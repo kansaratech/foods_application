@@ -1,11 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const STORE_BY_ID = gql`
-  query Restaurant($restaurantId: String) {
-    restaurant(id: $restaurantId) {
-      zone {
-        _id
-      }
+  query Restaurant($id: String) {
+    restaurant(id: $id) {
       location {
         coordinates
       }

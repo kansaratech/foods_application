@@ -13,7 +13,7 @@ import { WebSocketLink } from "@apollo/client/link/ws";
 import { getMainDefinition } from "@apollo/client/utilities";
 
 import getEnvVars from "@/environment";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "@/lib/services/secure-store";
 import { onError } from "@apollo/client/link/error";
 import { router } from "expo-router";
 import { DefinitionNode, FragmentDefinitionNode } from "graphql";

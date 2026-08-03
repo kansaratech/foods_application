@@ -17,7 +17,7 @@ import useOrders from "@/lib/hooks/useOrders";
 import Order from "@/lib/ui/useable-components/order";
 import { WalletIcon } from "@/lib/ui/useable-components/svg";
 import { ORDER_TYPE } from "@/lib/utils/types";
-import { useKeepAwake } from "expo-keep-awake";
+import useSafeKeepAwake from "@/lib/hooks/useSafeKeepAwake";
 import { useTranslation } from "react-i18next";
 
 function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
@@ -30,7 +30,7 @@ function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const { loading, processingOrders, refetch, currentTab, setCurrentTab } =
     useOrders();
-  useKeepAwake();
+  useSafeKeepAwake();
 
   // const { loading: mutateLoading } = useAcceptOrder();
 

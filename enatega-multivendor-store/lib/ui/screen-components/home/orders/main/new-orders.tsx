@@ -26,7 +26,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
-import { useKeepAwake } from "expo-keep-awake";
+import useSafeKeepAwake from "@/lib/hooks/useSafeKeepAwake";
 
 function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
   // Props
@@ -38,7 +38,7 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const { loading, activeOrders, refetch, currentTab, setCurrentTab } =
     useOrders();
-  useKeepAwake();
+  useSafeKeepAwake();
 
   // Ref
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);

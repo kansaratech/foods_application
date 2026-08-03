@@ -5,6 +5,7 @@ import {
   HelpIcon,
   HomeIcon,
   LanguageIcon,
+  PageIcon,
 } from "@/lib/ui/useable-components/svg";
 import ScheduleIcon from "@/lib/ui/useable-components/svg/schedule";
 import { Colors } from "@/lib/utils/constants";
@@ -83,6 +84,16 @@ export default function DrawerMain() {
           title: t("Language"),
           drawerIcon: ({ color, size }) => (
             <LanguageIcon color={color} height={size} width={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="menu"
+        options={{
+          drawerLabel: t("Menu"),
+          title: t("Menu"),
+          drawerIcon: ({ color, size }) => (
+            <PageIcon color={color} height={size} width={size} />
           ),
         }}
       />

@@ -1,7 +1,7 @@
 import "react-native-get-random-values";
 
 import { ApolloClient, gql, NormalizedCacheObject } from "@apollo/client";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "@/lib/services/secure-store";
 import * as Device from "expo-device";
 
 const METRICS_GENERAL = gql`

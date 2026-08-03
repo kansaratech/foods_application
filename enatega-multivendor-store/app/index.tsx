@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "@/lib/services/secure-store";
 import { useCallback, useEffect, useRef } from "react";
 import Constants from "expo-constants";
 

@@ -20,7 +20,7 @@ import { app_theme } from "@/lib/utils/types/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Core
-import { Appearance } from "react-native";
+import { Appearance, Platform } from "react-native";
 
 // Context
 const ThemeContext = createContext<AppThemeContext>({
@@ -52,7 +52,9 @@ export default function AppThemeProvidor({
     const systemTheme = Appearance.getColorScheme();
     const localTheme = await AsyncStorage.getItem("app_theme");
     const theme = localTheme || systemTheme || "dark";
-    Appearance.setColorScheme(theme as app_theme);
+    if (Platform.OS !== "web") {
+      Appearance.setColorScheme(theme as app_theme);
+    }
     setCurrentTheme(theme as app_theme);
     setAppTheme(
       theme === "light"

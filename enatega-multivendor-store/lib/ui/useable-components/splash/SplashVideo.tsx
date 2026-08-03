@@ -9,6 +9,7 @@ export default function SplashVideo({ onLoaded, onFinish }) {
     videoPlayer,
   ) => {
     videoPlayer.loop = false;
+    videoPlayer.muted = true;
     videoPlayer.play();
   });
 

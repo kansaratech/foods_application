@@ -1,0 +1,432 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  CUSTOMER
+  VENDOR
+  ADMIN
+  RIDER
+  STAFF
+}
+
+enum OrderStatus {
+  PENDING
+  ACCEPTED
+  PICKED
+  ASSIGNED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id                     String    @id @default(cuid())
+  name                   String?
+  email                  String?   @unique
+  phone                  String?   @unique
+  username               String?   @unique
+  password               String?
+  phoneIsVerified        Boolean   @default(false)
+  emailIsVerified        Boolean   @default(false)
+  isActive               Boolean   @default(true)
+  status                 String    @default("ACTIVE")
+  notes                  String?   @db.Text
+  isOrderNotification    Boolean   @default(true)
+  isOfferNotification    Boolean   @default(true)
+  notificationToken      String?
+  userType               UserType  @default(CUSTOMER)
+  image                  String?
+  firstName              String?
+  lastName               String?
+  appleId                String?
+  favouriteRestaurantIds Json?     @default("[]")
+  otpCode                String?
+  otpExpiresAt           DateTime?
+  permissions            Json?
+  tokenVersion           Int       @default(0)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  addresses    Address[]
+  restaurants  Restaurant[]  @relation("RestaurantOwner")
+  orders       Order[]       @relation("OrderCustomer")
+  riderOrders  Order[]       @relation("OrderRider")
+  riderProfile RiderProfile?
+}
+
+model Address {
+  id              String  @id @default(cuid())
+  userId          String
+  label           String?
+  deliveryAddress String? @db.Text
+  details         String?
+  latitude        Float?
+  longitude       Float?
+  selected        Boolean @default(false)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([userId])
+}
+
+model ShopType {
+  id       String  @id @default(cuid())
+  name     String
+  image    String?
+  slug     String  @unique
+  isActive Boolean @default(true)
+
+  cuisines    Cuisine[]
+  restaurants Restaurant[]
+}
+
+model Cuisine {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+  image       String?
+  shopTypeId  String?
+
+  shopType    ShopType?           @relation(fields: [shopTypeId], references: [id])
+  restaurants RestaurantCuisine[]
+
+  @@index([shopTypeId])
+}
+
+model Restaurant {
+  id                     String   @id @default(cuid())
+  ownerId                String
+  name                   String
+  image                  String?
+  logo                   String?
+  address                String?  @db.Text
+  phone                  String?
+  username               String?  @unique
+  password               String?
+  slug                   String   @unique
+  orderPrefix            String?
+  deliveryTime           Int      @default(30)
+  minimumOrder           Float    @default(0)
+  tax                    Float    @default(0)
+  commissionRate         Float    @default(0)
+  isActive               Boolean  @default(true)
+  isAvailable            Boolean  @default(true)
+  latitude               Float?
+  longitude              Float?
+  shopTypeId             String?
+  openingTimes           Json?
+  bussinessDetails       Json?
+  currentWalletAmount    Float    @default(0)
+  totalWalletAmount      Float    @default(0)
+  withdrawnWalletAmount  Float    @default(0)
+  deliveryBounds         Json?
+  circleBounds           Json?
+  boundType              String?
+  stripeDetailsSubmitted Boolean  @default(false)
+  city                   String?
+  postCode               String?
+  pickup                 Boolean  @default(true)
+  delivery               Boolean  @default(true)
+  minDeliveryFee         Float?
+  deliveryDistance       Float?
+  deliveryFee            Float?
+  clonedFromId           String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  owner      User                @relation("RestaurantOwner", fields: [ownerId], references: [id])
+  shopType   ShopType?           @relation(fields: [shopTypeId], references: [id])
+  cuisines   RestaurantCuisine[]
+  categories Category[]
+  addons     Addon[]
+  orders     Order[]
+  coupons    Coupon[]
+  clonedFrom Restaurant?         @relation("RestaurantClone", fields: [clonedFromId], references: [id])
+  clones     Restaurant[]        @relation("RestaurantClone")
+
+  @@index([ownerId])
+  @@index([shopTypeId])
+  @@index([clonedFromId])
+}
+
+model RestaurantCuisine {
+  restaurantId String
+  cuisineId    String
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  cuisine    Cuisine    @relation(fields: [cuisineId], references: [id], onDelete: Cascade)
+
+  @@id([restaurantId, cuisineId])
+}
+
+model Category {
+  id           String   @id @default(cuid())
+  restaurantId String
+  title        String
+  image        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant    Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  foods         Food[]
+  subCategories SubCategory[]
+
+  @@index([restaurantId])
+}
+
+model Food {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  categoryId    String
+  subCategoryId String?
+  title         String
+  description   String?  @db.Text
+  image         String?
+  isActive      Boolean  @default(true)
+  isOutOfStock  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subCategory SubCategory? @relation(fields: [subCategoryId], references: [id])
+  variations  Variation[]
+  orderItems  OrderItem[]
+
+  @@index([restaurantId])
+  @@index([categoryId])
+  @@index([subCategoryId])
+}
+
+model Variation {
+  id           String  @id @default(cuid())
+  foodId       String
+  title        String
+  price        Float
+  discounted   Float?
+  isOutOfStock Boolean @default(false)
+
+  food       Food             @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  addons     VariationAddon[]
+  orderItems OrderItem[]
+
+  @@index([foodId])
+}
+
+model Addon {
+  id              String  @id @default(cuid())
+  restaurantId    String
+  title           String
+  description     String?
+  quantityMinimum Int     @default(0)
+  quantityMaximum Int     @default(1)
+
+  restaurant      Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  options         Option[]
+  variations      VariationAddon[]
+  orderItemAddons OrderItemAddon[]
+
+  @@index([restaurantId])
+}
+
+model Option {
+  id          String  @id @default(cuid())
+  addonId     String
+  title       String
+  description String?
+  price       Float   @default(0)
+
+  addon                 Addon                  @relation(fields: [addonId], references: [id], onDelete: Cascade)
+  orderItemAddonOptions OrderItemAddonOption[]
+
+  @@index([addonId])
+}
+
+model VariationAddon {
+  variationId String
+  addonId     String
+
+  variation Variation @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  addon     Addon     @relation(fields: [addonId], references: [id], onDelete: Cascade)
+
+  @@id([variationId, addonId])
+}
+
+model Configuration {
+  id                     String  @id @default(cuid())
+  currency               String  @default("USD")
+  currencySymbol         String  @default("$")
+  deliveryRate           Float   @default(0)
+  termsAndConditions     String? @db.Text
+  privacyPolicy          String? @db.Text
+  testOtp                String?
+  skipMobileVerification Boolean @default(true)
+  skipEmailVerification  Boolean @default(true)
+  costType               String  @default("fixed")
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  userId          String
+  restaurantId    String
+  riderId         String?
+  addressId       String?
+  paymentMethod   String
+  paymentStatus   PaymentStatus @default(PENDING)
+  orderStatus     OrderStatus   @default(PENDING)
+  status          String        @default("ACTIVE")
+  paidAmount      Float         @default(0)
+  orderAmount     Float
+  deliveryCharges Float         @default(0)
+  tipping         Float         @default(0)
+  taxationAmount  Float         @default(0)
+  discountAmount  Float         @default(0)
+  instructions    String?       @db.Text
+  isPickedUp      Boolean       @default(false)
+  orderDate       DateTime      @default(now())
+  expectedTime    DateTime?
+  acceptedAt      DateTime?
+  pickedAt        DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user       User        @relation("OrderCustomer", fields: [userId], references: [id])
+  rider      User?       @relation("OrderRider", fields: [riderId], references: [id])
+  restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
+  address    Address?    @relation(fields: [addressId], references: [id])
+  items      OrderItem[]
+
+  @@index([userId])
+  @@index([restaurantId])
+  @@index([riderId])
+}
+
+model OrderItem {
+  id                  String  @id @default(cuid())
+  orderId             String
+  foodId              String
+  variationId         String?
+  title               String
+  price               Float
+  quantity            Int
+  specialInstructions String? @db.Text
+
+  order     Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  food      Food             @relation(fields: [foodId], references: [id])
+  variation Variation?       @relation(fields: [variationId], references: [id])
+  addons    OrderItemAddon[]
+
+  @@index([orderId])
+  @@index([foodId])
+}
+
+model OrderItemAddon {
+  id          String @id @default(cuid())
+  orderItemId String
+  addonId     String
+  title       String
+
+  orderItem OrderItem              @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  addon     Addon                  @relation(fields: [addonId], references: [id])
+  options   OrderItemAddonOption[]
+
+  @@index([orderItemId])
+}
+
+model OrderItemAddonOption {
+  id               String @id @default(cuid())
+  orderItemAddonId String
+  optionId         String
+  title            String
+  price            Float
+
+  orderItemAddon OrderItemAddon @relation(fields: [orderItemAddonId], references: [id], onDelete: Cascade)
+  option         Option         @relation(fields: [optionId], references: [id])
+
+  @@index([orderItemAddonId])
+}
+
+model Zone {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  boundary    Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  riders RiderProfile[]
+}
+
+model RiderProfile {
+  id                    String  @id @default(cuid())
+  userId                String  @unique
+  vehicleType           String?
+  available             Boolean @default(true)
+  assigned              Json?   @default("[]")
+  zoneId                String?
+  licenseDetails        Json?
+  vehicleDetails        Json?
+  bussinessDetails      Json?
+  currentWalletAmount   Float   @default(0)
+  totalWalletAmount     Float   @default(0)
+  withdrawnWalletAmount Float   @default(0)
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone Zone? @relation(fields: [zoneId], references: [id])
+
+  @@index([zoneId])
+}
+
+model SubCategory {
+  id               String @id @default(cuid())
+  title            String
+  parentCategoryId String
+
+  parentCategory Category @relation(fields: [parentCategoryId], references: [id], onDelete: Cascade)
+  foods          Food[]
+
+  @@index([parentCategoryId])
+}
+
+model Coupon {
+  id             String    @id @default(cuid())
+  title          String
+  discount       Float     @default(0)
+  enabled        Boolean   @default(true)
+  startDate      DateTime?
+  endDate        DateTime?
+  lifeTimeActive Boolean   @default(false)
+  restaurantId   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  restaurant Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+}
+
+model Banner {
+  id          String  @id @default(cuid())
+  title       String?
+  description String? @db.Text
+  action      String?
+  screen      String?
+  file        String?
+  parameters  Json?
+}

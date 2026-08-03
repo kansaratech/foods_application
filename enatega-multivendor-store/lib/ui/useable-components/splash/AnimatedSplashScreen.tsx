@@ -1,7 +1,7 @@
 import "expo-dev-client";
 import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   runOnJS,
@@ -17,6 +17,19 @@ export default function AnimatedSplashScreen({ children }) {
   const [isAppReady, setAppReady] = useState(false);
   const [isSplashVideoComplete, setSplashVideoComplete] = useState(false);
   const [isSplashAnimationComplete, setAnimationComplete] = useState(false);
+
+  // Web video playback/events are unreliable across browsers; never let the
+  // splash video block the app from rendering indefinitely.
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+
+    const timeout = setTimeout(() => {
+      setAppReady(true);
+      setSplashVideoComplete(true);
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     if (isAppReady && isSplashVideoComplete) {

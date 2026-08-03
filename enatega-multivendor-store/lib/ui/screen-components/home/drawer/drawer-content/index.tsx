@@ -17,7 +17,6 @@ import { useApptheme } from "@/lib/context/theme.context";
 import {
   AboutIcon,
   LogoutIcon,
-  PageIcon,
   PrivacyIcon,
   RightArrowIcon,
   UserIcon,
@@ -219,30 +218,6 @@ export default function CustomDrawerContent(
               }}
             >
               {t("Privacy Policy")}
-            </Text>
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            Linking.openURL("https://enatega.com/");
-          }}
-          className="flex-row justify-between items-center px-4 py-4 border-b-[0.5px]"
-          style={{ borderColor: appTheme.borderLineColor }}
-        >
-          <View className="flex-row items-center gap-3">
-            <View
-              className="h-[30px] w-[40px] rounded-full items-center justify-center"
-              style={{ backgroundColor: appTheme.sidebarIconBackground }}
-            >
-              <PageIcon width={16} height={16} color={appTheme.iconColor} />
-            </View>
-            <Text
-              className="text-sm font-semibold"
-              style={{
-                color: appTheme.buttonText,
-              }}
-            >
-              {t("Product Page")}
             </Text>
           </View>
         </TouchableOpacity>

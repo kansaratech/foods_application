@@ -1,0 +1,502 @@
+import { IResolvers } from '@graphql-tools/utils';
+import { Prisma, Restaurant } from '@prisma/client';
+import { prisma } from '../../prisma/client';
+import { GraphQLContext } from '../../context';
+import { requireAuth, requireRole } from '../../middleware/auth';
+import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
+import { distanceKm } from '../../utils/geo';
+import { notFoundError, userInputError } from '../../utils/errors';
+
+function slugify(name: string): string {
+  return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
+}
+
+async function resolveShopTypeId(shopType?: string | null): Promise<string | undefined> {
+  if (!shopType) return undefined;
+  const byId = await prisma.shopType.findUnique({ where: { id: shopType } });
+  if (byId) return byId.id;
+  const bySlug = await prisma.shopType.findUnique({ where: { slug: shopType } });
+  return bySlug?.id;
+}
+
+async function resolveCuisineIds(cuisines?: string[] | null): Promise<string[]> {
+  if (!cuisines?.length) return [];
+  const found = await prisma.cuisine.findMany({ where: { OR: [{ id: { in: cuisines } }, { name: { in: cuisines } }] } });
+  return found.map((c) => c.id);
+}
+
+interface RestaurantInputArgs {
+  name: string;
+  address?: string;
+  phone?: string;
+  image?: string;
+  logo?: string;
+  deliveryTime?: number;
+  minimumOrder?: number;
+  username?: string;
+  password?: string;
+  shopType?: string;
+  salesTax?: number;
+  cuisines?: string[];
+  latitude?: number;
+  longitude?: number;
+}
+
+interface RestaurantProfileInputArgs extends Partial<RestaurantInputArgs> {
+  _id: string;
+  orderPrefix?: string;
+  isAvailable?: boolean;
+}
+
+function assertOwnsRestaurant(user: { id: string; userType: string }, restaurant: Restaurant) {
+  if (user.userType === 'ADMIN') return;
+  if (user.userType === 'VENDOR' && restaurant.ownerId === user.id) return;
+  throw notFoundError('Restaurant not found');
+}
+
+export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
+  Query: {
+    nearByRestaurants: async (_parent, args: { latitude?: number; longitude?: number; shopType?: string }) => {
+      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
+
+      let restaurants = await prisma.restaurant.findMany({ where });
+      if (args.latitude != null && args.longitude != null) {
+        restaurants = restaurants
+          .map((r) => ({
+            r,
+            dist:
+              r.latitude != null && r.longitude != null
+                ? distanceKm(args.latitude as number, args.longitude as number, r.latitude, r.longitude)
+                : Number.MAX_SAFE_INTEGER,
+          }))
+          .sort((a, b) => a.dist - b.dist)
+          .map((x) => x.r);
+      }
+      return { offers: [], sections: [], restaurants };
+    },
+
+    nearByRestaurantsPreview: async (
+      _parent,
+      args: { latitude?: number; longitude?: number; shopType?: string; page?: number; limit?: number },
+    ) => {
+      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
+      const limit = args.limit ?? 20;
+      const page = args.page ?? 1;
+      return prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit });
+    },
+
+    restaurant: (_parent, args: { id: string }) => prisma.restaurant.findUnique({ where: { id: args.id } }),
+
+    userFavourite: async (_parent, _args, context) => {
+      const currentUser = requireAuth(context);
+      const ids = Array.isArray(currentUser.favouriteRestaurantIds)
+        ? (currentUser.favouriteRestaurantIds as string[])
+        : [];
+      if (!ids.length) return [];
+      return prisma.restaurant.findMany({ where: { id: { in: ids } } });
+    },
+
+    restaurants: async (_parent, _args, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      if (currentUser.userType === 'ADMIN') return prisma.restaurant.findMany();
+      return prisma.restaurant.findMany({ where: { ownerId: currentUser.id } });
+    },
+
+    restaurantsPaginated: async (_parent, args: { page?: number; limit?: number; search?: string }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const where = {
+        ...(currentUser.userType === 'VENDOR' ? { ownerId: currentUser.id } : {}),
+        ...(args.search ? { name: { contains: args.search } } : {}),
+      };
+      const [data, totalCount] = await Promise.all([
+        prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit }),
+        prisma.restaurant.count({ where }),
+      ]);
+      return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
+    },
+
+    restaurantByOwner: async (_parent, args: { id: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      return prisma.user.findUnique({ where: { id: args.id } });
+    },
+
+    commissionRate: async (_parent, args: { page?: number; limit?: number }, context) => {
+      requireRole(context, ['ADMIN']);
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const [restaurant, totalCount] = await Promise.all([
+        prisma.restaurant.findMany({ skip: (page - 1) * limit, take: limit }),
+        prisma.restaurant.count(),
+      ]);
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+      return {
+        restaurant,
+        currentPage: page,
+        totalPages,
+        nextPage: page < totalPages ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
+      };
+    },
+
+    getRestaurantDeliveryZoneInfo: async (_parent, args: { id: string }, context) => {
+      requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      return {
+        boundType: restaurant.boundType,
+        deliveryBounds: restaurant.deliveryBounds ? { coordinates: restaurant.deliveryBounds } : null,
+        location:
+          restaurant.latitude != null && restaurant.longitude != null
+            ? { coordinates: [restaurant.longitude, restaurant.latitude] }
+            : null,
+        circleBounds: restaurant.circleBounds,
+        address: restaurant.address,
+        city: restaurant.city,
+        postCode: restaurant.postCode,
+      };
+    },
+
+    getClonedRestaurants: () => prisma.restaurant.findMany({ where: { clonedFromId: { not: null } } }),
+    getClonedRestaurantsPaginated: async (_parent, args: { page?: number; limit?: number; search?: string }) => {
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const where = {
+        clonedFromId: { not: null },
+        ...(args.search ? { name: { contains: args.search } } : {}),
+      };
+      const [data, totalCount] = await Promise.all([
+        prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit }),
+        prisma.restaurant.count({ where }),
+      ]);
+      return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
+    },
+  },
+
+  Mutation: {
+    restaurantLogin: async (_parent, args: { username: string; password: string; notificationToken?: string }) => {
+      const restaurant = await prisma.restaurant.findUnique({ where: { username: args.username } });
+      if (!restaurant?.password || !(await comparePassword(args.password, restaurant.password))) {
+        throw userInputError('Invalid username or password');
+      }
+      if (!restaurant.isActive) {
+        throw userInputError('This restaurant account is inactive');
+      }
+
+      const owner = await prisma.user.findUnique({ where: { id: restaurant.ownerId } });
+      if (!owner) throw notFoundError('Restaurant owner not found');
+
+      if (args.notificationToken) {
+        await prisma.user.update({ where: { id: owner.id }, data: { notificationToken: args.notificationToken } });
+      }
+
+      const { token } = signAccessToken({ userId: owner.id, userType: owner.userType, tokenVersion: owner.tokenVersion });
+      return { token, restaurantId: restaurant.id };
+    },
+
+    createRestaurant: async (_parent, args: { restaurant: RestaurantInputArgs; owner: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      const owner = await prisma.user.findUnique({ where: { id: args.owner } });
+      if (!owner) throw userInputError('Owner not found');
+
+      const input = args.restaurant;
+      const cuisineIds = await resolveCuisineIds(input.cuisines);
+
+      const restaurant = await prisma.restaurant.create({
+        data: {
+          name: input.name,
+          address: input.address,
+          phone: input.phone,
+          image: input.image,
+          logo: input.logo,
+          deliveryTime: input.deliveryTime ?? 30,
+          minimumOrder: input.minimumOrder ?? 0,
+          username: input.username,
+          password: input.password ? await hashPassword(input.password) : undefined,
+          shopTypeId: await resolveShopTypeId(input.shopType),
+          tax: input.salesTax ?? 0,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          slug: slugify(input.name),
+          orderPrefix: input.name.slice(0, 3).toUpperCase(),
+          ownerId: owner.id,
+          cuisines: { create: cuisineIds.map((cuisineId) => ({ cuisineId })) },
+        },
+      });
+
+      if (owner.userType !== 'ADMIN') {
+        await prisma.user.update({ where: { id: owner.id }, data: { userType: 'VENDOR' } });
+      }
+
+      return restaurant;
+    },
+
+    editRestaurant: async (_parent, args: { restaurant: RestaurantProfileInputArgs }, context) => {
+      const currentUser = requireAuth(context);
+      const existing = await prisma.restaurant.findUnique({ where: { id: args.restaurant._id } });
+      if (!existing) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, existing);
+
+      const input = args.restaurant;
+      const cuisineIds = input.cuisines ? await resolveCuisineIds(input.cuisines) : undefined;
+
+      return prisma.restaurant.update({
+        where: { id: input._id },
+        data: {
+          name: input.name,
+          address: input.address,
+          phone: input.phone,
+          image: input.image,
+          logo: input.logo,
+          deliveryTime: input.deliveryTime,
+          minimumOrder: input.minimumOrder,
+          username: input.username,
+          password: input.password ? await hashPassword(input.password) : undefined,
+          shopTypeId: input.shopType ? await resolveShopTypeId(input.shopType) : undefined,
+          tax: input.salesTax,
+          orderPrefix: input.orderPrefix,
+          isAvailable: input.isAvailable,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          ...(cuisineIds
+            ? { cuisines: { deleteMany: {}, create: cuisineIds.map((cuisineId) => ({ cuisineId })) } }
+            : {}),
+        },
+      });
+    },
+
+    deleteRestaurant: async (_parent, args: { id: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      return prisma.restaurant.update({ where: { id: args.id }, data: { isActive: false } });
+    },
+
+    hardDeleteRestaurant: async (_parent, args: { id: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      await prisma.restaurant.delete({ where: { id: args.id } });
+      return true;
+    },
+
+    duplicateRestaurant: async (_parent, args: { id: string; owner: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      const source = await prisma.restaurant.findUnique({ where: { id: args.id }, include: { cuisines: true } });
+      if (!source) throw notFoundError('Restaurant not found');
+      const owner = await prisma.user.findUnique({ where: { id: args.owner } });
+      if (!owner) throw userInputError('Owner not found');
+
+      return prisma.restaurant.create({
+        data: {
+          name: `${source.name} (Copy)`,
+          image: source.image,
+          logo: source.logo,
+          address: source.address,
+          phone: source.phone,
+          deliveryTime: source.deliveryTime,
+          minimumOrder: source.minimumOrder,
+          tax: source.tax,
+          latitude: source.latitude,
+          longitude: source.longitude,
+          shopTypeId: source.shopTypeId,
+          slug: slugify(source.name),
+          orderPrefix: source.orderPrefix,
+          ownerId: owner.id,
+          clonedFromId: source.id,
+          cuisines: { create: source.cuisines.map((c) => ({ cuisineId: c.cuisineId })) },
+        },
+      });
+    },
+
+    updateCommission: (_parent, args: { id: string; commissionRate: number }, context) => {
+      requireRole(context, ['ADMIN']);
+      return prisma.restaurant.update({ where: { id: args.id }, data: { commissionRate: args.commissionRate } });
+    },
+
+    updateDeliveryOptions: async (
+      _parent,
+      args: { restId: string; pickup: boolean; delivery: boolean },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.restId } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, restaurant);
+      const updated = await prisma.restaurant.update({
+        where: { id: args.restId },
+        data: { pickup: args.pickup, delivery: args.delivery },
+      });
+      return { deliveryOptions: { pickup: updated.pickup, delivery: updated.delivery } };
+    },
+
+    updateTimings: async (
+      _parent,
+      args: { id: string; openingTimes?: { day?: string; times?: { startTime?: string[]; endTime?: string[] }[] }[] },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, restaurant);
+      return prisma.restaurant.update({
+        where: { id: args.id },
+        data: { openingTimes: args.openingTimes ?? [] },
+      });
+    },
+
+    updateDeliveryBoundsAndLocation: async (
+      _parent,
+      args: {
+        id: string;
+        boundType: string;
+        bounds?: number[][][];
+        circleBounds?: { radius: number };
+        location: { latitude: number; longitude: number };
+        address?: string;
+        postCode?: string;
+        city?: string;
+      },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, restaurant);
+
+      const data = await prisma.restaurant.update({
+        where: { id: args.id },
+        data: {
+          boundType: args.boundType,
+          deliveryBounds: args.bounds ?? undefined,
+          circleBounds: args.circleBounds ?? undefined,
+          latitude: args.location.latitude,
+          longitude: args.location.longitude,
+          address: args.address,
+          postCode: args.postCode,
+          city: args.city,
+        },
+      });
+      return { success: true, message: 'Delivery bounds updated', data };
+    },
+
+    updateRestaurantDelivery: async (
+      _parent,
+      args: { id: string; minDeliveryFee?: number; deliveryDistance?: number; deliveryFee?: number },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, restaurant);
+
+      const data = await prisma.restaurant.update({
+        where: { id: args.id },
+        data: {
+          minDeliveryFee: args.minDeliveryFee,
+          deliveryDistance: args.deliveryDistance,
+          deliveryFee: args.deliveryFee,
+        },
+      });
+      return { success: true, message: 'Delivery settings updated', data };
+    },
+
+    updateRestaurantBussinessDetails: async (
+      _parent,
+      args: { id: string; bussinessDetails?: Record<string, unknown> },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, restaurant);
+
+      const data = await prisma.restaurant.update({
+        where: { id: args.id },
+        data: { bussinessDetails: (args.bussinessDetails ?? undefined) as Prisma.InputJsonValue | undefined },
+      });
+      return { success: true, message: 'Business details updated', data };
+    },
+
+    saveRestaurantToken: async (_parent, args: { token?: string; isEnabled?: boolean }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      await prisma.user.update({
+        where: { id: currentUser.id },
+        data: {
+          notificationToken: args.token ?? currentUser.notificationToken,
+          isOrderNotification: args.isEnabled ?? currentUser.isOrderNotification,
+        },
+      });
+      const restaurant = await prisma.restaurant.findFirst({ where: { ownerId: currentUser.id } });
+      if (!restaurant) throw notFoundError('Restaurant not found');
+      return restaurant;
+    },
+  },
+
+  Restaurant: {
+    _id: (parent: Restaurant) => parent.id,
+    unique_restaurant_id: (parent: Restaurant) => parent.id,
+    location: (parent: Restaurant) =>
+      parent.latitude != null && parent.longitude != null
+        ? { coordinates: [parent.longitude, parent.latitude] }
+        : null,
+    owner: (parent: Restaurant) => prisma.user.findUnique({ where: { id: parent.ownerId } }),
+    shopType: async (parent: Restaurant) => {
+      if (!parent.shopTypeId) return null;
+      const shopType = await prisma.shopType.findUnique({ where: { id: parent.shopTypeId } });
+      return shopType?.slug ?? null;
+    },
+    cuisines: async (parent: Restaurant) => {
+      const links = await prisma.restaurantCuisine.findMany({
+        where: { restaurantId: parent.id },
+        include: { cuisine: true },
+      });
+      return links.map((l) => l.cuisine.name);
+    },
+    categories: (parent: Restaurant) => prisma.category.findMany({ where: { restaurantId: parent.id } }),
+    addons: (parent: Restaurant) =>
+      prisma.addon.findMany({ where: { restaurantId: parent.id }, include: { options: true } }),
+    options: async (parent: Restaurant) => {
+      const addons = await prisma.addon.findMany({ where: { restaurantId: parent.id }, include: { options: true } });
+      return addons.flatMap((a) => a.options);
+    },
+    openingTimes: (parent: Restaurant) => (Array.isArray(parent.openingTimes) ? parent.openingTimes : []),
+    bussinessDetails: (parent: Restaurant) => parent.bussinessDetails ?? null,
+    hasBusinessDetails: (parent: Restaurant) => Boolean(parent.bussinessDetails),
+    deliveryBounds: (parent: Restaurant) => (parent.deliveryBounds ? { coordinates: parent.deliveryBounds } : null),
+    notificationToken: async (parent: Restaurant) => {
+      const owner = await prisma.user.findUnique({ where: { id: parent.ownerId } });
+      return owner?.notificationToken ?? null;
+    },
+    enableNotification: async (parent: Restaurant) => {
+      const owner = await prisma.user.findUnique({ where: { id: parent.ownerId } });
+      return owner?.isOrderNotification ?? true;
+    },
+  },
+
+  CommissionRateLite: {
+    _id: (parent: Restaurant) => parent.id,
+    unique_restaurant_id: (parent: Restaurant) => parent.id,
+  },
+
+  RestaurantCarouselPreview: {
+    _id: (parent: Restaurant) => parent.id,
+    location: (parent: Restaurant) =>
+      parent.latitude != null && parent.longitude != null
+        ? { coordinates: [parent.longitude, parent.latitude] }
+        : null,
+    shopType: async (parent: Restaurant) => {
+      if (!parent.shopTypeId) return null;
+      const shopType = await prisma.shopType.findUnique({ where: { id: parent.shopTypeId } });
+      return shopType?.slug ?? null;
+    },
+  },
+
+  Vendor: {
+    _id: (parent: { id: string }) => parent.id,
+    restaurants: (parent: { id: string }) => prisma.restaurant.findMany({ where: { ownerId: parent.id } }),
+  },
+
+  Owner: {
+    _id: (parent: { id: string }) => parent.id,
+  },
+};

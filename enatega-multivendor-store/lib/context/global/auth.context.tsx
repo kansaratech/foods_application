@@ -15,7 +15,7 @@ import { IAuthContext, IAuthProviderProps } from "@/lib/utils/interfaces";
 // Expo
 import * as Localization from "expo-localization";
 import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import * as SecureStore from "@/lib/services/secure-store";
 
 // I18n
 import { setAppLanguage } from "@/i18next";
