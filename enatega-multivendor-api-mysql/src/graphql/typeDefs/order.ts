@@ -1,18 +1,25 @@
 export const orderTypeDefs = /* GraphQL */ `
   type OrderItemAddonOption {
     _id: ID!
+    id: ID!
     title: String!
     price: Float!
+    description: String
   }
 
   type OrderItemAddon {
     _id: ID!
+    id: ID!
     title: String!
     options: [OrderItemAddonOption!]!
+    description: String
+    quantityMinimum: Int
+    quantityMaximum: Int
   }
 
   type OrderItem {
     _id: ID!
+    id: ID!
     food: ID!
     title: String!
     price: Float!
@@ -20,6 +27,10 @@ export const orderTypeDefs = /* GraphQL */ `
     specialInstructions: String
     variation: Variation
     addons: [OrderItemAddon!]!
+    description: String
+    image: String
+    createdAt: String
+    updatedAt: String
   }
 
   type OrderUserLite {
@@ -27,6 +38,8 @@ export const orderTypeDefs = /* GraphQL */ `
     name: String
     phone: String
     email: String
+    username: String
+    available: Boolean
   }
 
   type OrderRestaurantLite {
@@ -61,11 +74,37 @@ export const orderTypeDefs = /* GraphQL */ `
     discountAmount: Float!
     instructions: String
     orderDate: String
+    expectedTime: String
+    acceptedAt: String
+    pickedAt: String
+    deliveredAt: String
+    cancelledAt: String
   }
 
   type OrdersActiveOrdersResult {
     totalCount: Int!
+    currentPage: Int!
+    totalPages: Int!
+    prevPage: Int
+    nextPage: Int
     orders: [Order!]!
+  }
+
+  type OrderFilterRestaurant {
+    _id: ID!
+    name: String!
+  }
+
+  type OrderFilterRider {
+    _id: ID!
+    name: String
+    username: String
+    phone: String
+  }
+
+  type OrderFilterOptions {
+    restaurants: [OrderFilterRestaurant!]!
+    riders: [OrderFilterRider!]!
   }
 
   input OrderAddonInput {
@@ -83,13 +122,27 @@ export const orderTypeDefs = /* GraphQL */ `
 
   extend type Query {
     order(id: String!): Order
+    orderDetails(id: String!): Order
     orders(offset: Int): [Order!]!
     getUsersActiveOrders(page: Int, limit: Int, offset: Int): [Order!]!
     getUsersPastOrders(page: Int, limit: Int, offset: Int): [Order!]!
 
     allOrders(page: Int): [Order!]!
-    getActiveOrders(restaurantId: String, page: Int, rowsPerPage: Int, search: String): OrdersActiveOrdersResult!
-    ordersByRestId(restaurant: String!, page: Int, rows: Int, search: String): OrdersActiveOrdersResult!
+    riderOrders: [Order!]!
+    getActiveOrders(restaurantId: String, page: Int, rowsPerPage: Int, actions: [String], search: String): OrdersActiveOrdersResult!
+    ordersByRestId(restaurant: String!, page: Int, rows: Int, search: String, orderStatus: [String]): OrdersActiveOrdersResult!
+    allOrdersPaginated(
+      page: Int
+      rows: Int
+      dateKeyword: String
+      starting_date: String
+      ending_date: String
+      orderStatus: [String]
+      search: String
+      restaurantId: ID
+      riderId: ID
+    ): OrdersActiveOrdersResult!
+    orderFilterOptions: OrderFilterOptions!
   }
 
   extend type Mutation {
@@ -110,15 +163,32 @@ export const orderTypeDefs = /* GraphQL */ `
     updateOrderStatus(id: String!, status: String!): Order!
     updateStatus(id: String!, orderStatus: String!): Order!
     assignRider(id: String!, riderId: String!): Order!
+    assignOrder(id: String!): Order!
+    updateOrderStatusRider(id: String!, status: String!): Order!
   }
 
   extend type Subscription {
     orderStatusChanged(userId: String!): OrderStatusChangedPayload!
     subscriptionOrder(id: String!): Order!
+    subscribePlaceOrder(restaurant: String!): OrderStatusChangedPayload!
+    subscriptionDispatcher: Order!
+    subscriptionAssignRider(riderId: String!): RiderAssignedPayload!
+    subscriptionZoneOrders(zoneId: String!): ZoneOrdersPayload!
+  }
+
+  type ZoneOrdersPayload {
+    zoneId: String!
+    origin: String
+    order: Order!
   }
 
   type OrderStatusChangedPayload {
     userId: String!
+    origin: String
+    order: Order!
+  }
+
+  type RiderAssignedPayload {
     origin: String
     order: Order!
   }

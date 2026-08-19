@@ -84,6 +84,40 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       ]);
       return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
     },
+
+    restaurantOptionsPaginated: async (
+      _parent,
+      args: { restaurantId: string; page?: number; limit?: number; search?: string },
+    ) => {
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const where = {
+        addon: { restaurantId: args.restaurantId },
+        ...(args.search ? { title: { contains: args.search } } : {}),
+      };
+      const [data, totalCount] = await Promise.all([
+        prisma.option.findMany({ where, skip: (page - 1) * limit, take: limit }),
+        prisma.option.count({ where }),
+      ]);
+      return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
+    },
+
+    restaurantAddonsPaginated: async (
+      _parent,
+      args: { restaurantId: string; page?: number; limit?: number; search?: string },
+    ) => {
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const where = {
+        restaurantId: args.restaurantId,
+        ...(args.search ? { title: { contains: args.search } } : {}),
+      };
+      const [data, totalCount] = await Promise.all([
+        prisma.addon.findMany({ where, skip: (page - 1) * limit, take: limit }),
+        prisma.addon.count({ where }),
+      ]);
+      return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
+    },
   },
 
   Mutation: {
@@ -269,6 +303,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
   },
   Variation: {
     _id: (parent: Variation) => parent.id,
+    id: (parent: Variation) => parent.id,
     addons: async (parent: Variation) => {
       const links = await prisma.variationAddon.findMany({ where: { variationId: parent.id } });
       return links.map((l) => l.addonId);

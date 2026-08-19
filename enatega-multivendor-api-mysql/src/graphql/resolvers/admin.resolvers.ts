@@ -4,7 +4,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../services/auth.service';
-import { notFoundError, userInputError } from '../../utils/errors';
+import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 
 const OWNER_ROLES = ['ADMIN', 'VENDOR', 'STAFF'] as const;
 
@@ -71,7 +71,10 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       return prisma.user.findMany({ where: { userType: 'VENDOR' } });
     },
     getVendor: async (_parent, args: { id: string }, context) => {
-      requireRole(context, ['ADMIN']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      if (currentUser.userType === 'VENDOR' && args.id !== currentUser.id) {
+        throw forbiddenError();
+      }
       const vendor = await prisma.user.findUnique({ where: { id: args.id } });
       if (!vendor) throw notFoundError('Vendor not found');
       return vendor;
@@ -118,9 +121,19 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       ]);
       return { usersCount, vendorsCount, restaurantsCount, ridersCount };
     },
+
+    webNotifications: (_parent, _args, context) => {
+      requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
+      return [];
+    },
   },
 
   Mutation: {
+    markWebNotificationsAsRead: (_parent, _args, context) => {
+      requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
+      return [];
+    },
+
     ownerLogin: async (_parent, args: { email: string; password: string }) => {
       const user = await prisma.user.findUnique({ where: { email: args.email } });
       if (!user || !OWNER_ROLES.includes(user.userType as (typeof OWNER_ROLES)[number])) {
@@ -159,9 +172,12 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       });
     },
     editVendor: async (_parent, args: { vendorInput: VendorInputArgs }, context) => {
-      requireRole(context, ['ADMIN']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
       const input = args.vendorInput;
       if (!input._id) throw notFoundError('Vendor _id is required to edit');
+      if (currentUser.userType === 'VENDOR' && input._id !== currentUser.id) {
+        throw forbiddenError();
+      }
       return prisma.user.update({
         where: { id: input._id },
         data: {

@@ -206,6 +206,7 @@ export default function VendorUpdateForms() {
                                 value={values.firstName}
                                 onChange={handleChange}
                                 showLabel={true}
+                                error={errors?.firstName ? t(errors.firstName) : ''}
                                 style={{
                                   borderColor: onErrorMessageMatcher(
                                     'firstName',
@@ -231,6 +232,16 @@ export default function VendorUpdateForms() {
                                 value={values.lastName}
                                 onChange={handleChange}
                                 showLabel={true}
+                                error={errors?.lastName ? t(errors.lastName) : ''}
+                                style={{
+                                  borderColor: onErrorMessageMatcher(
+                                    'lastName',
+                                    errors?.lastName,
+                                    VendorErrors
+                                  )
+                                    ? 'red'
+                                    : '',
+                                }}
                                 className="rounded-[6px] border-[#D1D5DB]"
                               />
                             </div>
@@ -247,6 +258,7 @@ export default function VendorUpdateForms() {
                                 className="rounded-[6px] border-[#D1D5DB]"
                                 value={values.email}
                                 onChange={handleChange}
+                                error={errors?.email ? t(errors.email) : ''}
                                 style={{
                                   borderColor: onErrorMessageMatcher(
                                     'email',

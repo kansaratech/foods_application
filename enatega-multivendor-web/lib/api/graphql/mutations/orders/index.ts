@@ -3,7 +3,7 @@ import { gql } from "@apollo/client";
 export const PLACE_ORDER = gql`
   mutation PlaceOrder(
     $restaurant: String!
-    $orderInput: [OrderInput!]!
+    $orderInput: [OrderItemInput!]!
     $paymentMethod: String!
     $couponCode: String
     $tipping: Float!
@@ -80,9 +80,6 @@ export const PLACE_ORDER = gql`
         _id
         name
       }
-      review {
-        _id
-      }
       paymentMethod
       paidAmount
       orderAmount
@@ -94,8 +91,6 @@ export const PLACE_ORDER = gql`
       tipping
       taxationAmount
       createdAt
-      completionTime
-      preparationTime
     }
   }
 `;
@@ -202,7 +197,6 @@ export const ABORT_ORDER = gql`
       orderId
       orderStatus
       cancelledAt
-      reason
       restaurant {
         _id
         name

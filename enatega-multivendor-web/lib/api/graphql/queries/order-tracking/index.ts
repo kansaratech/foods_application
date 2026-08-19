@@ -64,9 +64,6 @@ export const ORDER_TRACKING = gql`query OrderDetails($orderDetailsId: String!) {
     rider{
       _id
     }
-    review {
-      _id
-    }
     paymentMethod
     paidAmount
     orderAmount
@@ -79,14 +76,10 @@ export const ORDER_TRACKING = gql`query OrderDetails($orderDetailsId: String!) {
     expectedTime
     isPickedUp
     createdAt
-    completionTime
     cancelledAt
-    assignedAt
     deliveredAt
     acceptedAt
     pickedAt
-    preparationTime
-    selectedPrepTime
     instructions
     __typename
   }

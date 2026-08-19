@@ -54,9 +54,16 @@ export const restaurantTypeDefs = /* GraphQL */ `
     minDeliveryFee: Float
     deliveryDistance: Float
     deliveryFee: Float
+    deliveryInfo: DeliveryInfo
     notificationToken: String
     enableNotification: Boolean
     hasBusinessDetails: Boolean
+  }
+
+  type DeliveryInfo {
+    minDeliveryFee: Float
+    deliveryDistance: Float
+    deliveryFee: Float
   }
 
   type RestaurantCarouselPreview {

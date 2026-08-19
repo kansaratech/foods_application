@@ -5,6 +5,7 @@ import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../services/order.service';
 import { notFoundError, userInputError } from '../../utils/errors';
+import { pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
@@ -38,10 +39,47 @@ async function publishOrderUpdate(order: Order) {
     orderStatusChanged: { userId: order.userId, origin: 'order_service', order },
   });
   await pubsub.publish(TOPICS.SUBSCRIPTION_ORDER(order.id), { subscriptionOrder: order });
+  await pubsub.publish(TOPICS.SUBSCRIPTION_DISPATCHER, { subscriptionDispatcher: order });
+  await publishZoneOrder(order);
 }
 
-async function applyOrderStatusUpdate(context: GraphQLContext, id: string, statusInput: string): Promise<Order> {
-  const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+async function publishRiderAssigned(order: Order) {
+  if (!order.riderId) return;
+  await pubsub.publish(TOPICS.SUBSCRIPTION_ASSIGN_RIDER(order.riderId), {
+    subscriptionAssignRider: { origin: 'order_service', order },
+  });
+}
+
+// Pushes the order to riders subscribed to whichever zone(s) the restaurant's
+// location falls inside, so "New Orders" updates live instead of waiting on
+// the RIDER_ORDERS poll. 'new' when it first becomes claimable (ACCEPTED with
+// no rider yet); 'update' for any later change riders already see should stay
+// in sync with (claimed, picked, delivered, etc).
+async function publishZoneOrder(order: Order) {
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+  if (restaurant?.latitude == null || restaurant?.longitude == null) return;
+
+  const zones = await prisma.zone.findMany({ where: { isActive: true } });
+  const point: [number, number] = [restaurant.longitude, restaurant.latitude];
+  const origin = order.orderStatus === 'ACCEPTED' && !order.riderId ? 'new' : 'update';
+
+  for (const zone of zones) {
+    const ring = (zone.boundary as unknown as [number, number][][] | null)?.[0];
+    if (ring && pointInPolygon(point, ring)) {
+      await pubsub.publish(TOPICS.SUBSCRIPTION_ZONE_ORDERS(zone.id), {
+        subscriptionZoneOrders: { zoneId: zone.id, origin, order },
+      });
+    }
+  }
+}
+
+async function applyOrderStatusUpdate(
+  context: GraphQLContext,
+  id: string,
+  statusInput: string,
+  allowedRoles: Array<'ADMIN' | 'VENDOR' | 'RIDER'> = ['ADMIN', 'VENDOR'],
+): Promise<Order> {
+  const currentUser = requireRole(context, allowedRoles);
   const status = statusInput.toUpperCase() as OrderStatus;
   if (!ORDER_STATUS_VALUES.includes(status)) throw userInputError(`Invalid order status: ${statusInput}`);
 
@@ -51,6 +89,9 @@ async function applyOrderStatusUpdate(context: GraphQLContext, id: string, statu
     const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
     if (!restaurant || restaurant.ownerId !== currentUser.id) throw notFoundError('Order not found');
   }
+  if (currentUser.userType === 'RIDER' && order.riderId !== currentUser.id) {
+    throw notFoundError('Order not found');
+  }
 
   const timestampField: Partial<Record<OrderStatus, string>> = {
     ACCEPTED: 'acceptedAt',
@@ -59,6 +100,9 @@ async function applyOrderStatusUpdate(context: GraphQLContext, id: string, statu
     CANCELLED: 'cancelledAt',
   };
   const field = timestampField[status];
+  // Cash-on-delivery orders are settled the moment the rider hands them over -
+  // there's no separate "collect payment" step in this app.
+  const isCodSettledOnDelivery = status === 'DELIVERED' && order.paymentMethod === 'COD';
 
   const updated = await prisma.order.update({
     where: { id },
@@ -66,10 +110,50 @@ async function applyOrderStatusUpdate(context: GraphQLContext, id: string, statu
       orderStatus: status,
       status: status === 'CANCELLED' ? 'CANCELLED' : status === 'DELIVERED' || status === 'COMPLETED' ? 'COMPLETED' : 'ACTIVE',
       ...(field ? { [field]: new Date() } : {}),
+      ...(isCodSettledOnDelivery ? { paymentStatus: 'PAID', paidAmount: order.orderAmount } : {}),
     },
   });
   await publishOrderUpdate(updated);
   return updated;
+}
+
+function computeDateRange(
+  dateKeyword?: string,
+  starting_date?: string,
+  ending_date?: string,
+): { gte: Date; lte: Date } | undefined {
+  const now = new Date();
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  switch (dateKeyword) {
+    case 'Today': {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Week': {
+      const dayOfWeek = now.getDay();
+      const daysSinceMonday = (dayOfWeek + 6) % 7;
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Month': {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Year': {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Custom': {
+      if (!starting_date || !ending_date) return undefined;
+      const start = new Date(starting_date);
+      const end = new Date(ending_date);
+      end.setHours(23, 59, 59, 999);
+      return { gte: start, lte: end };
+    }
+    default:
+      return undefined;
+  }
 }
 
 async function resolveOrderAddress(userId: string, input: PlaceOrderArgs['address']): Promise<string> {
@@ -94,6 +178,17 @@ async function resolveOrderAddress(userId: string, input: PlaceOrderArgs['addres
 export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     order: async (_parent, args: { id: string }, context) => {
+      const currentUser = requireAuth(context);
+      const order = await prisma.order.findUnique({ where: { id: args.id } });
+      if (!order) return null;
+      const isOwner = order.userId === currentUser.id || order.riderId === currentUser.id;
+      const isStaff = currentUser.userType === 'ADMIN' || currentUser.userType === 'VENDOR';
+      if (!isOwner && !isStaff) throw notFoundError('Order not found');
+      return order;
+    },
+    // Same lookup as `order` - the customer web app's order-tracking screen
+    // calls this name specifically.
+    orderDetails: async (_parent, args: { id: string }, context) => {
       const currentUser = requireAuth(context);
       const order = await prisma.order.findUnique({ where: { id: args.id } });
       if (!order) return null;
@@ -137,16 +232,30 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const page = args.page ?? 1;
       return prisma.order.findMany({ orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit });
     },
+    // "My deliveries" plus unclaimed orders the rider could pick up - the app's
+    // New/Processing/Delivered tabs all filter this single list client-side.
+    riderOrders: (_parent, _args, context) => {
+      const currentUser = requireRole(context, ['RIDER']);
+      return prisma.order.findMany({
+        where: {
+          OR: [{ riderId: currentUser.id }, { riderId: null, orderStatus: 'ACCEPTED' }],
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    },
     getActiveOrders: async (
       _parent,
-      args: { restaurantId?: string; page?: number; rowsPerPage?: number; search?: string },
+      args: { restaurantId?: string; page?: number; rowsPerPage?: number; actions?: string[]; search?: string },
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
       const limit = args.rowsPerPage ?? 20;
       const page = args.page ?? 1;
+      const requestedStatuses = args.actions
+        ?.map((a) => a.toUpperCase() as OrderStatus)
+        .filter((a) => ACTIVE_STATUSES.includes(a));
       const where = {
-        orderStatus: { in: ACTIVE_STATUSES },
+        orderStatus: { in: requestedStatuses?.length ? requestedStatuses : ACTIVE_STATUSES },
         ...(args.restaurantId ? { restaurantId: args.restaurantId } : {}),
         ...(currentUser.userType === 'VENDOR' ? { restaurant: { ownerId: currentUser.id } } : {}),
       };
@@ -154,11 +263,19 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
         prisma.order.count({ where }),
       ]);
-      return { orders, totalCount };
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+      return {
+        orders,
+        totalCount,
+        currentPage: page,
+        totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+      };
     },
     ordersByRestId: async (
       _parent,
-      args: { restaurant: string; page?: number; rows?: number; search?: string },
+      args: { restaurant: string; page?: number; rows?: number; search?: string; orderStatus?: string[] },
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -168,12 +285,88 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
       const limit = args.rows ?? 20;
       const page = args.page ?? 1;
-      const where = { restaurantId: args.restaurant };
+      const requestedStatuses = args.orderStatus
+        ?.map((s) => s.toUpperCase() as OrderStatus)
+        .filter((s) => ORDER_STATUS_VALUES.includes(s));
+      const where = {
+        restaurantId: args.restaurant,
+        ...(requestedStatuses?.length ? { orderStatus: { in: requestedStatuses } } : {}),
+      };
       const [orders, totalCount] = await Promise.all([
         prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
         prisma.order.count({ where }),
       ]);
-      return { orders, totalCount };
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+      return {
+        orders,
+        totalCount,
+        currentPage: page,
+        totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+      };
+    },
+
+    allOrdersPaginated: async (
+      _parent,
+      args: {
+        page?: number;
+        rows?: number;
+        dateKeyword?: string;
+        starting_date?: string;
+        ending_date?: string;
+        orderStatus?: string[];
+        search?: string;
+        restaurantId?: string;
+        riderId?: string;
+      },
+      context,
+    ) => {
+      requireRole(context, ['ADMIN']);
+      const limit = args.rows ?? 20;
+      const page = args.page ?? 1;
+      const requestedStatuses = args.orderStatus
+        ?.map((s) => s.toUpperCase() as OrderStatus)
+        .filter((s) => ORDER_STATUS_VALUES.includes(s));
+      const dateRange = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+
+      const where = {
+        ...(requestedStatuses?.length ? { orderStatus: { in: requestedStatuses } } : {}),
+        ...(args.restaurantId ? { restaurantId: args.restaurantId } : {}),
+        ...(args.riderId ? { riderId: args.riderId } : {}),
+        ...(dateRange ? { createdAt: dateRange } : {}),
+        ...(args.search ? { orderId: { contains: args.search } } : {}),
+      };
+
+      const [orders, totalCount] = await Promise.all([
+        prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+        prisma.order.count({ where }),
+      ]);
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+      return {
+        orders,
+        totalCount,
+        currentPage: page,
+        totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+      };
+    },
+
+    orderFilterOptions: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      const [restaurants, riders] = await Promise.all([
+        prisma.restaurant.findMany({ select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+        prisma.user.findMany({
+          where: { userType: 'RIDER' },
+          select: { id: true, name: true, username: true, phone: true },
+          orderBy: { name: 'asc' },
+        }),
+      ]);
+      return {
+        restaurants: restaurants.map((r) => ({ _id: r.id, name: r.name })),
+        riders: riders.map((r) => ({ _id: r.id, name: r.name, username: r.username, phone: r.phone })),
+      };
     },
   },
 
@@ -210,6 +403,9 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       });
 
       await publishOrderUpdate(order);
+      await pubsub.publish(TOPICS.SUBSCRIBE_PLACE_ORDER(order.restaurantId), {
+        subscribePlaceOrder: { userId: order.userId, origin: 'order_service', order },
+      });
       return order;
     },
 
@@ -244,8 +440,31 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         data: { riderId: args.riderId, orderStatus: 'ASSIGNED' },
       });
       await publishOrderUpdate(updated);
+      await publishRiderAssigned(updated);
       return updated;
     },
+
+    // Rider claims an unassigned order for themselves (as opposed to
+    // `assignRider`, where ADMIN/VENDOR assigns a specific rider).
+    assignOrder: async (_parent, args: { id: string }, context) => {
+      const currentUser = requireRole(context, ['RIDER']);
+      const order = await prisma.order.findUnique({ where: { id: args.id } });
+      if (!order) throw notFoundError('Order not found');
+      if (order.riderId && order.riderId !== currentUser.id) {
+        throw userInputError('Order already assigned to another rider');
+      }
+
+      const updated = await prisma.order.update({
+        where: { id: args.id },
+        data: { riderId: currentUser.id, orderStatus: 'ASSIGNED' },
+      });
+      await publishOrderUpdate(updated);
+      await publishRiderAssigned(updated);
+      return updated;
+    },
+
+    updateOrderStatusRider: (_parent, args: { id: string; status: string }, context) =>
+      applyOrderStatusUpdate(context, args.id, args.status, ['RIDER']),
   },
 
   Order: {
@@ -259,20 +478,54 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
     orderDate: (parent: Order) => parent.orderDate?.toISOString(),
     createdAt: (parent: Order) => parent.createdAt?.toISOString(),
     updatedAt: (parent: Order) => parent.updatedAt?.toISOString(),
+    expectedTime: (parent: Order) => parent.expectedTime?.toISOString() ?? null,
+    acceptedAt: (parent: Order) => parent.acceptedAt?.toISOString() ?? null,
+    pickedAt: (parent: Order) => parent.pickedAt?.toISOString() ?? null,
+    deliveredAt: (parent: Order) => parent.deliveredAt?.toISOString() ?? null,
+    cancelledAt: (parent: Order) => parent.cancelledAt?.toISOString() ?? null,
+    // There is no soft-delete concept for orders in this schema (no `isActive` column on Order) -
+    // every persisted order returned from a query is, by definition, an active/live order record.
+    isActive: () => true,
+  },
+  OrderUserLite: {
+    available: async (parent: { id?: string }) => {
+      if (!parent?.id) return null;
+      const profile = await prisma.riderProfile.findUnique({ where: { userId: parent.id } });
+      return profile?.available ?? null;
+    },
   },
   OrderItem: {
     _id: (parent: OrderItem) => parent.id,
+    id: (parent: OrderItem) => parent.id,
     food: (parent: OrderItem) => parent.foodId,
     variation: (parent: OrderItem) =>
       parent.variationId ? prisma.variation.findUnique({ where: { id: parent.variationId } }) : null,
     addons: (parent: OrderItem) => prisma.orderItemAddon.findMany({ where: { orderItemId: parent.id } }),
+    // OrderItem doesn't store a menu snapshot; fall back to the live Food record for display metadata.
+    description: async (parent: OrderItem) => (await prisma.food.findUnique({ where: { id: parent.foodId } }))?.description ?? null,
+    image: async (parent: OrderItem) => (await prisma.food.findUnique({ where: { id: parent.foodId } }))?.image ?? null,
+    // Order items are created atomically with their order and never updated afterwards, so the
+    // parent order's timestamps are an accurate stand-in (there's no dedicated column on OrderItem).
+    createdAt: async (parent: OrderItem) =>
+      (await prisma.order.findUnique({ where: { id: parent.orderId } }))?.createdAt?.toISOString() ?? null,
+    updatedAt: async (parent: OrderItem) =>
+      (await prisma.order.findUnique({ where: { id: parent.orderId } }))?.updatedAt?.toISOString() ?? null,
   },
   OrderItemAddon: {
     _id: (parent: OrderItemAddon) => parent.id,
+    id: (parent: OrderItemAddon) => parent.id,
     options: (parent: OrderItemAddon) =>
       prisma.orderItemAddonOption.findMany({ where: { orderItemAddonId: parent.id } }),
+    description: async (parent: OrderItemAddon) => (await prisma.addon.findUnique({ where: { id: parent.addonId } }))?.description ?? null,
+    quantityMinimum: async (parent: OrderItemAddon) =>
+      (await prisma.addon.findUnique({ where: { id: parent.addonId } }))?.quantityMinimum ?? null,
+    quantityMaximum: async (parent: OrderItemAddon) =>
+      (await prisma.addon.findUnique({ where: { id: parent.addonId } }))?.quantityMaximum ?? null,
   },
   OrderItemAddonOption: {
     _id: (parent: OrderItemAddonOption) => parent.id,
+    id: (parent: OrderItemAddonOption) => parent.id,
+    description: async (parent: OrderItemAddonOption) =>
+      (await prisma.option.findUnique({ where: { id: parent.optionId } }))?.description ?? null,
   },
 };

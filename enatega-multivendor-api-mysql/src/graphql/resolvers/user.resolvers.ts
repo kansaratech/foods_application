@@ -75,6 +75,10 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         };
       }
 
+      if (!['apple', 'google', 'facebook'].includes(args.type)) {
+        throw userInputError('Unsupported login type');
+      }
+
       // google / apple: find-or-create by email (or appleId for apple)
       const where = args.type === 'apple' && args.appleId ? { appleId: args.appleId } : { email: args.email };
       let user = await prisma.user.findFirst({ where });

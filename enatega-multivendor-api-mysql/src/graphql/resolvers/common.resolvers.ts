@@ -104,7 +104,10 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     createCuisine: async (_parent, args: { cuisineInput: CuisineInputArgs }, context) => {
-      requireRole(context, ['ADMIN']);
+      // Additive-only and low-risk (shared taxonomy, no ownership), and the
+      // vendor's own "Add Store" wizard has a built-in "Add Cuisine" button
+      // that relies on this - see restaurant-details.tsx (vendor flow).
+      requireRole(context, ['ADMIN', 'VENDOR']);
       return prisma.cuisine.create({
         data: {
           name: args.cuisineInput.name,

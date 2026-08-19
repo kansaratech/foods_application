@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 export const GET_ACTIVE_ORDERS = gql`
   query GetActiveOrders(
-    $restaurantId: ID
+    $restaurantId: String
     $page: Int
     $rowsPerPage: Int
     $actions: [String]
@@ -18,9 +18,6 @@ export const GET_ACTIVE_ORDERS = gql`
       totalCount
       orders {
         _id
-        zone {
-          _id
-        }
         orderId
         restaurant {
           _id
@@ -65,7 +62,6 @@ export const GET_ACTIVE_ORDERS = gql`
             quantityMaximum
           }
           specialInstructions
-          isActive
           createdAt
           updatedAt
         }
@@ -82,7 +78,6 @@ export const GET_ACTIVE_ORDERS = gql`
         isPickedUp
         status
         paymentStatus
-        reason
         isActive
         createdAt
         deliveryCharges
@@ -165,7 +160,6 @@ export const GET_ORDER_BY_RESTAURANT = gql`
             quantityMaximum
           }
           specialInstructions
-          isActive
           createdAt
           updatedAt
         }
@@ -181,7 +175,6 @@ export const GET_ORDER_BY_RESTAURANT = gql`
         orderStatus
         status
         paymentStatus
-        reason
         isActive
         createdAt
         deliveryCharges
@@ -237,7 +230,6 @@ export const GET_ORDER_BY_RESTAURANT_WITHOUT_PAGINATION = gql`
           quantityMaximum
         }
         specialInstructions
-        isActive
         createdAt
         updatedAt
       }
@@ -311,7 +303,6 @@ export const GET_ORDERS = gql`
           quantityMaximum
         }
         specialInstructions
-        isActive
         createdAt
         updatedAt
       }
@@ -327,7 +318,6 @@ export const GET_ORDERS = gql`
       orderStatus
       status
       paymentStatus
-      reason
       isActive
       createdAt
       deliveryCharges
@@ -421,7 +411,6 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
             quantityMaximum
           }
           specialInstructions
-          isActive
           createdAt
           updatedAt
         }
@@ -437,7 +426,6 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         orderStatus
         status
         paymentStatus
-        reason
         isActive
         createdAt
         deliveryCharges
@@ -528,7 +516,6 @@ export const GET_ORDERS_WITHOUT_PAGINATION = gql`
           quantityMaximum
         }
         specialInstructions
-        isActive
         createdAt
         updatedAt
       }

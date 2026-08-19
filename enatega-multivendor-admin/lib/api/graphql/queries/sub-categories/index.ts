@@ -11,7 +11,7 @@ export const GET_SUBCATEGORIES = gql`
 `;
 export const GET_SUBCATEGORY = gql`
   query SubCategory($id: String) {
-    subCategory(_id: $id) {
+    subCategory(id: $id) {
       _id
       title
       parentCategoryId

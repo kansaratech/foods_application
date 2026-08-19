@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 export const GET_ADDONS_BY_RESTAURANT_ID = gql`
-  query Restaurant($id: String) {
+  query Restaurant($id: String!) {
     restaurant(id: $id) {
       _id
       addons {
@@ -10,7 +10,12 @@ export const GET_ADDONS_BY_RESTAURANT_ID = gql`
         description
         quantityMinimum
         quantityMaximum
-        options
+        options {
+          _id
+          title
+          description
+          price
+        }
       }
     }
   }
@@ -35,7 +40,12 @@ export const GET_RESTAURANT_ADDONS_PAGINATED = gql`
         description
         quantityMinimum
         quantityMaximum
-        options
+        options {
+          _id
+          title
+          description
+          price
+        }
       }
       totalCount
       currentPage

@@ -116,7 +116,6 @@ export const RIDER_ORDERS = gql`
       createdAt
       acceptedAt
       pickedAt
-      assignedAt
       isPickedUp
       deliveredAt
       expectedTime
@@ -162,7 +161,6 @@ export const RIDER_ORDERS = gql`
           quantityMinimum
           quantityMaximum
         }
-        isActive
         createdAt
       }
       user {
@@ -177,9 +175,6 @@ export const RIDER_ORDERS = gql`
       orderStatus
       tipping
       taxationAmount
-      reason
-      isRiderRinged
-      preparationTime
       rider {
         _id
         name

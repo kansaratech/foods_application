@@ -130,7 +130,7 @@ export const GET_CLONED_RESTAURANTS = gql`
 `;
 
 export const GET_RESTAURANTS_BY_OWNER = gql`
-  query RestaurantByOwner($id: String) {
+  query RestaurantByOwner($id: String!) {
     restaurantByOwner(id: $id) {
       _id
       email
@@ -192,7 +192,7 @@ export const GET_RESTAURANT_DELIVERY_ZONE_INFO = gql`
 `;
 
 export const GET_RESTAURANT_PROFILE = gql`
-  query Restaurant($id: String) {
+  query Restaurant($id: String!) {
     restaurant(id: $id) {
       _id
       orderId

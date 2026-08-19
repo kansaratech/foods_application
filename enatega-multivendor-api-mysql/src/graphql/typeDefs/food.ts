@@ -10,6 +10,7 @@ export const foodTypeDefs = /* GraphQL */ `
 
   type Variation {
     _id: ID!
+    id: ID!
     title: String!
     price: Float!
     discounted: Float
@@ -108,10 +109,26 @@ export const foodTypeDefs = /* GraphQL */ `
     subCategory(id: String): SubCategory
     subCategoriesByParentId(parentCategoryId: String!): [SubCategory!]!
     restaurantCategoriesPaginated(restaurantId: String!, page: Int, limit: Int, search: String): CategoryPaginated!
+    restaurantOptionsPaginated(restaurantId: String!, page: Int, limit: Int, search: String): OptionPaginated!
+    restaurantAddonsPaginated(restaurantId: String!, page: Int, limit: Int, search: String): AddonPaginated!
   }
 
   type CategoryPaginated {
     data: [Category!]!
+    totalCount: Int!
+    currentPage: Int!
+    totalPages: Int!
+  }
+
+  type OptionPaginated {
+    data: [Option!]!
+    totalCount: Int!
+    currentPage: Int!
+    totalPages: Int!
+  }
+
+  type AddonPaginated {
+    data: [Addon!]!
     totalCount: Int!
     currentPage: Int!
     totalPages: Int!

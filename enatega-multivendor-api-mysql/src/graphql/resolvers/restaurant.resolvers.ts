@@ -5,7 +5,7 @@ import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
 import { distanceKm } from '../../utils/geo';
-import { notFoundError, userInputError } from '../../utils/errors';
+import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 
 function slugify(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
@@ -120,7 +120,10 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     restaurantByOwner: async (_parent, args: { id: string }, context) => {
-      requireRole(context, ['ADMIN']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      if (currentUser.userType === 'VENDOR' && args.id !== currentUser.id) {
+        throw forbiddenError();
+      }
       return prisma.user.findUnique({ where: { id: args.id } });
     },
 
@@ -198,7 +201,10 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     createRestaurant: async (_parent, args: { restaurant: RestaurantInputArgs; owner: string }, context) => {
-      requireRole(context, ['ADMIN']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      if (currentUser.userType === 'VENDOR' && args.owner !== currentUser.id) {
+        throw forbiddenError();
+      }
       const owner = await prisma.user.findUnique({ where: { id: args.owner } });
       if (!owner) throw userInputError('Owner not found');
 
@@ -463,6 +469,11 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     bussinessDetails: (parent: Restaurant) => parent.bussinessDetails ?? null,
     hasBusinessDetails: (parent: Restaurant) => Boolean(parent.bussinessDetails),
     deliveryBounds: (parent: Restaurant) => (parent.deliveryBounds ? { coordinates: parent.deliveryBounds } : null),
+    deliveryInfo: (parent: Restaurant) => ({
+      minDeliveryFee: parent.minDeliveryFee,
+      deliveryDistance: parent.deliveryDistance,
+      deliveryFee: parent.deliveryFee,
+    }),
     notificationToken: async (parent: Restaurant) => {
       const owner = await prisma.user.findUnique({ where: { id: parent.ownerId } });
       return owner?.notificationToken ?? null;
@@ -493,6 +504,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
   Vendor: {
     _id: (parent: { id: string }) => parent.id,
+    unique_id: (parent: { id: string }) => parent.id,
     restaurants: (parent: { id: string }) => prisma.restaurant.findMany({ where: { ownerId: parent.id } }),
   },
 

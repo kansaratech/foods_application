@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:4000/graphql -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"query\":\"mutation\\($id: String!, $riderId: String!\\) { assignRider\\(id: $id, riderId: $riderId\\) { _id orderStatus rider { _id name username available } expectedTime acceptedAt } }\",\"variables\":{\"id\":\"cmsadmdz1001dieiw5u8k9hpf\",\"riderId\":\"cmsadmdq2000gieiwrvo8ogb5\"}}')",
+      "Bash(curl -s http://localhost:4000/graphql -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"query\":\"mutation\\($id: String!, $status: String!\\) { updateStatus\\(id: $id, orderStatus: $status\\) { _id orderStatus acceptedAt expectedTime rider { username available } } }\",\"variables\":{\"id\":\"cmsadmdz1001dieiw5u8k9hpf\",\"status\":\"ACCEPTED\"}}')",
+      "Bash(node -e ' *)",
+      "Bash(node test_queries.js)",
+      "Bash(node extract_queries.js)",
+      "Bash(node test_subs.js)",
+      "Bash(node ws_test.js)",
+      "Bash(curl -s http://localhost:4000/graphql -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"query\":\"query { restaurant\\(id: \\\\\"cmsadmdv6000nieiwlmo7k7xg\\\\\"\\) { categories { foods { _id title variations { _id title price } } } } }\"}')",
+      "Bash(curl -s http://localhost:4000/graphql -X POST -H \"Content-Type: application/json\" -d '{\"query\":\"mutation { login\\(email: \\\\\"customer@enatega.local\\\\\", password: \\\\\"Customer@123\\\\\", type: \\\\\"default\\\\\"\\) { token } }\"}')",
+      "Bash(node ws_test2.js \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbXNhZG1ka3IwMDBkaWVpdzVpN2Y0YWpwIiwidXNlclR5cGUiOiJDVVNUT01FUiIsInRva2VuVmVyc2lvbiI6MSwiaWF0IjoxNzg1ODI3ODM4LCJleHAiOjE3ODg0MTk4Mzh9._7O8ObQpjMHb1ftuuFSSzpcUQylrpCGAHf1F5L-ksNE\")"
+    ]
+  }
+}

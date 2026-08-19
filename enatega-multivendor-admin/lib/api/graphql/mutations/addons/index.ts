@@ -1,31 +1,35 @@
 import { gql } from '@apollo/client';
 
 export const CREATE_ADDONS = gql`
-  mutation CreateAddons($addonInput: AddonInput) {
-    createAddons(addonInput: $addonInput) {
+  mutation CreateAddon($addonInput: AddonInput!) {
+    createAddon(addonInput: $addonInput) {
       _id
-      addons {
+      title
+      description
+      quantityMinimum
+      quantityMaximum
+      options {
         _id
-        options
         title
         description
-        quantityMinimum
-        quantityMaximum
+        price
       }
     }
   }
 `;
 export const EDIT_ADDON = gql`
-  mutation editAddon($addonInput: editAddonInput) {
+  mutation editAddon($addonInput: AddonInput!) {
     editAddon(addonInput: $addonInput) {
       _id
-      addons {
+      title
+      description
+      quantityMinimum
+      quantityMaximum
+      options {
         _id
-        options
         title
         description
-        quantityMinimum
-        quantityMaximum
+        price
       }
     }
   }
@@ -33,16 +37,6 @@ export const EDIT_ADDON = gql`
 
 export const DELETE_ADDON = gql`
   mutation DeleteAddon($id: String!, $restaurant: String!) {
-    deleteAddon(id: $id, restaurant: $restaurant) {
-      _id
-      addons {
-        _id
-        options
-        title
-        description
-        quantityMinimum
-        quantityMaximum
-      }
-    }
+    deleteAddon(id: $id, restaurant: $restaurant)
   }
 `;

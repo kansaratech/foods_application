@@ -60,20 +60,30 @@ export const VendorSchemaForStoreForm = Yup.object().shape({
 export const VendorEditSchema = Yup.object().shape({
   name: Yup.string().trim().matches(/\S/, 'Name cannot be only spaces'),
   email: Yup.string().email('Invalid email').required('Required'),
+  // Password fields are optional here: this is a profile-edit form, not a
+  // create-vendor form, so leaving them blank must not block saving other
+  // changes (name/phone/etc). Only validate strength/match when the vendor
+  // is actually setting a new password.
   password: Yup.string()
-    .required('Required')
-    .min(6, 'At least 6 characters')
-    .matches(/[a-z]/, 'At least one lowercase letter (a-z)')
-    .matches(/[A-Z]/, 'At least one uppercase letter (A-Z)')
-    .matches(/[0-9]/, 'At least one number (0-9)')
-    .matches(
-      /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
-      'At least one special character'
+    .notRequired()
+    .test(
+      'password-strength',
+      'At least 6 characters, one lowercase, one uppercase, one number, and one special character',
+      (value) =>
+        !value ||
+        (value.length >= 6 &&
+          /[a-z]/.test(value) &&
+          /[A-Z]/.test(value) &&
+          /[0-9]/.test(value) &&
+          /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(value))
     ),
   confirmPassword: Yup.string()
     .nullable()
-    .oneOf([Yup.ref('password'), null], 'Password must match')
-    .required('Required'),
+    .test('passwords-match', 'Password must match', function (value) {
+      const { password } = this.parent;
+      if (!password) return true;
+      return value === password;
+    }),
   image: Yup.string().required(),
   phoneNumber: Yup.string()
     .required('Required')

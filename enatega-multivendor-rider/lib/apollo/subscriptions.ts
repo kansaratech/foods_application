@@ -15,6 +15,11 @@ export const SUBSCRIPTION_NEW_MESSAGE = gql`
   }
 `;
 
+// NOTE: subscriptionZoneOrders has no backend implementation yet (there's no
+// restaurant-to-zone geo mapping in the schema to key it off). Riders still
+// see zone-wide unclaimed orders via the RIDER_ORDERS polling query - this
+// subscription would only add instant push on top of that. Left unused until
+// zone matching is designed.
 export const SUBSCRIPTION_ZONE_ORDERS = gql`
   subscription SubscriptionZoneOrders($zoneId: String!) {
     subscriptionZoneOrders(zoneId: $zoneId) {
@@ -26,7 +31,6 @@ export const SUBSCRIPTION_ZONE_ORDERS = gql`
         acceptedAt
         expectedTime
         pickedAt
-        assignedAt
         isPickedUp
         deliveredAt
         deliveryCharges
@@ -70,7 +74,6 @@ export const SUBSCRIPTION_ZONE_ORDERS = gql`
             quantityMinimum
             quantityMaximum
           }
-          isActive
           createdAt
         }
         user {
@@ -85,9 +88,6 @@ export const SUBSCRIPTION_ZONE_ORDERS = gql`
         orderStatus
         tipping
         taxationAmount
-        reason
-        isRiderRinged
-        preparationTime
         rider {
           _id
           name
@@ -151,7 +151,6 @@ export const SUBSCRIPTION_ASSIGNED_RIDER = gql`
             quantityMinimum
             quantityMaximum
           }
-          isActive
           createdAt
         }
         user {
@@ -166,9 +165,6 @@ export const SUBSCRIPTION_ASSIGNED_RIDER = gql`
         orderStatus
         tipping
         taxationAmount
-        reason
-        isRiderRinged
-        preparationTime
         rider {
           _id
           name
@@ -188,8 +184,6 @@ export const SUBSCRIPTION_ORDERS = gql`
       rider {
         _id
       }
-      completionTime
-      preparationTime
     }
   }
 `;

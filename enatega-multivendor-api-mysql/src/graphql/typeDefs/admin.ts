@@ -9,6 +9,7 @@ export const adminTypeDefs = /* GraphQL */ `
 
   type Vendor {
     _id: ID!
+    unique_id: String
     email: String
     userType: String
     isActive: Boolean
@@ -17,7 +18,7 @@ export const adminTypeDefs = /* GraphQL */ `
     firstName: String
     lastName: String
     phoneNumber: String
-    restaurants: [RestaurantLite!]!
+    restaurants: [Restaurant!]!
   }
 
   type OwnerAuthPayload {
@@ -81,6 +82,14 @@ export const adminTypeDefs = /* GraphQL */ `
     _id: ID!
   }
 
+  type WebNotification {
+    _id: ID!
+    body: String
+    navigateTo: String
+    read: Boolean
+    createdAt: String
+  }
+
   type MetricsGeneral {
     excellence: String
     topgun: String
@@ -106,11 +115,18 @@ export const adminTypeDefs = /* GraphQL */ `
     user(id: ID!): AdminUser
 
     getDashboardUsers: DashboardUsers!
+
+    # Stub: no persistence backing this yet. Always returns an empty list so
+    # pages that poll it on mount don't hard-fail. See backend README.
+    webNotifications: [WebNotification!]!
   }
 
   extend type Mutation {
     ownerLogin(email: String!, password: String!): OwnerAuthPayload!
     refreshToken(refreshToken: String!, userType: String!): OwnerAuthPayload!
+
+    # Stub: matches webNotifications above, no persistence yet.
+    markWebNotificationsAsRead: [WebNotification!]!
 
     createVendor(vendorInput: VendorInput!): Vendor!
     editVendor(vendorInput: VendorInput!): Vendor!

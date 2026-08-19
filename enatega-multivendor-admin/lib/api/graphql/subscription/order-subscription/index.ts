@@ -51,7 +51,6 @@ export const SUBSCRIPTION_PLACE_ORDER = gql`
             quantityMaximum
           }
           specialInstructions
-          isActive
           createdAt
           updatedAt
         }
@@ -67,7 +66,6 @@ export const SUBSCRIPTION_PLACE_ORDER = gql`
         orderStatus
         status
         paymentStatus
-        reason
         isActive
         createdAt
         deliveryCharges
@@ -86,9 +84,6 @@ export const SUBSCRIPTION_DISPATCH_ORDER = gql`
   subscription SubscriptionDispatcher {
     subscriptionDispatcher {
       _id
-      zone {
-        _id
-      }
       orderId
       restaurant {
         _id
@@ -111,10 +106,8 @@ export const SUBSCRIPTION_DISPATCH_ORDER = gql`
       }
       paymentMethod
       orderStatus
-      preparationTime
       expectedTime
       acceptedAt
-      selectedPrepTime
       isPickedUp
       status
       isActive
@@ -137,8 +130,6 @@ export const SUBSCRIPTION_ORDER = gql`
       rider {
         _id
       }
-      completionTime
-      preparationTime
     }
   }
 `;
