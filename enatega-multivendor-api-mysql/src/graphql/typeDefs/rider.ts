@@ -25,20 +25,36 @@ export const riderTypeDefs = /* GraphQL */ `
     title: String
   }
 
+  type TimeSlot {
+    startTime: String
+    endTime: String
+  }
+
+  type DaySchedule {
+    day: String
+    enabled: Boolean
+    slots: [TimeSlot!]
+  }
+
   type Rider {
     _id: ID!
     name: String
     username: String
     phone: String
     email: String
+    image: String
     available: Boolean
     isActive: Boolean
     vehicleType: String
     assigned: [String!]
     zone: ZoneLite
+    location: Coordinates
+    timeZone: String
+    workSchedule: [DaySchedule!]
     bussinessDetails: BussinessDetails
     licenseDetails: LicenseDetails
     vehicleDetails: VehicleDetails
+    accountNumber: String
     currentWalletAmount: Float
     totalWalletAmount: Float
     withdrawnWalletAmount: Float
@@ -64,6 +80,28 @@ export const riderTypeDefs = /* GraphQL */ `
     password: String
   }
 
+  input TimeSlotInput {
+    startTime: String
+    endTime: String
+  }
+
+  input DayScheduleInput {
+    day: String!
+    enabled: Boolean!
+    slots: [TimeSlotInput!]
+  }
+
+  input LicenseDetailsInput {
+    number: String
+    expiryDate: String
+    image: String
+  }
+
+  input VehicleDetailsInput {
+    number: String
+    image: String
+  }
+
   extend type Query {
     riders: [Rider!]!
     ridersPaginated(page: Int, limit: Int, search: String, zone: String, available: Boolean, isActive: Boolean): RiderPaginated!
@@ -77,10 +115,17 @@ export const riderTypeDefs = /* GraphQL */ `
     editRider(riderInput: RiderInput!): Rider!
     deleteRider(id: String!): Rider!
     toggleAvailablity(id: String!): Rider!
+    riderLogin(username: String, password: String, notificationToken: String, timeZone: String!): AuthPayload!
+    updateRiderLocation(latitude: String!, longitude: String!): Rider!
+    updateRiderLicenseDetails(id: String!, licenseDetails: LicenseDetailsInput): Rider!
+    updateRiderVehicleDetails(id: String!, vehicleDetails: VehicleDetailsInput): Rider!
+    updateRiderBussinessDetails(id: String!, bussinessDetails: BussinessDetailsInput): Rider!
+    updateWorkSchedule(riderId: String!, workSchedule: [DayScheduleInput!]!, timeZone: String!): Rider!
   }
 
   extend type Subscription {
     riderUpdated: RiderUpdatedPayload!
+    subscriptionRiderLocation(riderId: String!): Rider!
   }
 
   type RiderUpdatedPayload {

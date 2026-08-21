@@ -58,6 +58,12 @@ export const restaurantTypeDefs = /* GraphQL */ `
     notificationToken: String
     enableNotification: Boolean
     hasBusinessDetails: Boolean
+    rating: Float
+    reviewAverage: Float
+    reviewCount: Int
+    reviewData: ReviewData!
+    restaurantUrl: String
+    zone: ZoneLite
   }
 
   type DeliveryInfo {
@@ -71,12 +77,18 @@ export const restaurantTypeDefs = /* GraphQL */ `
     name: String!
     image: String
     logo: String
+    slug: String
     deliveryTime: Int
     minimumOrder: Float
     tax: Float
     isAvailable: Boolean
+    isActive: Boolean
     shopType: String
+    cuisines: [String!]
+    openingTimes: [OpeningTime!]
     location: Coordinates
+    reviewAverage: Float
+    reviewCount: Int
   }
 
   type RestaurantList {
@@ -212,7 +224,12 @@ export const restaurantTypeDefs = /* GraphQL */ `
   extend type Query {
     nearByRestaurants(latitude: Float, longitude: Float, shopType: String): RestaurantList!
     nearByRestaurantsPreview(latitude: Float, longitude: Float, shopType: String, page: Int, limit: Int): [RestaurantCarouselPreview!]!
-    restaurant(id: String!): Restaurant
+    recentOrderRestaurantsPreview(latitude: Float!, longitude: Float!): [RestaurantCarouselPreview!]!
+    mostOrderedRestaurantsPreview(latitude: Float!, longitude: Float!, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
+    topRatedVendorsPreview(latitude: Float, longitude: Float, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
+    nearByRestaurantsCuisines(latitude: Float, longitude: Float, shopType: String): [Cuisine!]!
+    attachedCuisines: [Cuisine!]!
+    restaurant(id: String): Restaurant
     userFavourite(latitude: Float, longitude: Float): [Restaurant!]!
 
     restaurants: [Restaurant!]!
@@ -230,6 +247,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
 
     createRestaurant(restaurant: RestaurantInput!, owner: ID!): Restaurant!
     editRestaurant(restaurant: RestaurantProfileInput!): Restaurant!
+    toggleStoreAvailability(restaurantId: String!): Restaurant!
     deleteRestaurant(id: String!): Restaurant!
     hardDeleteRestaurant(id: String!): Boolean!
     duplicateRestaurant(id: String!, owner: String!): Restaurant!

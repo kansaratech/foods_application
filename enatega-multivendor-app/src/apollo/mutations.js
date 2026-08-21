@@ -39,7 +39,6 @@ export const placeOrder = `
       deliveryAddress{
         location{coordinates}
         deliveryAddress
-        id
       }
       items{
         _id
@@ -90,14 +89,11 @@ export const placeOrder = `
       tipping
       taxationAmount
       createdAt
-      completionTime
-      preparationTime
       deliveryCharges
       acceptedAt
       pickedAt
       deliveredAt
       cancelledAt
-      assignedAt
       instructions
       discountAmount
     }
@@ -229,7 +225,6 @@ export const reviewOrder = `mutation ReviewOrder(
       deliveryAddress{
         location{coordinates}
         deliveryAddress
-        id
       }
       items{
         _id
@@ -277,8 +272,6 @@ export const reviewOrder = `mutation ReviewOrder(
       tipping
       taxationAmount
       createdAt
-      completionTime
-      preparationTime
       orderDate
       expectedTime
       isPickedUp
@@ -287,7 +280,6 @@ export const reviewOrder = `mutation ReviewOrder(
       pickedAt
       deliveredAt
       cancelledAt
-      assignedAt
     }
   }`
 

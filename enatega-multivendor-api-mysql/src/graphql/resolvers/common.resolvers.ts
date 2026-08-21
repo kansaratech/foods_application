@@ -1,10 +1,24 @@
 import { IResolvers } from '@graphql-tools/utils';
-import { Cuisine, ShopType } from '@prisma/client';
+import { Cuisine, Prisma, ShopType } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { saveBase64Image } from '../../services/upload.service';
 import { requireRole } from '../../middleware/auth';
 import { GraphQLContext } from '../../context';
 import { notFoundError } from '../../utils/errors';
+
+// All 17 "save X configuration" mutations write into this one singleton row.
+// `data` should only contain the keys that mutation actually owns - callers
+// pass `undefined` for anything the form didn't submit, which is dropped
+// here so it never overwrites an existing value with null.
+async function saveConfiguration(context: GraphQLContext, data: Prisma.ConfigurationUpdateInput) {
+  requireRole(context, ['ADMIN']);
+  const clean = Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+  const existing = await prisma.configuration.findFirst();
+  if (!existing) {
+    return prisma.configuration.create({ data: clean });
+  }
+  return prisma.configuration.update({ where: { id: existing.id }, data: clean });
+}
 
 function slugify(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
@@ -135,9 +149,149 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
       await prisma.cuisine.delete({ where: { id: args.id } });
       return true;
     },
+
+    saveEmailConfiguration: (_parent, args: { configurationInput: { email?: string; emailName?: string; enableEmail?: boolean; password?: string } }, context) =>
+      saveConfiguration(context, {
+        email: args.configurationInput.email,
+        emailName: args.configurationInput.emailName,
+        enableEmail: args.configurationInput.enableEmail,
+        ...(args.configurationInput.password ? { emailPassword: args.configurationInput.password } : {}),
+      }),
+
+    saveFormEmailConfiguration: (_parent, args: { configurationInput: { formEmail?: string } }, context) =>
+      saveConfiguration(context, { formEmail: args.configurationInput.formEmail }),
+
+    saveSendGridConfiguration: (
+      _parent,
+      args: { configurationInput: { sendGridEnabled?: boolean; sendGridEmail?: string; sendGridEmailName?: string; apiKey?: string } },
+      context,
+    ) =>
+      saveConfiguration(context, {
+        sendGridEnabled: args.configurationInput.sendGridEnabled,
+        sendGridEmail: args.configurationInput.sendGridEmail,
+        sendGridEmailName: args.configurationInput.sendGridEmailName,
+        ...(args.configurationInput.apiKey ? { sendGridApiKey: args.configurationInput.apiKey } : {}),
+      }),
+
+    saveFirebaseConfiguration: (
+      _parent,
+      args: {
+        configurationInput: {
+          firebaseKey?: string;
+          authDomain?: string;
+          projectId?: string;
+          storageBucket?: string;
+          msgSenderId?: string;
+          appId?: string;
+          measurementId?: string;
+          vapidKey?: string;
+        };
+      },
+      context,
+    ) => saveConfiguration(context, args.configurationInput),
+
+    saveSentryConfiguration: (
+      _parent,
+      args: {
+        configurationInput: {
+          dashboardSentryUrl?: string;
+          webSentryUrl?: string;
+          apiSentryUrl?: string;
+          customerAppSentryUrl?: string;
+          restaurantAppSentryUrl?: string;
+          riderAppSentryUrl?: string;
+        };
+      },
+      context,
+    ) => saveConfiguration(context, args.configurationInput),
+
+    saveGoogleApiKeyConfiguration: (_parent, args: { configurationInput: { googleApiKey?: string } }, context) =>
+      saveConfiguration(context, { googleMapsApiKey: args.configurationInput.googleApiKey }),
+
+    saveCloudinaryConfiguration: (_parent, args: { configurationInput: { cloudinaryUploadUrl?: string; cloudinaryApiKey?: string } }, context) =>
+      saveConfiguration(context, args.configurationInput),
+
+    saveAmplitudeApiKeyConfiguration: (_parent, args: { configurationInput: { webAmplitudeApiKey?: string; appAmplitudeApiKey?: string } }, context) =>
+      saveConfiguration(context, args.configurationInput),
+
+    saveGoogleClientIDConfiguration: (
+      _parent,
+      args: { configurationInput: { webClientID?: string; androidClientID?: string; iOSClientID?: string; expoClientID?: string } },
+      context,
+    ) => saveConfiguration(context, args.configurationInput),
+
+    saveWebConfiguration: (_parent, args: { configurationInput: { googleMapLibraries?: string; googleColor?: string } }, context) =>
+      saveConfiguration(context, args.configurationInput),
+
+    saveAppConfigurations: (
+      _parent,
+      args: {
+        configurationInput: {
+          termsAndConditions?: string;
+          privacyPolicy?: string;
+          testOtp?: string;
+          enableCustomerDemoMode?: boolean;
+          customerDemoZoneId?: string;
+        };
+      },
+      context,
+    ) => saveConfiguration(context, args.configurationInput),
+
+    saveDeliveryRateConfiguration: (_parent, args: { configurationInput: { deliveryRate?: number; costType?: string } }, context) =>
+      saveConfiguration(context, args.configurationInput),
+
+    savePaypalConfiguration: (
+      _parent,
+      args: { configurationInput: { clientId?: string; sandbox?: boolean; clientSecret?: string } },
+      context,
+    ) =>
+      saveConfiguration(context, {
+        paypalClientId: args.configurationInput.clientId,
+        paypalSandbox: args.configurationInput.sandbox,
+        ...(args.configurationInput.clientSecret ? { paypalClientSecret: args.configurationInput.clientSecret } : {}),
+      }),
+
+    saveStripeConfiguration: (_parent, args: { configurationInput: { publishableKey?: string; secretKey?: string } }, context) =>
+      saveConfiguration(context, {
+        stripePublishableKey: args.configurationInput.publishableKey,
+        ...(args.configurationInput.secretKey ? { stripeSecretKey: args.configurationInput.secretKey } : {}),
+      }),
+
+    saveTwilioConfiguration: (
+      _parent,
+      args: {
+        configurationInput: {
+          twilioAccountSid?: string;
+          twilioPhoneNumber?: string;
+          twilioEnabled?: boolean;
+          twilioWhatsAppNumber?: string;
+          twilioAuthToken?: string;
+        };
+      },
+      context,
+    ) =>
+      saveConfiguration(context, {
+        twilioAccountSid: args.configurationInput.twilioAccountSid,
+        twilioPhoneNumber: args.configurationInput.twilioPhoneNumber,
+        twilioEnabled: args.configurationInput.twilioEnabled,
+        twilioWhatsAppNumber: args.configurationInput.twilioWhatsAppNumber,
+        ...(args.configurationInput.twilioAuthToken ? { twilioAuthToken: args.configurationInput.twilioAuthToken } : {}),
+      }),
+
+    saveVerificationsToggle: (
+      _parent,
+      args: { configurationInput: { skipEmailVerification?: boolean; skipMobileVerification?: boolean; skipWhatsAppOTP?: boolean } },
+      context,
+    ) => saveConfiguration(context, args.configurationInput),
+
+    saveCurrencyConfiguration: (_parent, args: { configurationInput: { currency?: string; currencySymbol?: string } }, context) =>
+      saveConfiguration(context, args.configurationInput),
   },
   Configuration: {
     _id: (parent: { id: string }) => parent.id,
+    clientId: (parent: { paypalClientId?: string | null }) => parent.paypalClientId ?? null,
+    sandbox: (parent: { paypalSandbox?: boolean }) => parent.paypalSandbox ?? null,
+    publishableKey: (parent: { stripePublishableKey?: string | null }) => parent.stripePublishableKey ?? null,
   },
   ShopType: {
     _id: (parent: ShopType) => parent.id,

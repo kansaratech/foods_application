@@ -4,7 +4,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
-import { distanceKm } from '../../utils/geo';
+import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 
 function slugify(name: string): string {
@@ -87,7 +87,85 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       return prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit });
     },
 
-    restaurant: (_parent, args: { id: string }) => prisma.restaurant.findUnique({ where: { id: args.id } }),
+    recentOrderRestaurantsPreview: async (_parent, _args: { latitude: number; longitude: number }, context) => {
+      const currentUser = requireAuth(context);
+      const orders = await prisma.order.findMany({
+        where: { userId: currentUser.id },
+        orderBy: { createdAt: 'desc' },
+        select: { restaurantId: true },
+        take: 50,
+      });
+      const restaurantIds: string[] = [];
+      for (const o of orders) {
+        if (!restaurantIds.includes(o.restaurantId)) restaurantIds.push(o.restaurantId);
+      }
+      if (restaurantIds.length === 0) return [];
+      const restaurants = await prisma.restaurant.findMany({ where: { id: { in: restaurantIds }, isActive: true } });
+      const byId = new Map(restaurants.map((r) => [r.id, r]));
+      return restaurantIds.map((id) => byId.get(id)).filter((r): r is Restaurant => r != null).slice(0, 10);
+    },
+
+    mostOrderedRestaurantsPreview: async (
+      _parent,
+      args: { latitude: number; longitude: number; page?: number; limit?: number; shopType?: string },
+    ) => {
+      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
+      const limit = args.limit ?? 20;
+      const page = args.page ?? 1;
+
+      const grouped = await prisma.order.groupBy({ by: ['restaurantId'], _count: { _all: true } });
+      const orderCountByRestaurant = new Map(grouped.map((g) => [g.restaurantId, g._count._all]));
+
+      const restaurants = await prisma.restaurant.findMany({ where });
+      restaurants.sort((a, b) => (orderCountByRestaurant.get(b.id) ?? 0) - (orderCountByRestaurant.get(a.id) ?? 0));
+      return restaurants.slice((page - 1) * limit, (page - 1) * limit + limit);
+    },
+
+    topRatedVendorsPreview: async (
+      _parent,
+      args: { latitude?: number; longitude?: number; page?: number; limit?: number; shopType?: string },
+    ) => {
+      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
+      const limit = args.limit ?? 20;
+      const page = args.page ?? 1;
+
+      const restaurants = await prisma.restaurant.findMany({ where });
+      const restaurantIds = restaurants.map((r) => r.id);
+      const reviews =
+        restaurantIds.length > 0
+          ? await prisma.review.groupBy({ by: ['restaurantId'], _avg: { rating: true }, where: { restaurantId: { in: restaurantIds } } })
+          : [];
+      const avgById = new Map(reviews.map((r) => [r.restaurantId, r._avg.rating ?? 0]));
+
+      restaurants.sort((a, b) => (avgById.get(b.id) ?? 0) - (avgById.get(a.id) ?? 0));
+      return restaurants.slice((page - 1) * limit, (page - 1) * limit + limit);
+    },
+
+    nearByRestaurantsCuisines: async (_parent, args: { latitude?: number; longitude?: number; shopType?: string }) => {
+      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
+      const restaurants = await prisma.restaurant.findMany({ where, select: { id: true } });
+      const restaurantIds = restaurants.map((r) => r.id);
+      if (restaurantIds.length === 0) return [];
+      const links = await prisma.restaurantCuisine.findMany({
+        where: { restaurantId: { in: restaurantIds } },
+        include: { cuisine: true },
+        distinct: ['cuisineId'],
+      });
+      return links.map((l) => l.cuisine);
+    },
+
+    attachedCuisines: async () => {
+      const links = await prisma.restaurantCuisine.findMany({ include: { cuisine: true }, distinct: ['cuisineId'] });
+      return links.map((l) => l.cuisine);
+    },
+
+    restaurant: (_parent, args: { id?: string }) => {
+      if (!args.id) throw userInputError('Restaurant id is required');
+      return prisma.restaurant.findUnique({ where: { id: args.id } });
+    },
 
     userFavourite: async (_parent, _args, context) => {
       const currentUser = requireAuth(context);
@@ -198,6 +276,14 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const { token } = signAccessToken({ userId: owner.id, userType: owner.userType, tokenVersion: owner.tokenVersion });
       return { token, restaurantId: restaurant.id };
+    },
+
+    toggleStoreAvailability: async (_parent, args: { restaurantId: string }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const existing = await prisma.restaurant.findUnique({ where: { id: args.restaurantId } });
+      if (!existing) throw notFoundError('Restaurant not found');
+      assertOwnsRestaurant(currentUser, existing);
+      return prisma.restaurant.update({ where: { id: existing.id }, data: { isAvailable: !existing.isAvailable } });
     },
 
     createRestaurant: async (_parent, args: { restaurant: RestaurantInputArgs; owner: string }, context) => {
@@ -482,6 +568,18 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const owner = await prisma.user.findUnique({ where: { id: parent.ownerId } });
       return owner?.isOrderNotification ?? true;
     },
+    reviewCount: (parent: Restaurant) => prisma.review.count({ where: { restaurantId: parent.id } }),
+    restaurantUrl: (parent: Restaurant) => (parent.slug ? `/restaurant/${parent.slug}` : null),
+    zone: async (parent: Restaurant) => {
+      if (parent.latitude == null || parent.longitude == null) return null;
+      const zones = await prisma.zone.findMany({ where: { isActive: true } });
+      const point: [number, number] = [parent.longitude, parent.latitude];
+      for (const zone of zones) {
+        const ring = (zone.boundary as unknown as [number, number][][] | null)?.[0];
+        if (ring && pointInPolygon(point, ring)) return zone;
+      }
+      return null;
+    },
   },
 
   CommissionRateLite: {
@@ -500,6 +598,17 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const shopType = await prisma.shopType.findUnique({ where: { id: parent.shopTypeId } });
       return shopType?.slug ?? null;
     },
+    slug: (parent: Restaurant) => parent.slug,
+    isActive: (parent: Restaurant) => parent.isActive,
+    openingTimes: (parent: Restaurant) => (Array.isArray(parent.openingTimes) ? parent.openingTimes : []),
+    cuisines: async (parent: Restaurant) => {
+      const links = await prisma.restaurantCuisine.findMany({
+        where: { restaurantId: parent.id },
+        include: { cuisine: true },
+      });
+      return links.map((l) => l.cuisine.name);
+    },
+    reviewCount: (parent: Restaurant) => prisma.review.count({ where: { restaurantId: parent.id } }),
   },
 
   Vendor: {

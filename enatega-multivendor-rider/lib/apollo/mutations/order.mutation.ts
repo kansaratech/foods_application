@@ -52,7 +52,6 @@ export const reviewOrder = gql`
           coordinates
         }
         deliveryAddress
-        id
       }
       items {
         _id
@@ -99,8 +98,6 @@ export const reviewOrder = gql`
       tipping
       taxationAmount
       createdAt
-      completionTime
-      preparationTime
       orderDate
       expectedTime
       isPickedUp
@@ -109,7 +106,6 @@ export const reviewOrder = gql`
       pickedAt
       deliveredAt
       cancelledAt
-      assignedAt
     }
   }
 `;
@@ -129,7 +125,6 @@ export const placeOrder = `#graphql
       deliveryAddress{
         location{coordinates}
         deliveryAddress
-        id
       }
       items{
         _id
@@ -179,14 +174,11 @@ export const placeOrder = `#graphql
       tipping
       taxationAmount
       createdAt
-      completionTime
-      preparationTime
       deliveryCharges
       acceptedAt
       pickedAt
       deliveredAt
       cancelledAt
-      assignedAt
       instructions
     }
   }`;

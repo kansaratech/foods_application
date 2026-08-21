@@ -26,6 +26,12 @@ export const couponTypeDefs = /* GraphQL */ `
     endDate: String
   }
 
+  type CouponVerifyResult {
+    success: Boolean!
+    message: String
+    coupon: Coupon
+  }
+
   extend type Query {
     coupons: [Coupon!]!
     couponsPaginated(page: Int, limit: Int, search: String, enabled: Boolean, startDate: String, endDate: String): CouponPaginated!
@@ -34,6 +40,7 @@ export const couponTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
+    coupon(coupon: String!, restaurantId: ID!): CouponVerifyResult!
     createCoupon(couponInput: CouponInput!): Coupon!
     editCoupon(couponInput: CouponInput!): Coupon!
     deleteCoupon(id: String!): Boolean!

@@ -85,9 +85,10 @@ async function applyOrderStatusUpdate(
 
   const order = await prisma.order.findUnique({ where: { id } });
   if (!order) throw notFoundError('Order not found');
-  if (currentUser.userType === 'VENDOR') {
-    const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
-    if (!restaurant || restaurant.ownerId !== currentUser.id) throw notFoundError('Order not found');
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+  if (!restaurant) throw notFoundError('Order not found');
+  if (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id) {
+    throw notFoundError('Order not found');
   }
   if (currentUser.userType === 'RIDER' && order.riderId !== currentUser.id) {
     throw notFoundError('Order not found');
@@ -113,6 +114,34 @@ async function applyOrderStatusUpdate(
       ...(isCodSettledOnDelivery ? { paymentStatus: 'PAID', paidAmount: order.orderAmount } : {}),
     },
   });
+
+  // Credit store and rider wallets once, the moment the order lands as
+  // DELIVERED. Split matches the `earnings` report: commission (on the food
+  // subtotal, at the restaurant's own commissionRate) stays with the
+  // platform; the rest of the food subtotal goes to the store; the full
+  // delivery fee + tip goes to the rider.
+  if (status === 'DELIVERED' && order.orderStatus !== 'DELIVERED') {
+    const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
+    const storeEarning = foodAmount - foodAmount * (restaurant.commissionRate / 100);
+    await prisma.restaurant.update({
+      where: { id: restaurant.id },
+      data: {
+        currentWalletAmount: { increment: storeEarning },
+        totalWalletAmount: { increment: storeEarning },
+      },
+    });
+    if (order.riderId) {
+      const riderEarning = order.deliveryCharges + order.tipping;
+      await prisma.riderProfile.update({
+        where: { userId: order.riderId },
+        data: {
+          currentWalletAmount: { increment: riderEarning },
+          totalWalletAmount: { increment: riderEarning },
+        },
+      });
+    }
+  }
+
   await publishOrderUpdate(updated);
   return updated;
 }
@@ -353,6 +382,21 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       };
     },
 
+    // Store-app dashboard: the store owns exactly one restaurant per login, so
+    // this resolves to their single restaurant's currently-active orders.
+    restaurantOrders: async (_parent, _args, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const restaurants = await prisma.restaurant.findMany({ where: { ownerId: currentUser.id } });
+      if (restaurants.length === 0) return [];
+      if (restaurants.length > 1) {
+        throw userInputError('You own multiple stores - this view only supports a single store per login');
+      }
+      return prisma.order.findMany({
+        where: { restaurantId: restaurants[0].id, orderStatus: { in: ACTIVE_STATUSES } },
+        orderBy: { createdAt: 'desc' },
+      });
+    },
+
     orderFilterOptions: async (_parent, _args, context) => {
       requireRole(context, ['ADMIN']);
       const [restaurants, riders] = await Promise.all([
@@ -382,7 +426,25 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       const addressId = await resolveOrderAddress(currentUser.id, args.address);
-      const orderAmount = itemsTotal + args.deliveryCharges + args.tipping + args.taxationAmount;
+
+      let discountAmount = 0;
+      if (args.couponCode) {
+        const now = new Date();
+        const coupon = await prisma.coupon.findFirst({
+          where: {
+            title: args.couponCode,
+            enabled: true,
+            OR: [{ restaurantId: null }, { restaurantId: args.restaurant }],
+          },
+        });
+        const isWithinWindow =
+          coupon && (coupon.lifeTimeActive || ((!coupon.startDate || now >= coupon.startDate) && (!coupon.endDate || now <= coupon.endDate)));
+        if (coupon && isWithinWindow) {
+          discountAmount = Math.min(itemsTotal, itemsTotal * (coupon.discount / 100));
+        }
+      }
+
+      const orderAmount = itemsTotal - discountAmount + args.deliveryCharges + args.tipping + args.taxationAmount;
 
       const order = await prisma.order.create({
         data: {
@@ -394,6 +456,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
           tipping: args.tipping,
           taxationAmount: args.taxationAmount,
           deliveryCharges: args.deliveryCharges,
+          discountAmount,
           orderAmount,
           instructions: args.instructions,
           isPickedUp: args.isPickedUp,
@@ -405,6 +468,9 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       await publishOrderUpdate(order);
       await pubsub.publish(TOPICS.SUBSCRIBE_PLACE_ORDER(order.restaurantId), {
         subscribePlaceOrder: { userId: order.userId, origin: 'order_service', order },
+      });
+      await prisma.webNotification.create({
+        data: { userId: restaurant.ownerId, body: `New order #${order.orderId} received`, navigateTo: '/orders' },
       });
       return order;
     },
@@ -437,7 +503,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const updated = await prisma.order.update({
         where: { id: args.id },
-        data: { riderId: args.riderId, orderStatus: 'ASSIGNED' },
+        data: { riderId: args.riderId, orderStatus: 'ASSIGNED', assignedAt: new Date() },
       });
       await publishOrderUpdate(updated);
       await publishRiderAssigned(updated);
@@ -456,7 +522,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const updated = await prisma.order.update({
         where: { id: args.id },
-        data: { riderId: currentUser.id, orderStatus: 'ASSIGNED' },
+        data: { riderId: currentUser.id, orderStatus: 'ASSIGNED', assignedAt: new Date() },
       });
       await publishOrderUpdate(updated);
       await publishRiderAssigned(updated);
@@ -465,10 +531,63 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
     updateOrderStatusRider: (_parent, args: { id: string; status: string }, context) =>
       applyOrderStatusUpdate(context, args.id, args.status, ['RIDER']),
+
+    // Store-app order actions: the store owns exactly one restaurant per login,
+    // so these resolve the caller's restaurant the same way resolveVendorRestaurant does.
+    acceptOrder: async (_parent, args: { _id: string; time?: string }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const order = await prisma.order.findUnique({ where: { id: args._id } });
+      if (!order) throw notFoundError('Order not found');
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+      if (!restaurant || (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id)) {
+        throw notFoundError('Order not found');
+      }
+      const updated = await prisma.order.update({
+        where: { id: order.id },
+        data: { orderStatus: 'ACCEPTED', status: 'ACTIVE', acceptedAt: new Date(), preparationTime: args.time },
+      });
+      await publishOrderUpdate(updated);
+      return updated;
+    },
+
+    cancelOrder: async (_parent, args: { _id: string; reason: string }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const order = await prisma.order.findUnique({ where: { id: args._id } });
+      if (!order) throw notFoundError('Order not found');
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+      if (!restaurant || (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id)) {
+        throw notFoundError('Order not found');
+      }
+      if (PAST_STATUSES.includes(order.orderStatus)) {
+        throw userInputError('This order can no longer be cancelled');
+      }
+      const updated = await prisma.order.update({
+        where: { id: order.id },
+        data: { orderStatus: 'CANCELLED', status: 'CANCELLED', cancelledAt: new Date(), reason: args.reason },
+      });
+      await publishOrderUpdate(updated);
+      return updated;
+    },
+
+    muteRing: async (_parent, args: { orderId?: string }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      if (!args.orderId) return true;
+      const order = await prisma.order.findUnique({ where: { id: args.orderId } });
+      if (!order) throw notFoundError('Order not found');
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+      if (!restaurant || (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id)) {
+        throw notFoundError('Order not found');
+      }
+      await prisma.order.update({ where: { id: order.id }, data: { isRinged: true } });
+      return true;
+    },
+
+    orderPickedUp: (_parent, args: { _id: string }, context) => applyOrderStatusUpdate(context, args._id, 'PICKED'),
   },
 
   Order: {
     _id: (parent: Order) => parent.id,
+    id: (parent: Order) => parent.id,
     restaurant: (parent: Order) => prisma.restaurant.findUnique({ where: { id: parent.restaurantId } }),
     deliveryAddress: (parent: Order) =>
       parent.addressId ? prisma.address.findUnique({ where: { id: parent.addressId } }) : null,
@@ -483,6 +602,9 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
     pickedAt: (parent: Order) => parent.pickedAt?.toISOString() ?? null,
     deliveredAt: (parent: Order) => parent.deliveredAt?.toISOString() ?? null,
     cancelledAt: (parent: Order) => parent.cancelledAt?.toISOString() ?? null,
+    assignedAt: (parent: Order) => parent.assignedAt?.toISOString() ?? null,
+    // "Completion" has no separate milestone from delivery in this schema - it's the same moment.
+    completionTime: (parent: Order) => parent.deliveredAt?.toISOString() ?? null,
     // There is no soft-delete concept for orders in this schema (no `isActive` column on Order) -
     // every persisted order returned from a query is, by definition, an active/live order record.
     isActive: () => true,
@@ -497,6 +619,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
   OrderItem: {
     _id: (parent: OrderItem) => parent.id,
     id: (parent: OrderItem) => parent.id,
+    isActive: () => true,
     food: (parent: OrderItem) => parent.foodId,
     variation: (parent: OrderItem) =>
       parent.variationId ? prisma.variation.findUnique({ where: { id: parent.variationId } }) : null,

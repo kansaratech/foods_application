@@ -22,7 +22,169 @@ export const commonTypeDefs = /* GraphQL */ `
     testOtp: String
     skipMobileVerification: Boolean
     skipEmailVerification: Boolean
+    skipWhatsAppOTP: Boolean
     costType: String
+
+    email: String
+    emailName: String
+    enableEmail: Boolean
+
+    formEmail: String
+
+    sendGridEnabled: Boolean
+    sendGridEmail: String
+    sendGridEmailName: String
+
+    clientId: String
+    sandbox: Boolean
+
+    publishableKey: String
+
+    twilioAccountSid: String
+    twilioPhoneNumber: String
+    twilioEnabled: Boolean
+    twilioWhatsAppNumber: String
+
+    dashboardSentryUrl: String
+    webSentryUrl: String
+    apiSentryUrl: String
+    customerAppSentryUrl: String
+    restaurantAppSentryUrl: String
+    riderAppSentryUrl: String
+
+    googleMapsApiKey: String
+    webClientID: String
+    androidClientID: String
+    iOSClientID: String
+    expoClientID: String
+    googleMapLibraries: String
+    googleColor: String
+
+    cloudinaryUploadUrl: String
+    cloudinaryApiKey: String
+
+    webAmplitudeApiKey: String
+    appAmplitudeApiKey: String
+
+    firebaseKey: String
+    authDomain: String
+    projectId: String
+    storageBucket: String
+    msgSenderId: String
+    appId: String
+    measurementId: String
+    vapidKey: String
+
+    isPaidVersion: Boolean
+    enableCustomerDemoMode: Boolean
+    customerDemoZoneId: String
+  }
+
+  input EmailConfigurationInput {
+    email: String
+    emailName: String
+    enableEmail: Boolean
+    password: String
+  }
+
+  input FormEmailConfigurationInput {
+    formEmail: String
+  }
+
+  input SendGridConfigurationInput {
+    sendGridEnabled: Boolean
+    sendGridEmail: String
+    sendGridEmailName: String
+    apiKey: String
+  }
+
+  input FirebaseConfigurationInput {
+    firebaseKey: String
+    authDomain: String
+    projectId: String
+    storageBucket: String
+    msgSenderId: String
+    appId: String
+    measurementId: String
+    vapidKey: String
+  }
+
+  input SentryConfigurationInput {
+    dashboardSentryUrl: String
+    webSentryUrl: String
+    apiSentryUrl: String
+    customerAppSentryUrl: String
+    restaurantAppSentryUrl: String
+    riderAppSentryUrl: String
+  }
+
+  input GoogleApiKeyConfigurationInput {
+    googleApiKey: String
+  }
+
+  input CloudinaryConfigurationInput {
+    cloudinaryUploadUrl: String
+    cloudinaryApiKey: String
+  }
+
+  input AmplitudeApiKeyConfigurationInput {
+    webAmplitudeApiKey: String
+    appAmplitudeApiKey: String
+  }
+
+  input GoogleClientIDConfigurationInput {
+    webClientID: String
+    androidClientID: String
+    iOSClientID: String
+    expoClientID: String
+  }
+
+  input WebConfigurationInput {
+    googleMapLibraries: String
+    googleColor: String
+  }
+
+  input AppConfigurationsInput {
+    termsAndConditions: String
+    privacyPolicy: String
+    testOtp: String
+    enableCustomerDemoMode: Boolean
+    customerDemoZoneId: String
+  }
+
+  input DeliveryCostConfigurationInput {
+    deliveryRate: Float
+    costType: String
+  }
+
+  input PaypalConfigurationInput {
+    clientId: String
+    sandbox: Boolean
+    clientSecret: String
+  }
+
+  input StripeConfigurationInput {
+    publishableKey: String
+    secretKey: String
+  }
+
+  input TwilioConfigurationInput {
+    twilioAccountSid: String
+    twilioPhoneNumber: String
+    twilioEnabled: Boolean
+    twilioWhatsAppNumber: String
+    twilioAuthToken: String
+  }
+
+  input VerificationConfigurationInput {
+    skipEmailVerification: Boolean
+    skipMobileVerification: Boolean
+    skipWhatsAppOTP: Boolean
+  }
+
+  input CurrencyConfigurationInput {
+    currency: String
+    currencySymbol: String
   }
 
   type ShopType {
@@ -112,6 +274,24 @@ export const commonTypeDefs = /* GraphQL */ `
     createCuisine(cuisineInput: CuisineInput!): Cuisine!
     editCuisine(cuisineInput: CuisineInput!): Cuisine!
     deleteCuisine(id: String!): Boolean!
+
+    saveEmailConfiguration(configurationInput: EmailConfigurationInput!): Configuration!
+    saveFormEmailConfiguration(configurationInput: FormEmailConfigurationInput!): Configuration!
+    saveSendGridConfiguration(configurationInput: SendGridConfigurationInput!): Configuration!
+    saveFirebaseConfiguration(configurationInput: FirebaseConfigurationInput!): Configuration!
+    saveSentryConfiguration(configurationInput: SentryConfigurationInput!): Configuration!
+    saveGoogleApiKeyConfiguration(configurationInput: GoogleApiKeyConfigurationInput!): Configuration!
+    saveCloudinaryConfiguration(configurationInput: CloudinaryConfigurationInput!): Configuration!
+    saveAmplitudeApiKeyConfiguration(configurationInput: AmplitudeApiKeyConfigurationInput!): Configuration!
+    saveGoogleClientIDConfiguration(configurationInput: GoogleClientIDConfigurationInput!): Configuration!
+    saveWebConfiguration(configurationInput: WebConfigurationInput!): Configuration!
+    saveAppConfigurations(configurationInput: AppConfigurationsInput!): Configuration!
+    saveDeliveryRateConfiguration(configurationInput: DeliveryCostConfigurationInput!): Configuration!
+    savePaypalConfiguration(configurationInput: PaypalConfigurationInput!): Configuration!
+    saveStripeConfiguration(configurationInput: StripeConfigurationInput!): Configuration!
+    saveTwilioConfiguration(configurationInput: TwilioConfigurationInput!): Configuration!
+    saveVerificationsToggle(configurationInput: VerificationConfigurationInput!): Configuration!
+    saveCurrencyConfiguration(configurationInput: CurrencyConfigurationInput!): Configuration!
   }
 
   type Subscription {

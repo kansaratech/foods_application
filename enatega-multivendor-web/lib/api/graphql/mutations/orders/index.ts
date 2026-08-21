@@ -126,7 +126,6 @@ export const ADD_REVIEW_ORDER = gql`
           coordinates
         }
         deliveryAddress
-        id
       }
       items {
         _id
@@ -175,8 +174,6 @@ export const ADD_REVIEW_ORDER = gql`
       tipping
       taxationAmount
       createdAt
-      completionTime
-      preparationTime
       orderDate
       expectedTime
       isPickedUp
@@ -185,7 +182,6 @@ export const ADD_REVIEW_ORDER = gql`
       pickedAt
       deliveredAt
       cancelledAt
-      assignedAt
     }
   }
 `;

@@ -1,0 +1,365 @@
+import { IResolvers } from '@graphql-tools/utils';
+import { OrderStatus, Prisma } from '@prisma/client';
+import { prisma } from '../../prisma/client';
+import { GraphQLContext } from '../../context';
+import { requireRole } from '../../middleware/auth';
+import { forbiddenError, notFoundError } from '../../utils/errors';
+
+type CurrentUser = { id: string; userType: string };
+
+function computeDateRange(
+  dateKeyword?: string,
+  starting_date?: string,
+  ending_date?: string,
+): { gte: Date; lte: Date } | undefined {
+  const now = new Date();
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  switch (dateKeyword) {
+    case 'Today': {
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Week': {
+      const dayOfWeek = now.getDay();
+      const daysSinceMonday = (dayOfWeek + 6) % 7;
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday);
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Month': {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Year': {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return { gte: start, lte: endOfToday };
+    }
+    case 'Custom': {
+      if (!starting_date || !ending_date) return undefined;
+      const start = new Date(starting_date);
+      const end = new Date(ending_date);
+      end.setHours(23, 59, 59, 999);
+      return { gte: start, lte: end };
+    }
+    default:
+      return undefined;
+  }
+}
+
+function monthRange(year: number, month: number): { gte: Date; lte: Date } {
+  return {
+    gte: new Date(year, month, 1),
+    lte: new Date(year, month + 1, 0, 23, 59, 59, 999),
+  };
+}
+
+function assertVendorAccess(user: CurrentUser, vendorId: string) {
+  if (user.userType === 'ADMIN') return;
+  if (user.userType === 'VENDOR' && user.id === vendorId) return;
+  throw forbiddenError();
+}
+
+async function assertRestaurantAccess(user: CurrentUser, restaurantId: string) {
+  if (user.userType === 'ADMIN') return;
+  if (user.userType === 'VENDOR') {
+    const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+    if (restaurant && restaurant.ownerId === user.id) return;
+  }
+  throw notFoundError('Restaurant not found');
+}
+
+async function orderStatsForWhere(where: Prisma.OrderWhereInput) {
+  const orders = await prisma.order.findMany({ where, select: { orderAmount: true, deliveryCharges: true } });
+  const total_orders = orders.length;
+  const total_sales = orders.reduce((sum, o) => sum + o.orderAmount, 0);
+  const total_delivery_fee = orders.reduce((sum, o) => sum + o.deliveryCharges, 0);
+  return {
+    total_orders,
+    total_sales,
+    total_sales_without_delivery: total_sales - total_delivery_fee,
+    total_delivery_fee,
+  };
+}
+
+async function storeDetailsForVendor(vendorId: string, range: { gte: Date; lte: Date } | undefined, search?: string) {
+  const restaurants = await prisma.restaurant.findMany({
+    where: { ownerId: vendorId, ...(search ? { name: { contains: search } } : {}) },
+  });
+  return Promise.all(
+    restaurants.map(async (restaurant) => {
+      const orders = await prisma.order.findMany({
+        where: { restaurantId: restaurant.id, ...(range ? { createdAt: range } : {}) },
+        select: { orderAmount: true, isPickedUp: true },
+      });
+      return {
+        _id: restaurant.id,
+        restaurantName: restaurant.name,
+        totalOrders: orders.length,
+        totalSales: orders.reduce((sum, o) => sum + o.orderAmount, 0),
+        pickUpCount: orders.filter((o) => o.isPickedUp).length,
+        deliveryCount: orders.filter((o) => !o.isPickedUp).length,
+      };
+    }),
+  );
+}
+
+export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
+  Query: {
+    getDashboardUsersByYear: async (_parent, args: { year: number }, context) => {
+      requireRole(context, ['ADMIN']);
+      const { year } = args;
+      const usersCount: number[] = [];
+      const vendorsCount: number[] = [];
+      const ridersCount: number[] = [];
+      const restaurantsCount: number[] = [];
+
+      for (let month = 0; month < 12; month++) {
+        const range = monthRange(year, month);
+        const [users, vendors, riders, restaurants] = await Promise.all([
+          prisma.user.count({ where: { userType: 'CUSTOMER', createdAt: range } }),
+          prisma.user.count({ where: { userType: 'VENDOR', createdAt: range } }),
+          prisma.user.count({ where: { userType: 'RIDER', createdAt: range } }),
+          prisma.restaurant.count({ where: { createdAt: range } }),
+        ]);
+        usersCount.push(users);
+        vendorsCount.push(vendors);
+        ridersCount.push(riders);
+        restaurantsCount.push(restaurants);
+      }
+
+      const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+      const prevYearRange = { gte: new Date(year - 1, 0, 1), lte: new Date(year - 1, 11, 31, 23, 59, 59, 999) };
+      const [prevUsers, prevVendors, prevRiders, prevRestaurants] = await Promise.all([
+        prisma.user.count({ where: { userType: 'CUSTOMER', createdAt: prevYearRange } }),
+        prisma.user.count({ where: { userType: 'VENDOR', createdAt: prevYearRange } }),
+        prisma.user.count({ where: { userType: 'RIDER', createdAt: prevYearRange } }),
+        prisma.restaurant.count({ where: { createdAt: prevYearRange } }),
+      ]);
+      const pct = (curr: number, prev: number) => (prev > 0 ? ((curr - prev) / prev) * 100 : null);
+
+      return {
+        usersCount,
+        vendorsCount,
+        ridersCount,
+        restaurantsCount,
+        percentageChange: {
+          usersPercent: pct(sum(usersCount), prevUsers),
+          vendorsPercent: pct(sum(vendorsCount), prevVendors),
+          restaurantsPercent: pct(sum(restaurantsCount), prevRestaurants),
+          ridersPercent: pct(sum(ridersCount), prevRiders),
+        },
+      };
+    },
+
+    getDashboardOrdersByType: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      const statuses: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED', 'DELIVERED', 'COMPLETED', 'CANCELLED'];
+      const counts = await Promise.all(statuses.map((status) => prisma.order.count({ where: { orderStatus: status } })));
+      return statuses.map((status, i) => ({ label: status, value: counts[i] }));
+    },
+
+    getDashboardSalesByType: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      const byMethod = await prisma.order.groupBy({ by: ['paymentMethod'], _sum: { orderAmount: true } });
+      return byMethod.map((row) => ({ label: row.paymentMethod, value: row._sum.orderAmount ?? 0 }));
+    },
+
+    getRestaurantDashboardOrdersSalesStats: async (
+      _parent,
+      args: { restaurant: string; starting_date: string; ending_date: string; dateKeyword?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      await assertRestaurantAccess(currentUser, args.restaurant);
+      const range = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+      const orders = await prisma.order.findMany({
+        where: { restaurantId: args.restaurant, ...(range ? { createdAt: range } : {}) },
+        select: { orderAmount: true, paymentMethod: true },
+      });
+      return {
+        totalOrders: orders.length,
+        totalSales: orders.reduce((sum, o) => sum + o.orderAmount, 0),
+        totalCODOrders: orders.filter((o) => o.paymentMethod === 'COD').length,
+        totalCardOrders: orders.filter((o) => o.paymentMethod !== 'COD').length,
+      };
+    },
+
+    getRestaurantDashboardSalesOrderCountDetailsByYear: async (
+      _parent,
+      args: { restaurant: string; year: number },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      await assertRestaurantAccess(currentUser, args.restaurant);
+      const salesAmount: number[] = [];
+      const ordersCount: number[] = [];
+      for (let month = 0; month < 12; month++) {
+        const orders = await prisma.order.findMany({
+          where: { restaurantId: args.restaurant, createdAt: monthRange(args.year, month) },
+          select: { orderAmount: true },
+        });
+        ordersCount.push(orders.length);
+        salesAmount.push(orders.reduce((sum, o) => sum + o.orderAmount, 0));
+      }
+      return { salesAmount, ordersCount };
+    },
+
+    getRestaurantDashboardOrderSalesDetailsByPaymentMethod: async (
+      _parent,
+      args: { restaurant: string; starting_date: string; ending_date: string; dateKeyword?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      await assertRestaurantAccess(currentUser, args.restaurant);
+      const range = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+      const baseWhere: Prisma.OrderWhereInput = {
+        restaurantId: args.restaurant,
+        ...(range ? { createdAt: range } : {}),
+      };
+
+      const [allStats, pickupStats, deliveryStats, codPickup, codDelivery, cardPickup, cardDelivery] = await Promise.all([
+        orderStatsForWhere(baseWhere),
+        orderStatsForWhere({ ...baseWhere, isPickedUp: true }),
+        orderStatsForWhere({ ...baseWhere, isPickedUp: false }),
+        orderStatsForWhere({ ...baseWhere, paymentMethod: 'COD', isPickedUp: true }),
+        orderStatsForWhere({ ...baseWhere, paymentMethod: 'COD', isPickedUp: false }),
+        orderStatsForWhere({ ...baseWhere, paymentMethod: { not: 'COD' }, isPickedUp: true }),
+        orderStatsForWhere({ ...baseWhere, paymentMethod: { not: 'COD' }, isPickedUp: false }),
+      ]);
+
+      return {
+        ...allStats,
+        pickup_total_orders: pickupStats.total_orders,
+        delivery_total_orders: deliveryStats.total_orders,
+        pickup_orders: pickupStats.total_orders,
+        delivery_orders: deliveryStats.total_orders,
+        pickup: { total_orders: pickupStats.total_orders },
+        delivery: { total_orders: deliveryStats.total_orders },
+        all: [
+          { _type: 'isPickedUp', data: pickupStats },
+          { _type: 'isNotPickedUp', data: deliveryStats },
+        ],
+        cod: [
+          { _type: 'isPickedUp', data: codPickup },
+          { _type: 'isNotPickedUp', data: codDelivery },
+        ],
+        card: [
+          { _type: 'isPickedUp', data: cardPickup },
+          { _type: 'isNotPickedUp', data: cardDelivery },
+        ],
+      };
+    },
+
+    getStoreDetailsByVendorId: async (
+      _parent,
+      args: { id: string; dateKeyword?: string; starting_date?: string; ending_date?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      assertVendorAccess(currentUser, args.id);
+      const range = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+      return storeDetailsForVendor(args.id, range);
+    },
+
+    getStoreDetailsByVendorIdPaginated: async (
+      _parent,
+      args: {
+        id: string;
+        dateKeyword?: string;
+        starting_date?: string;
+        ending_date?: string;
+        page?: number;
+        limit?: number;
+        search?: string;
+      },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      assertVendorAccess(currentUser, args.id);
+      const range = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+      const all = await storeDetailsForVendor(args.id, range, args.search);
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const totalCount = all.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+      const data = all.slice((page - 1) * limit, (page - 1) * limit + limit);
+      return { data, totalCount, currentPage: page, totalPages };
+    },
+
+    getVendorDashboardStatsCardDetails: async (
+      _parent,
+      args: { vendorId: string; dateKeyword?: string; starting_date: string; ending_date: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      assertVendorAccess(currentUser, args.vendorId);
+      const range = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+      const restaurants = await prisma.restaurant.findMany({ where: { ownerId: args.vendorId }, select: { id: true } });
+      const restaurantIds = restaurants.map((r) => r.id);
+      const orders = await prisma.order.findMany({
+        where: { restaurantId: { in: restaurantIds }, ...(range ? { createdAt: range } : {}) },
+        select: { orderAmount: true, orderStatus: true },
+      });
+      return {
+        totalRestaurants: restaurants.length,
+        totalOrders: orders.length,
+        totalSales: orders.reduce((sum, o) => sum + o.orderAmount, 0),
+        totalDeliveries: orders.filter((o) => o.orderStatus === 'DELIVERED' || o.orderStatus === 'COMPLETED').length,
+      };
+    },
+
+    getLiveMonitorData: async (
+      _parent,
+      args: { id: string; dateKeyword?: string; starting_date?: string; ending_date?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      assertVendorAccess(currentUser, args.id);
+      const range = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
+      const restaurants = await prisma.restaurant.findMany({ where: { ownerId: args.id } });
+      const restaurantIds = restaurants.map((r) => r.id);
+      const online_stores = restaurants.filter((r) => r.isActive && r.isAvailable).length;
+      const now = new Date();
+
+      const [cancelled_orders, delayed_orders, reviews] = await Promise.all([
+        prisma.order.count({
+          where: { restaurantId: { in: restaurantIds }, orderStatus: 'CANCELLED', ...(range ? { createdAt: range } : {}) },
+        }),
+        prisma.order.count({
+          where: {
+            restaurantId: { in: restaurantIds },
+            orderStatus: { notIn: ['DELIVERED', 'COMPLETED', 'CANCELLED'] },
+            expectedTime: { lt: now },
+            ...(range ? { createdAt: range } : {}),
+          },
+        }),
+        prisma.review.findMany({ where: { restaurantId: { in: restaurantIds } }, select: { rating: true } }),
+      ]);
+
+      const ratings = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : null;
+      return { online_stores, cancelled_orders, delayed_orders, ratings };
+    },
+
+    getVendorDashboardGrowthDetailsByYear: async (_parent, args: { vendorId: string; year: number }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      assertVendorAccess(currentUser, args.vendorId);
+      const totalRestaurants: number[] = [];
+      const totalOrders: number[] = [];
+      const totalSales: number[] = [];
+      for (let month = 0; month < 12; month++) {
+        const range = monthRange(args.year, month);
+        const [restCount, orders] = await Promise.all([
+          prisma.restaurant.count({ where: { ownerId: args.vendorId, createdAt: range } }),
+          prisma.order.findMany({
+            where: { restaurant: { ownerId: args.vendorId }, createdAt: range },
+            select: { orderAmount: true },
+          }),
+        ]);
+        totalRestaurants.push(restCount);
+        totalOrders.push(orders.length);
+        totalSales.push(orders.reduce((sum, o) => sum + o.orderAmount, 0));
+      }
+      return { totalRestaurants, totalOrders, totalSales };
+    },
+  },
+};

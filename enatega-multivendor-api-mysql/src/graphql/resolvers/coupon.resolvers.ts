@@ -2,7 +2,7 @@ import { IResolvers } from '@graphql-tools/utils';
 import { Coupon } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
-import { requireRole } from '../../middleware/auth';
+import { requireAuth, requireRole } from '../../middleware/auth';
 import { notFoundError } from '../../utils/errors';
 
 interface CouponInputArgs {
@@ -68,6 +68,27 @@ export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
   },
 
   Mutation: {
+    coupon: async (_parent, args: { coupon: string; restaurantId: string }, context) => {
+      requireAuth(context);
+      const now = new Date();
+      const match = await prisma.coupon.findFirst({
+        where: {
+          title: args.coupon,
+          enabled: true,
+          OR: [{ restaurantId: null }, { restaurantId: args.restaurantId }],
+        },
+      });
+      if (!match) {
+        return { success: false, message: 'Invalid coupon code', coupon: null };
+      }
+      const isWithinWindow =
+        match.lifeTimeActive || ((!match.startDate || now >= match.startDate) && (!match.endDate || now <= match.endDate));
+      if (!isWithinWindow) {
+        return { success: false, message: 'This coupon is not currently active', coupon: null };
+      }
+      return { success: true, message: 'Coupon applied', coupon: match };
+    },
+
     createCoupon: (_parent, args: { couponInput: CouponInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       return prisma.coupon.create({ data: couponData(args.couponInput) });

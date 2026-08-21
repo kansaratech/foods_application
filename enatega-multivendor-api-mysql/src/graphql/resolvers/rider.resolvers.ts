@@ -3,9 +3,9 @@ import { Prisma, RiderProfile, User, Zone } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
-import { hashPassword } from '../../services/auth.service';
-import { notFoundError } from '../../utils/errors';
-import { pubsub } from '../../utils/pubsub';
+import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
+import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
+import { pubsub, TOPICS } from '../../utils/pubsub';
 
 type RiderParent = User & { riderProfile: (RiderProfile & { zone: Zone | null }) | null };
 
@@ -80,6 +80,31 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
   },
 
   Mutation: {
+    riderLogin: async (
+      _parent,
+      args: { username?: string; password?: string; notificationToken?: string; timeZone: string },
+    ) => {
+      if (!args.username || !args.password) throw userInputError('username and password are required');
+      const user = await prisma.user.findFirst({ where: { username: args.username, userType: 'RIDER' } });
+      if (!user || !user.password || !(await comparePassword(args.password, user.password))) {
+        throw userInputError('Invalid username or password');
+      }
+      if (args.notificationToken) {
+        await prisma.user.update({ where: { id: user.id }, data: { notificationToken: args.notificationToken } });
+      }
+      const { token, expiresAt } = signAccessToken({ userId: user.id, userType: user.userType, tokenVersion: user.tokenVersion });
+      return {
+        userId: user.id,
+        token,
+        tokenExpiration: expiresAt,
+        isActive: user.isActive,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        isNewUser: false,
+      };
+    },
+
     createRider: async (_parent, args: { riderInput: RiderInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       const input = args.riderInput;
@@ -103,9 +128,10 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     editRider: async (_parent, args: { riderInput: RiderInputArgs }, context) => {
-      requireRole(context, ['ADMIN']);
+      const currentUser = requireRole(context, ['ADMIN', 'RIDER']);
       const input = args.riderInput;
       if (!input._id) throw notFoundError('Rider _id is required to edit');
+      if (currentUser.userType === 'RIDER' && currentUser.id !== input._id) throw forbiddenError();
 
       await prisma.user.update({
         where: { id: input._id },
@@ -147,22 +173,108 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       await pubsub.publish('RIDER_UPDATED', { riderUpdated: { _id: args.id } });
       return prisma.user.findUnique({ where: { id: args.id }, include: RIDER_INCLUDE });
     },
+
+    updateRiderLocation: async (_parent, args: { latitude: string; longitude: string }, context) => {
+      const currentUser = requireRole(context, ['RIDER']);
+      await prisma.riderProfile.update({
+        where: { userId: currentUser.id },
+        data: { latitude: Number(args.latitude), longitude: Number(args.longitude) },
+      });
+      const updated = await prisma.user.findUnique({ where: { id: currentUser.id }, include: RIDER_INCLUDE });
+      await pubsub.publish(TOPICS.SUBSCRIPTION_RIDER_LOCATION(currentUser.id), { subscriptionRiderLocation: updated });
+      return updated;
+    },
+
+    updateRiderLicenseDetails: async (
+      _parent,
+      args: { id: string; licenseDetails?: Prisma.InputJsonValue },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'RIDER']);
+      if (currentUser.userType === 'RIDER' && currentUser.id !== args.id) throw forbiddenError();
+      await prisma.riderProfile.upsert({
+        where: { userId: args.id },
+        create: { userId: args.id, licenseDetails: args.licenseDetails ?? undefined },
+        update: { licenseDetails: args.licenseDetails ?? undefined },
+      });
+      return prisma.user.findUnique({ where: { id: args.id }, include: RIDER_INCLUDE });
+    },
+
+    updateRiderVehicleDetails: async (
+      _parent,
+      args: { id: string; vehicleDetails?: Prisma.InputJsonValue },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'RIDER']);
+      if (currentUser.userType === 'RIDER' && currentUser.id !== args.id) throw forbiddenError();
+      await prisma.riderProfile.upsert({
+        where: { userId: args.id },
+        create: { userId: args.id, vehicleDetails: args.vehicleDetails ?? undefined },
+        update: { vehicleDetails: args.vehicleDetails ?? undefined },
+      });
+      return prisma.user.findUnique({ where: { id: args.id }, include: RIDER_INCLUDE });
+    },
+
+    updateRiderBussinessDetails: async (
+      _parent,
+      args: { id: string; bussinessDetails?: Prisma.InputJsonValue },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'RIDER']);
+      if (currentUser.userType === 'RIDER' && currentUser.id !== args.id) throw forbiddenError();
+      await prisma.riderProfile.upsert({
+        where: { userId: args.id },
+        create: { userId: args.id, bussinessDetails: args.bussinessDetails ?? undefined },
+        update: { bussinessDetails: args.bussinessDetails ?? undefined },
+      });
+      return prisma.user.findUnique({ where: { id: args.id }, include: RIDER_INCLUDE });
+    },
+
+    updateWorkSchedule: async (
+      _parent,
+      args: { riderId: string; workSchedule: Prisma.InputJsonValue; timeZone: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'RIDER']);
+      if (currentUser.userType === 'RIDER' && currentUser.id !== args.riderId) throw forbiddenError();
+      await prisma.riderProfile.upsert({
+        where: { userId: args.riderId },
+        create: { userId: args.riderId, workSchedule: args.workSchedule, timeZone: args.timeZone },
+        update: { workSchedule: args.workSchedule, timeZone: args.timeZone },
+      });
+      return prisma.user.findUnique({ where: { id: args.riderId }, include: RIDER_INCLUDE });
+    },
   },
 
   Subscription: {
     riderUpdated: {
       subscribe: () => pubsub.asyncIterableIterator('RIDER_UPDATED'),
     },
+    subscriptionRiderLocation: {
+      subscribe: (_parent, args: { riderId: string }) =>
+        pubsub.asyncIterableIterator(TOPICS.SUBSCRIPTION_RIDER_LOCATION(args.riderId)),
+    },
   },
 
   Rider: {
     _id: (parent: RiderParent) => parent.id,
     email: (parent: RiderParent) => parent.email,
+    image: (parent: RiderParent) => parent.image,
     available: (parent: RiderParent) => parent.riderProfile?.available ?? null,
     vehicleType: (parent: RiderParent) => parent.riderProfile?.vehicleType ?? null,
     assigned: (parent: RiderParent) => (Array.isArray(parent.riderProfile?.assigned) ? parent.riderProfile?.assigned : []),
     zone: (parent: RiderParent) => parent.riderProfile?.zone ?? null,
+    location: (parent: RiderParent) =>
+      parent.riderProfile?.latitude != null && parent.riderProfile?.longitude != null
+        ? { coordinates: [parent.riderProfile.longitude, parent.riderProfile.latitude] }
+        : null,
+    timeZone: (parent: RiderParent) => parent.riderProfile?.timeZone ?? null,
+    workSchedule: (parent: RiderParent) => parent.riderProfile?.workSchedule ?? null,
     bussinessDetails: (parent: RiderParent) => parent.riderProfile?.bussinessDetails ?? null,
+    accountNumber: (parent: RiderParent) => {
+      const details = parent.riderProfile?.bussinessDetails as { accountNumber?: string } | null | undefined;
+      return details?.accountNumber ?? null;
+    },
     licenseDetails: (parent: RiderParent) => parent.riderProfile?.licenseDetails ?? null,
     vehicleDetails: (parent: RiderParent) => parent.riderProfile?.vehicleDetails ?? null,
     currentWalletAmount: (parent: RiderParent) => parent.riderProfile?.currentWalletAmount ?? 0,

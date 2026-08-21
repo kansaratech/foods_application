@@ -9,6 +9,12 @@ import { riderTypeDefs } from './rider';
 import { staffTypeDefs } from './staff';
 import { couponTypeDefs } from './coupon';
 import { bannerTypeDefs } from './banner';
+import { reviewTypeDefs } from './review';
+import { dashboardTypeDefs } from './dashboard';
+import { paymentTypeDefs } from './payment';
+import { notificationTypeDefs } from './notification';
+import { supportTypeDefs } from './support';
+import { chatTypeDefs } from './chat';
 
 export const typeDefs = [
   commonTypeDefs,
@@ -22,4 +28,10 @@ export const typeDefs = [
   staffTypeDefs,
   couponTypeDefs,
   bannerTypeDefs,
+  reviewTypeDefs,
+  dashboardTypeDefs,
+  paymentTypeDefs,
+  notificationTypeDefs,
+  supportTypeDefs,
+  chatTypeDefs,
 ];

@@ -123,15 +123,16 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     webNotifications: (_parent, _args, context) => {
-      requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
-      return [];
+      const user = requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
+      return prisma.webNotification.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } });
     },
   },
 
   Mutation: {
-    markWebNotificationsAsRead: (_parent, _args, context) => {
-      requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
-      return [];
+    markWebNotificationsAsRead: async (_parent, _args, context) => {
+      const user = requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
+      await prisma.webNotification.updateMany({ where: { userId: user.id, read: false }, data: { read: true } });
+      return prisma.webNotification.findMany({ where: { userId: user.id }, orderBy: { createdAt: 'desc' } });
     },
 
     ownerLogin: async (_parent, args: { email: string; password: string }) => {

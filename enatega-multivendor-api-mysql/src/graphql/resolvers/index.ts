@@ -12,6 +12,12 @@ import { riderResolvers } from './rider.resolvers';
 import { staffResolvers } from './staff.resolvers';
 import { couponResolvers } from './coupon.resolvers';
 import { bannerResolvers } from './banner.resolvers';
+import { reviewResolvers } from './review.resolvers';
+import { dashboardResolvers } from './dashboard.resolvers';
+import { paymentResolvers } from './payment.resolvers';
+import { notificationResolvers } from './notification.resolvers';
+import { supportResolvers } from './support.resolvers';
+import { chatResolvers } from './chat.resolvers';
 
 type ResolverMap = Record<string, Record<string, unknown>>;
 
@@ -38,4 +44,10 @@ export const resolvers = mergeResolvers([
   staffResolvers,
   couponResolvers,
   bannerResolvers,
+  reviewResolvers,
+  dashboardResolvers,
+  paymentResolvers,
+  notificationResolvers,
+  supportResolvers,
+  chatResolvers,
 ]);

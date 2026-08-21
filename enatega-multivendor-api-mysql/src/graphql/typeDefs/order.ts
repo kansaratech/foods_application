@@ -29,6 +29,7 @@ export const orderTypeDefs = /* GraphQL */ `
     addons: [OrderItemAddon!]!
     description: String
     image: String
+    isActive: Boolean
     createdAt: String
     updatedAt: String
   }
@@ -52,6 +53,7 @@ export const orderTypeDefs = /* GraphQL */ `
 
   type Order {
     _id: ID!
+    id: ID!
     orderId: String!
     restaurant: OrderRestaurantLite!
     deliveryAddress: Address
@@ -79,6 +81,12 @@ export const orderTypeDefs = /* GraphQL */ `
     pickedAt: String
     deliveredAt: String
     cancelledAt: String
+    assignedAt: String
+    completionTime: String
+    preparationTime: String
+    reason: String
+    isRinged: Boolean
+    review: Review
   }
 
   type OrdersActiveOrdersResult {
@@ -131,6 +139,7 @@ export const orderTypeDefs = /* GraphQL */ `
     riderOrders: [Order!]!
     getActiveOrders(restaurantId: String, page: Int, rowsPerPage: Int, actions: [String], search: String): OrdersActiveOrdersResult!
     ordersByRestId(restaurant: String!, page: Int, rows: Int, search: String, orderStatus: [String]): OrdersActiveOrdersResult!
+    restaurantOrders: [Order!]!
     allOrdersPaginated(
       page: Int
       rows: Int
@@ -165,6 +174,10 @@ export const orderTypeDefs = /* GraphQL */ `
     assignRider(id: String!, riderId: String!): Order!
     assignOrder(id: String!): Order!
     updateOrderStatusRider(id: String!, status: String!): Order!
+    acceptOrder(_id: String!, time: String): Order!
+    cancelOrder(_id: String!, reason: String!): Order!
+    muteRing(orderId: String): Boolean!
+    orderPickedUp(_id: String!): Order!
   }
 
   extend type Subscription {

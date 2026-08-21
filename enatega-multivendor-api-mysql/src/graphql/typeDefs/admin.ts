@@ -116,8 +116,6 @@ export const adminTypeDefs = /* GraphQL */ `
 
     getDashboardUsers: DashboardUsers!
 
-    # Stub: no persistence backing this yet. Always returns an empty list so
-    # pages that poll it on mount don't hard-fail. See backend README.
     webNotifications: [WebNotification!]!
   }
 
@@ -125,7 +123,6 @@ export const adminTypeDefs = /* GraphQL */ `
     ownerLogin(email: String!, password: String!): OwnerAuthPayload!
     refreshToken(refreshToken: String!, userType: String!): OwnerAuthPayload!
 
-    # Stub: matches webNotifications above, no persistence yet.
     markWebNotificationsAsRead: [WebNotification!]!
 
     createVendor(vendorInput: VendorInput!): Vendor!

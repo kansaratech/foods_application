@@ -338,6 +338,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
   },
   Address: {
     _id: (parent: Address) => parent.id,
+    id: (parent: Address) => parent.id,
     location: (parent: Address) =>
       parent.latitude != null && parent.longitude != null
         ? { coordinates: [parent.longitude, parent.latitude] }

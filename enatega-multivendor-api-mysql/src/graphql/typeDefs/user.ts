@@ -1,6 +1,7 @@
 export const userTypeDefs = /* GraphQL */ `
   type Address {
     _id: ID!
+    id: ID!
     label: String
     deliveryAddress: String
     details: String
