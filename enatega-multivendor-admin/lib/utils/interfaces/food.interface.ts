@@ -63,6 +63,7 @@ export interface IFoodGridItem {
   description: string;
   category: IDropdownSelectItem | null;
   image: string;
+  images?: string[];
   variations?: IVariation[];
   isOutOfStock: boolean;
   subCategory?: IDropdownSelectItem | null;
@@ -85,6 +86,7 @@ export interface IFood {
   variations: IVariationForm[];
   subCategory: string;
   image: string;
+  images?: string[];
   isActive: boolean;
   __typename: string;
   isOutOfStock: boolean;
@@ -98,6 +100,7 @@ export interface IFoodNew {
   category: IDropdownSelectItem | null;
   subCategory: IDropdownSelectItem | null;
   image: string;
+  images?: string[];
   isActive: boolean;
   __typename: string;
   isOutOfStock: boolean;

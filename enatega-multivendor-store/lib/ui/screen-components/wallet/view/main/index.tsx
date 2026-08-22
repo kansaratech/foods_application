@@ -240,7 +240,7 @@ export default function WalletMain() {
   else
     return (
       <View
-        className="flex flex-col justify-between items-center -top-8  w-full h-[110%] "
+        className="flex flex-col justify-between items-center -top-8  w-full h-[110%] lg:max-w-2xl lg:self-center"
         // style={{ backgroundColor: appTheme.themeBackground }}
       >
         {storeProfileData?.restaurant ? (

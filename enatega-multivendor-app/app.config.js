@@ -32,17 +32,13 @@ module.exports = () => {
     description:
       "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
     slug: 'enategamultivendor',
-    owner: 'ninjas_code',
-    experiments: {
-      buildCacheProvider: 'eas'
-    },
     androidStatusBar: {
       backgroundColor: '#000000'
     },
     // Native OS splash (before JS boots) is theme-aware via the
     // expo-splash-screen plugin below — a solid per-theme background that
     // matches AnimatedSplash's first frame, so there is no black/white flash.
-    platforms: ['ios', 'android'],
+    platforms: ['ios', 'android', 'web'],
     orientation: 'portrait',
     icon: './assets/icon.png',
     assetBundlePatterns: ['**/*'],
@@ -164,12 +160,7 @@ module.exports = () => {
             'Allow this app to collect app-related data that can be used for tracking you or your device.'
         }
       ],
-      [
-        'expo-updates',
-        {
-          username: 'ninjas_code'
-        }
-      ],
+      'expo-updates',
       [
         'expo-location',
         {
@@ -211,14 +202,11 @@ module.exports = () => {
         riderResourceName: 'enatega_rider'
       },
       eas: {
-        projectId: '331d4e5b-b12a-434a-92ec-d6d283dc0e46'
+        projectId: 'c21fa0cc-d748-44d7-a561-6e2c5255f6a2'
       }
     },
     runtimeVersion: {
       policy: 'sdkVersion'
-    },
-    updates: {
-      url: 'https://u.expo.dev/331d4e5b-b12a-434a-92ec-d6d283dc0e46'
     }
   }
 }

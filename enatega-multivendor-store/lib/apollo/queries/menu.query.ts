@@ -22,6 +22,7 @@ export const RESTAURANT_CATEGORIES_PAGINATED = gql`
           title
           description
           image
+          images
           isActive
           isOutOfStock
           variations {

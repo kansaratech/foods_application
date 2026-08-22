@@ -13,7 +13,7 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 // Core
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 // React Native Modal
 import ReactNativeModal from "react-native-modal";
@@ -30,10 +30,11 @@ export default function EarningBottomBar({
 
   // Contexts
   const { setStoreOrderEarnings } = useUserContext();
+  const isWeb = Platform.OS === "web";
   return (
     <ReactNativeModal
-      animationIn={"slideInUp"}
-      animationOut={"slideOutDown"}
+      animationIn={isWeb ? "fadeIn" : "slideInUp"}
+      animationOut={isWeb ? "fadeOut" : "slideOutDown"}
       isVisible={modalVisible.bool}
       onBackdropPress={() => {
         setModalVisible({
@@ -46,26 +47,43 @@ export default function EarningBottomBar({
           totalOrderAmount: 0,
         });
       }}
-      style={{
-        maxHeight: "25%",
-        width: "100%",
-        height: "25%",
-        backgroundColor: appTheme.themeBackground,
-        borderRadius: 20,
-        padding: 5,
-        alignItems: "center",
-        justifyContent: "flex-start",
+      style={
+        isWeb
+          ? {
+              width: "100%",
+              maxWidth: 420,
+              alignSelf: "center",
+              backgroundColor: appTheme.themeBackground,
+              borderRadius: 20,
+              padding: 5,
+              alignItems: "center",
+              justifyContent: "flex-start",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }
+          : {
+              maxHeight: "25%",
+              width: "100%",
+              height: "25%",
+              backgroundColor: appTheme.themeBackground,
+              borderRadius: 20,
+              padding: 5,
+              alignItems: "center",
+              justifyContent: "flex-start",
 
-        shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        marginLeft: 0,
-        marginTop: "145%",
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      }}
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              marginLeft: 0,
+              marginTop: "145%",
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }
+      }
     >
       <Text
         className="font-bold text-xl w-full py-5 text-center"

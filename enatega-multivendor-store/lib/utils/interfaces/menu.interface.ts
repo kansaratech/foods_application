@@ -28,6 +28,7 @@ export interface IFood {
   title: string;
   description?: string | null;
   image?: string | null;
+  images?: string[] | null;
   isActive?: boolean | null;
   isOutOfStock?: boolean | null;
   variations: IVariation[];

@@ -67,7 +67,7 @@ const LoginScreen = () => {
           >
             {({ handleChange, handleBlur, handleSubmit, values, errors }) => {
               return (
-                <View className="mt-24 p-5 items-center gap-y-2">
+                <View className="mt-24 p-5 items-center gap-y-2 w-full max-w-md self-center">
                   {/* Icon */}
                   <Icon name="envelope" size={30} color={appTheme.primary} />
 
@@ -88,7 +88,7 @@ const LoginScreen = () => {
                   {/* Email Input */}
 
                   <View
-                    className="flex-row items-center border rounded-lg px-3  mb-[-4]"
+                    className="flex-row items-center border rounded-lg px-3 w-full mb-[-4]"
                     style={{
                       backgroundColor: appTheme.themeBackground,
                       borderColor: appTheme.borderLineColor,
@@ -117,7 +117,7 @@ const LoginScreen = () => {
 
                   {/* Password Input */}
                   <View
-                    className="flex-row items-center border rounded-lg px-3 mb-[-4]"
+                    className="flex-row items-center border rounded-lg px-3 w-full mb-[-4]"
                     style={{
                       backgroundColor: appTheme.themeBackground,
                       borderColor: appTheme.borderLineColor,

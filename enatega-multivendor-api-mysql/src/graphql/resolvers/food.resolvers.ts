@@ -27,10 +27,20 @@ interface FoodInputArgs {
   title: string;
   description?: string;
   image?: string;
+  images?: string[];
   isActive?: boolean;
   category: string;
   subCategory?: string;
   variations: VariationInputArgs[];
+}
+
+// The first image doubles as the legacy single `image` field so every
+// screen that only ever renders `food.image` (menus, cart, item detail,
+// order history, ...) keeps working without changes.
+function foodImageFields(input: Pick<FoodInputArgs, 'image' | 'images'>) {
+  const images = input.images?.filter(Boolean) ?? [];
+  if (images.length > 0) return { image: images[0], images };
+  return { image: input.image, images: undefined };
 }
 
 interface CategoryInputArgs {
@@ -132,7 +142,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           subCategoryId: input.subCategory || undefined,
           title: input.title,
           description: input.description,
-          image: input.image,
+          ...foodImageFields(input),
           isActive: input.isActive ?? true,
           variations: {
             create: input.variations.map((v) => ({
@@ -161,7 +171,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           subCategoryId: input.subCategory || undefined,
           title: input.title,
           description: input.description,
-          image: input.image,
+          ...foodImageFields(input),
           isActive: input.isActive,
         },
       });
@@ -297,6 +307,11 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: Food) => parent.id,
     subCategory: (parent: Food) => parent.subCategoryId,
     variations: (parent: Food) => prisma.variation.findMany({ where: { foodId: parent.id } }),
+    images: (parent: Food) => {
+      const stored = Array.isArray(parent.images) ? (parent.images as string[]) : [];
+      if (stored.length > 0) return stored;
+      return parent.image ? [parent.image] : [];
+    },
   },
   SubCategory: {
     _id: (parent: SubCategory) => parent.id,

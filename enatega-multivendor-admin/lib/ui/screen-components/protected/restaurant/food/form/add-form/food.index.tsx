@@ -26,7 +26,7 @@ import {
 import { IFoodDetailsForm } from '@/lib/utils/interfaces/forms/food.form.interface';
 
 // Constants and Methods
-import { FoodErrors, MAX_LANSDCAPE_FILE_SIZE } from '@/lib/utils/constants';
+import { FoodErrors } from '@/lib/utils/constants';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // Components
@@ -35,7 +35,7 @@ import CustomButton from '@/lib/ui/useable-components/button';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown';
 import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-field';
-import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
+import MultiImageUploadComponent from '@/lib/ui/useable-components/upload/upload-images-gallery';
 
 // API
 import { GET_CATEGORY_BY_RESTAURANT_ID } from '@/lib/api/graphql';
@@ -60,6 +60,7 @@ const initialValues: IFoodDetailsForm = {
   title: '',
   description: '',
   image: '',
+  images: [],
   category: null,
   subCategory: null,
 };
@@ -158,7 +159,8 @@ export default function FoodDetails({
       description: values.description,
       category: values.category,
       subCategory: values.subCategory,
-      image: values.image,
+      image: values.images[0] ?? values.image,
+      images: values.images,
       isOutOfStock: false,
       isActive: true,
       __typename: foodContextData?.food?.data?.__typename ?? 'Food',
@@ -375,20 +377,13 @@ export default function FoodDetails({
                       </div>
 
                       <div>
-                        <CustomUploadImageComponent
-                          key="image"
-                          name="image"
-                          title={t('Upload Image')}
-                          fileTypes={['image/jpg', 'image/webp', 'image/jpeg']}
-                          maxFileHeight={841}
-                          maxFileWidth={1980}
-                          maxFileSize={MAX_LANSDCAPE_FILE_SIZE}
-                          orientation="LANDSCAPE"
-                          onSetImageUrl={setFieldValue}
-                          existingImageUrl={values.image}
-                          showExistingImage={
-                            foodContextData?.isEditing ? true : false
-                          }
+                        <MultiImageUploadComponent
+                          key="images"
+                          name="images"
+                          title={t('Upload Images')}
+                          images={values.images}
+                          onChange={(images) => setFieldValue('images', images)}
+                          maxImages={5}
                           style={{
                             borderColor: onErrorMessageMatcher(
                               'image',

@@ -13,19 +13,17 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,
-  Dimensions,
   FlatList,
   ScrollView,
   Text,
   TouchableWithoutFeedback,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { showMessage } from "react-native-flash-message";
 import UpdateTimeBtn from "../../update-time-btn";
 import UpdateScheduleBtn from "../../updates-schedule-btn";
 import WorkScheduleStack from "../work-schedule";
-
-const { width } = Dimensions.get("window");
 
 const daysOfWeek: TWeekDays[] = [
   "MON",
@@ -55,6 +53,7 @@ export default function WorkScheduleMain() {
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
+  const { width } = useWindowDimensions();
   // States
   const [schedule, setSchedule] = useState<WorkSchedule[]>();
   const [dropdown, setDropdown] = useState<{

@@ -21,6 +21,7 @@ export const CREATE_FOOD = gql`
             isOutOfStock
           }
           image
+          images
           isActive
         }
         createdAt
@@ -51,6 +52,7 @@ export const EDIT_FOOD = gql`
             isOutOfStock
           }
           image
+          images
           isActive
         }
         createdAt

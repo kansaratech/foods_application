@@ -23,6 +23,7 @@ export const foodTypeDefs = /* GraphQL */ `
     title: String!
     description: String
     image: String
+    images: [String!]
     isActive: Boolean
     isOutOfStock: Boolean
     subCategory: ID
@@ -73,6 +74,7 @@ export const foodTypeDefs = /* GraphQL */ `
     title: String!
     description: String
     image: String
+    images: [String!]
     isActive: Boolean
     category: ID!
     subCategory: ID

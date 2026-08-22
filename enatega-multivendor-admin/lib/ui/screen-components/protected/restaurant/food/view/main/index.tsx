@@ -161,6 +161,7 @@ export default function FoodsMain() {
           _id: fd._id,
           description: fd.description,
           image: fd.image,
+          images: fd.images?.length ? fd.images : fd.image ? [fd.image] : [],
           isActive: fd.isActive,
           isOutOfStock: fd.isOutOfStock,
           subCategory: {

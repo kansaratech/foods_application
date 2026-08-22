@@ -22,6 +22,7 @@ export const GET_FOODS_BY_RESTAURANT_ID = gql`
             isOutOfStock
           }
           image
+          images
           isActive
           subCategory
         }

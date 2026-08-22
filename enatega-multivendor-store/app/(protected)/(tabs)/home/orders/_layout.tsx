@@ -54,7 +54,11 @@ export default function Layout() {
             />
           );
         },
-        tabBarPosition: "bottom",
+        // Mobile fakes a top tab strip by absolutely positioning a "bottom"
+        // bar at top: 0. On web there's no need for that trick - render it
+        // as a real top tab bar so it lands right under the header instead
+        // of falling through to the bottom of the page.
+        tabBarPosition: Platform.OS === "web" ? "top" : "bottom",
         tabBarItemStyle: {
           height: 40,
           backgroundColor: "transparent",
@@ -78,6 +82,13 @@ export default function Layout() {
             shadowColor: appTheme.themeBackground,
             shadowOpacity: 0,
             paddingTop: 20,
+            elevation: 0,
+          },
+          web: {
+            backgroundColor: appTheme.themeBackground,
+            borderBottomWidth: 1,
+            borderBottomColor: appTheme.borderLineColor,
+            shadowOpacity: 0,
             elevation: 0,
           },
         }),

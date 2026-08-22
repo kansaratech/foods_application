@@ -204,6 +204,7 @@ model Food {
   title         String
   description   String?  @db.Text
   image         String?
+  images        Json?
   isActive      Boolean  @default(true)
   isOutOfStock  Boolean  @default(false)
   createdAt     DateTime @default(now())

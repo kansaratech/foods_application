@@ -1,6 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@apollo/client";
 import { useTranslation } from "react-i18next";
@@ -14,6 +13,9 @@ import { RESTAURANT_CATEGORIES_PAGINATED } from "@/lib/apollo/queries/menu.query
 import { CustomContinueButton } from "@/lib/ui/useable-components";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
 import CustomSwitch from "@/lib/ui/useable-components/switch-button";
+import ResponsiveFormSheet, {
+  ResponsiveFormSheetHandle,
+} from "@/lib/ui/useable-components/responsive-form-sheet";
 import {
   IAddon,
   IFood,
@@ -41,13 +43,13 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
   ({ restaurantId, page, search, addons }, ref) => {
     const { appTheme } = useApptheme();
     const { t } = useTranslation();
-    const sheetRef = useRef<BottomSheetModal>(null);
+    const sheetRef = useRef<ResponsiveFormSheetHandle>(null);
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [categoryId, setCategoryId] = useState<string>("");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [image, setImage] = useState<string | null>(null);
+    const [images, setImages] = useState<string[]>([]);
     const [isActive, setIsActive] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [variations, setVariations] = useState<VariationRow[]>([]);
@@ -59,7 +61,9 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         setEditingId(food?._id ?? null);
         setTitle(food?.title ?? "");
         setDescription(food?.description ?? "");
-        setImage(food?.image ?? null);
+        setImages(
+          food?.images?.length ? food.images : food?.image ? [food.image] : [],
+        );
         setIsActive(food?.isActive ?? true);
         setVariations(
           food?.variations?.length
@@ -107,8 +111,9 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
     });
 
     const [uploadImage] = useMutation(UPLOAD_IMAGE_TO_S3);
+    const MAX_IMAGES = 5;
 
-    const handlePickImage = async () => {
+    const handlePickImages = async () => {
       const permission =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
@@ -118,25 +123,44 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         });
         return;
       }
+      const remaining = MAX_IMAGES - images.length;
+      if (remaining <= 0) {
+        showMessage({
+          message: t(`You can add up to ${MAX_IMAGES} images`),
+          type: "warning",
+        });
+        return;
+      }
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         base64: true,
         quality: 0.6,
+        allowsMultipleSelection: true,
+        selectionLimit: remaining,
       });
-      if (result.canceled || !result.assets?.[0]?.base64) return;
-      const asset = result.assets[0];
-      const dataUrl = `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`;
+      if (result.canceled || !result.assets?.length) return;
+
       try {
         setUploading(true);
-        const { data } = await uploadImage({ variables: { image: dataUrl } });
-        if (data?.uploadImageToS3?.imageUrl) {
-          setImage(data.uploadImageToS3.imageUrl);
+        const uploaded: string[] = [];
+        for (const asset of result.assets) {
+          if (!asset.base64) continue;
+          const dataUrl = `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`;
+          const { data } = await uploadImage({ variables: { image: dataUrl } });
+          if (data?.uploadImageToS3?.imageUrl) {
+            uploaded.push(data.uploadImageToS3.imageUrl);
+          }
         }
+        setImages((prev) => [...prev, ...uploaded]);
       } catch (e) {
         showMessage({ message: (e as Error).message, type: "danger" });
       } finally {
         setUploading(false);
       }
+    };
+
+    const removeImage = (index: number) => {
+      setImages((prev) => prev.filter((_, i) => i !== index));
     };
 
     const addVariationRow = () => {
@@ -199,7 +223,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         category: categoryId,
         title: title.trim(),
         description: description.trim() || undefined,
-        image,
+        images,
         isActive,
         variations: variations.map((v) => ({
           _id: v._id,
@@ -220,32 +244,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
     const loading = creating || editing;
 
     return (
-      <BottomSheetModal
-        ref={sheetRef}
-        snapPoints={["90%"]}
-        style={{ backgroundColor: appTheme.themeBackground }}
-        handleComponent={() => (
-          <View
-            style={{
-              backgroundColor: appTheme.themeBackground,
-              alignItems: "center",
-              justifyContent: "center",
-              borderTopWidth: 1,
-              borderTopColor: appTheme.fontMainColor,
-              paddingVertical: 8,
-            }}
-          >
-            <Ionicons color={appTheme.fontMainColor} name="remove" size={30} />
-          </View>
-        )}
-      >
-        <BottomSheetScrollView
-          contentContainerStyle={{
-            padding: 16,
-            gap: 12,
-            backgroundColor: appTheme.themeBackground,
-          }}
-        >
+      <ResponsiveFormSheet ref={sheetRef} snapPoint="90%">
           <Text
             className="text-lg font-semibold"
             style={{ color: appTheme.fontMainColor }}
@@ -253,27 +252,45 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
             {editingId ? t("Edit Food Item") : t("Add Food Item")}
           </Text>
 
-          <TouchableOpacity
-            onPress={handlePickImage}
-            className="h-24 w-24 rounded-md items-center justify-center overflow-hidden self-center"
-            style={{ backgroundColor: appTheme.sidebarIconBackground }}
-          >
-            {image ? (
-              <Image
-                source={{ uri: image }}
-                style={{ width: 96, height: 96 }}
-                resizeMode="cover"
-              />
-            ) : uploading ? (
-              <SpinnerComponent height={20} />
-            ) : (
-              <Ionicons
-                name="camera-outline"
-                size={28}
-                color={appTheme.iconColor}
-              />
+          <View className="flex-row flex-wrap gap-2 justify-center">
+            {images.map((uri, index) => (
+              <View
+                key={`${uri}-${index}`}
+                className="h-24 w-24 rounded-md overflow-hidden"
+              >
+                <Image
+                  source={{ uri }}
+                  style={{ width: 96, height: 96 }}
+                  resizeMode="cover"
+                />
+                <TouchableOpacity
+                  onPress={() => removeImage(index)}
+                  className="absolute top-1 right-1 h-5 w-5 rounded-full items-center justify-center"
+                  style={{ backgroundColor: appTheme.error }}
+                >
+                  <Ionicons name="close" size={14} color={appTheme.white} />
+                </TouchableOpacity>
+              </View>
+            ))}
+
+            {images.length < MAX_IMAGES && (
+              <TouchableOpacity
+                onPress={handlePickImages}
+                className="h-24 w-24 rounded-md items-center justify-center overflow-hidden"
+                style={{ backgroundColor: appTheme.sidebarIconBackground }}
+              >
+                {uploading ? (
+                  <SpinnerComponent height={20} />
+                ) : (
+                  <Ionicons
+                    name="camera-outline"
+                    size={28}
+                    color={appTheme.iconColor}
+                  />
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
 
           <View className="gap-2">
             <Text
@@ -453,8 +470,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
             isLoading={loading}
             onPress={handleSubmit}
           />
-        </BottomSheetScrollView>
-      </BottomSheetModal>
+      </ResponsiveFormSheet>
     );
   },
 );

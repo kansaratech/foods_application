@@ -17,7 +17,7 @@ const CustomTab = ({
 
   return (
     <View
-      className="sticky top-0 z-10 w-full p-3"
+      className="sticky top-0 z-10 w-full p-3 lg:max-w-md lg:self-center"
       style={{ backgroundColor: appTheme.themeBackground }}
     >
       <View

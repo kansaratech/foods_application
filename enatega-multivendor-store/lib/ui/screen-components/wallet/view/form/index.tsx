@@ -2,7 +2,7 @@
 import { IWithdrawModalProps } from "@/lib/utils/interfaces/withdraw.interface";
 
 // Core
-import { Text, TextInput, View } from "react-native";
+import { Platform, Text, TextInput, View } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
 // Components
@@ -35,33 +35,50 @@ export default function WithdrawModal({
     setWithdrawAmount(val);
     setAmountErrMsg("");
   }
+  const isWeb = Platform.OS === "web";
   return (
     <ReactNativeModal
       isVisible={isBottomModalOpen}
-      animationIn="slideInUp"
-      animationOut="slideOutDown"
+      animationIn={isWeb ? "fadeIn" : "slideInUp"}
+      animationOut={isWeb ? "fadeOut" : "slideOutDown"}
       onBackdropPress={() => {
         setIsBottomModalOpen(false);
       }}
       useNativeDriver={true}
-      style={{
-        maxHeight: 400,
-        width: "100%",
-        height: "100%",
-        backgroundColor: appTheme.themeBackground,
-        borderRadius: 20,
-        padding: 5,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 2,
-        },
-        marginLeft: 0,
-        marginTop: ModalMarginTop,
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      }}
+      style={
+        isWeb
+          ? {
+              width: "100%",
+              maxWidth: 420,
+              alignSelf: "center",
+              backgroundColor: appTheme.themeBackground,
+              borderRadius: 20,
+              padding: 16,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }
+          : {
+              maxHeight: 400,
+              width: "100%",
+              height: "100%",
+              backgroundColor: appTheme.themeBackground,
+              borderRadius: 20,
+              padding: 5,
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              marginLeft: 0,
+              marginTop: ModalMarginTop,
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            }
+      }
     >
       <View className="flex flex-col justify-between h-[75%] p-2 items-center w-full">
         <View

@@ -1,6 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { BottomSheetModal, BottomSheetView } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@apollo/client";
 import { useTranslation } from "react-i18next";
@@ -16,6 +15,9 @@ import { UPLOAD_IMAGE_TO_S3 } from "@/lib/apollo/mutations/upload.mutation";
 import { RESTAURANT_CATEGORIES_PAGINATED } from "@/lib/apollo/queries/menu.query";
 import { CustomContinueButton } from "@/lib/ui/useable-components";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
+import ResponsiveFormSheet, {
+  ResponsiveFormSheetHandle,
+} from "@/lib/ui/useable-components/responsive-form-sheet";
 import { ICategory } from "@/lib/utils/interfaces/menu.interface";
 
 export interface CategoryFormSheetHandle {
@@ -32,7 +34,7 @@ const CategoryFormSheet = forwardRef<CategoryFormSheetHandle, Props>(
   ({ restaurantId, page, search }, ref) => {
     const { appTheme } = useApptheme();
     const { t } = useTranslation();
-    const sheetRef = useRef<BottomSheetModal>(null);
+    const sheetRef = useRef<ResponsiveFormSheetHandle>(null);
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [title, setTitle] = useState("");
@@ -132,31 +134,7 @@ const CategoryFormSheet = forwardRef<CategoryFormSheetHandle, Props>(
     const loading = creating || editing;
 
     return (
-      <BottomSheetModal
-        ref={sheetRef}
-        style={{ backgroundColor: appTheme.themeBackground }}
-        handleComponent={() => (
-          <View
-            style={{
-              backgroundColor: appTheme.themeBackground,
-              alignItems: "center",
-              justifyContent: "center",
-              borderTopWidth: 1,
-              borderTopColor: appTheme.fontMainColor,
-              paddingVertical: 8,
-            }}
-          >
-            <Ionicons color={appTheme.fontMainColor} name="remove" size={30} />
-          </View>
-        )}
-      >
-        <BottomSheetView
-          style={{
-            padding: 16,
-            gap: 12,
-            backgroundColor: appTheme.themeBackground,
-          }}
-        >
+      <ResponsiveFormSheet ref={sheetRef}>
           <Text
             className="text-lg font-semibold"
             style={{ color: appTheme.fontMainColor }}
@@ -211,8 +189,7 @@ const CategoryFormSheet = forwardRef<CategoryFormSheetHandle, Props>(
             isLoading={loading}
             onPress={handleSubmit}
           />
-        </BottomSheetView>
-      </BottomSheetModal>
+      </ResponsiveFormSheet>
     );
   },
 );

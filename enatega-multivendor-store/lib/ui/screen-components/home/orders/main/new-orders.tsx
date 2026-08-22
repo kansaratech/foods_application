@@ -17,12 +17,10 @@ import Order from "@/lib/ui/useable-components/order";
 import SetTimeScreenAndAcceptOrder from "@/lib/ui/useable-components/set-order-accept-time";
 import { WalletIcon } from "@/lib/ui/useable-components/svg";
 import { ORDER_TYPE } from "@/lib/utils/types";
-import { Ionicons } from "@expo/vector-icons";
-import {
-  BottomSheetModal,
-  BottomSheetModalProvider,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import ResponsiveFormSheet, {
+  ResponsiveFormSheetHandle,
+} from "@/lib/ui/useable-components/responsive-form-sheet";
 import { useTranslation } from "react-i18next";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
@@ -41,7 +39,7 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
   useSafeKeepAwake();
 
   // Ref
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const bottomSheetModalRef = useRef<ResponsiveFormSheetHandle>(null);
 
   // States
   const [refreshing, setRefreshing] = useState(false);
@@ -138,7 +136,7 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
             setSelectedTab={setCurrentTab}
           />
 
-          <View className="flex-1 w-full">
+          <View className="flex-1 w-full lg:max-w-4xl lg:self-center">
             {loading && (!orders || orders?.length < 1) ? (
               <View className="flex-1">
                 <SpinnerComponent />
@@ -167,42 +165,15 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
           </View>
         </View>
 
-        <BottomSheetModal
-          ref={bottomSheetModalRef}
-          style={{ backgroundColor: appTheme.themeBackground }}
-          handleComponent={() => (
-            <View
-              style={{
-                backgroundColor: appTheme.themeBackground,
-                alignItems: "center",
-                justifyContent: "center",
-                borderTopWidth: 1,
-                borderTopColor: appTheme.fontMainColor,
-              }}
-            >
-              <Ionicons
-                color={appTheme.fontMainColor}
-                name="remove"
-                size={30}
-              />
-            </View>
+        <ResponsiveFormSheet ref={bottomSheetModalRef} maxWidth={420}>
+          {selectedOrder?._id && (
+            <SetTimeScreenAndAcceptOrder
+              id={selectedOrder?._id ?? ""}
+              orderId={selectedOrder?.orderId ?? ""}
+              handleDismissModal={handleDismissModal}
+            />
           )}
-        >
-          <BottomSheetView
-            style={[
-              style.contentContainer,
-              { backgroundColor: appTheme.themeBackground },
-            ]}
-          >
-            {selectedOrder?._id && (
-              <SetTimeScreenAndAcceptOrder
-                id={selectedOrder?._id ?? ""}
-                orderId={selectedOrder?.orderId ?? ""}
-                handleDismissModal={handleDismissModal}
-              />
-            )}
-          </BottomSheetView>
-        </BottomSheetModal>
+        </ResponsiveFormSheet>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
