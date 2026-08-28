@@ -26,8 +26,10 @@ const getEnvVars = (env = Updates.channel) => {
   }
 
   return {
-    GRAPHQL_URL: "http://localhost:4000/graphql",
-    WS_GRAPHQL_URL: "ws://localhost:4000/graphql",
+    // Use the machine's LAN IP, not "localhost": on an Android emulator or a
+    // physical device "localhost" is the device itself, not the dev machine.
+    GRAPHQL_URL: "http://192.168.1.127:4000/graphql",
+    WS_GRAPHQL_URL: "ws://192.168.1.127:4000/graphql",
     SENTRY_DSN:
       configuration?.riderAppSentryUrl ??
       "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",

@@ -3,10 +3,10 @@ const ENV_CONFIG = {
     // A physical phone can't reach "localhost" - that means the phone
     // itself, not this computer. Point it at the computer's LAN IP instead
     // (phone and computer must be on the same Wi-Fi network).
-    GRAPHQL_URL: 'http://192.168.1.102:4000/graphql',
-    WS_GRAPHQL_URL: 'ws://192.168.1.102:4000/graphql',
-    SERVER_URL: 'http://192.168.1.102:4000/graphql',
-    SERVER_REST_URL: 'http://192.168.1.102:4000/',
+    GRAPHQL_URL: 'http://192.168.1.127:4000/graphql',
+    WS_GRAPHQL_URL: 'ws://192.168.1.127:4000/graphql',
+    SERVER_URL: 'http://192.168.1.127:4000/graphql',
+    SERVER_REST_URL: 'http://192.168.1.127:4000/',
     CLARITY_ENABLED: true
   },
   staging: {

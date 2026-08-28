@@ -1,6 +1,18 @@
 import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin();
+
+const isDev = process.env.NODE_ENV !== "production";
+
+// In local development the API is served over plain http/ws (e.g.
+// http://localhost:4000), which the production CSP below blocks: `connect-src`
+// only allows https:/wss: and `upgrade-insecure-requests` rewrites http -> https.
+// Add explicit http/ws origins and drop the upgrade directive when not building
+// for production so the customer web app can actually reach a local backend.
+const devConnectSrc = isDev
+  ? " http://localhost:4000 ws://localhost:4000 http://127.0.0.1:4000 ws://127.0.0.1:4000"
+  : "";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -11,10 +23,10 @@ const contentSecurityPolicy = [
   "font-src 'self' data: https:",
   "style-src 'self' 'unsafe-inline' https:",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
-  "connect-src 'self' https: wss: ws:",
+  `connect-src 'self' https: wss: ws:${devConnectSrc}`,
   "frame-src 'self' https:",
   "media-src 'self' data: blob: https:",
-  "upgrade-insecure-requests",
+  ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 /** @type {import('next').NextConfig} */

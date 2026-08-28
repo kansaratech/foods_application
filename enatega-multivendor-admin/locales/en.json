@@ -347,6 +347,7 @@
   "PICKED": "PICKED",
   "ASSIGNED": "ASSIGNED",
   "DELIVERED": "DELIVERED",
+  "COMPLETED": "COMPLETED",
   "REJECTED": "REJECTED",
   "shop Type": "Shop Type",
   "Upload a Logo": "Upload a logo",
