@@ -1,0 +1,1126 @@
+{
+  "info": {
+    "name": "Enatega Backend · Rider",
+    "description": "Rider app (enatega-multivendor-rider). Auth via riderLogin (username = \"rider1\", not email).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "wsUrl",
+      "value": "ws://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "riderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 · Auth & Profile",
+      "item": [
+        {
+          "name": "riderLogin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.riderLogin.token; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('token', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}",
+                  "try { const v = body.data.riderLogin.userId; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('riderId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation riderLogin($username:String,$password:String,$timeZone:String!,$notificationToken:String){ riderLogin(username:$username,password:$password,timeZone:$timeZone,notificationToken:$notificationToken){ userId token tokenExpiration name email phone isActive } }\",\n  \"variables\": {\n    \"username\": \"rider1\",\n    \"password\": \"Rider@123\",\n    \"timeZone\": \"America/Los_Angeles\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.profile._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('riderId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { profile { _id name email phone } }\",\n  \"variables\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "configuration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { configuration { _id currency currencySymbol deliveryRate termsAndConditions privacyPolicy skipEmailVerification skipMobileVerification googleMapsApiKey } }\",\n  \"variables\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 · Orders",
+      "item": [
+        {
+          "name": "riderOrders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.riderOrders.0._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('orderId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { riderOrders { _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } } }\",\n  \"variables\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query order($id:String!){ order(id:$id){ _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "orderDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query orderDetails($id:String!){ orderDetails(id:$id){ _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } deliveryAddress { deliveryAddress location { coordinates } } } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "assignOrder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation assignOrder($id:String!){ assignOrder(id:$id){ _id rider { _id name } orderStatus } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateOrderStatusRider (PICKED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$status:String!){ updateOrderStatusRider(id:$id,status:$status){ _id orderStatus isPickedUp } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\",\n    \"status\": \"PICKED\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateOrderStatusRider (DELIVERED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$status:String!){ updateOrderStatusRider(id:$id,status:$status){ _id orderStatus } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\",\n    \"status\": \"DELIVERED\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 · Rider Status & Schedule",
+      "item": [
+        {
+          "name": "updateRiderLocation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($latitude:String!,$longitude:String!){ updateRiderLocation(latitude:$latitude,longitude:$longitude){ _id location { coordinates } } }\",\n  \"variables\": {\n    \"latitude\": \"37.7749\",\n    \"longitude\": \"-122.4194\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateRiderLicenseDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$licenseDetails:LicenseDetailsInput){ updateRiderLicenseDetails(id:$id,licenseDetails:$licenseDetails){ _id licenseDetails { number expiryDate } } }\",\n  \"variables\": {\n    \"id\": \"{{riderId}}\",\n    \"licenseDetails\": {\n      \"number\": \"LIC-1001\",\n      \"expiryDate\": \"2027-01-01\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateRiderVehicleDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$vehicleDetails:VehicleDetailsInput){ updateRiderVehicleDetails(id:$id,vehicleDetails:$vehicleDetails){ _id vehicleDetails { number } } }\",\n  \"variables\": {\n    \"id\": \"{{riderId}}\",\n    \"vehicleDetails\": {\n      \"number\": \"MC-1001\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateRiderBussinessDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$bussinessDetails:BussinessDetailsInput){ updateRiderBussinessDetails(id:$id,bussinessDetails:$bussinessDetails){ _id bussinessDetails { bankName accountNumber } } }\",\n  \"variables\": {\n    \"id\": \"{{riderId}}\",\n    \"bussinessDetails\": {\n      \"bankName\": \"Sample Bank\",\n      \"accountName\": \"Alex Rider\",\n      \"accountNumber\": \"000999\",\n      \"accountCode\": \"001\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateWorkSchedule",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($riderId:String!,$workSchedule:[DayScheduleInput!]!,$timeZone:String!){ updateWorkSchedule(riderId:$riderId,workSchedule:$workSchedule,timeZone:$timeZone){ _id workSchedule { day enabled } } }\",\n  \"variables\": {\n    \"riderId\": \"{{riderId}}\",\n    \"timeZone\": \"America/Los_Angeles\",\n    \"workSchedule\": [\n      {\n        \"day\": \"MON\",\n        \"enabled\": true,\n        \"slots\": [\n          {\n            \"startTime\": \"09:00\",\n            \"endTime\": \"17:00\"\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 · Earnings & Withdraw",
+      "item": [
+        {
+          "name": "riderEarningsGraph",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($riderId:ID!,$page:Int,$limit:Int){ riderEarningsGraph(riderId:$riderId,page:$page,limit:$limit){ totalCount earnings { _id totalEarningsSum totalTipsSum totalDeliveries } } }\",\n  \"variables\": {\n    \"riderId\": \"{{riderId}}\",\n    \"page\": 1,\n    \"limit\": 10\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "riderCurrentWithdrawRequest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($riderId:String){ riderCurrentWithdrawRequest(riderId:$riderId){ _id requestId requestAmount status createdAt } }\",\n  \"variables\": {\n    \"riderId\": \"{{riderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "transactionHistory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($userType:UserTypeEnum,$userId:String,$pagination:MoneyPaginationInput){ transactionHistory(userType:$userType,userId:$userId,pagination:$pagination){ pagination { total } data { _id transactionId status amountTransferred } } }\",\n  \"variables\": {\n    \"userType\": \"RIDER\",\n    \"userId\": \"{{riderId}}\",\n    \"pagination\": {\n      \"pageSize\": 10,\n      \"pageNo\": 1\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "earnings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($userId:String,$userType:UserTypeEnum,$pagination:MoneyPaginationInput){ earnings(userId:$userId,userType:$userType,pagination:$pagination){ success pagination { total } data { grandTotalEarnings { riderTotal } earnings { _id orderId } } } }\",\n  \"variables\": {\n    \"userId\": \"{{riderId}}\",\n    \"userType\": \"RIDER\",\n    \"pagination\": {\n      \"pageSize\": 10,\n      \"pageNo\": 1\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createWithdrawRequest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($requestAmount:Float!,$userId:String){ createWithdrawRequest(requestAmount:$requestAmount,userId:$userId){ _id requestId requestAmount status createdAt } }\",\n  \"variables\": {\n    \"requestAmount\": 10,\n    \"userId\": \"{{riderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 · Chat",
+      "item": [
+        {
+          "name": "chat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query chat($order:ID!){ chat(order:$order){ id message createdAt user { id name } } }\",\n  \"variables\": {\n    \"order\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "sendChatMessage",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($orderId:ID!,$message:ChatMessageInput!){ sendChatMessage(orderId:$orderId,message:$message){ success data { id message } } }\",\n  \"variables\": {\n    \"orderId\": \"{{orderId}}\",\n    \"message\": {\n      \"message\": \"On my way\",\n      \"user\": {\n        \"id\": \"{{riderId}}\",\n        \"name\": \"Alex Rider\"\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 · Subscriptions (reference)",
+      "item": [
+        {
+          "name": "[SUB] subscriptionAssignRider",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription subscriptionAssignRider($riderId:String!){ origin order { _id orderId } }\n\n# variables:\n# {\"riderId\":\"{{riderId}}\"}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        },
+        {
+          "name": "[SUB] subscriptionRiderLocation",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription subscriptionRiderLocation($riderId:String!){ _id location { coordinates } }\n\n# variables:\n# {\"riderId\":\"{{riderId}}\"}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        },
+        {
+          "name": "[SUB] riderUpdated",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription riderUpdated { _id }\n\n# variables:\n# {}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        },
+        {
+          "name": "[SUB] subscriptionOrder",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription subscriptionOrder($id:String!){ _id orderStatus }\n\n# variables:\n# {\"id\":\"{{orderId}}\"}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        }
+      ]
+    }
+  ]
+}

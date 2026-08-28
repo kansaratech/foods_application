@@ -334,7 +334,7 @@ const TermsConditions = () => {
       ],
     },
     {
-      number: "20.",
+      number: "21.",
       head: t("representations_warranties_limitations"),
       paras: [
         t("terms_paragraph_20_1"),

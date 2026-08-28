@@ -17,19 +17,19 @@ const OnePara = ({Para}) => {
         <h3>{Para.number}</h3>
         <Heading heading={Para.head}/>
         </div>
-        {Para?.paras?.map((paragraph: OneParaProps)=>
-        { 
-           return <Paragraph 
-           key={paragraph.number}
+        {Para?.paras?.map((paragraph: string, index: number)=>
+        {
+           return <Paragraph
+           key={index}
            paragraph={paragraph} />
 
         })}
         <ul className='list-disc list-inside mx-4'>
         {
-            Para?.list?.map((item:OneParaProps)=>
+            Para?.list?.map((item:OneParaProps, index: number)=>
             {
-             return <ListItem 
-             key={item.number}
+             return <ListItem
+             key={index}
              item={item}  />
             })
         }

@@ -1,0 +1,2870 @@
+{
+  "info": {
+    "name": "Enatega Backend · Store (Vendor)",
+    "description": "Restaurant/store app (enatega-multivendor-store). Auth via restaurantLogin (username = \"FalafelTmeer@yopmail.com\" / \"Yalla0014yalla0014@\"); returns an owner (VENDOR) token + restaurantId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "wsUrl",
+      "value": "ws://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "restaurantId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ownerId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "foodId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "addonId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "couponId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "riderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 · Auth & Store Profile",
+      "item": [
+        {
+          "name": "restaurantLogin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.restaurantLogin.token; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('token', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}",
+                  "try { const v = body.data.restaurantLogin.restaurantId; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('restaurantId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation restaurantLogin($username:String!,$password:String!,$notificationToken:String){ restaurantLogin(username:$username,password:$password,notificationToken:$notificationToken){ token restaurantId } }\",\n  \"variables\": {\n    \"username\": \"FalafelTmeer@yopmail.com\",\n    \"password\": \"Yalla0014yalla0014@\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "profile (owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.profile._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('ownerId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { profile { _id name email } }\",\n  \"variables\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "restaurantLogin returns an owner (VENDOR) token; this resolves the owner user id used by the vendor dashboard / support queries."
+          }
+        },
+        {
+          "name": "restaurant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query restaurant($id:String){ restaurant(id:$id){ _id name slug isActive isAvailable address deliveryTime minimumOrder logo commissionRate tax currentWalletAmount totalWalletAmount openingTimes { day times { startTime endTime } } bussinessDetails { bankName accountNumber } } }\",\n  \"variables\": {\n    \"id\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "configuration",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { configuration { _id currency currencySymbol deliveryRate termsAndConditions privacyPolicy skipEmailVerification skipMobileVerification currencySymbol googleMapsApiKey } }\",\n  \"variables\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "editRestaurant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation editRestaurant($restaurant:RestaurantProfileInput!){ editRestaurant(restaurant:$restaurant){ _id name slug isActive isAvailable address deliveryTime minimumOrder } }\",\n  \"variables\": {\n    \"restaurant\": {\n      \"_id\": \"{{restaurantId}}\",\n      \"name\": \"Sample Restaurant\",\n      \"phone\": \"+15550003333\",\n      \"address\": \"123 Main St, San Francisco, CA\",\n      \"deliveryTime\": 30,\n      \"minimumOrder\": 10,\n      \"isAvailable\": true\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "toggleStoreAvailability",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation toggleStoreAvailability($restaurantId:String!){ toggleStoreAvailability(restaurantId:$restaurantId){ _id isAvailable } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "saveRestaurantToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation saveRestaurantToken($token:String,$isEnabled:Boolean){ saveRestaurantToken(token:$token,isEnabled:$isEnabled){ _id notificationToken enableNotification } }\",\n  \"variables\": {\n    \"token\": \"fcm-store-token-123\",\n    \"isEnabled\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateTimings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation updateTimings($id:String!,$openingTimes:[TimingsInput]){ updateTimings(id:$id,openingTimes:$openingTimes){ _id openingTimes { day } } }\",\n  \"variables\": {\n    \"id\": \"{{restaurantId}}\",\n    \"openingTimes\": [\n      {\n        \"day\": \"MON\",\n        \"times\": [\n          {\n            \"startTime\": [\n              \"09\",\n              \"00\"\n            ],\n            \"endTime\": [\n              \"22\",\n              \"00\"\n            ]\n          }\n        ]\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateRestaurantBussinessDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$bussinessDetails:BussinessDetailsInput){ updateRestaurantBussinessDetails(id:$id,bussinessDetails:$bussinessDetails){ success message } }\",\n  \"variables\": {\n    \"id\": \"{{restaurantId}}\",\n    \"bussinessDetails\": {\n      \"bankName\": \"Sample Bank\",\n      \"accountName\": \"Sample Vendor\",\n      \"accountNumber\": \"000123456\",\n      \"accountCode\": \"001\",\n      \"taxRate\": 5\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateDeliveryBoundsAndLocation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:ID!,$boundType:String!,$circleBounds:CircleBoundsInput,$location:CoordinatesInput!,$address:String,$city:String,$postCode:String){ updateDeliveryBoundsAndLocation(id:$id,boundType:$boundType,circleBounds:$circleBounds,location:$location,address:$address,city:$city,postCode:$postCode){ success message } }\",\n  \"variables\": {\n    \"id\": \"{{restaurantId}}\",\n    \"boundType\": \"radius\",\n    \"circleBounds\": {\n      \"radius\": 5000\n    },\n    \"location\": {\n      \"latitude\": 37.7749,\n      \"longitude\": -122.4194\n    },\n    \"address\": \"123 Main St\",\n    \"city\": \"San Francisco\",\n    \"postCode\": \"94103\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getRestaurantDeliveryZoneInfo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($id:ID!){ getRestaurantDeliveryZoneInfo(id:$id){ boundType address city postCode circleBounds { radius } location { coordinates } } }\",\n  \"variables\": {\n    \"id\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 · Orders",
+      "item": [
+        {
+          "name": "restaurantOrders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.restaurantOrders.0._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('orderId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { restaurantOrders { _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } } }\",\n  \"variables\": {}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "ordersByRestId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurant:String!,$page:Int,$rows:Int,$search:String,$orderStatus:[String]){ ordersByRestId(restaurant:$restaurant,page:$page,rows:$rows,search:$search,orderStatus:$orderStatus){ totalCount orders { _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } } } }\",\n  \"variables\": {\n    \"restaurant\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"rows\": 10,\n    \"search\": \"\",\n    \"orderStatus\": []\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getActiveOrders",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurantId:String,$page:Int,$rowsPerPage:Int){ getActiveOrders(restaurantId:$restaurantId,page:$page,rowsPerPage:$rowsPerPage){ totalCount orders { _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } } } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"rowsPerPage\": 10\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query order($id:String!){ order(id:$id){ _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "orderDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query orderDetails($id:String!){ orderDetails(id:$id){ _id orderId orderStatus paymentMethod paymentStatus orderAmount paidAmount isActive isPickedUp createdAt restaurant { _id name } user { _id name phone } rider { _id name } items { _id title quantity price } deliveryAddress { deliveryAddress } } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "acceptOrder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation acceptOrder($_id:String!,$time:String){ acceptOrder(_id:$_id,time:$time){ _id orderStatus acceptedAt preparationTime } }\",\n  \"variables\": {\n    \"_id\": \"{{orderId}}\",\n    \"time\": \"20\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "orderPickedUp",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation orderPickedUp($_id:String!){ orderPickedUp(_id:$_id){ _id orderStatus isPickedUp pickedAt } }\",\n  \"variables\": {\n    \"_id\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "cancelOrder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation cancelOrder($_id:String!,$reason:String!){ cancelOrder(_id:$_id,reason:$reason){ _id orderStatus reason cancelledAt } }\",\n  \"variables\": {\n    \"_id\": \"{{orderId}}\",\n    \"reason\": \"Out of stock\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateOrderStatus",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation updateOrderStatus($id:String!,$status:String!){ updateOrderStatus(id:$id,status:$status){ _id orderStatus } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\",\n    \"status\": \"ACCEPTED\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "assignRider",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation assignRider($id:String!,$riderId:String!){ assignRider(id:$id,riderId:$riderId){ _id rider { _id name } } }\",\n  \"variables\": {\n    \"id\": \"{{orderId}}\",\n    \"riderId\": \"{{riderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "muteRing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation muteRing($orderId:String){ muteRing(orderId:$orderId) }\",\n  \"variables\": {\n    \"orderId\": \"{{orderId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 · Menu Management",
+      "item": [
+        {
+          "name": "restaurantCategoriesPaginated",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.restaurantCategoriesPaginated.data.0._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('categoryId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}",
+                  "try { const v = body.data.restaurantCategoriesPaginated.data.0.foods.0._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('foodId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurantId:String!,$page:Int,$limit:Int,$search:String){ restaurantCategoriesPaginated(restaurantId:$restaurantId,page:$page,limit:$limit,search:$search){ totalCount data { _id title foods { _id title } } } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"limit\": 10,\n    \"search\": \"\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "restaurantOptionsPaginated",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurantId:String!,$page:Int,$limit:Int,$search:String){ restaurantOptionsPaginated(restaurantId:$restaurantId,page:$page,limit:$limit,search:$search){ totalCount data { _id title description price } } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"limit\": 10,\n    \"search\": \"\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "restaurantAddonsPaginated",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.restaurantAddonsPaginated.data.0._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('addonId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurantId:String!,$page:Int,$limit:Int,$search:String){ restaurantAddonsPaginated(restaurantId:$restaurantId,page:$page,limit:$limit,search:$search){ totalCount data { _id title description quantityMinimum quantityMaximum options { _id title price } } } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"limit\": 10,\n    \"search\": \"\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "popularFoodItems",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query popularFoodItems($restaurantId:String!){ popularFoodItems(restaurantId:$restaurantId){ _id title description image isActive isOutOfStock variations { _id title price } } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "subCategoriesByParentId",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($parentCategoryId:String!){ subCategoriesByParentId(parentCategoryId:$parentCategoryId){ _id title parentCategoryId } }\",\n  \"variables\": {\n    \"parentCategoryId\": \"{{categoryId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createCategory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation createCategory($category:CategoryInput!){ createCategory(category:$category){ _id categories { _id title } } }\",\n  \"variables\": {\n    \"category\": {\n      \"title\": \"QA Category\",\n      \"restaurant\": \"{{restaurantId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "editCategory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation editCategory($category:CategoryInput!){ editCategory(category:$category){ _id } }\",\n  \"variables\": {\n    \"category\": {\n      \"_id\": \"{{categoryId}}\",\n      \"title\": \"Burgers\",\n      \"restaurant\": \"{{restaurantId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "deleteCategory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation deleteCategory($id:String!,$restaurant:String!){ deleteCategory(id:$id,restaurant:$restaurant){ _id } }\",\n  \"variables\": {\n    \"id\": \"REPLACE_WITH_DISPOSABLE_CATEGORY_ID\",\n    \"restaurant\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createFood",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation createFood($foodInput:FoodInput!){ createFood(foodInput:$foodInput){ _id } }\",\n  \"variables\": {\n    \"foodInput\": {\n      \"restaurant\": \"{{restaurantId}}\",\n      \"title\": \"QA Item\",\n      \"description\": \"Test\",\n      \"category\": \"{{categoryId}}\",\n      \"variations\": [\n        {\n          \"title\": \"Regular\",\n          \"price\": 9.99\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "editFood",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation editFood($foodInput:FoodInput!){ editFood(foodInput:$foodInput){ _id } }\",\n  \"variables\": {\n    \"foodInput\": {\n      \"_id\": \"{{foodId}}\",\n      \"restaurant\": \"{{restaurantId}}\",\n      \"title\": \"Classic Burger\",\n      \"category\": \"{{categoryId}}\",\n      \"variations\": [\n        {\n          \"title\": \"Regular\",\n          \"price\": 8.99\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "updateFoodOutOfStock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($id:String!,$restaurant:String!,$categoryId:String!){ updateFoodOutOfStock(id:$id,restaurant:$restaurant,categoryId:$categoryId) }\",\n  \"variables\": {\n    \"id\": \"{{foodId}}\",\n    \"restaurant\": \"{{restaurantId}}\",\n    \"categoryId\": \"{{categoryId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "deleteFood",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation deleteFood($id:String!,$restaurant:String!,$categoryId:String!){ deleteFood(id:$id,restaurant:$restaurant,categoryId:$categoryId){ _id } }\",\n  \"variables\": {\n    \"id\": \"REPLACE_WITH_DISPOSABLE_FOOD_ID\",\n    \"restaurant\": \"{{restaurantId}}\",\n    \"categoryId\": \"{{categoryId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createAddon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation createAddon($addonInput:AddonInput!){ createAddon(addonInput:$addonInput){ _id title description quantityMinimum quantityMaximum options { _id title price } } }\",\n  \"variables\": {\n    \"addonInput\": {\n      \"restaurant\": \"{{restaurantId}}\",\n      \"title\": \"QA Addon\",\n      \"quantityMinimum\": 0,\n      \"quantityMaximum\": 2,\n      \"options\": [\n        {\n          \"title\": \"Extra\",\n          \"price\": 1\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "editAddon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation editAddon($addonInput:AddonInput!){ editAddon(addonInput:$addonInput){ _id title description quantityMinimum quantityMaximum options { _id title price } } }\",\n  \"variables\": {\n    \"addonInput\": {\n      \"_id\": \"{{addonId}}\",\n      \"restaurant\": \"{{restaurantId}}\",\n      \"title\": \"Extra Toppings\",\n      \"quantityMinimum\": 0,\n      \"quantityMaximum\": 3\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "deleteAddon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation deleteAddon($id:String!,$restaurant:String!){ deleteAddon(id:$id,restaurant:$restaurant) }\",\n  \"variables\": {\n    \"id\": \"REPLACE_WITH_DISPOSABLE_ADDON_ID\",\n    \"restaurant\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createSubCategories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation createSubCategories($subCategories:[SubCategoryInput!]!){ createSubCategories(subCategories:$subCategories) }\",\n  \"variables\": {\n    \"subCategories\": [\n      {\n        \"title\": \"QA Sub\",\n        \"parentCategoryId\": \"{{categoryId}}\"\n      }\n    ]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "uploadImageToS3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation uploadImageToS3($image:String!){ uploadImageToS3(image:$image){ imageUrl } }\",\n  \"variables\": {\n    \"image\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 · Coupons",
+      "item": [
+        {
+          "name": "restaurantCoupons",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.restaurantCoupons.0._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('couponId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query restaurantCoupons($restaurantId:String!){ restaurantCoupons(restaurantId:$restaurantId){ _id title discount enabled lifeTimeActive startDate endDate } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "restaurantCouponsPaginated",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurantId:String!,$page:Int,$limit:Int){ restaurantCouponsPaginated(restaurantId:$restaurantId,page:$page,limit:$limit){ totalCount data { _id title discount enabled lifeTimeActive startDate endDate } } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"limit\": 10\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createRestaurantCoupon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($restaurantId:ID!,$couponInput:CouponInput!){ createRestaurantCoupon(restaurantId:$restaurantId,couponInput:$couponInput){ _id title discount enabled lifeTimeActive startDate endDate } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"couponInput\": {\n      \"title\": \"SQA1787891593987\",\n      \"discount\": 5,\n      \"enabled\": true\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "editRestaurantCoupon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($restaurantId:ID!,$couponInput:CouponInput!){ editRestaurantCoupon(restaurantId:$restaurantId,couponInput:$couponInput){ _id title discount enabled lifeTimeActive startDate endDate } }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"couponInput\": {\n      \"_id\": \"{{couponId}}\",\n      \"title\": \"BURGER5\",\n      \"discount\": 5,\n      \"enabled\": true\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "deleteRestaurantCoupon",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($restaurantId:ID!,$couponId:ID!){ deleteRestaurantCoupon(restaurantId:$restaurantId,couponId:$couponId) }\",\n  \"variables\": {\n    \"restaurantId\": \"{{restaurantId}}\",\n    \"couponId\": \"REPLACE_WITH_DISPOSABLE_COUPON_ID\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 · Earnings & Withdraw",
+      "item": [
+        {
+          "name": "storeEarningsGraph",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($storeId:ID!,$page:Int,$limit:Int){ storeEarningsGraph(storeId:$storeId,page:$page,limit:$limit){ totalCount earnings { _id totalEarningsSum } } }\",\n  \"variables\": {\n    \"storeId\": \"{{restaurantId}}\",\n    \"page\": 1,\n    \"limit\": 10\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "storeCurrentWithdrawRequest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($storeId:String){ storeCurrentWithdrawRequest(storeId:$storeId){ _id requestId requestAmount status createdAt } }\",\n  \"variables\": {\n    \"storeId\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "transactionHistory",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($userType:UserTypeEnum,$userId:String,$pagination:MoneyPaginationInput){ transactionHistory(userType:$userType,userId:$userId,pagination:$pagination){ pagination { total } data { _id transactionId status amountTransferred } } }\",\n  \"variables\": {\n    \"userType\": \"STORE\",\n    \"userId\": \"{{restaurantId}}\",\n    \"pagination\": {\n      \"pageSize\": 10,\n      \"pageNo\": 1\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "earnings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($userType:UserTypeEnum,$pagination:MoneyPaginationInput){ earnings(userType:$userType,pagination:$pagination){ success pagination { total } data { grandTotalEarnings { storeTotal } earnings { _id orderId } } } }\",\n  \"variables\": {\n    \"userType\": \"STORE\",\n    \"pagination\": {\n      \"pageSize\": 10,\n      \"pageNo\": 1\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createWithdrawRequest",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($requestAmount:Float!,$restaurant:String){ createWithdrawRequest(requestAmount:$requestAmount,restaurant:$restaurant){ _id requestId requestAmount status createdAt } }\",\n  \"variables\": {\n    \"requestAmount\": 10,\n    \"restaurant\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 · Dashboard & Reviews",
+      "item": [
+        {
+          "name": "getRestaurantDashboardOrdersSalesStats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurant:String!,$starting_date:String!,$ending_date:String!){ getRestaurantDashboardOrdersSalesStats(restaurant:$restaurant,starting_date:$starting_date,ending_date:$ending_date){ totalOrders totalSales totalCODOrders totalCardOrders } }\",\n  \"variables\": {\n    \"restaurant\": \"{{restaurantId}}\",\n    \"starting_date\": \"2025-01-01\",\n    \"ending_date\": \"2025-12-31\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getRestaurantDashboardSalesOrderCountDetailsByYear",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurant:String!,$year:Int!){ getRestaurantDashboardSalesOrderCountDetailsByYear(restaurant:$restaurant,year:$year){ salesAmount ordersCount } }\",\n  \"variables\": {\n    \"restaurant\": \"{{restaurantId}}\",\n    \"year\": 2026\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getRestaurantDashboardOrderSalesDetailsByPaymentMethod",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($restaurant:String!,$starting_date:String!,$ending_date:String!){ getRestaurantDashboardOrderSalesDetailsByPaymentMethod(restaurant:$restaurant,starting_date:$starting_date,ending_date:$ending_date){ total_orders total_sales pickup_orders delivery_orders } }\",\n  \"variables\": {\n    \"restaurant\": \"{{restaurantId}}\",\n    \"starting_date\": \"2025-01-01\",\n    \"ending_date\": \"2025-12-31\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getVendorDashboardStatsCardDetails",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($vendorId:String!,$starting_date:String!,$ending_date:String!){ getVendorDashboardStatsCardDetails(vendorId:$vendorId,starting_date:$starting_date,ending_date:$ending_date){ totalRestaurants totalOrders totalSales totalDeliveries } }\",\n  \"variables\": {\n    \"vendorId\": \"{{ownerId}}\",\n    \"starting_date\": \"2025-01-01\",\n    \"ending_date\": \"2025-12-31\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getLiveMonitorData",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($id:String!){ getLiveMonitorData(id:$id){ online_stores cancelled_orders delayed_orders ratings } }\",\n  \"variables\": {\n    \"id\": \"{{ownerId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "reviewsByRestaurant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query reviewsByRestaurant($restaurant:String!){ reviewsByRestaurant(restaurant:$restaurant){ reviews { _id rating description comments isActive createdAt order { user { _id name } } } } }\",\n  \"variables\": {\n    \"restaurant\": \"{{restaurantId}}\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 · Support Tickets",
+      "item": [
+        {
+          "name": "createSupportTicket",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);",
+                  "const d = (body && body.data) || {};",
+                  "try { const v = body.data.createSupportTicket._id; if (v !== undefined && v !== null && v !== '') pm.collectionVariables.set('ticketId', typeof v === 'object' ? JSON.stringify(v) : String(v)); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($ticketInput:SupportTicketInput!){ createSupportTicket(ticketInput:$ticketInput){ _id title description status category orderId createdAt user { _id name userType } } }\",\n  \"variables\": {\n    \"ticketInput\": {\n      \"title\": \"Store issue\",\n      \"description\": \"Printer not working\",\n      \"category\": \"TECHNICAL\",\n      \"userType\": \"VENDOR\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getSingleUserSupportTickets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($input:SingleUserSupportTicketsInput!){ getSingleUserSupportTickets(input:$input){ docsCount tickets { _id title description status category orderId createdAt user { _id name userType } } } }\",\n  \"variables\": {\n    \"input\": {\n      \"userId\": \"{{ownerId}}\",\n      \"filters\": {\n        \"page\": 1,\n        \"limit\": 10\n      }\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "getTicketMessages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query($input:TicketMessagesInput!){ getTicketMessages(input:$input){ docsCount messages { _id content senderType isRead ticket createdAt } } }\",\n  \"variables\": {\n    \"input\": {\n      \"ticket\": \"{{ticketId}}\",\n      \"page\": 1,\n      \"limit\": 20\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        },
+        {
+          "name": "createMessage",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const status = pm.response.code;",
+                  "pm.test('HTTP 200', () => pm.expect(status).to.eql(200));",
+                  "let body;",
+                  "try { body = pm.response.json(); } catch (e) { body = {}; }",
+                  "pm.test('No GraphQL errors', () => pm.expect(body.errors, JSON.stringify(body.errors)).to.be.undefined);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation($messageInput:MessageInput!){ createMessage(messageInput:$messageInput){ _id content senderType isRead ticket createdAt } }\",\n  \"variables\": {\n    \"messageInput\": {\n      \"content\": \"Still broken\",\n      \"ticket\": \"{{ticketId}}\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/graphql",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 · Subscriptions (reference)",
+      "item": [
+        {
+          "name": "[SUB] subscriptionOrder",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription subscriptionOrder($id:String!){ _id orderStatus }\n\n# variables:\n# {\"id\":\"{{orderId}}\"}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        },
+        {
+          "name": "[SUB] subscribePlaceOrder",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription subscribePlaceOrder($restaurant:String!){ origin order { _id orderId } }\n\n# variables:\n# {\"restaurant\":\"{{restaurantId}}\"}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        },
+        {
+          "name": "[SUB] subscriptionDispatcher",
+          "request": {
+            "method": "OPTIONS",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "# GraphQL subscription — not runnable as HTTP.\n# Connect a WebSocket client to {{wsUrl}}/graphql\n# sub-protocol: graphql-transport-ws (or legacy graphql-ws)\n# connectionParams: { \"authorization\": \"Bearer {{token}}\" }\n\nsubscription subscriptionDispatcher { _id orderId orderStatus }\n\n# variables:\n# {}"
+            },
+            "url": {
+              "raw": "{{wsUrl}}/graphql",
+              "host": [
+                "{{wsUrl}}"
+              ],
+              "path": [
+                "graphql"
+              ]
+            },
+            "description": "Subscription reference only. Use a WebSocket client."
+          }
+        }
+      ]
+    }
+  ]
+}

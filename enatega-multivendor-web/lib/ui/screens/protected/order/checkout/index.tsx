@@ -126,9 +126,11 @@ export default function OrderCheckoutScreen() {
     loadingProfile,
   } = useUser();
 
-  console.log(cart, "cart");
   const { userAddress } = useUserAddress();
-  const restaurantFromLocalStorage = localStorage.getItem("restaurant");
+  const restaurantFromLocalStorage =
+    typeof window !== "undefined"
+      ? localStorage.getItem("restaurant")
+      : null;
   const { data: restaurantData } = useRestaurant(restaurantId || "") || {
     data: restaurantFromLocalStorage
       ? JSON.parse(restaurantFromLocalStorage)

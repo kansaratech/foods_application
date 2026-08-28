@@ -18,7 +18,7 @@ export default function LoginPage() {
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-6 py-16 text-center">
       <h1 className="text-3xl font-semibold">{t("login_label")}</h1>
       <p className="mt-3 text-sm text-neutral-600">
-        {t("password_reset_success")}
+        {t("sign_up_or_log_in_to_continue_message")}
       </p>
       <CustomButton
         label={t("open_login_label")}
