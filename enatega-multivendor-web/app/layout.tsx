@@ -7,7 +7,8 @@ import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
 
 export const metadata = {
-  title: "Enatega Multivendor",
+  title: "Padharo",
+  description: "Jo Chahiye, Padharo Par Mile.",
   manifest: "/manifest.json",
 };
 
@@ -32,6 +33,7 @@ export default async function RootLayout({
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <head>
         <link rel="icon" type="image/png" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/* 🔥 Inline theme script to prevent flash of wrong theme */}
         <script
           dangerouslySetInnerHTML={{
@@ -64,7 +66,7 @@ export default async function RootLayout({
         </Script>
 
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#94e469" />
+        <meta name="theme-color" content="#f5820a" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 

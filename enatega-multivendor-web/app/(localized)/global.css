@@ -1,7 +1,7 @@
 @layer tailwind-base, primereact, tailwind-utilities;
 
 /* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
-@import "primereact/resources/themes/lara-light-green/theme.css"
+@import "primereact/resources/themes/lara-light-amber/theme.css"
   layer(primereact);
 @layer tailwind-base {
   @tailwind base;
@@ -13,14 +13,22 @@
 }
 
 :root {
-  --primary-color: #75d04b;
-  --primary-light: #f3ffee;
-  --primary-dark: #5ac12f;
-  --primary-hover: #68c73e;
-  --primary-pressed: #56b02f;
-  --primary-focus: rgba(117, 208, 75, 0.32);
-  --primary-disabled: #b9e8a3;
-  --secondary-color: #75d04b;
+  /* Padharo palette — orange = primary/CTA, maroon = brand/secondary, teal = accent, cream = tint */
+  --primary-color: #f5820a;
+  --primary-light: #fff3e7;
+  --primary-dark: #d96d00;
+  --primary-hover: #e8760a;
+  --primary-pressed: #c96400;
+  --primary-focus: rgba(245, 130, 10, 0.32);
+  --primary-disabled: #f8cfa0;
+  --secondary-color: #8c1d40;
+
+  --brand-maroon: #8c1d40;
+  --brand-maroon-dark: #6e1732;
+  --brand-orange: #f5820a;
+  --brand-cream: #faf0e6;
+  --brand-teal: #1b9e9e;
+
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;

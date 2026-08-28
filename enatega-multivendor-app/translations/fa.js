@@ -599,7 +599,7 @@ export const fa = {
     Done: 'انجام شد',
     addMessage: 'افزودن پیام',
     kindlyBeAdvisedText: 'لطفا توجه داشته باشید که پیام شما نیز ممکن است برای شریک تحویل که مسئول تحویل سفارش شما به محل است، قابل مشاهده باشد.',
-    exploreYallaCities: 'شهرهای انتگا را کاوش کنید',
+    explorePadharoCities: 'شهرهای انتگا را کاوش کنید',
     Card: 'کارت',
     lebelAlreadyExist: 'برچسب "{{selectedLabel}}" قبلاً وجود دارد. لطفا یکی دیگر انتخاب کنید.',
     UpdateAvailable: 'به روز رسانی موجود است',

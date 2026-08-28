@@ -3,7 +3,7 @@
 /* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
 @import 'primereact/resources/primereact.min.css' layer(primereact);
 @import 'primeicons/primeicons.css' layer(primereact);
-@import 'primereact/resources/themes/lara-light-blue/theme.css'
+@import 'primereact/resources/themes/lara-light-amber/theme.css'
 layer(primereact);
 
 @layer tailwind-base {
@@ -16,9 +16,9 @@ layer(primereact);
 }
 
 :root {
-  --primary-color: #b1c748;
-  --primary-dark: #5ac12f;
-  --secondary-color: #bac973;
+  --primary-color: #f5820a;
+  --primary-dark: #d96d00;
+  --secondary-color: #8c1d40;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
@@ -526,7 +526,7 @@ body {
 .dark .p-datatable-table tr.p-highlight {
   background-color: rgba(90, 193, 47, 0.15) !important;
   /* soft green tint */
-  color: #5ac12f !important;
+  color: var(--primary-color) !important;
 }
 
 /* === Dark mode: dropdown input inside DataTable === */
@@ -871,7 +871,7 @@ body {
 }
 
 .dark .order-filter-dropdown:not(.p-disabled).p-focus {
-  border-color: #5ac12f !important;
+  border-color: var(--primary-color) !important;
   box-shadow: 0 0 0 1px rgba(90, 193, 47, 0.35) !important;
 }
 

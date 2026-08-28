@@ -14,14 +14,12 @@ const PhoneNumberInput = () => {
       inputProps={{
         name: "phoneNumber",
         id: "phoneNumber",
+        // Padding side is handled purely in CSS below (the html[dir="rtl"] rules),
+        // not with a typeof-window branch — that produced an SSR/client mismatch.
         className:
           "w-full border-2 border-gray-200 dark:border-gray-600 py-2 rounded-lg " +
           "focus:outline-none focus:ring-0 active:outline-none " +
-          "bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-100 " +
-          (typeof window !== "undefined" &&
-          document?.documentElement?.dir === "rtl"
-            ? "pr-12"
-            : "pl-12"),
+          "bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-100 pl-12",
       }}
       containerClass="custom-phone-input w-full"
       buttonClass="custom-phone-button"
@@ -73,11 +71,16 @@ const PhoneNumberInput = () => {
         }
 
         html.dark .custom-phone-input .country-list .country.highlight {
-          background-color: #94e469 !important; /* theme green */
+          background-color: var(--primary-color) !important;
           color: #111827 !important; /* gray-900 text */
         }
 
         /* ✅ RTL fixes */
+        html[dir="rtl"] .custom-phone-input .form-control {
+          padding-left: 0 !important;
+          padding-right: 3rem !important; /* mirror of pl-12 */
+        }
+
         html[dir="rtl"] .custom-phone-input .flag-dropdown {
           right: 0; /* stick to right */
           left: auto !important; /* override default left */

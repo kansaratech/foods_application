@@ -26,14 +26,14 @@ module.exports = () => {
   ]
 
   return {
-    name: 'Enatega Multi',
+    name: 'Padharo',
     scheme: 'enategamultivendor',
     version: '1.1.31',
     description:
       "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
     slug: 'enategamultivendor',
     androidStatusBar: {
-      backgroundColor: '#000000'
+      backgroundColor: '#8C1D40'
     },
     // Native OS splash (before JS boots) is theme-aware via the
     // expo-splash-screen plugin below — a solid per-theme background that
@@ -81,7 +81,7 @@ module.exports = () => {
       color: '#90E36D',
       icon: './assets/not-icon.png',
       androidMode: 'default',
-      androidCollapsedTitle: 'Enatega Multivendor'
+      androidCollapsedTitle: 'Padharo'
     },
     android: {
       versionCode: 131,
@@ -131,7 +131,7 @@ module.exports = () => {
       ],
       adaptiveIcon: {
         foregroundImage: './assets/icon.png',
-        backgroundColor: '#000000'
+        backgroundColor: '#8C1D40'
       }
     },
     plugins: [
@@ -143,12 +143,12 @@ module.exports = () => {
           // a 1x1 transparent PNG — only the background color shows. The animated
           // pin / wordmark is drawn by the JS AnimatedSplash component, whose
           // first frame uses these same colors so the handoff shows no flash.
-          backgroundColor: '#f4f8f5', // light ("Pink")
+          backgroundColor: '#8C1D40', // light (Padharo maroon)
           image: './assets/splashTransparent.png',
           imageWidth: 1,
           resizeMode: 'contain',
           dark: {
-            backgroundColor: '#0b1225', // dark
+            backgroundColor: '#6E1732', // dark
             image: './assets/splashTransparent.png'
           }
         }
@@ -165,7 +165,7 @@ module.exports = () => {
         'expo-location',
         {
           locationAlwaysAndWhenInUsePermission:
-            'Allow $Enatega Multivendor to use your location.'
+            'Allow Padharo to use your location.'
         }
       ],
       '@react-native-firebase/app',
@@ -195,8 +195,8 @@ module.exports = () => {
       liveActivity: {
         appGroupId: 'group.com.enatega.multivendor.shared',
         appScheme: 'enategamultivendor',
-        brandName: 'Enatega',
-        primaryColor: '#90E36D',
+        brandName: 'Padharo',
+        primaryColor: '#F5820A',
         accentColor: '#FFA921',
         logoResourceName: 'enatega_logo',
         riderResourceName: 'enatega_rider'

@@ -18,7 +18,7 @@ const ActionButton = ({
         ? "bg-primary-color text-white font-medium transition-colors"
         : disabled
           ? "bg-gray-100 dark:bg-gray-600 dark:text-gray-400 text-gray-400 cursor-not-allowed"
-          : "bg-primary-color  hover:bg-[#5ab633]  text-gray-800"
+          : "bg-primary-color  hover:bg-primary-hover  text-gray-800"
     )}
   >
     {children}

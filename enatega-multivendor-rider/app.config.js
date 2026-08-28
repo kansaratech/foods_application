@@ -9,7 +9,7 @@ const androidGoogleMapsApiKey =
 
 module.exports = {
   expo: {
-    name: 'Enatega Multivendor Rider',
+    name: 'Padharo Rider',
     description:
       "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
     version: '1.1.87',
@@ -30,12 +30,12 @@ module.exports = {
           // a 1x1 transparent PNG — only the background color shows. The animated
           // pin / wordmark is drawn by the JS AnimatedSplash component, whose
           // first frame uses these same colors so the handoff shows no flash.
-          backgroundColor: '#f4f8f5', // light
+          backgroundColor: '#8C1D40', // light (Padharo maroon)
           image: './lib/assets/images/splashTransparent.png',
           imageWidth: 1,
           resizeMode: 'contain',
           dark: {
-            backgroundColor: '#0b1225', // dark
+            backgroundColor: '#6E1732', // dark
             image: './lib/assets/images/splashTransparent.png'
           }
         }
@@ -86,7 +86,7 @@ module.exports = {
       icon: './lib/assets/images/appIcon.png',
       adaptiveIcon: {
         foregroundImage: './lib/assets/images/appIcon.png',
-        backgroundColor: '#ffffff'
+        backgroundColor: '#F5820A'
       }
     },
     extra: {

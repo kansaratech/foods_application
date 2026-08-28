@@ -5,9 +5,10 @@ import { ThemeProvider } from 'next-themes';
 
 // ✅ Add metadata export for favicon
 export const metadata = {
-  title: 'Enatega Admin Dashboard',
+  title: 'Padharo Admin',
+  description: 'Jo Chahiye, Padharo Par Mile.',
   icons: {
-    icon: '/favsicons.png',
+    icon: '/favicon.png',
     // You can add more like:
     // shortcut: "/favicon.png",
     // apple: "/apple-touch-icon.png"

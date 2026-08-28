@@ -634,7 +634,7 @@ export const gu = {
   Done: 'પૂર્ણ',
   addMessage: 'સંદેશ ઉમેરો',
   kindlyBeAdvisedText: 'કૃપા કરીને નોંધ લો કે તમારો સંદેશ તમારો ઓર્ડર ડિલિવર કરવા માટે જવાબદાર કુરિયર પાર્ટનરને પણ દેખાઈ શકે છે.',
-  exploreYallaCities: 'એનાટેગા શહેરો શોધો',
+  explorePadharoCities: 'એનાટેગા શહેરો શોધો',
   Card: 'કાર્ડ',
   lebelAlreadyExist: "'{{selectedLabel}}' લેબલ પહેલેથી જ અસ્તિત્વમાં છે. કૃપા કરીને અલગ એક પસંદ કરો.",
   UpdateAvailable: 'અપડેટ ઉપલબ્ધ',

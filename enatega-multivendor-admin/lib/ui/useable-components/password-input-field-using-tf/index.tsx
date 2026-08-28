@@ -30,27 +30,28 @@ export default function CustomPasswordTextField({
   const _icon = faEye;
 
   return (
-    <IconField iconPosition={'left'}>
-      <InputIcon
-        className="cursor-pointer"
-        onClick={() => setIsVisible((prevState) => !prevState)}
-      >
-        <FontAwesomeIcon icon={_icon} className="mt-3 cursor-pointer" />
-      </InputIcon>
-
-      <div className="flex flex-col gap-y-1">
-        {showLabel && (
-          <label htmlFor="username" className="text-sm font-[500]">
-            {placeholder}
-          </label>
-        )}
+    <div className="flex flex-col gap-y-1">
+      {showLabel && (
+        <label htmlFor="username" className="text-sm font-[500]">
+          {placeholder}
+        </label>
+      )}
+      {/* InputIcon + InputText must be IconField's direct children — it clones
+          them to inject `iconPosition`; a wrapper here leaks the prop to the DOM. */}
+      <IconField iconPosition={'left'}>
+        <InputIcon
+          className="cursor-pointer"
+          onClick={() => setIsVisible((prevState) => !prevState)}
+        >
+          <FontAwesomeIcon icon={_icon} className="mt-3 cursor-pointer" />
+        </InputIcon>
         <InputText
           type={isVisible ? 'text' : 'password'}
           className={`h-10 w-full border border-gray-300 border-inherit px-0 text-sm focus:shadow-none focus:outline-none ${className}`}
           placeholder={placeholder}
           {...props}
         />
-      </div>
-    </IconField>
+      </IconField>
+    </div>
   );
 }

@@ -601,7 +601,7 @@ export const ps = {
   Done: 'ترسره شو',
   addMessage: 'پیغام اضافه کړئ',
   kindlyBeAdvisedText: 'مهرباني وکړئ خبر اوسئ چې ستاسو پیغام ممکن د کوریر ملګري ته هم ښکاره شي چې ستاسو امر د ځای ته د تحویلولو مسؤلیت لري.',
-  exploreYallaCities: 'ایناتیګا ښارونه وپلټئ',
+  explorePadharoCities: 'ایناتیګا ښارونه وپلټئ',
   Card: 'کارډ',
   lebelAlreadyExist: "لیبل '{{selectedLabel}}' لا دمخه شتون لري. مهرباني وکړئ بل یو غوره کړئ.",
   UpdateAvailable: 'تازه شتون لري',

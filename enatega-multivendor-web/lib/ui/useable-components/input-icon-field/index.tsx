@@ -30,17 +30,18 @@ export default function CustomIconTextField({
   const { icon, position, style } = iconProperties;
 
   return !isLoading ?
-      <IconField iconPosition={position} className="w-full">
-        <InputIcon style={style}>
-          <FontAwesomeIcon icon={icon} />
-        </InputIcon>
-
-        <div className="flex w-full flex-col gap-y-1">
-          {showLabel && (
-            <label htmlFor="username" className="text-sm font-[500]">
-              {placeholder}
-            </label>
-          )}
+      <div className="flex w-full flex-col gap-y-1">
+        {showLabel && (
+          <label htmlFor="username" className="text-sm font-[500]">
+            {placeholder}
+          </label>
+        )}
+        {/* InputIcon + InputText must be IconField's direct children — it clones
+            them to inject `iconPosition`; a wrapper here leaks the prop to the DOM. */}
+        <IconField iconPosition={position} className="w-full">
+          <InputIcon style={style}>
+            <FontAwesomeIcon icon={icon} />
+          </InputIcon>
           <InputText
             className={twMerge(
               `h-10 w-full rounded-lg border border-gray-300 px-2 text-sm focus:shadow-none focus:outline-none`,
@@ -49,7 +50,7 @@ export default function CustomIconTextField({
             placeholder={placeholder}
             {...props}
           />
-        </div>
-      </IconField>
+        </IconField>
+      </div>
     : <InputSkeleton showLabel={showLabel} />;
 }

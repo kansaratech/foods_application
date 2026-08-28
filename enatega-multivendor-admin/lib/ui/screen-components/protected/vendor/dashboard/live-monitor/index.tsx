@@ -55,7 +55,7 @@ export default function VendorLiveMonitor({
       </p>
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-4">
         <div className="flex items-center rounded-lg border p-2 lg:p-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#CED111] text-white lg:h-10 bg-[#CED111] lg:w-10">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-primary-color text-white lg:h-10 bg-primary-color lg:w-10">
             <span className="text-base font-semibold lg:text-lg">
               {online_stores ?? 0}
             </span>

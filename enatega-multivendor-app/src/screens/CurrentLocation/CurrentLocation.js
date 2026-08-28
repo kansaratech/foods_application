@@ -313,7 +313,7 @@ export default function CurrentLocation() {
 
           <TouchableOpacity activeOpacity={0.7} style={styles(currentTheme).linkButton} onPress={() => setCitiesModalVisible(true)}>
             <TextDefault textColor={currentTheme.fontMainColor} H5 center>
-              {t('exploreYallaCities')}
+              {t('explorePadharoCities')}
             </TextDefault>
           </TouchableOpacity>
         </View>

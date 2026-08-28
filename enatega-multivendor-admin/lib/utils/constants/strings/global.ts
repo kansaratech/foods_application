@@ -1,2 +1,2 @@
-export const APP_NAME = 'Yalla';
+export const APP_NAME = 'Padharo';
 export const LOGO_URL = '/';

@@ -599,7 +599,7 @@ export const ko = {
     Done: '완료',
     addMessage: '메시지 추가',
     kindlyBeAdvisedText: '메시지가 장소로 배달하는 퀵 서비스 파트너에게도 표시될 수 있다는 점을 알려드립니다.',
-    exploreYallaCities: '에나테가 도시 탐색',
+    explorePadharoCities: '에나테가 도시 탐색',
     Card: '카드',
     lebelAlreadyExist: "라벨 '{{selectedLabel}}'이(가) 이미 존재합니다. 다른 라벨을 선택하세요.",
     UpdateAvailable: '업데이트 가능',

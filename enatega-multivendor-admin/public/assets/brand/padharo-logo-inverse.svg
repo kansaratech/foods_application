@@ -1,0 +1,9 @@
+<svg width="260" height="72" viewBox="0 0 260 72" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Padharo">
+  <ellipse cx="34" cy="60" rx="20" ry="4.5" fill="#1B9E9E"/>
+  <path d="M32 6c6 8.5 14.5 12.5 14.5 23 0 2.6-.7 5.2-2 7.2H19.5c-1.3-2-2-4.6-2-7.2C17.5 18.5 26 14.5 32 6Z" fill="#FAF0E6"/>
+  <path d="M14 18h13.5c11.3 0 19.3 7.3 19.3 18s-8 18-19.3 18H25v22H14V18Zm11 10.5v15h2.5c5.3 0 8.7-2.7 8.7-7.5s-3.4-7.5-8.7-7.5H25Z" fill="#F5820A"/>
+  <path d="M33.5 30c6 0 10.6 4.6 10.6 10.6C44.1 48 33.5 57.5 33.5 57.5S22.9 48 22.9 40.6C22.9 34.6 27.5 30 33.5 30Z" fill="#FAF0E6"/>
+  <circle cx="33.5" cy="40.6" r="4.4" fill="#8C1D40"/>
+  <text x="66" y="48" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="40" font-weight="800" letter-spacing="-1" fill="#FAF0E6">Padharo</text>
+  <path d="M243 20c5 1.5 8 5.5 8 10.5l-11-1.5c0-4 1-7 3-9Z" fill="#F5820A"/>
+</svg>

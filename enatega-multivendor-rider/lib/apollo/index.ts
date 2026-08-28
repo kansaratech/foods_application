@@ -178,7 +178,7 @@ const setupApollo = () => {
       nonce: nonce || "",
       "x-platform": platform,
       "accept-language": locale,
-      "user-agent": `Yalla-Rider-App/${platform}`,
+      "user-agent": `Padharo-Rider-App/${platform}`,
       ...operation.getContext().headers,
     };
 
