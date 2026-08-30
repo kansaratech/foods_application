@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 // UI
 import CustomTab from "@/lib/ui/useable-components/custom-tab";
-import Spinner from "@/lib/ui/useable-components/spinner";
+import OrderLoader from "@/lib/ui/useable-components/order-loader";
 // Constants
 import { NO_ORDER_PROMPT, ORDER_DISPATCH_TYPE } from "@/lib/utils/constants";
 
@@ -76,14 +76,20 @@ function HomeDeliveredOrdersMain(props: IOrderTabsComponentProps) {
 
   const renderEmptyState = () => (
     <View
+      className="self-center items-center justify-center rounded-3xl border px-16 py-14"
       style={{
-        flex: 1,
-        width: "100%",
-        justifyContent: "center",
-        alignItems: "center",
+        borderColor: appTheme.borderLineColor,
+        backgroundColor: appTheme.cartContainer,
+        marginTop: 48,
+        minWidth: 360,
       }}
     >
-      <WalletIcon height={100} width={100} color={appTheme.fontMainColor} />
+      <View
+        className="h-20 w-20 items-center justify-center rounded-full mb-5"
+        style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}
+      >
+        <WalletIcon height={44} width={44} color={appTheme.primary} />
+      </View>
 
       {orders?.length === 0 ? (
         <Text
@@ -102,7 +108,7 @@ function HomeDeliveredOrdersMain(props: IOrderTabsComponentProps) {
 
   return (
     <View
-      className="pt-14 flex-1 items-center"
+      className="pt-5 flex-1 items-center px-5"
       style={[style.container, { backgroundColor: appTheme.themeBackground }]}
     >
       <CustomTab
@@ -115,11 +121,9 @@ function HomeDeliveredOrdersMain(props: IOrderTabsComponentProps) {
         pickupCount={deliveredOrders?.filter((o) => !!o.isPickedUp).length ?? 0}
       />
 
-      <View className="flex-1 w-full">
+      <View className="flex-1 w-full lg:max-w-4xl lg:self-center">
         {loading && (!orders || orders?.length < 1) ? (
-          <View className="flex-1">
-            <Spinner />
-          </View>
+          <OrderLoader label={t("Loading delivered orders")} />
         ) : orders?.length > 0 ? (
           <FlatList
             className="w-full"

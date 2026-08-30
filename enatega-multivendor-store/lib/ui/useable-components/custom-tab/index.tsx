@@ -17,26 +17,23 @@ const CustomTab = ({
 
   return (
     <View
-      className="sticky top-0 z-10 w-full p-3 lg:max-w-md lg:self-center"
+      className="sticky top-0 z-10 w-full py-3 lg:max-w-xl lg:self-center"
       style={{ backgroundColor: appTheme.themeBackground }}
     >
       <View
-        className="h-[50px] w-full flex-row p-2 justify-center items-center space-x-2 rounded-[8px]"
-        style={{ backgroundColor: appTheme.themeBackground }}
+        className="h-14 w-full flex-row p-1.5 justify-center items-center rounded-2xl"
+        style={{ backgroundColor: appTheme.sidebarIconBackground }}
       >
         {options.map((option) => (
           <TouchableOpacity
             key={String(option)}
             onPress={() => setSelectedTab(option)}
-            className={`h-full px-4 py-2 w-1/2 flex items-center justify-center rounded-[8px]`}
+            className="h-full px-4 w-1/2 flex-row gap-2 items-center justify-center rounded-xl"
             style={{
               backgroundColor:
                 selectedTab === option
                   ? appTheme.primary
-                  : appTheme.themeBackground,
-              borderColor: appTheme.borderLineColor,
-              borderWidth: 1,
-              marginHorizontal: 2,
+                  : "transparent",
             }}
           >
             <Text
@@ -58,9 +55,7 @@ const CustomTab = ({
                   height: 20,
                   alignItems: "center",
                   justifyContent: "center",
-                  position: "absolute",
-                  left: -3,
-                  top: -5,
+                    marginLeft: 8,
                 }}
               >
                 <Text
@@ -83,9 +78,7 @@ const CustomTab = ({
                   height: 20,
                   alignItems: "center",
                   justifyContent: "center",
-                  position: "absolute",
-                  left: -3,
-                  top: -5,
+                    marginLeft: 8,
                 }}
               >
                 <Text

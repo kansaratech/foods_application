@@ -82,6 +82,13 @@ export default function AnimatedSplashScreen({ children }) {
     };
   });
 
+  // The animated video is a native-app launch treatment. Rendering it in the
+  // browser causes a black full-screen layer while web routes are changing or
+  // hot reloading, so web renders the application immediately.
+  if (Platform.OS === "web") {
+    return <View style={{ flex: 1 }}>{children}</View>;
+  }
+
   return (
     <View style={{ flex: 1 }}>
       {isSplashAnimationComplete ? children : null}

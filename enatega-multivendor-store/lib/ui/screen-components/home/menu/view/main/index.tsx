@@ -6,6 +6,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useMutation, useQuery } from "@apollo/client";
@@ -53,6 +54,8 @@ export default function MenuMain() {
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
   const { userId: restaurantId } = useUserContext();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
 
   const [activeTab, setActiveTab] = useState<MenuTab>("menu");
   const [searchInput, setSearchInput] = useState("");
@@ -241,8 +244,11 @@ export default function MenuMain() {
 
   const renderCategory = ({ item: category }: { item: ICategory }) => (
     <View
-      className="border-b-[0.5px]"
-      style={{ borderColor: appTheme.borderLineColor }}
+      className="border rounded-2xl mb-3 overflow-hidden"
+      style={{
+        borderColor: appTheme.borderLineColor,
+        backgroundColor: appTheme.cartContainer,
+      }}
     >
       <TouchableOpacity
         onPress={() => toggleExpanded(category._id)}
@@ -343,13 +349,16 @@ export default function MenuMain() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <BottomSheetModalProvider>
         <View
-          className="flex-1"
-          style={{ backgroundColor: appTheme.themeBackground }}
+          className="flex-1 w-full self-center px-5 py-4"
+          style={{
+            backgroundColor: appTheme.themeBackground,
+            maxWidth: isDesktop ? 1120 : undefined,
+          }}
         >
-          <View className="flex-row px-4 pt-3 gap-2">
+          <View className="flex-row gap-2 p-1.5 rounded-2xl" style={{ backgroundColor: appTheme.sidebarIconBackground }}>
             <TouchableOpacity
               onPress={() => setActiveTab("menu")}
-              className="flex-1 py-2 rounded-full items-center"
+              className="flex-1 py-3 rounded-xl items-center"
               style={{
                 backgroundColor:
                   activeTab === "menu"
@@ -368,7 +377,7 @@ export default function MenuMain() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setActiveTab("addons")}
-              className="flex-1 py-2 rounded-full items-center"
+              className="flex-1 py-3 rounded-xl items-center"
               style={{
                 backgroundColor:
                   activeTab === "addons"
@@ -389,10 +398,10 @@ export default function MenuMain() {
             </TouchableOpacity>
           </View>
 
-          <View className="flex-row items-center gap-3 px-4 py-3">
+          <View className="flex-row items-center gap-3 py-5">
             {activeTab === "menu" ? (
               <TextInput
-                className="flex-1 rounded-md border-2 border-gray-300 px-3 py-2"
+                className="flex-1 h-12 rounded-xl border px-4"
                 placeholder={t("Search categories")}
                 placeholderTextColor={appTheme.fontSecondColor}
                 style={{ color: appTheme.fontSecondColor }}
@@ -408,7 +417,7 @@ export default function MenuMain() {
                   ? categorySheetRef.current?.open()
                   : addonSheetRef.current?.open()
               }
-              className="flex-row items-center gap-1 px-3 py-2 rounded-full"
+              className="h-12 flex-row items-center gap-2 px-5 rounded-xl"
               style={{ backgroundColor: appTheme.primary }}
             >
               <Ionicons name="add" size={18} color={appTheme.black} />
@@ -429,6 +438,7 @@ export default function MenuMain() {
                   data={categories}
                   keyExtractor={(item) => item._id}
                   renderItem={renderCategory}
+                  contentContainerStyle={{ paddingBottom: 32 }}
                 />
                 {totalPages > 1 && (
                   <View className="flex-row items-center justify-center gap-4 py-3">

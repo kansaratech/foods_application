@@ -4,14 +4,22 @@ const withNextIntl = createNextIntlPlugin();
 
 const isDev = process.env.NODE_ENV !== "production";
 
-// In local development the API is served over plain http/ws (e.g.
-// http://localhost:4000), which the production CSP below blocks: `connect-src`
-// only allows https:/wss: and `upgrade-insecure-requests` rewrites http -> https.
-// Add explicit http/ws origins and drop the upgrade directive when not building
-// for production so the customer web app can actually reach a local backend.
-const devConnectSrc = isDev
-  ? " http://localhost:4000 ws://localhost:4000 http://127.0.0.1:4000 ws://127.0.0.1:4000"
+// When the API is served over plain http/ws (e.g. http://localhost:4000) the
+// production CSP below would block it: `connect-src` only allows https:/wss: and
+// `upgrade-insecure-requests` rewrites http -> https. Allow the local API origins
+// (and drop the upgrade directive) whenever we are in dev OR the configured API
+// URL itself is a local http host, so `next start` against a local backend works.
+const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
+const usesLocalHttpApi =
+  /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(apiUrl) || apiUrl === "";
+const allowLocalApi = isDev || usesLocalHttpApi;
+const localApiOrigins = " http://localhost:4000 http://127.0.0.1:4000";
+const devConnectSrc = allowLocalApi
+  ? `${localApiOrigins} ws://localhost:4000 ws://127.0.0.1:4000`
   : "";
+// Restaurant / food images uploaded to the local API are served from
+// http://localhost:4000/uploads — allow that origin for images in local dev too.
+const devImgSrc = allowLocalApi ? localApiOrigins : "";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -19,14 +27,14 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "object-src 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob: https:",
+  `img-src 'self' data: blob: https:${devImgSrc}`,
   "font-src 'self' data: https:",
   "style-src 'self' 'unsafe-inline' https:",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
   `connect-src 'self' https: wss: ws:${devConnectSrc}`,
   "frame-src 'self' https:",
   "media-src 'self' data: blob: https:",
-  ...(isDev ? [] : ["upgrade-insecure-requests"]),
+  ...(allowLocalApi ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 /** @type {import('next').NextConfig} */

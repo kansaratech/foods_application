@@ -9,7 +9,6 @@ export const LOGIN = gql`
     $idToken: String
     $name: String
     $notificationToken: String
-    $isActive: Boolean
     ) {
       login(
       type: $type
@@ -19,7 +18,6 @@ export const LOGIN = gql`
       idToken: $idToken
       name: $name
       notificationToken: $notificationToken
-      isActive: $isActive
       ) {
         userId
         token
@@ -30,14 +28,7 @@ export const LOGIN = gql`
       email
       emailIsVerified
       picture
-      addresses {
-        location {
-          coordinates
-        }
-        deliveryAddress
-      }
       isNewUser
-      userTypeId
       isActive
     }
   }
@@ -124,8 +115,6 @@ export const CREATE_USER = gql`
       emailIsVerified
       picture
       isNewUser
-      userTypeId
-      emailIsVerified
     }
   }
 `;

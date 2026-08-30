@@ -32,7 +32,7 @@
     "subText6": "For stores"
   },
   "InfoCardHomeScreen": {
-    "tagLine": "LIFE TASTES BETTER WITH ENATEGA",
+    "tagLine": "LIFE TASTES BETTER WITH PADHARO",
     "subHeading": "Almost everything delivered to you – quickly, reliably, and affordably",
     "Title1": "Real support from real people",
     "SubText1": "Our world-class support team has your back, with friendly assistance and fast response times.",
@@ -932,5 +932,7 @@
   "show_more_orders": "Show more orders",
   "your_email": "your@email.com",
   "Select_your_address_prompt": "Select your address.",
-  "Our-brands": "Our brands"
+  "Our-brands": "Our brands",
+  "Login": "Login",
+  "You have logged in successfully": "You have logged in successfully."
 }

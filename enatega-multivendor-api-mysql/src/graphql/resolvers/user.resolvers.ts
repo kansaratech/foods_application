@@ -54,6 +54,11 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
       // NOTE: social login (google/apple) trusts the client-supplied identifier
       // without verifying it against Google/Apple's servers. Harden this before
       // shipping to production (see backend README "Deferred" section).
+      const loginConfig = await prisma.configuration.findFirst();
+      const verifiedFlags = (user: { emailIsVerified: boolean; phoneIsVerified: boolean }) => ({
+        emailIsVerified: loginConfig?.skipEmailVerification ? true : user.emailIsVerified,
+        phoneIsVerified: loginConfig?.skipMobileVerification ? true : user.phoneIsVerified,
+      });
       if (args.type === 'default') {
         if (!args.email || !args.password) {
           throw userInputError('email and password are required');
@@ -71,6 +76,8 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
           name: user.name,
           email: user.email,
           phone: user.phone,
+          ...verifiedFlags(user),
+          picture: user.image,
           isNewUser: false,
         };
       }
@@ -104,6 +111,8 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        ...verifiedFlags(user),
+        picture: user.image,
         isNewUser,
       };
     },
@@ -114,6 +123,13 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         const existing = await prisma.user.findUnique({ where: { email: input.email } });
         if (existing) throw userInputError('Email is already registered');
       }
+      // When the marketplace has verification turned off (no SMTP / WhatsApp /
+      // Firebase configured), new accounts are created already verified so the
+      // customer can sign in immediately.
+      const config = await prisma.configuration.findFirst();
+      const emailIsVerified = config?.skipEmailVerification ? true : (input.emailIsVerified ?? false);
+      const phoneIsVerified = config?.skipMobileVerification ? true : false;
+
       const user = await prisma.user.create({
         data: {
           name: input.name,
@@ -122,7 +138,8 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
           password: input.password ? await hashPassword(input.password) : undefined,
           notificationToken: input.notificationToken,
           appleId: input.appleId,
-          emailIsVerified: input.emailIsVerified ?? false,
+          emailIsVerified,
+          phoneIsVerified,
         },
       });
       const { token, expiresAt } = signAccessToken({ userId: user.id, userType: user.userType, tokenVersion: user.tokenVersion });
@@ -134,6 +151,9 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        emailIsVerified: user.emailIsVerified,
+        phoneIsVerified: user.phoneIsVerified,
+        picture: user.image,
         isNewUser: true,
       };
     },

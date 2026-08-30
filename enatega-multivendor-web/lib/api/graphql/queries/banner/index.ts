@@ -10,8 +10,6 @@ export const GET_BANNERS = gql`
       screen
       file
       parameters
-      slug
-      shopType
     }
   }
 `;

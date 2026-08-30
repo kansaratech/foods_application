@@ -1,5 +1,6 @@
 import { useApptheme } from "@/lib/context/theme.context";
 import { HapticTab } from "@/lib/ui/useable-components/HapticTab";
+import WebSidebar from "@/lib/ui/layouts/web-sidebar";
 import {
   CurrencyIcon,
   HomeIcon,
@@ -7,24 +8,22 @@ import {
   WalletIcon,
 } from "@/lib/ui/useable-components/svg";
 import { Tabs, usePathname } from "expo-router";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform } from "react-native";
+import { Platform, useWindowDimensions } from "react-native";
 
 const RootLayout = () => {
-  const [tabKey, setTabKey] = useState(0);
   const pathName = usePathname();
   const { t } = useTranslation();
   const { appTheme } = useApptheme();
-
-  useEffect(() => {
-    setTabKey((prev) => prev + 1);
-  }, [pathName]);
+  const { width } = useWindowDimensions();
+  const isDesktopWeb = Platform.OS === "web" && width >= 1024;
 
   return (
     <Tabs
-      key={tabKey}
+      tabBar={isDesktopWeb ? () => <WebSidebar /> : undefined}
       screenOptions={{
+        tabBarPosition: isDesktopWeb ? "left" : "bottom",
+        tabBarLabelPosition: isDesktopWeb ? "beside-icon" : "below-icon",
         tabBarActiveTintColor: appTheme.primary,
         headerShown: false,
         tabBarButton: HapticTab,
@@ -53,7 +52,28 @@ const RootLayout = () => {
             shadowOpacity: 0.1,
             shadowRadius: 5,
           },
+          web: isDesktopWeb
+            ? {
+                width: 236,
+                paddingTop: 28,
+                paddingHorizontal: 12,
+                backgroundColor: appTheme.cartContainer,
+                borderRightWidth: 1,
+                borderRightColor: appTheme.borderLineColor,
+              }
+            : {
+                height: 64,
+                backgroundColor: appTheme.cartContainer,
+                borderTopWidth: 1,
+                borderTopColor: appTheme.borderLineColor,
+              },
         }),
+        tabBarItemStyle: isDesktopWeb
+          ? { height: 56, borderRadius: 14, marginVertical: 4 }
+          : undefined,
+        tabBarLabelStyle: isDesktopWeb
+          ? { fontSize: 15, fontWeight: "600", marginLeft: 10 }
+          : undefined,
       }}
     >
       <Tabs.Screen
@@ -99,7 +119,7 @@ const RootLayout = () => {
       <Tabs.Screen
         name="profile"
         options={{
-          headerShown: true,
+          headerShown: false,
           headerTitle: t("Profile"),
           headerTitleAlign: "center",
           headerStyle: { backgroundColor: appTheme.themeBackground },

@@ -628,10 +628,10 @@ export default function RestaurantDetailsScreen() {
         transition={{ duration: 0.3 }}
         className="lg:top-[60px] top-[95px] sticky z-50 bg-white dark:bg-gray-900 shadow-[0_1px_1px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_1px_rgba(255,255,255,0.05)]"
       >
-        <PaddingContainer height={headerHeight}>
-          <div className="p-3 h-full w-full flex flex-col gap-3">
+        <PaddingContainer>
+          <div className="p-3 w-full flex flex-col gap-3">
             {/* Search Input */}
-            <div className="w-full md:max-w-[420px] md:ml-auto">
+            <div className="w-full md:max-w-[480px]">
               <CustomIconTextField
                 value={filter}
                 className="w-full h-11 rounded-full pl-10 pr-4 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"

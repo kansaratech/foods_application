@@ -34,13 +34,97 @@
   --background-end-rgb: 255, 255, 255;
 }
 
+@keyframes hero-orbit-clockwise {
+  from {
+    transform: translate(-50%, -50%) rotate(-14deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(346deg);
+  }
+}
+
+@keyframes hero-orbit-counter-clockwise {
+  from {
+    transform: translate(-50%, -50%) rotate(18deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(-342deg);
+  }
+}
+
+@keyframes hero-collage-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+.hero-collage {
+  animation: hero-collage-float 6s ease-in-out infinite;
+}
+
+.hero-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 92%;
+  height: 67%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero-orbit::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  top: 4%;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f5820a;
+  box-shadow: 0 0 0 5px #fffdfa;
+}
+
+.hero-orbit-primary {
+  border: 2px solid rgba(245, 130, 10, 0.72);
+  animation: hero-orbit-clockwise 22s linear infinite;
+}
+
+.hero-orbit-secondary {
+  width: 84%;
+  height: 61%;
+  border: 1px solid rgba(140, 29, 64, 0.32);
+  animation: hero-orbit-counter-clockwise 30s linear infinite;
+}
+
+.hero-orbit-secondary::after {
+  left: auto;
+  right: 5%;
+  top: 72%;
+  width: 8px;
+  height: 8px;
+  background: #8c1d40;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orbit-primary,
+  .hero-orbit-secondary,
+  .hero-collage {
+    animation-play-state: paused;
+  }
+}
+
 html,
 body,
 #root {
   margin: 0;
   padding: 0;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
+  max-width: 100%;
 
   overflow: auto !important;
   overflow-x: hidden !important;
@@ -90,7 +174,6 @@ body {
   box-shadow: none !important;
   border-top: none !important;
 }
-
 
 .layout-top-container {
   position: sticky;
@@ -212,8 +295,6 @@ body {
   border-radius: 7px;
 }
 
-
-
 /* Global Dialog Styling Auth Dialog */
 :root {
   --dialog-max-width-narrow: 500px;
@@ -288,8 +369,6 @@ body {
     font-size: 1rem;
   }
 }
-
-
 
 /* Dropdown */
 
@@ -550,8 +629,6 @@ body {
 .p-stepper-panels {
   padding: 0;
 }
-
-
 
 /* Auto Complet */
 .p-autocomplete {
@@ -913,11 +990,12 @@ Discovery Caurousal
   display: none !important;
 }
 
-.rce-mbox-right-notch , .rce-mbox-left-notch{
+.rce-mbox-right-notch,
+.rce-mbox-left-notch {
   display: none;
 }
 
-.p-dialog-content{
+.p-dialog-content {
   padding-left: 0;
   padding-right: 0;
 }
@@ -930,26 +1008,25 @@ Discovery Caurousal
   text-align: right;
 }
 
- .message-left .rce-mbox-text {
+.message-left .rce-mbox-text {
   background-color: var(--primary-color); /* Light green for current user */
   border-radius: 3px;
   padding: 5px;
-  color:white;
-  width:fit-content
+  color: white;
+  width: fit-content;
 }
 
 .message-right {
   /* background-color: #f1f1f1;; Light green for current user */
   border-radius: 10px;
-  padding: 4px;  
-
+  padding: 4px;
 }
 
 /* 🔹 Dark mode Dropdown wrapper (the white container around filter) */
 .dark .p-dropdown-panel {
   background-color: #1f2937 !important; /* gray-800 */
-  color: #f9fafb !important;           /* gray-100 */
-  border-color: #4b5563 !important;    /* gray-600 */
+  color: #f9fafb !important; /* gray-100 */
+  border-color: #4b5563 !important; /* gray-600 */
 }
 
 /* 🔹 The header above items (where filter input lives) */
@@ -972,18 +1049,17 @@ Discovery Caurousal
   color: #f9fafb !important;
 }
 
-
 .dark .p-dropdown-panel .p-dropdown-filter {
   background-color: #1f2937; /* gray-800 */
-  color: #f9fafb;           /* gray-100 */
+  color: #f9fafb; /* gray-100 */
   border: 1px solid #4b5563;
 }
 
 /* 🔹 Selected option text box (closed dropdown) */
 .dark .p-dropdown .p-dropdown-label {
   background-color: #1f2937 !important; /* gray-800 */
-  color: #f9fafb !important;            /* gray-100 */
-  border-color: #4b5563 !important;     /* gray-600 */
+  color: #f9fafb !important; /* gray-100 */
+  border-color: #4b5563 !important; /* gray-600 */
 }
 
 /* 🔹 Placeholder text */
@@ -991,12 +1067,11 @@ Discovery Caurousal
   color: #9ca3af !important; /* gray-400 */
 }
 
-
 /* 🔹 Input field (already partly handled by Tailwind) */
 .dark .p-autocomplete-input {
   background-color: #1f2937 !important; /* gray-800 */
-  color: #f9fafb !important;           /* gray-100 */
-  border-color: #4b5563 !important;    /* gray-600 */
+  color: #f9fafb !important; /* gray-100 */
+  border-color: #4b5563 !important; /* gray-600 */
 }
 
 /* 🔹 Suggestion panel (the floating dropdown) */
@@ -1028,15 +1103,14 @@ input:-webkit-autofill:active {
 }
 
 /* === Dark mode autofill === */
- input:-webkit-autofill,
- input:-webkit-autofill:hover,
- input:-webkit-autofill:focus,
- input:-webkit-autofill:active {
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
   /* -webkit-box-shadow: 0 0 0px 1000px #374151 inset !important; gray-700 bg */
   -webkit-text-fill-color: #000000 !important; /* gray-100 text */
   caret-color: #000000 !important; /* keeps cursor visible */
 }
-
 
 /* === Dark mode autofill === */
 .dark input:-webkit-autofill,
@@ -1048,7 +1122,7 @@ input:-webkit-autofill:active {
   caret-color: #f3f4f6 !important; /* keeps cursor visible */
 }
 
-[dir = "rtl"] .p-icon-field-right > .p-input-icon:last-of-type {
+[dir="rtl"] .p-icon-field-right > .p-input-icon:last-of-type {
   left: 0;
   right: auto;
 }

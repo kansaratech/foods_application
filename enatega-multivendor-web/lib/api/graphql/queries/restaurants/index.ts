@@ -25,7 +25,7 @@ export const FOOD = gql`
 `;
 
 export const RESTAURANTS_FRAGMENT = gql`
-  fragment RestaurantPreviewFields on RestaurantPreview {
+  fragment RestaurantPreviewFields on Restaurant {
     _id
     name
     image
@@ -117,15 +117,13 @@ export const NEAR_BY_RESTAURANTS_PREVIEW = gql`
   query Restaurants(
     $latitude: Float
     $longitude: Float
-    $page: Int
-    $limit: Int
+    $radiusKm: Float
     $shopType: String
   ) {
-    nearByRestaurantsPreview(
+    nearByRestaurants(
       latitude: $latitude
       longitude: $longitude
-      page: $page
-      limit: $limit
+      radiusKm: $radiusKm
       shopType: $shopType
     ) {
       restaurants {
@@ -135,9 +133,52 @@ export const NEAR_BY_RESTAURANTS_PREVIEW = gql`
   }
 `;
 
+export const ACTIVE_RESTAURANT_COUNT = gql`
+  query ActiveRestaurantCount(
+    $latitude: Float
+    $longitude: Float
+    $radiusKm: Float
+    $shopType: String
+  ) {
+    activeRestaurantCount(
+      latitude: $latitude
+      longitude: $longitude
+      radiusKm: $radiusKm
+      shopType: $shopType
+    )
+  }
+`;
+
+export const POPULAR_RESTAURANTS_PREVIEW = gql`
+  ${RESTAURANTS_CAROUSEL_FRAGMENT}
+  query PopularRestaurantsPreview(
+    $latitude: Float
+    $longitude: Float
+    $radiusKm: Float
+    $limit: Int
+    $shopType: String
+  ) {
+    popularRestaurantsPreview(
+      latitude: $latitude
+      longitude: $longitude
+      radiusKm: $radiusKm
+      limit: $limit
+      shopType: $shopType
+    ) {
+      ...RestaurantCarouselPreviewFields
+      reviewCount
+    }
+    activeRestaurantCount(
+      latitude: $latitude
+      longitude: $longitude
+      radiusKm: $radiusKm
+    )
+  }
+`;
+
 export const GET_RESTAURANT_BY_ID_SLUG = gql`
-  query RestaurantByIdAndSlug($id: String, $slug: String) {
-    restaurant(id: $id, slug: $slug) {
+  query RestaurantByIdAndSlug($id: String) {
+    restaurant(id: $id) {
       _id
       orderId
       orderPrefix
@@ -199,20 +240,23 @@ export const GET_RESTAURANT_BY_ID_SLUG = gql`
         title
         description
         price
-        isOutOfStock
       }
       addons {
         _id
-        options
         title
         description
         quantityMinimum
         quantityMaximum
+        options {
+          _id
+          title
+          description
+          price
+        }
       }
       zone {
         _id
         title
-        tax
       }
       rating
       isAvailable

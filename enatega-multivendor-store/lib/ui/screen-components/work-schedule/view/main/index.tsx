@@ -54,6 +54,7 @@ export default function WorkScheduleMain() {
   const { t } = useTranslation();
   const tabBarHeight = useBottomTabBarHeight();
   const { width } = useWindowDimensions();
+  const isDesktop = width >= 1024;
   // States
   const [schedule, setSchedule] = useState<WorkSchedule[]>();
   const [dropdown, setDropdown] = useState<{
@@ -411,15 +412,22 @@ export default function WorkScheduleMain() {
           style={{ backgroundColor: appTheme.themeBackground }}
         >
           <FlatList
+            key={isDesktop ? "desktop-schedule" : "mobile-schedule"}
             data={schedule}
+            numColumns={isDesktop ? 2 : 1}
+            columnWrapperStyle={isDesktop ? { gap: 16 } : undefined}
+            style={{ width: "100%", maxWidth: 1120, alignSelf: "center" }}
             keyExtractor={(item) => item.day}
             scrollEnabled={true}
             scrollEventThrottle={16}
-            contentContainerStyle={{ paddingBottom: 24 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
             renderItem={({ item, index }) => renderScheduleItem({ item, index })}
           />
         </View>
-        <View className="w-full px-2" style={{ marginBottom: tabBarHeight + 16 }}>
+        <View
+          className="w-full px-4 self-center"
+          style={{ maxWidth: 1120, marginBottom: tabBarHeight + 16 }}
+        >
           <UpdateScheduleBtn
             isUpatingSchedule={isUpatingSchedule}
             onHandlerSubmit={onHandlerSubmit}

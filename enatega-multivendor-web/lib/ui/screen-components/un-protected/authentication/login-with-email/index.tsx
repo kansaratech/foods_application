@@ -65,6 +65,11 @@ export default function LoginWithEmail({
       return handleChangePanel(7); // go to password
     }
 
+    showToast({
+      type: "info",
+      title: t("sign_up_label"),
+      message: "No account found for that email — let's create one.",
+    });
     handleChangePanel(2); // go to registration
   };
 

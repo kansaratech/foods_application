@@ -35,7 +35,7 @@ export default function StoreScreen() {
         variables: { page: page + 1, limit, shopType: "grocery" },
       });
 
-      const newItems = res.data?.nearByRestaurantsPreview?.restaurants ?? [];
+      const newItems = res.data?.nearByRestaurants?.restaurants ?? [];
 
       if (newItems.length > 0) {
         setItems((prev) => [...prev, ...newItems]);

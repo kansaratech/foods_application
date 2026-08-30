@@ -45,7 +45,7 @@ export interface IDeliveryInfo {
 }
 
 export interface INearByRestaurantsPreviewData {
-  nearByRestaurantsPreview: {
+  nearByRestaurants: {
     restaurants: IRestaurant[];
   };}
 

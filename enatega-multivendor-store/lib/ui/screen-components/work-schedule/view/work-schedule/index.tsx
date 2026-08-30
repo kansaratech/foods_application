@@ -44,10 +44,11 @@ export default function WorkScheduleStack({
   return (
     <TouchableOpacity
       onPress={() => setDropdown(null)}
-      className=" border p-4 my-2 rounded-lg"
+      className="border p-5 mb-4 rounded-2xl flex-1"
       style={{
-        backgroundColor: appTheme.themeBackground,
+        backgroundColor: appTheme.cartContainer,
         borderColor: appTheme.borderLineColor,
+        minHeight: 128,
       }}
     >
       {/* Day Header with Toggle */}

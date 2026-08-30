@@ -23,7 +23,7 @@ import ResponsiveFormSheet, {
 } from "@/lib/ui/useable-components/responsive-form-sheet";
 import { useTranslation } from "react-i18next";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import SpinnerComponent from "@/lib/ui/useable-components/spinner";
+import OrderLoader from "@/lib/ui/useable-components/order-loader";
 import useSafeKeepAwake from "@/lib/hooks/useSafeKeepAwake";
 
 function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
@@ -97,16 +97,22 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
 
   const renderEmptyState = () => (
     <View
+      className="self-center items-center justify-center rounded-3xl border px-16 py-14"
       style={{
-        flex: 1,
-        width: "100%",
-        justifyContent: "center",
-        alignItems: "center",
+        borderColor: appTheme.borderLineColor,
+        backgroundColor: appTheme.cartContainer,
+        marginTop: 48,
+        minWidth: 360,
       }}
     >
-      <WalletIcon height={100} width={100} color={appTheme.fontMainColor} />
+      <View
+        className="h-20 w-20 items-center justify-center rounded-full mb-5"
+        style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}
+      >
+        <WalletIcon height={44} width={44} color={appTheme.primary} />
+      </View>
       {orders?.length === 0 ? (
-        <Text className="font-[Inter] text-[18px] text-base font-[500] text-gray-600">
+        <Text className="font-[Inter] text-lg font-semibold text-gray-700">
           {t(NO_ORDER_PROMPT[route.key])}
         </Text>
       ) : (
@@ -118,7 +124,7 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
     <GestureHandlerRootView style={style.gestureContainer}>
       <BottomSheetModalProvider>
         <View
-          className="pt-14 flex-1 items-center"
+          className="pt-5 flex-1 items-center px-5"
           style={[
             style.container,
             { backgroundColor: appTheme.themeBackground },
@@ -138,9 +144,7 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
 
           <View className="flex-1 w-full lg:max-w-4xl lg:self-center">
             {loading && (!orders || orders?.length < 1) ? (
-              <View className="flex-1">
-                <SpinnerComponent />
-              </View>
+              <OrderLoader label={t("Loading new orders")} />
             ) : orders?.length > 0 ? (
               <FlatList
                 className="w-full"

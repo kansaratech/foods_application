@@ -15,7 +15,7 @@ export default function ProfileMain() {
       showsVerticalScrollIndicator={false}
       style={{ backgroundColor: appTheme.themeBackground }}
     >
-      <View className="flex flex-col items-center">
+      <View className="w-full max-w-6xl self-center px-5 py-6">
         <DocumentsSection />
       </View>
     </ScrollView>

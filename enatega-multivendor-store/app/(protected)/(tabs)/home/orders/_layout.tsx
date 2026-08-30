@@ -11,6 +11,9 @@ export default function Layout() {
   return (
     <Tabs
       screenOptions={{
+        lazy: false,
+        animation: "none",
+        sceneStyle: { backgroundColor: appTheme.themeBackground },
         tabBarIcon: () => null,
         tabBarActiveTintColor: appTheme.primary,
         headerShown: false,
@@ -86,8 +89,13 @@ export default function Layout() {
           },
           web: {
             backgroundColor: appTheme.themeBackground,
-            borderBottomWidth: 1,
-            borderBottomColor: appTheme.borderLineColor,
+            maxWidth: 920,
+            width: "100%",
+            alignSelf: "center",
+            marginTop: 18,
+            borderWidth: 1,
+            borderColor: appTheme.borderLineColor,
+            borderRadius: 14,
             shadowOpacity: 0,
             elevation: 0,
           },

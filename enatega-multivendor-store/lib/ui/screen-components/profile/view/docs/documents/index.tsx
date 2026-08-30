@@ -1,169 +1,156 @@
-// Hooks
 import { useUserContext } from "@/lib/context/global/user.context";
-import { useTranslation } from "react-i18next";
-
-// Core
-import { Text, TouchableOpacity, View } from "react-native";
-
-// Expo
 import { useApptheme } from "@/lib/context/theme.context";
 import { app_theme } from "@/lib/utils/types/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Switch } from "react-native-switch";
 
 export default function DocumentsSection() {
-  // Hooks
   const { appTheme, currentTheme, toggleTheme } = useApptheme();
   const { t } = useTranslation();
   const { dataProfile } = useUserContext();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 900;
   const hasBusinessDetails = !!dataProfile?.hasBusinessDetails;
 
+  const details = [
+    { icon: "location-outline", label: t("Address"), value: dataProfile?.address },
+    { icon: "call-outline", label: t("Phone"), value: dataProfile?.phone },
+    { icon: "person-outline", label: t("Username"), value: dataProfile?.username },
+  ] as const;
+
+  const cardStyle = {
+    backgroundColor: appTheme.cartContainer,
+    borderColor: appTheme.borderLineColor,
+  };
+
   return (
-    <View className="flex flex-col w-full items-center">
-      <View
-        className="flex flex-col gap-3 items-start justify-center px-5 w-full border-b-2 py-3"
-        style={{ borderColor: appTheme.borderLineColor }}
-      >
-        <View className="flex flex-row w-full justify-between items-start">
-          <Text
-            className="font-bold"
-            style={{
-              color: appTheme.fontMainColor,
-            }}
+    <View className={isDesktop ? "flex-row gap-5" : "gap-y-5"}>
+      <View className="flex-1 gap-y-5">
+        <View className="rounded-3xl border p-6" style={cardStyle}>
+          <View className="flex-row items-start justify-between">
+            <View className="flex-row items-center flex-1">
+              <View
+                className="h-11 w-11 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}
+              >
+                <Ionicons name="card-outline" size={21} color={appTheme.primary} />
+              </View>
+              <View className="ml-4 flex-1">
+                <Text className="text-lg font-bold" style={{ color: appTheme.fontMainColor }}>
+                  {t("Bank Details")}
+                </Text>
+                <Text className="text-sm mt-1" style={{ color: appTheme.fontSecondColor }}>
+                  Required for settlements and withdrawals
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push("/bank-management")}
+              className="rounded-xl px-4 py-2"
+              style={{ backgroundColor: appTheme.primary }}
+            >
+              <Text className="font-semibold text-white">
+                {hasBusinessDetails ? t("Update") : t("Add")}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View
+            className="self-start flex-row items-center rounded-full px-3 py-2 mt-5"
+            style={{ backgroundColor: hasBusinessDetails ? "#DCFCE7" : "#FEE2E2" }}
           >
-            {t("Bank Details")}
-          </Text>
-          <TouchableOpacity
-            className="top-6"
-            onPress={() => router.push("/bank-management")}
-          >
-            <Text className="font-semibold" style={{ color: appTheme.primary }}>
-              {hasBusinessDetails ? t("Update") : t("Add")}
+            <Ionicons
+              name={hasBusinessDetails ? "checkmark-circle" : "alert-circle"}
+              size={16}
+              color={hasBusinessDetails ? "#15803D" : "#B91C1C"}
+            />
+            <Text
+              className="text-sm font-semibold ml-2"
+              style={{ color: hasBusinessDetails ? "#15803D" : "#B91C1C" }}
+            >
+              {hasBusinessDetails ? t("Details submitted") : t("Details required")}
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
-        <View
-          className="p-2 border rounded-3xl"
-          style={{
-            backgroundColor: hasBusinessDetails
-              ? appTheme.lowOpacityPrimaryColor
-              : "#FEE2E2",
-            borderColor: hasBusinessDetails ? appTheme.primary : "#FEE2E2",
-          }}
-        >
-          <Text
-            className="font-semibold"
-            style={{ color: hasBusinessDetails ? appTheme.primary : "#991B1B" }}
-          >
-            {hasBusinessDetails ? t("Submitted Data") : t("Missing Data")}
+
+        <View className="rounded-3xl border p-6" style={cardStyle}>
+          <Text className="text-lg font-bold mb-4" style={{ color: appTheme.fontMainColor }}>
+            Appearance
           </Text>
-        </View>
-      </View>
-      <View>
-        <Text
-          className="font-bold m-3"
-          style={{
-            color: appTheme.fontMainColor,
-          }}
-        >
-          {t("Other Details")}
-        </Text>
-        <View
-          className="flex flex-row gap-3 items-center justify-between px-5 w-full border-b-2 py-3"
-          style={{ borderColor: appTheme.borderLineColor }}
-        >
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-            }}
-          >
-            {t("Address")}
-          </Text>
-          {dataProfile?.address ? (
-            <Text style={{ color: appTheme.fontSecondColor }}>
-              {dataProfile?.address}
-            </Text>
-          ) : (
-            <Ionicons name="sad-outline" color={appTheme.iconPink} size={20} />
-          )}
-        </View>
-        <View
-          className="flex flex-row gap-3 items-center justify-between px-5 w-full border-b-2 py-3"
-          style={{ borderColor: appTheme.borderLineColor }}
-        >
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-            }}
-          >
-            {t("Phone")}
-          </Text>
-          {dataProfile?.phone ? (
-            <Text style={{ color: appTheme.fontSecondColor }}>
-              {dataProfile?.phone}
-            </Text>
-          ) : (
-            <Ionicons name="sad-outline" color={appTheme.iconPink} size={20} />
-          )}
-        </View>
-        <View
-          className="flex flex-row gap-3 items-center justify-between px-5 w-full border-b-2 py-3"
-          style={{ borderColor: appTheme.borderLineColor }}
-        >
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-            }}
-          >
-            {t("Username")}
-          </Text>
-          {dataProfile?.username ? (
-            <Text style={{ color: appTheme.fontSecondColor }}>
-              {dataProfile?.username}
-            </Text>
-          ) : (
-            <Ionicons name="sad-outline" color={appTheme.iconPink} size={20} />
-          )}
-        </View>
-      </View>
-      <View className="flex flex-row items-center justify-between w-full my-5 px-5">
-        <Text
-          className="text-xl font-bold"
-          style={{
-            color: appTheme.fontMainColor,
-          }}
-        >
-          {t("Theme")}
-        </Text>
-        <View className="flex flex-row  items-center justify-center">
-          <Switch
-            containerStyle={{ width: "20%" }}
-            switchWidthMultiplier={3}
-            activeText={"Dark"}
-            inActiveText={"Light"}
-            renderInsideCircle={() => {
-              return (
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center flex-1">
+              <View
+                className="h-11 w-11 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: appTheme.sidebarIconBackground }}
+              >
                 <Ionicons
-                  name={
-                    currentTheme === "dark"
-                      ? "moon"
-                      : currentTheme === "light"
-                        ? "sunny"
-                        : "phone-portrait"
-                  }
-                  size={22}
+                  name={currentTheme === "dark" ? "moon" : "sunny"}
+                  size={21}
+                  color={appTheme.primary}
                 />
-              );
-            }}
-            circleActiveColor={appTheme.primary}
-            backgroundInactive={appTheme.primary}
-            backgroundActive={appTheme.primary}
-            activeTextStyle={{ color: appTheme.black }}
-            value={currentTheme === "dark"}
-            onValueChange={() => toggleTheme(currentTheme as app_theme)}
-          />
+              </View>
+              <View className="ml-4">
+                <Text className="font-semibold" style={{ color: appTheme.fontMainColor }}>
+                  {currentTheme === "dark" ? "Dark theme" : "Light theme"}
+                </Text>
+                <Text className="text-sm mt-1" style={{ color: appTheme.fontSecondColor }}>
+                  Choose the interface that feels best
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={currentTheme === "dark"}
+              onValueChange={() => toggleTheme(currentTheme as app_theme)}
+              activeText=""
+              inActiveText=""
+              circleSize={24}
+              barHeight={28}
+              backgroundActive={appTheme.primary}
+              backgroundInactive={appTheme.gray}
+              circleBorderWidth={0}
+            />
+          </View>
         </View>
+      </View>
+
+      <View className="flex-1 rounded-3xl border p-6" style={cardStyle}>
+        <Text className="text-lg font-bold" style={{ color: appTheme.fontMainColor }}>
+          Restaurant details
+        </Text>
+        <Text className="text-sm mt-1 mb-5" style={{ color: appTheme.fontSecondColor }}>
+          Contact information visible to your team
+        </Text>
+        {details.map((detail, index) => (
+          <View
+            key={detail.label}
+            className="flex-row items-center py-4"
+            style={{
+              borderBottomWidth: index === details.length - 1 ? 0 : 1,
+              borderBottomColor: appTheme.borderLineColor,
+            }}
+          >
+            <View
+              className="h-10 w-10 rounded-xl items-center justify-center"
+              style={{ backgroundColor: appTheme.sidebarIconBackground }}
+            >
+              <Ionicons name={detail.icon} size={19} color={appTheme.iconColor} />
+            </View>
+            <View className="ml-4 flex-1">
+              <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
+                {detail.label}
+              </Text>
+              <Text
+                className="text-sm font-semibold mt-1"
+                style={{ color: detail.value ? appTheme.fontMainColor : appTheme.textErrorColor }}
+                numberOfLines={2}
+              >
+                {detail.value || t("Not provided")}
+              </Text>
+            </View>
+          </View>
+        ))}
       </View>
     </View>
   );

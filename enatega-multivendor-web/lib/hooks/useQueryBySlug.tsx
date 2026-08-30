@@ -127,7 +127,7 @@ export default function useQueryBySlug(
         error: nearby.error,
         fetchMore: async (vars) => {
           const res = await nearby.fetchMore(vars);
-          return res?.data?.nearByRestaurantsPreview?.restaurants ?? [];
+          return res?.data?.nearByRestaurants?.restaurants ?? [];
         },
       };
     }
@@ -139,7 +139,7 @@ export default function useQueryBySlug(
         error: grocery_list.error,
         fetchMore: async (vars) => {
           const res = await grocery_list.fetchMore(vars);
-          return res?.data?.nearByRestaurantsPreview?.restaurants ?? [];
+          return res?.data?.nearByRestaurants?.restaurants ?? [];
         },
       };
     }

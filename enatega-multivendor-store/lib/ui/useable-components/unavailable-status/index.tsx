@@ -1,5 +1,4 @@
 import { useUserContext } from "@/lib/context/global/user.context";
-import { useApptheme } from "@/lib/context/theme.context";
 import { usePathname } from "expo-router";
 import { isBoolean } from "lodash";
 import { useEffect, useState } from "react";
@@ -9,7 +8,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function UnavailableStatus() {
   // Hooks
   const { t } = useTranslation();
-  const { appTheme } = useApptheme();
   const pathName = usePathname();
   const { dataProfile } = useUserContext();
   const insets = useSafeAreaInsets();
@@ -30,17 +28,17 @@ export default function UnavailableStatus() {
   return (
     <View
       style={{
-        backgroundColor: appTheme.black,
+        backgroundColor: "#8F173F",
         paddingTop: insets.top - 9, // Ensures it stays below the notch
         paddingHorizontal: 16,
-        paddingBottom: 2,
+        paddingBottom: 5,
         position: "absolute",
         width: "100%",
         zIndex: 50,
       }}
     >
-      <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>
-        {t("You are currently unavailable")}.
+      <Text style={{ color: "white", textAlign: "center", fontWeight: "600", fontSize: 12 }}>
+        {t("Store offline")} · {t("Turn on availability to receive orders")}
       </Text>
     </View>
   );

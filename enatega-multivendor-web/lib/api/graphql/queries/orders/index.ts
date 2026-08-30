@@ -1,16 +1,14 @@
 import { gql } from "@apollo/client";
 
 export const ORDERS = gql`
-  query Orders($page: Int, $limit: Int) {
-    orders(page: $page, limit: $limit) {
+  query Orders($offset: Int) {
+    orders(offset: $offset) {
       _id
       orderId
       id
       restaurant {
         _id
         name
-        slug
-        shopType
         image
         address
         location {
@@ -22,7 +20,6 @@ export const ORDERS = gql`
           coordinates
         }
         deliveryAddress
-        id
       }
       items {
         _id

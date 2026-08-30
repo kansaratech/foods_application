@@ -222,11 +222,13 @@ export const restaurantTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    nearByRestaurants(latitude: Float, longitude: Float, shopType: String): RestaurantList!
+    nearByRestaurants(latitude: Float, longitude: Float, radiusKm: Float, shopType: String): RestaurantList!
     nearByRestaurantsPreview(latitude: Float, longitude: Float, shopType: String, page: Int, limit: Int): [RestaurantCarouselPreview!]!
     recentOrderRestaurantsPreview(latitude: Float!, longitude: Float!): [RestaurantCarouselPreview!]!
     mostOrderedRestaurantsPreview(latitude: Float!, longitude: Float!, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
     topRatedVendorsPreview(latitude: Float, longitude: Float, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
+    popularRestaurantsPreview(latitude: Float, longitude: Float, radiusKm: Float, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
+    activeRestaurantCount(latitude: Float, longitude: Float, radiusKm: Float, shopType: String): Int!
     nearByRestaurantsCuisines(latitude: Float, longitude: Float, shopType: String): [Cuisine!]!
     attachedCuisines: [Cuisine!]!
     restaurant(id: String): Restaurant

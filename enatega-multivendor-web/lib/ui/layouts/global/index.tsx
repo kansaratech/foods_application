@@ -1,9 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useEffect, useState } from "react";
-// Components
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+
+import LandingHeader from "@/lib/ui/screen-components/un-protected/layout/landing-header";
+import LandingFooter from "@/lib/ui/screen-components/un-protected/layout/landing-footer";
 import AppTopbar from "@/lib/ui/screen-components/un-protected/layout/app-bar";
+import AppFooter from "@/lib/ui/screen-components/un-protected/layout/app-footer";
 
 // Interface & Types
 import { IProvider } from "@/lib/utils/interfaces";
@@ -12,21 +16,24 @@ import { IProvider } from "@/lib/utils/interfaces";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 import { GoogleMapsProvider } from "@/lib/context/global/google-maps.context";
 import AuthModal from "@/lib/ui/screen-components/un-protected/authentication";
-import AppFooter from "../../screen-components/un-protected/layout/app-footer";
 import StripeOrderRecovery from "../../screens/protected/order/stripe-order-recovery";
 
-// Search Context 
+// Search Context
 import { useSearchUI } from "@/lib/context/search/search.context";
 
 // Hooks
 import { useAuth } from "@/lib/context/auth/auth.context";
-import { usePathname } from "next/navigation";
 
 const AppLayout = ({ children }: IProvider) => {
   const pathname = usePathname();
-  const [isScrolled, setIsScrolled] = useState(false);
+  // The marketing landing page ("/") keeps its own slim Padharo chrome. Every
+  // other route uses the full app bar (cart sidebar, address picker, live
+  // search) + the app footer.
+  const isLanding = pathname === "/";
+
   // Hooks
-  const { isAuthModalVisible, setIsAuthModalVisible, setActivePanel } = useAuth();
+  const { isAuthModalVisible, setIsAuthModalVisible, setActivePanel } =
+    useAuth();
   const { isSearchFocused } = useSearchUI();
 
   // Hook
@@ -41,40 +48,30 @@ const AppLayout = ({ children }: IProvider) => {
     });
   };
 
-  useEffect(() => {
-    setIsScrolled(false);
-    window.document.body.scrollTo({ top: 0, behavior: "smooth" })
-  }, [pathname]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      setIsScrolled(scrollTop > 300 ? true : false);
-    }
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    }
-  }, [])
-
   const UI = (
-    <div className="layout-main">
-      <div className={`
-        layout-top-container transtion-all duration-300 ease-in-out h-[100px] md:h-[64px]
-        ${isScrolled ? '!fixed !top-0 left-0 shadow-lg' : ''}
-      `}>
-        <AppTopbar handleModalToggle={handleModalToggle} />
-      </div>
-      <div className={`layout-main-container ${isSearchFocused && 'blur-md overflow-hidden h-screen '}`}>
-        <div className="layout-main w-full min-h-screen dark:bg-gray-900">
+    <div className="layout-main min-h-screen w-full flex-col">
+      {isLanding ? (
+        <LandingHeader />
+      ) : (
+        <div className="layout-top-container transition-all duration-300 ease-in-out h-[100px] md:h-[64px]">
+          <AppTopbar handleModalToggle={handleModalToggle} />
+        </div>
+      )}
+      <div
+        className={`layout-main-container ${isSearchFocused && "blur-md overflow-hidden h-screen "}`}
+      >
+        <div className="layout-main min-h-screen w-full min-w-0 flex-col dark:bg-gray-900">
           <StripeOrderRecovery />
           {children}
         </div>
       </div>
-      <div className="pb-[45px] md:pb-0 bg-[#141414]">
-        <AppFooter />
-      </div>
+      {isLanding ? (
+        <LandingFooter />
+      ) : (
+        <div className="pb-[45px] md:pb-0 bg-[#141414]">
+          <AppFooter />
+        </div>
+      )}
       <AuthModal
         handleModalToggle={handleModalToggle}
         isAuthModalVisible={isAuthModalVisible}
@@ -82,13 +79,15 @@ const AppLayout = ({ children }: IProvider) => {
     </div>
   );
 
-  useEffect(() => { }, [GOOGLE_MAPS_KEY]);
+  useEffect(() => {}, [GOOGLE_MAPS_KEY]);
 
-  return GOOGLE_MAPS_KEY ?
+  return GOOGLE_MAPS_KEY ? (
     <GoogleMapsProvider apiKey={GOOGLE_MAPS_KEY} libraries={LIBRARIES}>
       <>{UI}</>
     </GoogleMapsProvider>
-    : <>{UI}</>;
+  ) : (
+    <>{UI}</>
+  );
 };
 
 export default AppLayout;

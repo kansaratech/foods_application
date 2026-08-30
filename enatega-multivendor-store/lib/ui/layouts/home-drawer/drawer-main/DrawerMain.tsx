@@ -2,10 +2,12 @@ import { useApptheme } from "@/lib/context/theme.context";
 import CustomDrawerContent from "@/lib/ui/screen-components/home/drawer/drawer-content";
 import {
   CardIcon,
+  AboutIcon,
   HelpIcon,
   HomeIcon,
   LanguageIcon,
   PageIcon,
+  PrivacyIcon,
 } from "@/lib/ui/useable-components/svg";
 import ScheduleIcon from "@/lib/ui/useable-components/svg/schedule";
 import { Colors } from "@/lib/utils/constants";
@@ -13,12 +15,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
 import { Drawer } from "expo-router/drawer";
 import { useTranslation } from "react-i18next";
-import { TouchableOpacity } from "react-native";
+import { Platform, TouchableOpacity, useWindowDimensions } from "react-native";
 
 export default function DrawerMain() {
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
+  const isDesktopWeb = Platform.OS === "web" && width >= 1024;
   return (
     <Drawer
       drawerContent={CustomDrawerContent}
@@ -28,6 +32,7 @@ export default function DrawerMain() {
         lazy: true,
         headerTintColor: appTheme.fontMainColor,
         headerLeft: () => {
+          if (isDesktopWeb) return null;
           return (
             <TouchableOpacity
               onPress={() => {
@@ -47,13 +52,17 @@ export default function DrawerMain() {
         headerStyle: {
           backgroundColor: appTheme.screenBackground,
         },
+        headerTitleStyle: { fontSize: 20, fontWeight: "700" },
         drawerStatusBarAnimation: "slide",
         drawerItemStyle: {
           borderRadius: 0,
           marginTop: 4,
         },
+        drawerType: "front",
         drawerStyle: {
-          marginBottom: 45,
+          display: isDesktopWeb ? "none" : "flex",
+          width: isDesktopWeb ? 0 : Math.min(360, width * 0.88),
+          marginBottom: isDesktopWeb ? 0 : 64,
         },
       })}
     >
@@ -114,6 +123,26 @@ export default function DrawerMain() {
           title: t("Help"),
           drawerIcon: ({ color, size }) => (
             <HelpIcon color={color} height={size} width={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="about/index"
+        options={{
+          drawerLabel: t("About Us"),
+          title: t("About Us"),
+          drawerIcon: ({ color, size }) => (
+            <AboutIcon color={color} height={size} width={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="privacy/index"
+        options={{
+          drawerLabel: t("Privacy Policy"),
+          title: t("Privacy Policy"),
+          drawerIcon: ({ color, size }) => (
+            <PrivacyIcon color={color} height={size} width={size} />
           ),
         }}
       />

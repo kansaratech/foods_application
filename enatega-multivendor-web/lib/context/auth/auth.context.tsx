@@ -386,23 +386,20 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       });
       setAuthToken(data?.login?.token ?? "");
       await fetchProfile();
-      if (!data.login.emailIsVerified) {
+      const emailOk = data.login.emailIsVerified || SKIP_EMAIL_VERIFICATION;
+      const phoneOk = data.login.phoneIsVerified || SKIP_MOBILE_VERIFICATION;
+      if (!emailOk) {
         setActivePanel(5);
-      } else if (!data.login.phoneIsVerified) {
+      } else if (!phoneOk) {
         setActivePanel(4);
       } else {
-        if (data.login?.phoneIsVerified && data.login?.emailIsVerified) {
-          setActivePanel(0);
-          setIsAuthModalVisible(false);
-          showToast({
-            type: "success",
-            title: t("login_success"),
-            message: t("login_success_message"),
-          });
-        } else {
-          setActivePanel(4);
-        }
-        router.push("/");
+        setActivePanel(0);
+        setIsAuthModalVisible(false);
+        showToast({
+          type: "success",
+          title: t("login_success"),
+          message: t("login_success_message"),
+        });
       }
     } catch (err) {
       const error = err as ApolloError;

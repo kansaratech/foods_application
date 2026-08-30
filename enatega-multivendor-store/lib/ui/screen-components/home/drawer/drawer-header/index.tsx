@@ -49,8 +49,8 @@ const CustomDrawerHeader = () => {
 
   return (
     <View
-      className="w-full -mt-0 h-[150px] flex-row justify-between p-4 pt-8"
-      style={{ backgroundColor: appTheme.primary, marginTop: 1 }}
+      className="w-full h-[176px] flex-row justify-between p-5 pt-8"
+      style={{ backgroundColor: "#8F173F" }}
     >
       <View className="justify-between flex-1">
         <View
@@ -68,7 +68,7 @@ const CustomDrawerHeader = () => {
             <Text
               className="text-[16px] font-semibold"
               style={{
-                color: appTheme.primary,
+                color: "#8F173F",
               }}
             >
               {(() => {
@@ -90,7 +90,7 @@ const CustomDrawerHeader = () => {
           <Text
             className="font-semibold text-[16px]"
             style={{
-              color: appTheme.black,
+              color: appTheme.white,
             }}
             numberOfLines={2}
             ellipsizeMode="tail"
@@ -111,12 +111,12 @@ const CustomDrawerHeader = () => {
       <View className="items-end justify-end gap-2">
         <Text
           className="text-md"
-          style={{ color: appTheme.secondaryTextColor }}
+          style={{ color: "rgba(255,255,255,0.72)" }}
         >
           {t("Availability")}
         </Text>
         {loading || loadingProfile ? (
-          <SpinnerComponent color={appTheme.secondaryTextColor} height={10} />
+          <SpinnerComponent color={appTheme.white} height={10} />
         ) : (
           <CustomSwitch
             value={!!dataProfile?.isAvailable}
@@ -126,7 +126,7 @@ const CustomDrawerHeader = () => {
         )}
         <Text
           className="text-xs font-medium"
-          style={{ color: appTheme.secondaryTextColor }}
+          style={{ color: "rgba(255,255,255,0.72)" }}
         >
           {dataProfile?.isAvailable ? t("available") : t("notAvailable")}
         </Text>
