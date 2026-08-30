@@ -4,7 +4,9 @@ import { useApptheme } from "@/lib/context/theme.context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { useContext, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+
+import ConfirmModal from "@/lib/ui/useable-components/confirm-modal";
 
 const navigation = [
   { label: "Orders", icon: "receipt-outline" as const, route: "/home/orders" },
@@ -15,7 +17,7 @@ const navigation = [
   },
   { label: "Menu", icon: "restaurant-outline" as const, route: "/home/menu" },
   { label: "Wallet", icon: "wallet-outline" as const, route: "/wallet" },
-  { label: "Earnings", icon: "cash-outline" as const, route: "/earnings" },
+  { label: "Earnings", icon: "bar-chart-outline" as const, route: "/earnings" },
   {
     label: "Bank Management",
     icon: "card-outline" as const,
@@ -42,6 +44,7 @@ const navigation = [
 
 export default function WebSidebar() {
   const [collapsed, setCollapsed] = useState(true);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const pathname = usePathname();
   const { appTheme } = useApptheme();
   const { dataProfile } = useUserContext();
@@ -50,13 +53,6 @@ export default function WebSidebar() {
   const isActive = (route: string) => {
     if (route === "/home/orders") return pathname.startsWith("/home/orders");
     return pathname === route || pathname.startsWith(`${route}/`);
-  };
-
-  const confirmLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Logout", style: "destructive", onPress: () => logout?.() },
-    ]);
   };
 
   const initials = (dataProfile?.name ?? "Padharo Store")
@@ -227,7 +223,7 @@ export default function WebSidebar() {
             style={{ borderTopColor: appTheme.borderLineColor }}
           >
             <TouchableOpacity
-              onPress={confirmLogout}
+              onPress={() => setLogoutOpen(true)}
               className="h-12 flex-row items-center rounded-xl px-3"
               style={{ justifyContent: collapsed ? "center" : "flex-start" }}
             >
@@ -248,6 +244,21 @@ export default function WebSidebar() {
           </View>
         </ScrollView>
       </View>
+
+      <ConfirmModal
+        visible={logoutOpen}
+        title="Log out?"
+        message="You'll need to sign in again to manage orders and your menu."
+        confirmLabel="Log out"
+        cancelLabel="Stay signed in"
+        destructive
+        icon="log-out-outline"
+        onCancel={() => setLogoutOpen(false)}
+        onConfirm={() => {
+          setLogoutOpen(false);
+          logout?.();
+        }}
+      />
     </View>
   );
 }

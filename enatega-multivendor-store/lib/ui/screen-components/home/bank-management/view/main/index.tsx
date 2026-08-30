@@ -1,255 +1,189 @@
-// Components
 import { UPDATE_BUSINESS_DETAILS } from "@/lib/apollo/mutations/store.mutation";
 import { STORE_PROFILE } from "@/lib/apollo/queries/store.query";
 import { useUserContext } from "@/lib/context/global/user.context";
 import { useApptheme } from "@/lib/context/theme.context";
 import { CustomContinueButton } from "@/lib/ui/useable-components";
 
-// Hooks
 import { useMutation } from "@apollo/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Alert, FlatList, KeyboardAvoidingView } from "react-native";
-
-// Core
 import {
-  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { showMessage } from "react-native-flash-message";
 
+type FieldKey = "bankName" | "accountName" | "accountCode" | "accountNumber";
+
+const FIELDS: {
+  key: FieldKey;
+  label: string;
+  placeholder: string;
+  numeric?: boolean;
+}[] = [
+  { key: "bankName", label: "Bank Name", placeholder: "e.g. State Bank of India" },
+  {
+    key: "accountName",
+    label: "Account Name",
+    placeholder: "Account holder's full name",
+  },
+  {
+    key: "accountCode",
+    label: "IBAN / SWIFT / IFSC",
+    placeholder: "e.g. SBIN0001234",
+  },
+  {
+    key: "accountNumber",
+    label: "Account Number",
+    placeholder: "Bank account number",
+    numeric: true,
+  },
+];
+
 export default function BankManagementMain() {
-  // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
   const { bottom } = useSafeAreaInsets();
+  const { userId, dataProfile } = useUserContext();
 
-  // Contexts
-  const { userId } = useUserContext();
-
-  // states
-  const [isError, setIsError] = useState({
-    field: "",
-    message: "",
-  });
-  const [formData, setFormData] = useState({
-    bankName: "",
-    accountName: "",
-    accountNumber: "",
-    accountCode: "",
-  });
-  // Mutations
-  const [mutateBankDetails, { loading: areBankDetailsLoading }] = useMutation(
-    UPDATE_BUSINESS_DETAILS,
-    {
-      onError: () => {
-        showMessage({
-          message: t("Failed to update bank details"),
-          type: "danger",
-        });
-      },
-      onCompleted: () => {
-        setFormData({
-          bankName: "",
-          accountName: "",
-          accountNumber: "",
-          accountCode: "",
-        });
-        setIsError({
-          field: "",
-          message: "",
-        });
-      },
-      refetchQueries: [
-        { query: STORE_PROFILE, variables: { restaurantId: userId } },
-      ],
-    },
+  const existing = dataProfile?.bussinessDetails;
+  const initial = useMemo(
+    () => ({
+      bankName: existing?.bankName ?? "",
+      accountName: existing?.accountName ?? "",
+      accountCode: existing?.accountCode ?? "",
+      accountNumber: existing?.accountNumber
+        ? String(existing.accountNumber)
+        : "",
+    }),
+    [existing],
   );
 
-  // Handlers
-  const handleChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
-  const handleSubmit = async () => {
-    try {
-      if (!formData.bankName) {
-        setIsError({
-          field: "bankName",
-          message: t("Bank Name is required"),
-        });
-        return showMessage({
-          message: t("Bank Name is required"),
-          type: "danger",
-        });
-      } else if (!formData.accountName) {
-        setIsError({
-          field: "accountName",
-          message: t("Account Name is required"),
-        });
-        return showMessage({
-          message: t("Account Name is required"),
-          type: "danger",
-        });
-      } else if (!formData.accountNumber) {
-        setIsError({
-          field: "accountNumber",
-          message: t("Account Number is required"),
-        });
-        return showMessage({
-          message: t("Account Number is required"),
-          type: "danger",
-        });
-      } else if (!formData.accountCode) {
-        setIsError({
-          field: "accountCode",
-          message: t("Account Code is required"),
-        });
-        return showMessage({
-          message: t("Account Code is required"),
-          type: "danger",
-        });
-      }
-      await mutateBankDetails({
-        variables: {
-          updateRestaurantBussinessDetailsId: userId,
-          bussinessDetails: {
-            bankName: formData.bankName,
-            accountName: formData.accountName,
-            accountNumber: Number(formData.accountNumber),
-            accountCode: formData.accountCode,
-          },
-        },
+  const [formData, setFormData] = useState(initial);
+  const [errorField, setErrorField] = useState<FieldKey | "">("");
+
+  useEffect(() => {
+    setFormData(initial);
+  }, [initial]);
+
+  const [mutateBankDetails, { loading }] = useMutation(UPDATE_BUSINESS_DETAILS, {
+    onError: () =>
+      showMessage({
+        message: t("Failed to update bank details"),
+        type: "danger",
+      }),
+    onCompleted: () => {
+      setErrorField("");
+      showMessage({
+        message: t("Your bank details have been updated successfully"),
+        type: "success",
       });
-      Alert.alert(
-        t("Bank Details Updated"),
-        t("Your bank details have been updated successfully"),
-      );
-    } catch {
+    },
+    refetchQueries: [
+      { query: STORE_PROFILE, variables: { restaurantId: userId } },
+    ],
+  });
+
+  const set = (key: FieldKey, value: string) => {
+    setErrorField("");
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = () => {
+    const missing = FIELDS.find((f) => !formData[f.key].trim());
+    if (missing) {
+      setErrorField(missing.key);
+      showMessage({
+        message: t(`${missing.label} is required`),
+        type: "danger",
+      });
       return;
     }
+    mutateBankDetails({
+      variables: {
+        updateRestaurantBussinessDetailsId: userId,
+        bussinessDetails: {
+          bankName: formData.bankName.trim(),
+          accountName: formData.accountName.trim(),
+          accountNumber: Number(formData.accountNumber),
+          accountCode: formData.accountCode.trim(),
+        },
+      },
+    });
   };
 
-  // UseEffect
-  useEffect(() => {
-    if (!areBankDetailsLoading) {
-      setFormData({
-        bankName: "",
-        accountName: "",
-        accountNumber: "",
-        accountCode: "",
-      });
-    }
-  }, [areBankDetailsLoading]);
-
   return (
-    <View className="flex-1 w-[95%] mx-auto">
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView className="flex-1">
-          <FlatList
-            data={[
-              <View
-                className={`flex flex-col w-full items-start justify-start  gap-2`}
-              >
+    <KeyboardAvoidingView
+      className="flex-1"
+      style={{ backgroundColor: appTheme.themeBackground }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 20,
+          paddingBottom: bottom + 32,
+          alignItems: "center",
+        }}
+      >
+        <View className="w-full max-w-[480px]">
+          <Text
+            className="text-sm mb-6"
+            style={{ color: appTheme.fontSecondColor }}
+          >
+            {t(
+              "Used for settlements and withdrawals. Only your team can see this.",
+            )}
+          </Text>
+
+          <View className="gap-y-4">
+            {FIELDS.map((field) => (
+              <View key={field.key}>
                 <Text
-                  className="text-lg font-normal"
+                  className="text-sm font-semibold mb-2"
+                  style={{ color: appTheme.fontMainColor }}
+                >
+                  {t(field.label)}
+                </Text>
+                <TextInput
+                  value={formData[field.key]}
+                  onChangeText={(v) => set(field.key, v)}
+                  placeholder={t(field.placeholder)}
+                  placeholderTextColor={appTheme.fontSecondColor}
+                  keyboardType={field.numeric ? "number-pad" : "default"}
+                  autoCapitalize={
+                    field.key === "accountCode" ? "characters" : "words"
+                  }
+                  className="h-12 rounded-xl border px-4 text-base outline-none"
                   style={{
                     color: appTheme.fontMainColor,
-                  }}
-                >
-                  {t("Bank Name")}
-                </Text>
-                <TextInput
-                  className={`min-w-[100%] rounded-md border ${isError.field === "bankName" ? "border-red-600 border-2" : "border-2 border-gray-300"} p-3 my-2 `}
-                  value={formData.bankName}
-                  placeholder={t("Swiss Bank")}
-                  style={{
-                    color: appTheme.fontSecondColor,
-                  }}
-                  placeholderTextColor={appTheme.fontSecondColor}
-                  onChangeText={(val) => {
-                    setIsError({ field: "", message: "" });
-                    handleChange("bankName", val);
+                    borderColor:
+                      errorField === field.key
+                        ? appTheme.textErrorColor
+                        : appTheme.borderLineColor,
+                    backgroundColor: appTheme.themeBackground,
                   }}
                 />
-              </View>,
-              <View className="flex flex-col w-full items-start justify-start gap-2">
-                <Text
-                  className="text-lg font-normal"
-                  style={{ color: appTheme.fontMainColor }}
-                >
-                  {t("Account Name")}
-                </Text>
-                <TextInput
-                  className={`min-w-[100%] rounded-md border ${isError.field === "accountName" ? "border-red-600 border-2" : "border-2 border-gray-300"} p-3 my-2`}
-                  value={formData.accountName}
-                  placeholder={t("Account_Name_Placeholder")}
-                  style={{ color: appTheme.fontSecondColor }}
-                  placeholderTextColor={appTheme.fontSecondColor}
-                  onChangeText={(val) => {
-                    setIsError({ field: "", message: "" });
-                    handleChange("accountName", val);
-                  }}
-                />
-              </View>,
-              <View className="flex flex-col w-full items-start justify-start gap-2">
-                <Text
-                  className="text-lg font-normal"
-                  style={{ color: appTheme.fontMainColor }}
-                >
-                  {t("IBAN_SWIFT_BSB")}
-                </Text>
-                <TextInput
-                  className={`min-w-[100%] rounded-md border ${isError.field === "accountCode" ? "border-red-600 border-2" : "border-2 border-gray-300"} p-3 my-2`}
-                  value={formData.accountCode}
-                  placeholder={t("IBAN_Placeholder")}
-                  style={{ color: appTheme.fontSecondColor }}
-                  placeholderTextColor={appTheme.fontSecondColor}
-                  onChangeText={(val) => {
-                    setIsError({ field: "", message: "" });
-                    handleChange("accountCode", val);
-                  }}
-                />
-              </View>,
-              <View className="flex flex-col w-full items-start justify-start gap-2">
-                <Text
-                  className="text-lg font-normal"
-                  style={{ color: appTheme.fontMainColor }}
-                >
-                  {t("Account Number")}
-                </Text>
-                <TextInput
-                  className={`min-w-[100%] rounded-md border ${isError.field === "accountNumber" ? "border-red-600 border-2" : "border-2 border-gray-300"} p-3 my-2`}
-                  value={formData.accountNumber}
-                  placeholder="7838246824682346"
-                  keyboardType="number-pad"
-                  textContentType="password"
-                  style={{ color: appTheme.fontSecondColor }}
-                  placeholderTextColor={appTheme.fontSecondColor}
-                  onChangeText={(val) => {
-                    setIsError({ field: "", message: "" });
-                    handleChange("accountNumber", val);
-                  }}
-                />
-              </View>,
-              <View>
-                <CustomContinueButton
-                  title={
-                    areBankDetailsLoading ? t("Please wait") : t("Confirm")
-                  }
-                  onPress={handleSubmit}
-                />
-              </View>,
-          ]}
-            style={{ flex: 1 }}
-            contentContainerStyle={{ paddingBottom: bottom + 24 }}
-            renderItem={({ item }) => item}
-          />
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    </View>
+              </View>
+            ))}
+          </View>
+
+          <View className="mt-8">
+            <CustomContinueButton
+              title={loading ? t("Please wait") : t("Confirm")}
+              disabled={loading}
+              isLoading={loading}
+              onPress={handleSubmit}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

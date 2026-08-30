@@ -1,11 +1,8 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
 
-import LandingHeader from "@/lib/ui/screen-components/un-protected/layout/landing-header";
-import AppTopbar from "@/lib/ui/screen-components/un-protected/layout/app-bar";
+import AppHeader from "@/lib/ui/screen-components/un-protected/layout/app-header";
 import AppFooter from "@/lib/ui/screen-components/un-protected/layout/app-footer";
 
 // Interface & Types
@@ -24,11 +21,9 @@ import { useSearchUI } from "@/lib/context/search/search.context";
 import { useAuth } from "@/lib/context/auth/auth.context";
 
 const AppLayout = ({ children }: IProvider) => {
-  const pathname = usePathname();
-  // The marketing landing page ("/") keeps its own slim Padharo chrome. Every
-  // other route uses the full app bar (cart sidebar, address picker, live
-  // search) + the app footer.
-  const isLanding = pathname === "/";
+  // One header on every route — landing, discovery, store, checkout, profile.
+  // AppHeader carries the Padharo chrome + the working cart sidebar, delivery-
+  // location picker and profile menu.
 
   // Hooks
   const { isAuthModalVisible, setIsAuthModalVisible, setActivePanel } =
@@ -49,13 +44,7 @@ const AppLayout = ({ children }: IProvider) => {
 
   const UI = (
     <div className="layout-main min-h-screen w-full flex-col">
-      {isLanding ? (
-        <LandingHeader />
-      ) : (
-        <div className="layout-top-container transition-all duration-300 ease-in-out h-[100px] md:h-[64px]">
-          <AppTopbar handleModalToggle={handleModalToggle} />
-        </div>
-      )}
+      <AppHeader />
       <div
         className={`layout-main-container ${isSearchFocused && "blur-md overflow-hidden h-screen "}`}
       >

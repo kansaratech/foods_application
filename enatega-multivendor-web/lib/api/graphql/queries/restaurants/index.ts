@@ -38,6 +38,7 @@ export const RESTAURANTS_FRAGMENT = gql`
       coordinates
     }
     reviewAverage
+    reviewCount
     cuisines
     openingTimes {
       day
@@ -69,6 +70,7 @@ export const RESTAURANTS_CAROUSEL_FRAGMENT = gql`
       coordinates
     }
     reviewAverage
+    reviewCount
     cuisines
     openingTimes {
       day

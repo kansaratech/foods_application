@@ -28,6 +28,7 @@ import { EarningScreenMainLoading } from "@/lib/ui/skeletons";
 
 // Components
 import { useApptheme } from "@/lib/context/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import formatNumber from "@/lib/utils/methods/num-formatter";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useEffect, useMemo } from "react";
@@ -61,6 +62,7 @@ export default function EarningsMain() {
 
   // Hooks
   const { appTheme } = useApptheme();
+  const { symbol } = useCurrency();
   const { t } = useTranslation();
   const { userId, setModalVisible } = useUserContext();
   const tabBarHeight = useBottomTabBarHeight();
@@ -110,13 +112,26 @@ export default function EarningsMain() {
   }, [userId]);
 
   const earnings = storeEarningsData?.storeEarningsGraph.earnings ?? [];
+
+  // Readable label for an earnings row (the API `_id` is the store id, not a date).
+  const rowLabel = (earning: IStoreEarnings): string => {
+    const days = (earning.earningsArray ?? [])
+      .map((d) => d.date)
+      .filter(Boolean)
+      .sort();
+    if (!days.length) return "Total";
+    return days[0] === days[days.length - 1]
+      ? days[0].slice(5)
+      : `${days[0].slice(5)}–${days[days.length - 1].slice(5)}`;
+  };
+
   const barData = useMemo<barDataItem[]>(
     () =>
       earnings.slice(0, 7).map((earning) => ({
         value: earning.totalEarningsSum.toString().startsWith("-")
           ? Number(-earning.totalEarningsSum)
           : earning.totalEarningsSum,
-        label: earning._id,
+        label: rowLabel(earning),
         topLabelComponent: () => (
           <Text
             style={{
@@ -127,11 +142,12 @@ export default function EarningsMain() {
               wordWrap: "wrap",
             }}
           >
-            ${formatNumber(Number(earning.totalEarningsSum))}
+            {symbol}
+            {formatNumber(Number(earning.totalEarningsSum))}
           </Text>
         ),
       })),
-    [appTheme.fontMainColor, earnings],
+    [appTheme.fontMainColor, earnings, symbol],
   );
   const recentTransaction = earnings;
 
@@ -152,7 +168,7 @@ export default function EarningsMain() {
     index: number;
   }) => (
     <EarningStack
-      date={item._id}
+      date={rowLabel(item)}
       earning={item.totalEarningsSum}
       totalDeliveries={item.earningsArray.length}
       _id={item._id}

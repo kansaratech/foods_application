@@ -2,7 +2,7 @@
 import { useUserContext } from "@/lib/context/global/user.context";
 
 // Interfaces
-import { IStoreEarningsArray } from "@/lib/utils/interfaces/rider-earnings.interface";
+import { IFlatEarningOrder } from "@/lib/utils/interfaces/rider-earnings.interface";
 
 // Components
 import { NoRecordFound } from "@/lib/ui/useable-components";
@@ -12,58 +12,60 @@ import OrderStack from "../order-stack";
 
 // Hooks
 import { useApptheme } from "@/lib/context/theme.context";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 export default function EarningsOrderDetailsMain() {
-  // States
-  const [recentOrderEarnings, setRecentOrderEarnings] = useState<
-    IStoreEarningsArray[]
-  >([] as IStoreEarningsArray[]);
-
-  // Hooks
   const { appTheme } = useApptheme();
   const { storeOrdersEarnings } = useUserContext();
   const tabBarHeight = useBottomTabBarHeight();
 
-  // UseEffects
-  useEffect(() => {
-    if (storeOrdersEarnings?.length) {
-      const sortedOrderEarnings = [...storeOrdersEarnings].sort(
+  // The API groups earnings by day, each day carrying a list of orders. Flatten
+  // to one row per order (the old code read `day.orderDetails.orderId` — a field
+  // that doesn't exist on the array — and crashed on `.substring` of undefined).
+  const orders = useMemo<IFlatEarningOrder[]>(() => {
+    const days = storeOrdersEarnings ?? [];
+    return days
+      .flatMap((day) => {
+        const list = Array.isArray(day.orderDetails)
+          ? day.orderDetails
+          : [day.orderDetails].filter(Boolean);
+        const perOrder =
+          list.length > 0 ? Number(day.totalOrderAmount) / list.length : 0;
+        return list
+          .filter((od) => od && od.orderId)
+          .map((od) => ({
+            orderId: od.orderId,
+            orderType: od.orderType,
+            paymentMethod: od.paymentMethod,
+            date: day.date,
+            amount: perOrder,
+          }));
+      })
+      .sort(
         (a, b) =>
-          new Date(String(b?.date)).setHours(0, 0, 0, 0) -
-          new Date(String(a?.date)).setHours(23, 59, 59, 999),
+          new Date(String(b.date)).getTime() -
+          new Date(String(a.date)).getTime(),
       );
-      setRecentOrderEarnings(sortedOrderEarnings);
-    }
-  }, [storeOrdersEarnings?.length]);
+  }, [storeOrdersEarnings]);
 
-  const renderOrderItem = ({
-    item,
-    index,
-  }: {
-    item: IStoreEarningsArray;
-    index: number;
-  }) => (
-    <OrderStack
-      isLast={index === recentOrderEarnings.length - 1}
-      amount={item.totalOrderAmount}
-      orderId={item.orderDetails.orderId}
-      date={item.date}
-    />
-  );
+  if (!orders.length) return <NoRecordFound />;
 
-  if (!recentOrderEarnings.length) return <NoRecordFound />;
   return (
     <View style={{ backgroundColor: appTheme.themeBackground, flex: 1 }}>
       <FlatList
-        data={recentOrderEarnings}
-        contentContainerClassName="scroll-smooth"
+        data={orders}
+        keyExtractor={(item, index) => `${item.orderId}-${index}`}
         contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }}
-        keyExtractor={(item, index) =>
-          `${item.orderDetails.orderId}-${item.date}-${index}`
-        }
         ListEmptyComponent={<NoRecordFound />}
-        renderItem={({ item, index }) => renderOrderItem({ item, index })}
+        renderItem={({ item, index }) => (
+          <OrderStack
+            isLast={index === orders.length - 1}
+            amount={item.amount}
+            orderId={item.orderId}
+            date={item.date}
+            paymentMethod={item.paymentMethod}
+          />
+        )}
       />
     </View>
   );

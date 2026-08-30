@@ -3,11 +3,12 @@ import {
   DrawerContentComponentProps,
   DrawerContentScrollView,
 } from "@react-navigation/drawer";
-import { useContext } from "react";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { useContext, useState } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 // Context
 import { AuthContext } from "@/lib/context/global/auth.context";
+import ConfirmModal from "@/lib/ui/useable-components/confirm-modal";
 
 // Drawer
 import CustomDrawerHeader from "@/lib/ui/screen-components/home/drawer/drawer-header";
@@ -30,29 +31,7 @@ export default function CustomDrawerContent(
   const { appTheme, currentTheme } = useApptheme();
   const { t } = useTranslation();
   const { logout } = useContext(AuthContext);
-
-  const handleLogoutConfirmation = () => {
-    Alert.alert(
-      t("Logout"),
-      t(
-        "Are you sure you want to logout?",
-        "Are you sure you want to logout?"
-      ),
-      [
-        {
-          text: t("Cancel", "Cancel"),
-          style: "cancel",
-        },
-        {
-          text: t("Logout"),
-          style: "destructive",
-          onPress: () => {
-            if (logout) logout();
-          },
-        },
-      ]
-    );
-  };
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   return (
     <DrawerContentScrollView
@@ -173,7 +152,7 @@ export default function CustomDrawerContent(
         {/* Logout Button */}
 
         <TouchableOpacity
-          onPress={handleLogoutConfirmation}
+          onPress={() => setLogoutOpen(true)}
           className="flex-row justify-between items-center px-4 py-4 border-b-[0.5px]"
           style={{ borderColor: appTheme.borderLineColor }}
         >
@@ -195,6 +174,20 @@ export default function CustomDrawerContent(
           </View>
         </TouchableOpacity>
       </ScrollView>
+
+      <ConfirmModal
+        visible={logoutOpen}
+        title={t("Logout")}
+        message={t("Are you sure you want to logout?")}
+        confirmLabel={t("Logout")}
+        destructive
+        icon="log-out-outline"
+        onCancel={() => setLogoutOpen(false)}
+        onConfirm={() => {
+          setLogoutOpen(false);
+          logout?.();
+        }}
+      />
     </DrawerContentScrollView>
   );
 }

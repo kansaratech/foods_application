@@ -32,18 +32,33 @@ export default function EarningsDetailStacks({
   }: {
     item: IStoreEarnings;
     index: number;
-  }) => (
-    <EarningStack
-      totalDeliveries={earning.earningsArray.length}
-      date={earning._id}
-      earning={earning.totalEarningsSum}
-      _id={earning._id}
-      earningsArray={earning.earningsArray}
-      totalOrderAmount={earning.totalOrderAmount}
-      setModalVisible={setModalVisible}
-      isLast={storeEarnings ? storeEarnings?.length - 1 === index : false}
-    />
-  );
+  }) => {
+    // The API returns one row spanning the whole selected range; its `_id` is
+    // the store id, not something to show. Label it with the actual day range.
+    const days = (earning.earningsArray ?? [])
+      .map((d) => d.date)
+      .filter(Boolean)
+      .sort();
+    const label =
+      days.length === 0
+        ? "All earnings"
+        : days[0] === days[days.length - 1]
+          ? days[0]
+          : `${days[0]} – ${days[days.length - 1]}`;
+
+    return (
+      <EarningStack
+        totalDeliveries={earning.earningsArray.length}
+        date={label}
+        earning={earning.totalEarningsSum}
+        _id={earning._id}
+        earningsArray={earning.earningsArray}
+        totalOrderAmount={earning.totalOrderAmount}
+        setModalVisible={setModalVisible}
+        isLast={storeEarnings ? storeEarnings?.length - 1 === index : false}
+      />
+    );
+  };
 
   // Empty Component
   const ListEmptyComponent = () => {

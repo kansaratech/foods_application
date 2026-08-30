@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "primereact/skeleton";
 import { useMutation } from "@apollo/client";
 import { ADD_FAVOURITE_RESTAURANT } from "@/lib/api/graphql/mutations/restaurant";
@@ -12,15 +12,15 @@ import { useQuery } from "@apollo/client";
 // Context & Hooks
 import useUser from "@/lib/hooks/useUser";
 import useRestaurant from "@/lib/hooks/useRestaurant";
+import useToast from "@/lib/hooks/useToast";
 
 // Icons
 import { ClockSvg, HeartSvg, InfoSvg, RatingSvg } from "@/lib/utils/assets/svg";
-import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faSearch, faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 // Components
 import Spacer from "@/lib/ui/useable-components/spacer";
 import { PaddingContainer } from "@/lib/ui/useable-components/containers";
-import CustomIconTextField from "@/lib/ui/useable-components/input-icon-field";
 import FoodItemDetail from "@/lib/ui/useable-components/item-detail";
 import FoodCategorySkeleton from "@/lib/ui/useable-components/custom-skeletons/food-items.skeleton";
 import ClearCartModal from "@/lib/ui/useable-components/clear-cart-modal";
@@ -32,6 +32,9 @@ import { ICategory, IFood } from "@/lib/utils/interfaces";
 
 // Methods
 import { toSlug } from "@/lib/utils/methods";
+import { calculateDistance } from "@/lib/utils/methods/order";
+import { MARKETPLACE_LOCATION } from "@/lib/utils/constants";
+import { useUserAddress } from "@/lib/context/address/address.context";
 import ChatSvg from "@/lib/utils/assets/svg/chat";
 import { isRestaurantOpen } from "@/lib/utils/constants/isRestaurantOpen";
 import ReviewsModal from "@/lib/ui/useable-components/reviews-modal";
@@ -291,11 +294,41 @@ export default function RestaurantDetailsScreen() {
   // States
   const [visibleItems, setVisibleItems] = useState(10); // Default visible items
   const [showAll, setShowAll] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState("64px"); // Default for desktop
   const [showReviews, setShowReviews] = useState<boolean>(false);
   const [showMoreInfo, setShowMoreInfo] = useState<boolean>(false);
 
   const isOpen = isRestaurantOpen(restaurantInfo);
+
+  // Is this store reachable from the customer's chosen delivery location?
+  // `restaurant.deliveryDistance` when the vendor has set one, else the
+  // marketplace radius (every Padharo store serves within it).
+  const router = useRouter();
+  const { showToast } = useToast();
+  const { userAddress } = useUserAddress();
+  const outOfDeliveryRange = useMemo(() => {
+    const storeCoords = data?.restaurant?.location?.coordinates;
+    const userCoords = userAddress?.location?.coordinates;
+    if (!storeCoords || !userCoords) return false;
+
+    const sLng = Number(storeCoords[0]);
+    const sLat = Number(storeCoords[1]);
+    const uLng = Number(userCoords[0]);
+    const uLat = Number(userCoords[1]);
+    const valid = [sLng, sLat, uLng, uLat].every(Number.isFinite);
+    if (!valid || (uLng === 0 && uLat === 0) || (sLng === 0 && sLat === 0)) {
+      return false;
+    }
+
+    const radiusKm =
+      Number(data?.restaurant?.deliveryDistance) > 0
+        ? Number(data?.restaurant?.deliveryDistance)
+        : MARKETPLACE_LOCATION.radiusKm;
+    return calculateDistance(sLat, sLng, uLat, uLng) > radiusKm;
+  }, [
+    data?.restaurant?.location?.coordinates,
+    data?.restaurant?.deliveryDistance,
+    userAddress?.location?.coordinates,
+  ]);
 
   // Function to handle clicking on a restaurant
   const handleRestaurantClick = (food: IFood) => {
@@ -365,13 +398,20 @@ export default function RestaurantDetailsScreen() {
 
   // Function to handle opening the food item modal
   const handleOpenFoodModal = (food: IFood) => {
+    if (outOfDeliveryRange) {
+      showToast({
+        type: "info",
+        title: "Outside delivery area",
+        message: `${restaurantInfo.name} doesn't deliver to your location. Change it in the top bar to order.`,
+      });
+      return;
+    }
     // Add restaurant ID to the food item
     setSelectedFood({
       ...food,
       restaurant: restaurantInfo._id,
     });
     setShowDialog(true);
-    console.log("Food ModAL dETAISL", food);
   };
 
   // Function to close the food item modal
@@ -404,24 +444,11 @@ export default function RestaurantDetailsScreen() {
       }
     };
 
-    const updateHeight = () => {
-      if (window.innerWidth >= 1024)
-        setHeaderHeight("64px"); // lg (desktop)
-      else if (window.innerWidth >= 768)
-        setHeaderHeight("80px"); // md (tablet)
-      else if (window.innerWidth >= 640)
-        setHeaderHeight("100px"); // sm (larger phones)
-      else setHeaderHeight("120px"); // xs (small phones)
-    };
-
-    updateHeight();
     updateVisibleItems();
-    window.addEventListener("resize", updateHeight);
     window.addEventListener("resize", updateVisibleItems);
 
     return () => {
       window.removeEventListener("resize", updateVisibleItems);
-      window.removeEventListener("resize", updateHeight);
     };
   }, []);
 
@@ -621,32 +648,63 @@ export default function RestaurantDetailsScreen() {
         </PaddingContainer>
       </div>
 
+      {/* Out-of-delivery-range notice */}
+      {!loading && outOfDeliveryRange && (
+        <div className="border-b border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/25">
+          <PaddingContainer>
+            <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm leading-6 text-amber-900 dark:text-amber-200">
+                <span className="font-semibold">{restaurantInfo.name}</span>
+                {" doesn’t deliver to "}
+                <span className="font-semibold">
+                  {userAddress?.deliveryAddress}
+                </span>
+                {". You can browse the menu, but ordering is off until you pick a nearer delivery location (top bar)."}
+              </p>
+              <button
+                type="button"
+                onClick={() => router.push("/discovery")}
+                className="shrink-0 rounded-full bg-[#f5820a] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
+              >
+                Browse stores near you →
+              </button>
+            </div>
+          </PaddingContainer>
+        </div>
+      )}
+
       {/* Category Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="lg:top-[60px] top-[95px] sticky z-50 bg-white dark:bg-gray-900 shadow-[0_1px_1px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_1px_rgba(255,255,255,0.05)]"
+        className="lg:top-[64px] top-[125px] sticky z-50 bg-white dark:bg-gray-900 shadow-[0_1px_1px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_1px_rgba(255,255,255,0.05)]"
       >
         <PaddingContainer>
           <div className="p-3 w-full flex flex-col gap-3">
             {/* Search Input */}
-            <div className="w-full md:max-w-[480px]">
-              <CustomIconTextField
+            <div className="relative w-full md:max-w-[480px]">
+              <FontAwesomeIcon
+                icon={faSearch}
+                style={{ width: 14, height: 14 }}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
                 value={filter}
-                className="w-full h-11 rounded-full pl-10 pr-4 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
-                iconProperties={{
-                  icon: faSearch,
-                  position: "left",
-                  style: { marginTop: 0 },
-                }}
-                placeholder={t("search_for_food_items_placeholder")}
+                onChange={(e) => setFilter(e.target.value)}
                 type="text"
                 name="search"
-                showLabel={false}
-                isLoading={loading}
-                onChange={(e) => setFilter(e.target.value)}
+                placeholder={t("search_for_food_items_placeholder")}
+                className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#f5820a] focus:ring-2 focus:ring-[#f5820a]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
               />
+              {loading && (
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  spin
+                  style={{ width: 13, height: 13 }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+              )}
             </div>
 
             {/* Category List */}

@@ -41,6 +41,7 @@ import { Alert, FlatList, Text, View } from "react-native";
 
 // Skeletons
 import { useApptheme } from "@/lib/context/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { WalletScreenMainLoading } from "@/lib/ui/skeletons";
 import { useTranslation } from "react-i18next";
 import { showMessage } from "react-native-flash-message";
@@ -49,6 +50,7 @@ export default function WalletMain() {
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { userId } = useUserContext();
   const tabBarHeight = useBottomTabBarHeight();
 
@@ -164,7 +166,7 @@ export default function WalletMain() {
       storeProfileData?.restaurant?.currentWalletAmount || 0;
     if (withdrawAmount > (currentAmount || 0)) {
       return setAmountErrMsg(
-        `${t("Please enter a valid amount")}. ${t("You have")} $${currentAmount} ${"available"}.`
+        `${t("Please enter a valid amount")}. ${t("You have")} ${format(currentAmount || 0)} ${t("available")}.`
       );
     } else if (withdrawAmount < 10) {
       return setAmountErrMsg(
@@ -209,16 +211,19 @@ export default function WalletMain() {
     }
   }, [userId]);
 
-  const renderTransactionsHeader = () => (
+  const SectionTitle = ({ label }: { label: string }) => (
     <Text
-      className="font-bold text-lg p-5"
+      className="font-bold text-base px-4 pt-5 pb-2"
       style={{
         color: appTheme.fontMainColor,
         backgroundColor: appTheme.themeBackground,
       }}
     >
-      {t("Recent Transactions")}
+      {label}
     </Text>
+  );
+  const renderTransactionsHeader = () => (
+    <SectionTitle label={t("Recent Transactions")} />
   );
 
   const renderTransactionItem = ({
@@ -237,91 +242,71 @@ export default function WalletMain() {
   };
 
   if (isLoading) return <WalletScreenMainLoading />;
-  else
-    return (
-      <View
-        className="flex flex-col justify-between items-center -top-8  w-full h-[110%] lg:max-w-2xl lg:self-center"
-        // style={{ backgroundColor: appTheme.themeBackground }}
-      >
-        {storeProfileData?.restaurant ? (
-          <View
-            className="flex-1 w-full flex flex-column gap-2 items-center top-0"
-            // style={{ backgroundColor: appTheme.themeBackground }}
-          >
-            <Text
-              className="text-[18px] font-[600] mt-12"
-              style={{
-                color: appTheme.fontSecondColor,
-              }}
-            >
-              {t("Current Balance")}
-            </Text>
-            <Text
-              className="font-semibold text-[32px]"
-              style={{ color: appTheme.fontMainColor }}
-            >
-              $
-              {String(
-                storeProfileData?.restaurant?.currentWalletAmount?.toFixed(2) ??
-                  "0.00"
-              )}
-            </Text>
 
+  const pendingRequest =
+    storeCurrentWithdrawRequestData?.storeCurrentWithdrawRequest;
+
+  return (
+    <View
+      className="flex-1 w-full lg:max-w-2xl lg:self-center"
+      style={{ backgroundColor: appTheme.themeBackground }}
+    >
+      {storeProfileData?.restaurant ? (
+        <View className="w-full items-center gap-2 px-4 pt-8 pb-6">
+          <Text
+            className="text-base font-semibold"
+            style={{ color: appTheme.fontSecondColor }}
+          >
+            {t("Current Balance")}
+          </Text>
+          <Text
+            className="font-bold text-[34px]"
+            style={{ color: appTheme.fontMainColor }}
+          >
+            {format(storeProfileData?.restaurant?.currentWalletAmount ?? 0)}
+          </Text>
+          <View className="w-full mt-2">
             <CustomContinueButton
               title={t("Withdraw Now")}
-              onPress={() => setIsBottomModalOpen((prev) => !prev)}
+              onPress={() => setIsBottomModalOpen(true)}
             />
           </View>
-        ) : (
-          <NoRecordFound msg={t("Your wallet is currently empty")} />
-        )}
-        {storeCurrentWithdrawRequestData?.storeCurrentWithdrawRequest && (
-          <View className="w-full h-40 -top-8">
-            <Text
-              className="font-bold text-lg p-5 mt-2"
-              style={{
-                backgroundColor: appTheme.themeBackground,
-                color: appTheme.fontMainColor,
-              }}
-            >
-              {t("Pending Request")}
-            </Text>
-            <RecentTransaction
-              transaction={{
-                amountTransferred:
-                  storeCurrentWithdrawRequestData?.storeCurrentWithdrawRequest
-                    ?.requestAmount || 0,
-                status:
-                  storeCurrentWithdrawRequestData?.storeCurrentWithdrawRequest
-                    ?.status,
-                createdAt:
-                  storeCurrentWithdrawRequestData?.storeCurrentWithdrawRequest
-                    ?.createdAt,
-              }}
-              key={
-                storeCurrentWithdrawRequestData?.storeCurrentWithdrawRequest
-                  ?.createdAt
-              }
-              isLast={false}
-            />
-          </View>
-        )}
+        </View>
+      ) : (
+        <NoRecordFound msg={t("Your wallet is currently empty")} />
+      )}
 
-        {storeTransactionData && (
-          <FlatList
-            className="w-full h-full flex-1 basis-32 -mt-12"
-            ListHeaderComponent={renderTransactionsHeader}
-            data={storeTransactionData?.transactionHistory?.data}
-            contentContainerStyle={{ paddingBottom: tabBarHeight + 24 }}
-            ListEmptyComponent={<NoRecordFound />}
-            keyExtractor={(item, index) =>
-              `${item.createdAt}-${item.status}-${index}`
-            }
-            renderItem={({ item, index }) => renderTransactionItem({ item, index })}
+      {pendingRequest && (
+        <View className="w-full">
+          <SectionTitle label={t("Pending Request")} />
+          <RecentTransaction
+            transaction={{
+              amountTransferred: pendingRequest?.requestAmount || 0,
+              status: pendingRequest?.status,
+              createdAt: pendingRequest?.createdAt,
+            }}
+            isLast
           />
-        )}
+        </View>
+      )}
 
-        <WithdrawModal
+      <FlatList
+        className="w-full flex-1"
+        ListHeaderComponent={renderTransactionsHeader}
+        data={storeTransactionData?.transactionHistory?.data ?? []}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + 24, flexGrow: 1 }}
+        ListEmptyComponent={
+          <View className="py-10">
+            <NoRecordFound />
+          </View>
+        }
+        keyExtractor={(item, index) =>
+          `${item.createdAt}-${item.status}-${index}`
+        }
+        renderItem={({ item, index }) => renderTransactionItem({ item, index })}
+      />
+
+      <WithdrawModal
           isBottomModalOpen={isBottomModalOpen}
           setIsBottomModalOpen={setIsBottomModalOpen}
           amountErrMsg={amountErrMsg}

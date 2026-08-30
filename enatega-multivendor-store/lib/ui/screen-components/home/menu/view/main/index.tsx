@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   FlatList,
   Image,
   Text,
@@ -18,6 +17,8 @@ import { showMessage } from "react-native-flash-message";
 
 import { useApptheme } from "@/lib/context/theme.context";
 import { useUserContext } from "@/lib/context/global/user.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
+import ConfirmModal from "@/lib/ui/useable-components/confirm-modal";
 import {
   RESTAURANT_ADDONS,
   RESTAURANT_CATEGORIES_PAGINATED,
@@ -53,6 +54,7 @@ type MenuTab = "menu" | "addons";
 export default function MenuMain() {
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { userId: restaurantId } = useUserContext();
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
@@ -62,6 +64,11 @@ export default function MenuMain() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [pendingDelete, setPendingDelete] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const categorySheetRef = useRef<CategoryFormSheetHandle>(null);
   const foodSheetRef = useRef<FoodFormSheetHandle>(null);
@@ -126,53 +133,34 @@ export default function MenuMain() {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   const confirmDeleteCategory = (category: ICategory) => {
-    Alert.alert(
-      t("Delete Category"),
-      t(`Delete "${category.title}" and all its food items?`),
-      [
-        { text: t("Cancel"), style: "cancel" },
-        {
-          text: t("Delete"),
-          style: "destructive",
-          onPress: () =>
-            deleteCategory({
-              variables: { id: category._id, restaurant: restaurantId },
-            }),
-        },
-      ],
-    );
+    setPendingDelete({
+      title: t("Delete Category"),
+      message: t(`Delete "${category.title}" and all its food items?`),
+      onConfirm: () =>
+        deleteCategory({
+          variables: { id: category._id, restaurant: restaurantId },
+        }),
+    });
   };
 
   const confirmDeleteFood = (food: IFood, categoryId: string) => {
-    Alert.alert(t("Delete Food Item"), t(`Delete "${food.title}"?`), [
-      { text: t("Cancel"), style: "cancel" },
-      {
-        text: t("Delete"),
-        style: "destructive",
-        onPress: () =>
-          deleteFood({
-            variables: {
-              id: food._id,
-              restaurant: restaurantId,
-              categoryId,
-            },
-          }),
-      },
-    ]);
+    setPendingDelete({
+      title: t("Delete Food Item"),
+      message: t(`Delete "${food.title}"?`),
+      onConfirm: () =>
+        deleteFood({
+          variables: { id: food._id, restaurant: restaurantId, categoryId },
+        }),
+    });
   };
 
   const confirmDeleteAddon = (addon: IAddon) => {
-    Alert.alert(t("Delete Addon"), t(`Delete "${addon.title}"?`), [
-      { text: t("Cancel"), style: "cancel" },
-      {
-        text: t("Delete"),
-        style: "destructive",
-        onPress: () =>
-          deleteAddon({
-            variables: { id: addon._id, restaurant: restaurantId },
-          }),
-      },
-    ]);
+    setPendingDelete({
+      title: t("Delete Addon"),
+      message: t(`Delete "${addon.title}"?`),
+      onConfirm: () =>
+        deleteAddon({ variables: { id: addon._id, restaurant: restaurantId } }),
+    });
   };
 
   const priceLabel = (food: IFood) => {
@@ -180,7 +168,9 @@ export default function MenuMain() {
     const prices = food.variations.map((v) => v.price);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    return min === max ? `$${min.toFixed(2)}` : `${t("from")} $${min.toFixed(2)}`;
+    return min === max
+      ? format(min)
+      : `${t("from")} ${format(min)}`;
   };
 
   const renderFoodRow = (food: IFood, category: ICategory) => (
@@ -502,6 +492,20 @@ export default function MenuMain() {
           addons={addons}
         />
         <AddonFormSheet ref={addonSheetRef} restaurantId={restaurantId ?? ""} />
+
+        <ConfirmModal
+          visible={!!pendingDelete}
+          title={pendingDelete?.title ?? ""}
+          message={pendingDelete?.message}
+          confirmLabel={t("Delete")}
+          destructive
+          icon="trash-outline"
+          onCancel={() => setPendingDelete(null)}
+          onConfirm={() => {
+            pendingDelete?.onConfirm();
+            setPendingDelete(null);
+          }}
+        />
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

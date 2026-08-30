@@ -1,6 +1,7 @@
 // Contexts
 import { useUserContext } from "@/lib/context/global/user.context";
 import { useApptheme } from "@/lib/context/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 
 // Interfaces
 import { IEarningBottomProps } from "@/lib/utils/interfaces/earning.interface";
@@ -18,148 +19,126 @@ import { Platform, Text, TouchableOpacity, View } from "react-native";
 // React Native Modal
 import ReactNativeModal from "react-native-modal";
 
+const EMPTY = {
+  bool: false,
+  _id: "",
+  date: "",
+  earningsArray: [],
+  totalEarningsSum: 0,
+  totalDeliveries: 0,
+  totalOrderAmount: 0,
+};
+
 export default function EarningBottomBar({
   totalEarnings,
   totalDeliveries,
   modalVisible,
   setModalVisible,
 }: IEarningBottomProps) {
-  // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
-
-  // Contexts
+  const { format } = useCurrency();
   const { setStoreOrderEarnings } = useUserContext();
   const isWeb = Platform.OS === "web";
+
+  const close = () => setModalVisible(EMPTY);
+
+  const openOrderDetails = () => {
+    setStoreOrderEarnings(modalVisible.earningsArray);
+    router.push({
+      pathname:
+        "/(protected)/(tabs)/earnings/(routes)/earnings-order-details",
+    });
+    close();
+  };
+
   return (
     <ReactNativeModal
+      isVisible={modalVisible.bool}
+      onBackdropPress={close}
+      onBackButtonPress={close}
+      useNativeDriver
+      backdropOpacity={0.45}
       animationIn={isWeb ? "fadeIn" : "slideInUp"}
       animationOut={isWeb ? "fadeOut" : "slideOutDown"}
-      isVisible={modalVisible.bool}
-      onBackdropPress={() => {
-        setModalVisible({
-          bool: false,
-          _id: "",
-          date: "",
-          earningsArray: [],
-          totalEarningsSum: 0,
-          totalDeliveries: 0,
-          totalOrderAmount: 0,
-        });
+      style={{
+        margin: 0,
+        justifyContent: isWeb ? "center" : "flex-end",
+        alignItems: "center",
       }}
-      style={
-        isWeb
-          ? {
-              width: "100%",
-              maxWidth: 420,
-              alignSelf: "center",
-              backgroundColor: appTheme.themeBackground,
-              borderRadius: 20,
-              padding: 5,
-              alignItems: "center",
-              justifyContent: "flex-start",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-            }
-          : {
-              maxHeight: "25%",
-              width: "100%",
-              height: "25%",
-              backgroundColor: appTheme.themeBackground,
-              borderRadius: 20,
-              padding: 5,
-              alignItems: "center",
-              justifyContent: "flex-start",
-
-              shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              marginLeft: 0,
-              marginTop: "145%",
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-            }
-      }
     >
-      <Text
-        className="font-bold text-xl w-full py-5 text-center"
-        style={{ color: appTheme.fontMainColor }}
-      >
-        {t("Earnings")}
-      </Text>
-      <Ionicons
-        name="close-circle-outline"
-        size={25}
-        color={appTheme.fontMainColor}
-        className="absolute right-5 top-5 block"
-        onPress={() => {
-          setModalVisible({
-            bool: false,
-            _id: "",
-            date: "",
-            earningsArray: [],
-            totalEarningsSum: 0,
-            totalDeliveries: 0,
-            totalOrderAmount: 0,
-          });
+      <View
+        style={{
+          backgroundColor: appTheme.themeBackground,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.18,
+          shadowRadius: 24,
+          elevation: 12,
         }}
-      />
-      <View className="flex flex-col justify-between h-[65%] w-full">
+        className={`w-[92%] max-w-[420px] ${
+          isWeb ? "rounded-3xl" : "w-full rounded-t-3xl"
+        }`}
+      >
         <View
-          className="flex flex-row justify-between items-center flex-2 p-5"
-          style={{ backgroundColor: appTheme.themeBackground }}
+          className="flex-row items-center justify-between px-5 pt-5 pb-3 border-b"
+          style={{ borderColor: appTheme.borderLineColor }}
         >
-          <Text className="font-bold" style={{ color: appTheme.fontMainColor }}>
-            {t("Total Earning")}
-          </Text>
-          <Text style={{ color: appTheme.fontMainColor }}>
-            ${totalEarnings}
-          </Text>
-        </View>
-
-        <View className="flex flex-row justify-between p-5">
           <Text
-            style={{ color: appTheme.linkColor }}
-            className="text-md font-bold"
+            className="text-lg font-bold"
+            style={{ color: appTheme.fontMainColor }}
           >
-            {t("Deliveries")}({totalDeliveries})
+            {t("Earnings")}
           </Text>
-          <TouchableOpacity
-            className="flex flex-row gap-2 items-center flex-2"
-            onPress={() => {
-              router.push({
-                pathname:
-                  "/(protected)/(tabs)/earnings/(routes)/earnings-order-details",
-              });
-              setStoreOrderEarnings(modalVisible.earningsArray);
-              setModalVisible({
-                bool: false,
-                _id: "",
-                date: "",
-                earningsArray: [],
-                totalEarningsSum: 0,
-                totalDeliveries: 0,
-                totalOrderAmount: 0,
-              });
-            }}
-          >
-            <Text
-              style={{ color: appTheme.linkColor }}
-              className="text-md font-bold"
-            >
-              ${totalEarnings}
-            </Text>
+          <TouchableOpacity onPress={close} accessibilityLabel={t("Close")}>
             <Ionicons
-              name="arrow-forward"
-              size={23}
-              color={appTheme.linkColor}
+              name="close-circle-outline"
+              size={24}
+              color={appTheme.fontSecondColor}
             />
           </TouchableOpacity>
         </View>
+
+        <View className="flex-row items-center justify-between px-5 py-4">
+          <Text
+            className="font-semibold"
+            style={{ color: appTheme.fontSecondColor }}
+          >
+            {t("Total Earning")}
+          </Text>
+          <Text
+            className="text-base font-bold"
+            style={{ color: appTheme.fontMainColor }}
+          >
+            {format(totalEarnings)}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={openOrderDetails}
+          className="flex-row items-center justify-between px-5 py-4 border-t"
+          style={{ borderColor: appTheme.borderLineColor }}
+        >
+          <Text
+            className="font-semibold"
+            style={{ color: appTheme.linkColor }}
+          >
+            {t("Deliveries")} ({totalDeliveries})
+          </Text>
+          <View className="flex-row items-center gap-2">
+            <Text
+              className="font-bold"
+              style={{ color: appTheme.linkColor }}
+            >
+              {format(totalEarnings)}
+            </Text>
+            <Ionicons
+              name="arrow-forward"
+              size={20}
+              color={appTheme.linkColor}
+            />
+          </View>
+        </TouchableOpacity>
       </View>
     </ReactNativeModal>
   );

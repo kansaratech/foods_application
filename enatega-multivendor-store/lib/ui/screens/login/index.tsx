@@ -62,9 +62,11 @@ const LoginScreen = () => {
                 style={{ backgroundColor: "#8F173F" }}
               >
                 <View className="flex-row items-center gap-3">
-                  <View className="h-12 w-12 rounded-2xl bg-[#FF8508] items-center justify-center">
-                    <Image source={IMAGES.icon} className="h-10 w-10 rounded-xl" />
-                  </View>
+                  <Image
+                    source={IMAGES.icon}
+                    style={{ width: 48, height: 48, borderRadius: 14 }}
+                    resizeMode="cover"
+                  />
                   <View>
                     <Text className="text-white text-2xl font-bold">Padharo</Text>
                     <Text className="text-white/70 text-xs tracking-widest uppercase">
@@ -102,7 +104,11 @@ const LoginScreen = () => {
               <View className="w-full max-w-md">
                 {!isDesktop && (
                   <View className="items-center mb-9">
-                    <Image source={IMAGES.icon} className="h-20 w-20 rounded-3xl" />
+                    <Image
+                      source={IMAGES.icon}
+                      style={{ width: 72, height: 72, borderRadius: 20 }}
+                      resizeMode="cover"
+                    />
                     <Text
                       className="text-2xl font-bold mt-3"
                       style={{ color: appTheme.fontMainColor }}
@@ -213,19 +219,6 @@ const LoginScreen = () => {
                         isLoading={isLogging}
                         onPress={() => handleSubmit()}
                       />
-
-                      <View
-                        className="flex-row items-start rounded-2xl px-4 py-3 mt-1"
-                        style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}
-                      >
-                        <Icon name="circle-info" size={15} color={appTheme.primary} />
-                        <Text
-                          className="flex-1 text-xs leading-5 ml-3"
-                          style={{ color: appTheme.fontSecondColor }}
-                        >
-                          Demo access is pre-filled. Select Sign in to explore the merchant dashboard.
-                        </Text>
-                      </View>
                     </View>
                   )}
                 </Formik>

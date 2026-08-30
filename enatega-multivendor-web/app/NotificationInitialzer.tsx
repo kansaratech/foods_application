@@ -37,9 +37,21 @@ export default function NotificationInitializer() {
     };
 
     const initNotifications = async () => {
+      // Web push needs a real Firebase config + a service worker. Neither is
+      // present in this deployment, and `navigator.serviceWorker.ready` never
+      // resolves without a registered worker — so bail before we await it.
+      if (!FIREBASE_KEY || !FIREBASE_PROJECT_ID || !FIREBASE_VAPID_KEY) return;
+      if (
+        typeof navigator === "undefined" ||
+        !("serviceWorker" in navigator) ||
+        typeof Notification === "undefined"
+      ) {
+        return;
+      }
+
       const localToken = localStorage.getItem("token");
       const userId = localStorage.getItem("userId");
-    
+
       if (
         Notification.permission === "default" &&
         localToken &&

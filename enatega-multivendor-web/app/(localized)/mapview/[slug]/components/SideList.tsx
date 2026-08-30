@@ -120,10 +120,16 @@ const SideList: React.FC<SideListProps> = ({ data, onHover }) => {
                   </p>
 
                   <div className="flex items-center text-sm text-gray-500 mt-1 dark:text-white">
-                    <span className="mr-2 rtl:ml-2">
-                      ⭐ {item.reviewAverage.toFixed(1)}
-                    </span>
-                    <span>({item.reviewCount} reviews)</span>
+                    {Number(item.reviewAverage) > 0 ? (
+                      <>
+                        <span className="mr-2 rtl:ml-2">
+                          ⭐ {Number(item.reviewAverage).toFixed(1)}
+                        </span>
+                        <span>({item.reviewCount ?? 0} reviews)</span>
+                      </>
+                    ) : (
+                      <span>No reviews yet</span>
+                    )}
                   </div>
 
                   <div className="flex items-center text-sm font-semibold mt-1">

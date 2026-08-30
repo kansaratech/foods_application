@@ -1,15 +1,21 @@
 import { ApolloQueryResult } from "@apollo/client";
 import { Dispatch, SetStateAction } from "react";
 
+export interface IEarningsOrderDetail {
+  orderType: string;
+  orderId: string;
+  paymentMethod: string;
+}
 export interface IStoreEarningsArray {
-  orderDetails: {
-    orderType: string;
-    orderId: string;
-    paymentMethod: string;
-  };
+  // API returns this as a list of orders for the day.
+  orderDetails: IEarningsOrderDetail[];
   totalOrderAmount: number;
   totalEarnings: number;
   date: string;
+}
+export interface IFlatEarningOrder extends IEarningsOrderDetail {
+  date: string;
+  amount: number;
 }
 export interface IStoreEarnings {
   _id: string;
@@ -31,6 +37,7 @@ export interface IStoreEarningsOrderProps {
   orderId: string;
   isLast: boolean;
   date: string;
+  paymentMethod?: string;
 }
 
 export interface IDateFilter {

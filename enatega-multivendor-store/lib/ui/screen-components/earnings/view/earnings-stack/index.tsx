@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 // Core
 import { useApptheme } from "@/lib/context/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function EarningStack({
@@ -22,6 +23,7 @@ export default function EarningStack({
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format } = useCurrency();
 
   // Handlers
   function handleForwardPress() {
@@ -37,29 +39,36 @@ export default function EarningStack({
   }
 
   return (
-    <View
-      className="flex flex-row justify-between items-center p-4 w-[95%] mx-auto my-3  border-b-2"
+    <TouchableOpacity
+      onPress={handleForwardPress}
+      className="flex-row items-center justify-between px-4 py-4 border-b"
       style={{
-        borderBottomColor: appTheme.borderLineColor,
+        borderColor: appTheme.borderLineColor,
         backgroundColor: appTheme.themeBackground,
-        marginBottom: isLast ? 300 : 0,
+        marginBottom: isLast ? 24 : 0,
       }}
     >
-      <View className="flex flex-row gap-2 items-center flex-2">
-        <Text style={{ color: appTheme.fontMainColor }}>{date}</Text>
-        <Text className="font-bold" style={{ color: appTheme.fontMainColor }}>
+      <View className="min-w-0 flex-1 pr-3">
+        <Text
+          className="text-xs"
+          style={{ color: appTheme.fontSecondColor }}
+          numberOfLines={1}
+        >
+          {date}
+        </Text>
+        <Text
+          className="font-semibold mt-0.5"
+          style={{ color: appTheme.fontMainColor }}
+        >
           {t("Total Earnings")}
         </Text>
       </View>
-      <TouchableOpacity
-        className="flex flex-row gap-2 items-center flex-2"
-        onPress={handleForwardPress}
-      >
-        <Text className="font-bold " style={{ color: appTheme.linkColor }}>
-          ${Number(earning)}
+      <View className="flex-row items-center gap-2">
+        <Text className="font-bold" style={{ color: appTheme.linkColor }}>
+          {format(earning, 0)}
         </Text>
         <RightArrowIcon color={appTheme.linkColor} />
-      </TouchableOpacity>
-    </View>
+      </View>
+    </TouchableOpacity>
   );
 }

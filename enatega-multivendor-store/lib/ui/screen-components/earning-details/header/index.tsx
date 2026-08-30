@@ -13,6 +13,7 @@ import { IStoreEarningsResponse } from "@/lib/utils/interfaces/rider-earnings.in
 
 // Core
 import { useApptheme } from "@/lib/context/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
@@ -27,6 +28,7 @@ export default function EarningDetailsHeader() {
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const { userId } = useUserContext();
 
   // Queries
@@ -61,49 +63,50 @@ export default function EarningDetailsHeader() {
   if (isRiderEarningsLoading) return <SpinnerComponent />;
   return (
     <View
+      className="px-4 py-4 border-b"
       style={{
         backgroundColor: appTheme.themeBackground,
         borderColor: appTheme.borderLineColor,
-        borderWidth: 1,
-        paddingVertical: 12,
       }}
     >
       <Text
-        className="left-5 text-xl font-semibold"
+        className="text-lg font-bold mb-3"
         style={{ color: appTheme.fontMainColor }}
       >
-        {t("Summary").length > 15
-          ? t("Summary").substring(0, 15)
-          : t("Summary")}
+        {t("Summary")}
       </Text>
-      <View className="flex flex-row justify-between items-center p-5">
-        <View className="flex gap-2 items-center">
-          <Text className="text-lg" style={{ color: appTheme.fontMainColor }}>
-            {t("Total Earnings").length > 15
-              ? t("Total Earnings")
-              : t("Total Earnings")}
+
+      <View className="flex-row gap-3">
+        <View
+          className="flex-1 rounded-2xl p-4"
+          style={{ backgroundColor: appTheme.sidebarIconBackground }}
+        >
+          <Text
+            className="text-xs font-semibold uppercase"
+            style={{ color: appTheme.fontSecondColor }}
+          >
+            {t("Total Earnings")}
           </Text>
           <Text
-            className="font-semibold text-lg text-start self-start"
+            className="text-2xl font-bold mt-1"
             style={{ color: appTheme.fontMainColor }}
           >
-            ${Number(storeEarningsGrandTotal.earnings).toFixed(2)}
+            {format(storeEarningsGrandTotal.earnings)}
           </Text>
         </View>
+
         <View
-          className="flex gap-2 items-center pl-3"
-          style={{
-            borderLeftWidth: 2,
-            borderLeftColor: appTheme.borderLineColor,
-          }}
+          className="flex-1 rounded-2xl p-4"
+          style={{ backgroundColor: appTheme.sidebarIconBackground }}
         >
-          <Text className="text-lg" style={{ color: appTheme.fontMainColor }}>
-            {t("Total Deliveries").length > 15
-              ? t("Total Deliveries")
-              : t("Total Deliveries")}
+          <Text
+            className="text-xs font-semibold uppercase"
+            style={{ color: appTheme.fontSecondColor }}
+          >
+            {t("Total Deliveries")}
           </Text>
           <Text
-            className="font-semibold text-lg text-start self-start"
+            className="text-2xl font-bold mt-1"
             style={{ color: appTheme.fontMainColor }}
           >
             {storeEarningsGrandTotal.totalDeliveries}

@@ -22,29 +22,38 @@ export default function ClientProviders({
   children: React.ReactNode;
 }) {
   const client = useSetupApollo();
-  const hasRegistered = useRef(false);
+  const hasCleanedSW = useRef(false);
   const primeReactConfig = useMemo(() => ({ ripple: true }), []);
 
+  // The app used to register a Workbox service worker that precached
+  // build-specific `/_next/static` chunk URLs. After any rebuild those URLs
+  // 404, the SW answered with ERR_FAILED, and the shell could never hydrate.
+  // We no longer use a service worker — actively tear down any lingering
+  // registration and its caches so returning visitors self-heal.
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) return;
+    if (hasCleanedSW.current) return;
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+    hasCleanedSW.current = true;
 
-    const registerServiceWorker = () => {
-      if (hasRegistered.current) return;
-      hasRegistered.current = true;
-
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => registration.update())
-        .catch((error) => {
-          console.error("Service worker registration failed:", error);
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => {
+          // Pull the self-unregistering /sw.js, then drop the registration.
+          registration.update().catch(() => {});
+          registration.unregister().catch(() => {});
         });
-    };
+      })
+      .catch(() => {});
 
-    window.addEventListener("load", registerServiceWorker, { once: true });
-
-    return () => {
-      window.removeEventListener("load", registerServiceWorker);
-    };
+    if (typeof caches !== "undefined") {
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {});
+    }
   }, []);
 
   return (
