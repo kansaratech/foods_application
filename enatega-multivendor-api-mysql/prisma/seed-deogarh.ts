@@ -334,17 +334,20 @@ async function main() {
   }
 
   // ---- Owner + reviewer ----
-  const owner = await prisma.user.upsert({
-    where: { email: 'deogarh-vendors@padharo.local' },
-    update: {},
-    create: {
-      email: 'deogarh-vendors@padharo.local',
-      name: 'Padharo Deogarh Partners',
-      password: await hashPassword('Vendor@123'),
-      userType: 'VENDOR',
-      emailIsVerified: true,
-    },
-  });
+  // Each store gets its OWN vendor account: the store app is "one login = one
+  // store" (`restaurantOrders` throws if the owner has more than one restaurant).
+  const ownerFor = async (slug: string, name: string) =>
+    prisma.user.upsert({
+      where: { email: `${slug}-owner@padharo.local` },
+      update: {},
+      create: {
+        email: `${slug}-owner@padharo.local`,
+        name: `${name} (Owner)`,
+        password: await hashPassword('Vendor@123'),
+        userType: 'VENDOR',
+        emailIsVerified: true,
+      },
+    });
 
   const reviewer = await prisma.user.upsert({
     where: { email: 'deogarh-diner@padharo.local' },
@@ -418,13 +421,17 @@ async function main() {
       if (c) cuisineIds.push(await getCuisineId(c, shopType.id));
     }
 
+    const storeOwner = await ownerFor(slug, seed.name);
     const restaurant = await prisma.restaurant.create({
       data: {
-        ownerId: owner.id,
+        ownerId: storeOwner.id,
         name: seed.name,
         slug,
         image,
         logo: image,
+        // Store-app (merchant) login: `<slug>@store.padharo` / `Store@123`
+        username: `${slug}@store.padharo`,
+        password: await hashPassword('Store@123'),
         openingTimes: openingTimesFor(seed.shop) as Prisma.InputJsonValue,
         orderPrefix: slug.replace(/[^a-z]/g, '').slice(0, 3).toUpperCase() || 'DGH',
         address: `${seed.area}, Deogarh, Rajsamand, Rajasthan`,

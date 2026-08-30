@@ -60,7 +60,9 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
     },
     rider: (_parent, args: { id: string }, context) => {
-      requireRole(context, ['ADMIN', 'VENDOR']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR', 'RIDER']);
+      // A rider may only read their own profile (the rider app's RIDER_PROFILE query).
+      if (currentUser.userType === 'RIDER' && currentUser.id !== args.id) throw forbiddenError();
       return prisma.user.findFirst({ where: { id: args.id, userType: 'RIDER' }, include: RIDER_INCLUDE });
     },
     availableRiders: (_parent, _args, context) => {
@@ -166,7 +168,9 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     toggleAvailablity: async (_parent, args: { id: string }, context) => {
-      requireRole(context, ['ADMIN', 'VENDOR']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR', 'RIDER']);
+      // A rider may only toggle their own availability (the rider app's switch).
+      if (currentUser.userType === 'RIDER' && currentUser.id !== args.id) throw forbiddenError();
       const profile = await loadRiderProfile(args.id);
       if (!profile) throw notFoundError('Rider not found');
       await prisma.riderProfile.update({ where: { userId: args.id }, data: { available: !profile.available } });

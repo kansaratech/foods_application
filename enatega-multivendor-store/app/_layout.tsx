@@ -14,7 +14,7 @@ import { ApolloProvider } from "@apollo/client";
 import { useEffect, useState } from "react";
 
 // Locale
-import "@/i18next";
+import i18n from "@/i18next";
 
 // Style
 import "../global.css";
@@ -46,7 +46,23 @@ function RootLayout() {
   });
 
   const [isTokenReady, setIsTokenReady] = useState(false);
+  const [isI18nReady, setIsI18nReady] = useState(i18n.isInitialized);
   const [client] = useState(() => setupApollo());
+
+  // Never render the app tree (which is full of `useTranslation()` calls) before
+  // i18n is initialised — otherwise react-i18next changes its hook count between
+  // renders and React 19 crashes in `areHookInputsEqual`.
+  useEffect(() => {
+    if (i18n.isInitialized) {
+      setIsI18nReady(true);
+      return;
+    }
+    const onReady = () => setIsI18nReady(true);
+    i18n.on("initialized", onReady);
+    return () => {
+      i18n.off("initialized", onReady);
+    };
+  }, []);
 
   // Use Effect
   useEffect(() => {
@@ -65,7 +81,7 @@ function RootLayout() {
       });
   }, [client]);
 
-  if (!isTokenReady) {
+  if (!isTokenReady || !isI18nReady) {
     return null;
   }
 

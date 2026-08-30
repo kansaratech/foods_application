@@ -6,16 +6,53 @@
 - Environments: .env.local
 
   Creating an optimized production build ...
-(node:12636) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(node:21332) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
-✓ Compiled successfully in 61s
+✓ Compiled successfully in 14.3s
   Running TypeScript ...
-  Finished TypeScript in 41s ...
+  Finished TypeScript in 23.5s ...
   Collecting page data using 7 workers ...
   Generating static pages using 7 workers (0/24) ...
   Generating static pages using 7 workers (6/24) 
   Generating static pages using 7 workers (12/24) 
   Generating static pages using 7 workers (18/24) 
-✓ Generating static pages using 7 workers (24/24) in 3.8s
+✓ Generating static pages using 7 workers (24/24) in 2.8s
   Finalizing page optimization ...
   Collecting build traces ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /about
+├ ƒ /auth/forgot-password
+├ ƒ /auth/login
+├ ƒ /auth/reset
+├ ƒ /category/[slug]
+├ ƒ /discovery
+├ ƒ /forbidden
+├ ƒ /mapview/[slug]
+├ ƒ /not-found
+├ ƒ /order/[id]/tracking
+├ ƒ /order/checkout
+├ ƒ /privacy
+├ ƒ /profile
+├ ƒ /profile/addresses
+├ ƒ /profile/customerTicket
+├ ƒ /profile/getHelp
+├ ƒ /profile/order-history
+├ ƒ /profile/settings
+├ ƒ /restaurant/[slug]/[id]
+├ ƒ /restaurantInfo
+├ ƒ /restaurants
+├ ƒ /rider
+├ ƒ /search/[slug]
+├ ƒ /see-all/[slug]
+├ ƒ /shop-type/[slug]
+├ ƒ /store
+├ ƒ /store/[slug]/[id]
+├ ƒ /stripe/success
+└ ƒ /terms
+
+
+ƒ  (Dynamic)  server-rendered on demand
+

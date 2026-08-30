@@ -47,6 +47,9 @@ export const orderTypeDefs = /* GraphQL */ `
     _id: ID!
     name: String!
     image: String
+    logo: String
+    slug: String
+    shopType: String
     address: String
     location: Coordinates
   }

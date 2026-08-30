@@ -582,7 +582,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       return true;
     },
 
-    orderPickedUp: (_parent, args: { _id: string }, context) => applyOrderStatusUpdate(context, args._id, 'PICKED'),
+    orderPickedUp: (_parent, args: { _id: string }, context) =>
+      applyOrderStatusUpdate(context, args._id, 'PICKED', ['ADMIN', 'VENDOR', 'RIDER']),
   },
 
   Order: {
@@ -608,6 +609,18 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
     // There is no soft-delete concept for orders in this schema (no `isActive` column on Order) -
     // every persisted order returned from a query is, by definition, an active/live order record.
     isActive: () => true,
+  },
+  OrderRestaurantLite: {
+    _id: (parent: { id: string }) => parent.id,
+    location: (parent: { latitude?: number | null; longitude?: number | null }) =>
+      parent.latitude != null && parent.longitude != null
+        ? { coordinates: [parent.longitude, parent.latitude] }
+        : null,
+    shopType: async (parent: { shopTypeId?: string | null }) => {
+      if (!parent.shopTypeId) return null;
+      const shopType = await prisma.shopType.findUnique({ where: { id: parent.shopTypeId } });
+      return shopType?.slug ?? null;
+    },
   },
   OrderUserLite: {
     available: async (parent: { id?: string }) => {

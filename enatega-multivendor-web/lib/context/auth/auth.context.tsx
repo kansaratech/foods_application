@@ -351,6 +351,9 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           tokenExpiration: userData.data.createUser.tokenExpiration,
           userType: 'USER',
         });
+        if (typeof window !== "undefined" && window.location.pathname === "/") {
+          router.push("/discovery");
+        }
         return userData.data.createUser as ICreateUserData;
       } else {
         return {} as ICreateUserData;
@@ -400,6 +403,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           title: t("login_success"),
           message: t("login_success_message"),
         });
+        // Take the signed-in customer into the app instead of leaving them on
+        // the marketing landing page (which still reads as "logged out").
+        if (typeof window !== "undefined" && window.location.pathname === "/") {
+          router.push("/discovery");
+        }
       }
     } catch (err) {
       const error = err as ApolloError;

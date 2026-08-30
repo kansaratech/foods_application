@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 import LandingHeader from "@/lib/ui/screen-components/un-protected/layout/landing-header";
-import LandingFooter from "@/lib/ui/screen-components/un-protected/layout/landing-footer";
 import AppTopbar from "@/lib/ui/screen-components/un-protected/layout/app-bar";
 import AppFooter from "@/lib/ui/screen-components/un-protected/layout/app-footer";
 
@@ -65,13 +64,7 @@ const AppLayout = ({ children }: IProvider) => {
           {children}
         </div>
       </div>
-      {isLanding ? (
-        <LandingFooter />
-      ) : (
-        <div className="pb-[45px] md:pb-0 bg-[#141414]">
-          <AppFooter />
-        </div>
-      )}
+      <AppFooter />
       <AuthModal
         handleModalToggle={handleModalToggle}
         isAuthModalVisible={isAuthModalVisible}

@@ -2,6 +2,28 @@ import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
 import * as Localization from "expo-localization";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { en as enTranslation } from "./languages/en";
+
+// Initialise SYNCHRONOUSLY with bundled English so `useTranslation()` never runs
+// against an uninitialised i18n instance (that crashes react-i18next's
+// `useMemoizedT` on React 19: "Cannot read properties of undefined (reading
+// 'length')"). The user's preferred language is loaded/switched afterwards.
+if (!i18next.isInitialized) {
+  i18next.use(initReactI18next).init({
+    lng: "en",
+    fallbackLng: "en",
+    // `initImmediate: false` makes init() finish synchronously (i18next otherwise
+    // defers it to a setTimeout(0)); combined with bundled `en` resources this
+    // guarantees `useTranslation()` always sees a ready instance, so react-i18next
+    // never early-returns then re-renders with a different hook count — the cause
+    // of "Cannot read properties of undefined (reading 'length')" on React 19.
+    initImmediate: false,
+    compatibilityJSON: "v4",
+    resources: { en: { translation: enTranslation } },
+    interpolation: { escapeValue: false },
+    react: { useSuspense: false },
+  });
+}
 
 const LANGUAGE_LOADERS = {
   en: () => import("./languages/en").then((module) => module.en),
@@ -72,26 +94,12 @@ export const setAppLanguage = async (language?: string | null) => {
 const initializeLanguage = async (): Promise<void> => {
   try {
     const initialLang = normalizeLanguage(await getInitialLanguage());
-    const resources = {
-      ...(await getLanguageResources(DEFAULT_LANGUAGE)),
-      ...(initialLang === DEFAULT_LANGUAGE
-        ? {}
-        : await getLanguageResources(initialLang)),
-    };
-
-    await i18next.use(initReactI18next).init({
-      lng: initialLang,
-      fallbackLng: DEFAULT_LANGUAGE,
-      resources,
-    });
+    if (initialLang !== DEFAULT_LANGUAGE) {
+      await ensureLanguageResources(initialLang);
+      await i18next.changeLanguage(initialLang);
+    }
   } catch {
-    const fallbackResources = await getLanguageResources(DEFAULT_LANGUAGE);
-
-    await i18next.use(initReactI18next).init({
-      lng: DEFAULT_LANGUAGE,
-      fallbackLng: DEFAULT_LANGUAGE,
-      resources: fallbackResources,
-    });
+    // Stay on the synchronously-initialised English instance.
   }
 };
 

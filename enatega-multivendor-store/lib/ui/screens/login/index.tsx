@@ -22,8 +22,8 @@ import { CustomContinueButton } from "../../useable-components";
 import { IMAGES } from "@/lib/assets/images";
 
 const initial: ILoginInitialValues = {
-  username: "FalafelTmeer@yopmail.com",
-  password: "Yalla0014yalla0014@",
+  username: "dgh-shrinath-mishthan-bhandar@store.padharo",
+  password: "Store@123",
 };
 
 const LoginScreen = () => {

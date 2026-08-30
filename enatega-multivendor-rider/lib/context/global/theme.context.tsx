@@ -49,10 +49,19 @@ export default function AppThemeProvidor({
 
   // Methods
   async function getCurrentAppTheme() {
+    let localTheme: string | null = null;
+    try {
+      localTheme = await AsyncStorage.getItem("app_theme");
+    } catch {
+      // AsyncStorage can be unavailable (e.g. web / private mode) — fall back.
+    }
     const systemTheme = Appearance.getColorScheme();
-    const localTheme = await AsyncStorage.getItem("app_theme");
     const theme = localTheme || systemTheme || "dark";
-    Appearance.setColorScheme(theme as app_theme);
+    try {
+      Appearance.setColorScheme(theme as app_theme);
+    } catch {
+      // `setColorScheme` is a no-op / throws on some platforms (react-native-web).
+    }
     setCurrentTheme(theme as app_theme);
     setAppTheme(
       theme === "light"

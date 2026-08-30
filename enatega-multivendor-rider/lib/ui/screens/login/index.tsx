@@ -34,7 +34,7 @@ import { ILoginInitialValues } from "@/lib/utils/interfaces";
 import { CustomContinueButton } from "../../useable-components";
 
 const initial: ILoginInitialValues = {
-  username: "ryanabotreef",
+  username: "rider1",
   password: "Rider@123",
 };
 

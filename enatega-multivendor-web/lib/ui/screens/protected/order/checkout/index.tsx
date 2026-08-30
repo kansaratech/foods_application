@@ -726,8 +726,13 @@ export default function OrderCheckoutScreen() {
       return;
     }
 
-    // if false then select the address
-    if (!isAddressSelectedOnce && deliveryType === "Delivery") {
+    // Ask the customer to confirm an address only when we don't already have
+    // one (picked on the landing page or from their saved profile address).
+    if (
+      !isAddressSelectedOnce &&
+      !userAddress?.location?.coordinates &&
+      deliveryType === "Delivery"
+    ) {
       setIsUserAddressModalOpen(true);
       return;
     }
@@ -1418,16 +1423,18 @@ export default function OrderCheckoutScreen() {
                 </div>
               )}
 
-              <div className="flex justify-between mb-1 text-xs lg:text-[14px]">
-                <span className="font-inter text-gray-900 dark:text-white leading-5">
-                  {" "}
-                  {t("tax_label")}{" "}
-                </span>
-                <span className="font-inter text-gray-900 dark:text-white leading-5">
-                  {CURRENCY_SYMBOL}
-                  {taxCalculation()}
-                </span>
-              </div>
+              {Number(taxCalculation()) > 0 && (
+                <div className="flex justify-between mb-1 text-xs lg:text-[14px]">
+                  <span className="font-inter text-gray-900 dark:text-white leading-5">
+                    {" "}
+                    GST ({taxValue ?? 0}%){" "}
+                  </span>
+                  <span className="font-inter text-gray-900 dark:text-white leading-5">
+                    {CURRENCY_SYMBOL}
+                    {taxCalculation()}
+                  </span>
+                </div>
+              )}
 
               {/* <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
                   <span className="font-inter text-gray-900 leading-5">
@@ -1532,15 +1539,17 @@ export default function OrderCheckoutScreen() {
                 </div>
               )}
 
-              <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                <span className="font-inter text-gray-900 dark:text-white leading-5">
-                  {t("tax_label")}
-                </span>
-                <span className="font-inter text-gray-900 dark:text-white leading-5">
-                  {CURRENCY_SYMBOL}
-                  {taxCalculation()}
-                </span>
-              </div>
+              {Number(taxCalculation()) > 0 && (
+                <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
+                  <span className="font-inter text-gray-900 dark:text-white leading-5">
+                    GST ({taxValue ?? 0}%)
+                  </span>
+                  <span className="font-inter text-gray-900 dark:text-white leading-5">
+                    {CURRENCY_SYMBOL}
+                    {taxCalculation()}
+                  </span>
+                </div>
+              )}
 
               {/* <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
                   <span className="font-inter text-gray-900 leading-5">
@@ -1646,24 +1655,17 @@ export default function OrderCheckoutScreen() {
                         </div>
                       )}
 
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          Tax
-                        </span>
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          {CURRENCY_SYMBOL}
-                          {taxCalculation()}
-                        </span>
-                      </div>
-
+                      {Number(taxCalculation()) > 0 && (
                         <div className="flex justify-between mb-1 text-sm">
-                      <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                        Service fee
-                      </span>
-                      <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                        $0.40
-                      </span>
-                    </div> 
+                          <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
+                            GST ({taxValue ?? 0}%)
+                          </span>
+                          <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
+                            {CURRENCY_SYMBOL}
+                            {taxCalculation()}
+                          </span>
+                        </div>
+                      )}
 
                       <Divider />
 

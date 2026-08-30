@@ -33,7 +33,6 @@ export const PLACE_ORDER = gql`
         _id
         name
         image
-        slug
         address
         location {
           coordinates

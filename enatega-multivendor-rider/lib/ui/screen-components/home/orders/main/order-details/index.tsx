@@ -757,27 +757,33 @@ export default function OrderDetailScreen() {
                     const amountNote = isUnpaid
                       ? `\n\n${t("Confirm you have collected")} ${configuration?.currencySymbol ?? ""}${order?.orderAmount}.`
                       : "";
-                    Alert.alert(
-                      t("Mark as Delivered?"),
-                      `${t("This completes the order and cannot be undone.")}${amountNote}`,
-                      [
-                        { text: t("Cancel"), style: "cancel" },
-                        {
-                          text: t("Mark as Delivered"),
-                          onPress: async () => {
-                            await mutateOrderStatus({
-                              variables: {
-                                id: order?._id,
-                                status: "DELIVERED",
-                              },
-                              onCompleted: () => {
-                                setOrderId(order?.orderId);
-                              },
-                            });
-                          },
+                    const message = `${t("This completes the order and cannot be undone.")}${amountNote}`;
+                    const markDelivered = async () => {
+                      await mutateOrderStatus({
+                        variables: {
+                          id: order?._id,
+                          status: "DELIVERED",
                         },
-                      ],
-                    );
+                        onCompleted: () => {
+                          setOrderId(order?.orderId);
+                        },
+                      });
+                    };
+                    // `Alert.alert` with multiple buttons is a no-op on
+                    // react-native-web, so fall back to window.confirm there.
+                    if (Platform.OS === "web") {
+                      if (
+                        typeof window !== "undefined" &&
+                        window.confirm(`${t("Mark as Delivered?")}\n\n${message}`)
+                      ) {
+                        markDelivered();
+                      }
+                      return;
+                    }
+                    Alert.alert(t("Mark as Delivered?"), message, [
+                      { text: t("Cancel"), style: "cancel" },
+                      { text: t("Mark as Delivered"), onPress: markDelivered },
+                    ]);
                   }}
                 >
                   {loadingOrderStatus ? (

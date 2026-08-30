@@ -15,8 +15,21 @@ export default function LandingHeader() {
   const locale = useLocale();
   const [, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState("");
-  const { setIsAuthModalVisible } = useAuth();
-  const { cartCount } = useUser();
+  const { setIsAuthModalVisible, authToken } = useAuth();
+  const { cartCount, profile } = useUser();
+
+  const isLoggedIn = Boolean(authToken);
+  const displayName =
+    profile?.name?.trim() || profile?.email?.split("@")[0] || "Account";
+  const initials =
+    (profile?.name || profile?.email || "U")
+      .trim()
+      .split(/[\s@.]+/)
+      .filter(Boolean)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
 
   const isHindi = locale === "hi";
   const toggleLocale = () => {
@@ -94,13 +107,36 @@ export default function LandingHeader() {
             Cart{cartCount > 0 ? ` (${cartCount})` : ""}
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setIsAuthModalVisible(true)}
-            className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#f5820a] hover:text-[#8c1d40] dark:border-gray-600 dark:text-white sm:px-4"
-          >
-            Log in
-          </button>
+          {isLoggedIn ? (
+            <>
+              <Link
+                href="/discovery"
+                className="hidden rounded-full bg-[#f5820a] px-4 py-1.5 font-bold text-white transition hover:brightness-95 sm:inline"
+              >
+                Browse stores
+              </Link>
+              <Link
+                href="/profile"
+                title={displayName}
+                className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3 transition hover:border-[#f5820a] dark:border-gray-600"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#8c1d40] text-xs font-bold text-white">
+                  {initials}
+                </span>
+                <span className="hidden max-w-[120px] truncate sm:inline">
+                  {displayName}
+                </span>
+              </Link>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsAuthModalVisible(true)}
+              className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#f5820a] hover:text-[#8c1d40] dark:border-gray-600 dark:text-white sm:px-4"
+            >
+              Log in
+            </button>
+          )}
         </div>
       </div>
     </header>

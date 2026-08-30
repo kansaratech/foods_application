@@ -40,6 +40,17 @@ const IDLE_TRACKING_OPTIONS: Location.LocationOptions = {
   timeInterval: 60000,
 };
 
+// `LocationSubscription.remove()` throws on web (`expo-location` calls the
+// removed `EventEmitter.removeSubscription`). Swallow it so effect cleanup on
+// the web build doesn't surface a red-box.
+const removeListener = (listener?: Location.LocationSubscription) => {
+  try {
+    listener?.remove();
+  } catch (err) {
+    console.log("Error removing location listener: ", err);
+  }
+};
+
 export const LocationProvider = ({ children }: ILocationProviderProps) => {
   const locationListener = useRef<Location.LocationSubscription | undefined>(
     undefined,
@@ -134,7 +145,7 @@ export const LocationProvider = ({ children }: ILocationProviderProps) => {
       // The effect may have been torn down while watchPositionAsync was
       // awaiting; if so, remove the listener now to avoid leaking a watcher.
       if (isCancelled()) {
-        listener.remove();
+        removeListener(listener);
         return;
       }
 
@@ -162,7 +173,7 @@ export const LocationProvider = ({ children }: ILocationProviderProps) => {
     return () => {
       cancelled = true;
       if (locationListener.current) {
-        locationListener.current.remove();
+        removeListener(locationListener.current);
         locationListener.current = undefined;
       }
     };
