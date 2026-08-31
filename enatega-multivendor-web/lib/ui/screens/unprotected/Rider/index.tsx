@@ -1,60 +1,47 @@
-// import libraries
-import React from 'react';
-import { useTranslations } from 'next-intl';
+"use client";
 
-// import components
-import EmailForm from '@/lib/ui/useable-components/RiderandRestaurantsInfos/Form';
-import Heading from '@/lib/ui/useable-components/RiderandRestaurantsInfos/Heading/Heading';
-import WhyCardsList from '@/lib/ui/useable-components/RiderandRestaurantsInfos/WhyCards/WhyCardsList';
-import WhyChoose from '@/lib/ui/useable-components/RiderandRestaurantsInfos/WhyChoose';
-import StartingImage from '@/lib/ui/useable-components/RiderandRestaurantsInfos/StartingImage/StartingImage';
+import { FiClock, FiMap, FiTrendingUp } from "react-icons/fi";
 
-// import images
-import growth from "@/public/assets/images/png/Growth.png";
-import getMoreOrders from "@/public/assets/images/png/GetMoreOrders.png";
-import deliverMoreCustomers from "@/public/assets/images/png/deliverToCustomer.png";
-import RiderBanner from '@/public/assets/images/png/RidersBanner.webp';
+import PartnerLanding from "@/lib/ui/useable-components/RiderandRestaurantsInfos/PartnerLanding";
+import riderBanner from "@/public/assets/images/png/riderBanner.webp";
 
-const Rider = () => {
-  const t = useTranslations();
-
-  const cards = [
-    {
-      heading: t("enatega_rider_page_name_card1_heading"),
-      text: t("enatega_rider_page_name_card1_text"),
-      image: growth,
-      color: "#f7fbfe",
-    },
-    {
-      heading: t("enatega_rider_page_name_card2_heading"),
-      text: t("enatega_rider_page_name_card2_text"),
-      image: getMoreOrders,
-      color: "#faf7fc",
-    },
-    {
-      heading: t("enatega_rider_page_name_card3_heading"),
-      text: t("enatega_rider_page_name_card3_text"),
-      image: deliverMoreCustomers,
-      color: "#fbfbfb",
-    },
-  ];
-
+export default function Rider() {
   return (
-    <div className="w-screen h-auto">
-      <Heading heading={t("enatega_rider_page_name_main_heading")} />
-      <StartingImage image={RiderBanner} />
-      <WhyChoose
-        heading={t("enatega_rider_page_name_why_heading")}
-        subHeading={t("enatega_rider_page_name_why_subheading")}
-      />
-      <WhyCardsList cards={cards} />
-      <hr className="w-[30%] ml-12 border-4 border-primary-color my-12 rounded" />
-      <EmailForm
-        heading={t("enatega_rider_page_name_form_heading")}
-        role={t("enatega_rider_page_name_form_role")}
-      />
-    </div>
+    <PartnerLanding
+      eyebrow="Ride with Padharo"
+      heading="Your city. Your time."
+      accent="Your way to earn."
+      intro="Join Deogarh’s local delivery network, choose when you ride and earn by delivering food, groceries and everyday essentials nearby."
+      image={riderBanner}
+      imageAlt="Padharo delivery rider ready for a local delivery"
+      primaryCta="Become a rider"
+      heroBadge="Flexible work, local routes"
+      metrics={[
+        { value: "Flexible", label: "Choose when you go online" },
+        { value: "Local", label: "Short Deogarh routes" },
+        { value: "Clear", label: "Trip earnings upfront" },
+      ]}
+      benefitsEyebrow="Designed around riders"
+      benefitsHeading="Work that fits around your life."
+      benefitsIntro="Simple tools, transparent trip information and a local support team help you focus on completing deliveries safely."
+      benefits={[
+        { heading: "Earn on every completed trip", text: "Review the delivery information before accepting and track your completed work from the rider app.", icon: <FiTrendingUp /> },
+        { heading: "Choose your own hours", text: "Go online when it suits you—ride regularly or fit deliveries around another job or commitment.", icon: <FiClock /> },
+        { heading: "Stay close to home", text: "Pickups and drops stay within Deogarh and nearby service zones, supported by clear in-app navigation.", icon: <FiMap /> },
+      ]}
+      stepsHeading="Start riding without the runaround."
+      steps={[
+        { title: "Send your application", copy: "Share your contact details using the form below. Previous delivery experience is not required." },
+        { title: "Complete verification", copy: "Our team reviews your documents and helps set up your Padharo rider account." },
+        { title: "Go online and deliver", copy: "Choose your availability, accept a nearby request and earn for each completed trip." },
+      ]}
+      form={{
+        eyebrow: "Become a rider",
+        heading: "Ready for your first trip?",
+        role: "Rider registration",
+        subheading: "Tell us a little about yourself. Our rider team will contact you and guide you through onboarding.",
+        bullets: ["Flexible working hours", "Clear trip information", "Local delivery routes", "Support while you are on a delivery"],
+      }}
+    />
   );
-};
-
-export default Rider;
+}

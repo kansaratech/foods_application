@@ -780,34 +780,22 @@ export const restaurantList = `query Restaurants($latitude:Float,$longitude:Floa
 }`
 export const restaurantListPreview = `query Restaurants($latitude:Float,$longitude:Float,$shopType:String,$page:Int,$limit:Int){
   nearByRestaurantsPreview(latitude:$latitude,longitude:$longitude,shopType:$shopType,page:$page,limit:$limit){
-    offers{
-      _id
-      name
-      tag
-      restaurants
-    }
-    sections{
-      _id
-      name
-      restaurants
-    }
     restaurants{
       _id
       name
       image
       logo
+      slug
       deliveryTime
       minimumOrder
       isAvailable
+      isActive
       tax
       shopType
       cuisines
-      tags
       reviewCount
       reviewAverage
       distanceWithCurrentLocation @client
-      freeDelivery
-      acceptVouchers
       location{coordinates}
       openingTimes{
         day

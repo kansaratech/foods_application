@@ -1,18 +1,22 @@
-import React from 'react'
-import SideCard from '../card'
-import { sideCardList } from '@/lib/utils/interfaces/Rider-restaurant.interface'
+import React from "react";
+import SideCard from "../card";
+import { sideCardList } from "@/lib/utils/interfaces/Rider-restaurant.interface";
 
-const SideContainers:React.FC<sideCardList> = ({sideCards}) => {
+const SideContainers: React.FC<sideCardList> = ({ sideCards }) => {
   return (
-    <div className='w-[90%] mx-auto my-[30px]'>
-
-      {sideCards?.map((item)=>
-      {
-       return <SideCard key={item.heading} image={item.image} heading={item.heading} subHeading={item.subHeading} right={item.right}/>
-      })}
-      
+    <div className="mx-auto flex max-w-5xl flex-col gap-16 px-4 sm:gap-20">
+      {sideCards?.map((item, i) => (
+        <SideCard
+          key={item.heading}
+          index={i}
+          image={item.image}
+          heading={item.heading}
+          subHeading={item.subHeading}
+          right={item.right}
+        />
+      ))}
     </div>
-  )
-}
+  );
+};
 
-export default SideContainers
+export default SideContainers;

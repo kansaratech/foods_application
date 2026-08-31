@@ -1,7 +1,14 @@
 module.exports = () => {
-  const iosGoogleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS
+  // Google Maps key. Restrict it by Android app signature + iOS bundle id and by
+  // API in the Google Cloud console — Maps SDK keys always ship inside the app
+  // binary, so a literal fallback here is safe and guarantees the native
+  // AndroidManifest / Info.plist always gets a key even when .env is absent
+  // (e.g. on EAS Build servers).
+  const DEFAULT_GOOGLE_MAPS_KEY = 'AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q'
+  const iosGoogleMapsApiKey =
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS || DEFAULT_GOOGLE_MAPS_KEY
   const androidGoogleMapsApiKey =
-    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID || DEFAULT_GOOGLE_MAPS_KEY
   const reversedGoogleIosClientId =
     process.env.EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID
 

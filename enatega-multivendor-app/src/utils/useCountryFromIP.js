@@ -8,15 +8,15 @@ function getDeviceRegionCode() {
       typeof Localization.getLocales === 'function'
         ? Localization.getLocales()
         : []
-    return locales?.[0]?.regionCode || Localization.region || 'PK'
+    return locales?.[0]?.regionCode || Localization.region || 'IN'
   } catch {
-    return 'PK'
+    return 'IN'
   }
 }
 
 function buildCountryFromRegion(code) {
-  const normalizedCode = code || 'PK'
-  const callingCode = countryCallingCodes[normalizedCode] || countryCallingCodes.PK || '92'
+  const normalizedCode = code || 'IN'
+  const callingCode = countryCallingCodes[normalizedCode] || countryCallingCodes.IN || '91'
   return {
     callingCode: [callingCode.toString()],
     cca2: normalizedCode,

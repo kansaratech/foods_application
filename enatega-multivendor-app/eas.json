@@ -5,7 +5,9 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID": "AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS": "AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q"
       },
       "android": {
         "buildType": "apk"

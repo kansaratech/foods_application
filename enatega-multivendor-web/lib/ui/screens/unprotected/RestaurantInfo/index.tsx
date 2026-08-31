@@ -1,83 +1,47 @@
 "use client";
 
-import React from 'react';
-import { useTranslations } from 'next-intl';
+import { FiBarChart2, FiShoppingBag, FiTruck } from "react-icons/fi";
 
-// components
-import EmailForm from '@/lib/ui/useable-components/RiderandRestaurantsInfos/Form';
-import Heading from '@/lib/ui/useable-components/RiderandRestaurantsInfos/Heading/Heading';
-import SideContainers from '@/lib/ui/useable-components/RiderandRestaurantsInfos/SideContainers/SideCard';
-import WhyCardsList from '@/lib/ui/useable-components/RiderandRestaurantsInfos/WhyCards/WhyCardsList';
-import WhyChoose from '@/lib/ui/useable-components/RiderandRestaurantsInfos/WhyChoose';
-import StartingImage from '@/lib/ui/useable-components/RiderandRestaurantsInfos/StartingImage/StartingImage';
-
-// images
-import WorldClassCustomers from "@/public/assets/images/png/WorldClassCustomer.webp";
-import enategaApp from "@/public/assets/images/png/enategaApp.png";
-import growth from "@/public/assets/images/png/Growth.png";
-import getMoreOrders from "@/public/assets/images/png/GetMoreOrders.png";
-import deliverMoreCustomers from "@/public/assets/images/png/deliverToCustomer.png";
+import PartnerLanding from "@/lib/ui/useable-components/RiderandRestaurantsInfos/PartnerLanding";
 import restaurantBanner from "@/public/assets/images/png/restaurant-banner.png";
 
-const RestInfo = () => {
-  const t = useTranslations();
-
-  const cards = [
-    {
-      heading: t("grow_with_Enatega"),
-      text: t("access_active_customer_base"),
-      image: growth,
-      color: "#f7fbfe"
-    },
-    {
-      heading: t("get_more_orders"),
-      text: t("increase_orders_reaching_customers"),
-      image: getMoreOrders,
-      color: "#faf7fc"
-    },
-    {
-      heading: t("deliver_to_more_customers"),
-      text: t("rider_partners_deliver_in_30_minutes"),
-      image: deliverMoreCustomers,
-      color: "#fbfbfb"
-    }
-  ];
-
-  const sideCards = [
-    {
-      image: enategaApp,
-      heading: t("how_Enatega_works"),
-      subHeading: t("how_Enatega_works_desc"),
-      right: false
-    },
-    {
-      image: WorldClassCustomers,
-      heading: t("world_class_customer_support"),
-      subHeading: t("world_class_customer_support_desc"),
-      right: true
-    }
-  ];
-
+export default function RestInfo() {
   return (
-    <div className='w-screen h-auto'>
-      <Heading
-        heading={t("reach_more_customers_and_grow_your_business_with_Enatega")}
-        subHeading={t("partner_with_Enatega_to_create_more_sales")}
-      />
-      <StartingImage image={restaurantBanner} />
-      <WhyChoose
-        heading={t("why_deliver_with_Enatega")}
-        subHeading={t("rider_partner_earn_money_flexible_schedule")}
-      />
-      <WhyCardsList cards={cards} />
-      <SideContainers sideCards={sideCards} />
-      <hr className='w-[30%] ml-12 border-4 border-primary-color my-12 rounded' />
-      <EmailForm
-        heading={t("become_a_restaurant")}
-        role={t("vendor_registration")}
-      />
-    </div>
+    <PartnerLanding
+      eyebrow="Partner with Padharo"
+      heading="Your kitchen deserves"
+      accent="a bigger neighbourhood."
+      intro="Bring your menu online, reach customers across Deogarh and grow every service—while Padharo takes care of the delivery journey."
+      image={restaurantBanner}
+      imageAlt="Restaurant kitchen ready to serve Padharo customers"
+      primaryCta="List your restaurant"
+      heroBadge="Ready for more orders"
+      metrics={[
+        { value: "₹0", label: "Upfront joining fee" },
+        { value: "30 min", label: "Typical local delivery" },
+        { value: "100%", label: "Control over your menu" },
+      ]}
+      benefitsEyebrow="Built for local businesses"
+      benefitsHeading="More reach. Less operational weight."
+      benefitsIntro="A practical partnership that helps independent restaurants sell online without building their own delivery operation."
+      benefits={[
+        { heading: "Grow with local demand", text: "Get discovered by customers already searching for meals, groceries and essentials around them.", icon: <FiBarChart2 /> },
+        { heading: "Own your storefront", text: "Manage your menu, pricing, categories, add-ons and promotions from one straightforward merchant experience.", icon: <FiShoppingBag /> },
+        { heading: "We handle the last mile", text: "Accept the order and prepare it. Padharo riders manage pickup, live movement and delivery to the customer.", icon: <FiTruck /> },
+      ]}
+      stepsHeading="From your kitchen to customers in three steps."
+      steps={[
+        { title: "Share your business details", copy: "Submit the short application with your restaurant, contact and verification information." },
+        { title: "Build your digital menu", copy: "Our onboarding team helps you configure products, pricing, availability and service hours." },
+        { title: "Open your store", copy: "Go online, accept incoming orders and let the Padharo delivery network take it from there." },
+      ]}
+      form={{
+        eyebrow: "Become a restaurant partner",
+        heading: "Let’s grow your restaurant",
+        role: "Vendor registration",
+        subheading: "Tell us about your business and our local onboarding team will contact you with the next steps.",
+        bullets: ["No upfront joining fee", "Full control of your menu and pricing", "Local onboarding support", "Delivery handled by Padharo riders"],
+      }}
+    />
   );
-};
-
-export default RestInfo;
+}

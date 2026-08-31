@@ -85,9 +85,29 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     ) => {
       const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
-      const limit = args.limit ?? 20;
-      const page = args.page ?? 1;
-      return prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit });
+
+      let restaurants = await prisma.restaurant.findMany({ where });
+      if (args.latitude != null && args.longitude != null) {
+        restaurants = restaurants
+          .map((r) => ({
+            r,
+            dist:
+              r.latitude != null && r.longitude != null
+                ? distanceKm(args.latitude as number, args.longitude as number, r.latitude, r.longitude)
+                : Number.MAX_SAFE_INTEGER,
+          }))
+          .sort((a, b) => a.dist - b.dist)
+          .map((x) => x.r);
+      }
+
+      if (args.limit != null) {
+        const page = args.page ?? 1;
+        restaurants = restaurants.slice((page - 1) * args.limit, (page - 1) * args.limit + args.limit);
+      }
+
+      // Same shape as nearByRestaurants so the customer app can read
+      // `data.nearByRestaurantsPreview.restaurants`.
+      return { offers: [], sections: [], restaurants };
     },
 
     recentOrderRestaurantsPreview: async (_parent, _args: { latitude: number; longitude: number }, context) => {

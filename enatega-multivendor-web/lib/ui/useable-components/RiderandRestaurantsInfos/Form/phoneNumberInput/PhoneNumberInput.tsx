@@ -6,9 +6,10 @@ const PhoneNumberInput = () => {
   return (
     <div>
       <PhoneInput
-      // default country pakistan "pk"
-      country={"pk"}
-     
+      // Padharo is India-only for now.
+      country={"in"}
+      onlyCountries={["in"]}
+      countryCodeEditable={false}
       value={field.value}
       onChange={(value) => helpers.setValue(value)}
       inputProps={{
@@ -17,9 +18,9 @@ const PhoneNumberInput = () => {
         // Padding side is handled purely in CSS below (the html[dir="rtl"] rules),
         // not with a typeof-window branch — that produced an SSR/client mismatch.
         className:
-          "w-full border-2 border-gray-200 dark:border-gray-600 py-2 rounded-lg " +
-          "focus:outline-none focus:ring-0 active:outline-none " +
-          "bg-white text-gray-900 dark:bg-gray-700 dark:text-gray-100 pl-12",
+          "w-full min-h-12 border border-slate-200 dark:border-gray-600 py-3 rounded-2xl " +
+          "focus:outline-none focus:ring-4 focus:ring-orange-100 active:outline-none " +
+          "bg-slate-50 text-gray-900 dark:bg-gray-700 dark:text-gray-100 pl-12",
       }}
       containerClass="custom-phone-input w-full"
       buttonClass="custom-phone-button"
@@ -28,13 +29,13 @@ const PhoneNumberInput = () => {
       <style jsx global>{`
         /* Light mode */
         .custom-phone-input .flag-dropdown {
-          background-color: white;
-          border: 2px solid #e5e7eb;
-          border-radius: 0.5rem 0 0 0.5rem;
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 1rem 0 0 1rem;
         }
 
         .custom-phone-input .form-control {
-          background-color: white;
+          background-color: #f8fafc;
           color: #111827; /* gray-900 */
         }
 

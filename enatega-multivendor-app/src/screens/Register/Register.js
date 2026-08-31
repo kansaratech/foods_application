@@ -237,8 +237,9 @@ function Register(props) {
                             countryCode={countryCode}
                             onSelect={(country) => onCountrySelect(country)}
                             theme={themeContext.ThemeValue === 'Dark' ? DARK_THEME : undefined}
-                            withAlphaFilter
-                            withFilter
+                            countryCodes={['IN']}
+                            withAlphaFilter={false}
+                            withFilter={false}
                             flatListProps={{
                             ListEmptyComponent: (
                               <View style={{ paddingVertical: 20, alignItems: 'center' }}>

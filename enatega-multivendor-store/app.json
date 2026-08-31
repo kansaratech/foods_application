@@ -57,11 +57,13 @@
       "versionCode": 83,
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "BLUETOOTH",
-        "BLUETOOTH_CONNECT",
-        "BLUETOOTH_SCAN",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "multivendor.enatega.restaurant",
       "adaptiveIcon": {
@@ -69,13 +71,15 @@
         "backgroundColor": "#F5820A"
       }
     },
-    "extra": {
-      "eas": {
-        "projectId": "6a94161f-f21b-4ad9-8a04-c95b54ef0116"
-      }
-    },
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "489af486-4452-4bd0-9600-fddb2462bf1f"
+      }
+    },
+    "owner": "kkansara21"
   }
 }
