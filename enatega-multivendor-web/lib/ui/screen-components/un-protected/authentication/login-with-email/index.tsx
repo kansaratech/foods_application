@@ -31,11 +31,13 @@ export default function LoginWithEmail({
 
   // Inside component
   const [isValid, setIsValid] = useState(true);
+  const [accountNotFound, setAccountNotFound] = useState(false);
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleChange = (email: string) => {
     handleFormChange("email", email);
     setUser((prev) => ({ ...prev, email }));
+    setAccountNotFound(false);
 
     // Real-time email validation
     setIsValid(emailRegex.test(email));
@@ -65,12 +67,12 @@ export default function LoginWithEmail({
       return handleChangePanel(7); // go to password
     }
 
+    setAccountNotFound(true);
     showToast({
       type: "info",
       title: t("sign_up_label"),
-      message: "No account found for that email — let's create one.",
+      message: "No account found for that email. Please create one or use Google sign-in.",
     });
-    handleChangePanel(2); // go to registration
   };
 
   return (
@@ -110,7 +112,24 @@ export default function LoginWithEmail({
               {t("please_enter_valid_email_address_message")}
             </p>
           )}
+          {!isValid || accountNotFound ? null : null}
+          {accountNotFound && !isValid && null}
+          {accountNotFound && (
+            <div className="text-sm text-amber-600 dark:text-amber-400">
+              No account found for this email. Use the sign-up button below to create one.
+            </div>
+          )}
         </div>
+
+        {accountNotFound && (
+          <button
+            type="button"
+            onClick={() => handleChangePanel(2)}
+            className="w-full md:w-auto self-center rounded-full border border-primary-color px-4 py-2 text-sm font-medium text-primary-color transition-colors hover:bg-primary-color/5"
+          >
+            {t("sign_up_label")}
+          </button>
+        )}
 
         {/* Continue with Google */}
         <button

@@ -283,7 +283,7 @@ export const reviewOrder = `mutation ReviewOrder(
     }
   }`
 
-export const addFavouriteRestaurant = `mutation AddFavourite($id:String!){
+export const addFavouriteRestaurant = `mutation AddFavourite($id:ID!){
     addFavourite(id:$id){
       _id
       addresses{

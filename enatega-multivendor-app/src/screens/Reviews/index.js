@@ -43,9 +43,15 @@ const Reviews = ({ navigation, route }) => {
   } = useQuery(Review, {
     variables: { restaurant: restaurantId || restaurant?._id }
   })
-  const rating = reviewsdata?.reviewsByRestaurant.ratings
-  const total = reviewsdata?.reviewsByRestaurant.total
   const reviews = reviewsdata?.reviewsByRestaurant.reviews
+  // API returns only the review list; derive the aggregate summary client-side.
+  const total = reviews?.length ?? 0
+  const rating =
+    total > 0
+      ? Number(
+        (reviews.reduce((sum, r) => sum + (r?.rating ?? 0), 0) / total).toFixed(1)
+      )
+      : 0
   const reviewGroups = groupAndCount(
     reviewsdata?.reviewsByRestaurant.reviews,
     'rating'
@@ -107,7 +113,6 @@ const Reviews = ({ navigation, route }) => {
     })
   }, [navigation, currentTheme, t, restaurant.restaurantName])
   const sorted = reviews && reviews?.length ? sortReviews([...reviews], sortBy) : []
-
 
   const calculatePercentages = (groups, total) => {
     if (!total || total <= 0) {
@@ -333,7 +338,8 @@ const Reviews = ({ navigation, route }) => {
             ))}
           </View>
           <View style={styles.emptyStateContainer}>
-            {sorted.length === 0 ? (
+            {sorted.length === 0
+              ? (
               <View
                 style={[
                   styles.emptyStateCard,
@@ -379,7 +385,8 @@ const Reviews = ({ navigation, route }) => {
                   )}
                 </TextDefault>
               </View>
-            ) : null}
+                )
+              : null}
           </View>
         </View>
       </ScrollView>

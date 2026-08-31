@@ -1,5 +1,6 @@
 import { useApptheme } from "@/lib/context/global/theme.context";
-import { View, ScrollView, RefreshControl, SafeAreaView } from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import WalletMain from "../../screen-components/wallet/view/main";
 import React, { useCallback, useState } from "react";
 import {
@@ -28,7 +29,7 @@ export default function WalletScreen() {
 
   return (
     // fix background color of scrollview
-    <SafeAreaView style={{ flex: 1, backgroundColor: appTheme.screenBackground }}>
+    <SafeAreaView edges={["bottom", "left", "right"]} style={{ flex: 1, backgroundColor: appTheme.screenBackground }}>
     <ScrollView
       contentContainerStyle={{ flex: 1, backgroundColor: appTheme.screenBackground }}
       refreshControl={

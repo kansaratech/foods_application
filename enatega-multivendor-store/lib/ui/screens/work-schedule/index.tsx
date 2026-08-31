@@ -1,5 +1,5 @@
 // Core
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Components
 import { useApptheme } from "@/lib/context/theme.context";
@@ -9,7 +9,7 @@ export default function WorkScheduleScreen() {
   // Hooks
   const { appTheme } = useApptheme();
   return (
-    <SafeAreaView
+    <SafeAreaView edges={["bottom", "left", "right"]}
       className="flex-1 h-full w-full"
       style={{ backgroundColor: appTheme.themeBackground }}
     >

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import useUser from "@/lib/hooks/useUser";
+import { useAuth } from "@/lib/context/auth/auth.context";
+import useToast from "@/lib/hooks/useToast";
 
 // Interface
 import {
@@ -32,6 +34,8 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
   const { CURRENCY_SYMBOL } = useConfig();
   const { id, slug }: { id: string; slug: string } = useParams();
   const locale = useLocale();
+  const { authToken, setIsAuthModalVisible, setActivePanel } = useAuth();
+  const { showToast } = useToast();
 
   // Map locale to direction - same logic as DirectionHandler.tsx (SSR-safe)
   const isRTL = ["ar", "he", "fa", "ur"].includes(locale);
@@ -132,6 +136,17 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
   // Function to add item to cart
   const handleAddToCart = () => {
     if (!isFormValid() || !foodItem || !selectedVariation) return;
+
+    if (!authToken) {
+      setActivePanel(1);
+      setIsAuthModalVisible(true);
+      showToast({
+        type: "info",
+        title: "Login required",
+        message: "Please log in first to add items to your order.",
+      });
+      return;
+    }
 
     // Check if we need to clear the cart (different restaurant)
     const needsClear =

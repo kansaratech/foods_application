@@ -62,14 +62,14 @@ const RootLayout = () => {
             // display: isDrawerOpen === 'open' ? 'none' : 'flex',
           },
           android: {
-            position: "absolute",
+            // Not absolutely positioned so screen content never renders behind
+            // the bar and @react-navigation adds the bottom safe-area inset
+            // automatically (SafeAreaProvider is mounted at the app root).
             backgroundColor: "#1F2937",
-            // display: (isDrawerOpen === 'open'||pathName.startsWith('/wallet/success') )? 'none' : 'flex',
-
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            borderTopWidth: 0.5, // Optional border at the top
-            elevation: 5, // Shadow for Android
+            borderTopWidth: 0.5,
+            elevation: 5,
             shadowOffset: { width: 0, height: -5 },
             shadowOpacity: 0.1,
             shadowRadius: 5,

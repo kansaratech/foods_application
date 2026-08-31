@@ -1,5 +1,5 @@
 // Core
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Componnets
 import { useApptheme } from "@/lib/context/theme.context";
@@ -9,7 +9,7 @@ const index = () => {
   // Hooks
   const { appTheme } = useApptheme();
   return (
-    <SafeAreaView
+    <SafeAreaView edges={["bottom", "left", "right"]}
       style={{ backgroundColor: appTheme.themeBackground }}
       className="h-full w-full"
     >

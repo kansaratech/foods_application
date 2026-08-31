@@ -1,9 +1,9 @@
 import EarningsOrderDetailsMain from "@/lib/ui/screen-components/earning-order-details/view";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EarningsOrderDetailsScreen() {
   return (
-    <SafeAreaView className="bg-white">
+    <SafeAreaView edges={["bottom", "left", "right"]} className="bg-white">
       <EarningsOrderDetailsMain />
     </SafeAreaView>
   );

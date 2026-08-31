@@ -55,7 +55,7 @@ function Cart(props) {
   const [orderDate, setOrderDate] = useState(new Date())
   const isCartEmpty = cart?.length === 0
   const cartLength = !isCartEmpty ? cart?.length : 0
-  const { loading, data } = useRestaurant(cartRestaurant)
+  const { loading, data, error, refetch: refetchRestaurant } = useRestaurant(cartRestaurant)
   const restaurant = data?.restaurant
   const foods = useMemo(() => restaurant?.categories?.flatMap((category) => category.foods) ?? [], [restaurant])
   const populatedCart = useMemo(() => populateCart(restaurant, cart), [cart, restaurant])
@@ -147,10 +147,17 @@ function Cart(props) {
     })
   }, [props?.navigation])
 
-  useLayoutEffect(() => {
-    if (!data) return
-    didFocus()
-  }, [data])
+  useEffect(() => {
+    // Never block the cart forever. Clear the loader as soon as the restaurant
+    // query settles (success OR error), or when there's nothing to load anyway
+    // (empty cart / no restaurant id / offline).
+    if (data?.restaurant) {
+      setMinimumOrder(data.restaurant.minimumOrder)
+      setLoadingData(false)
+    } else if (error || isCartEmpty || !cartRestaurant) {
+      setLoadingData(false)
+    }
+  }, [data, error, isCartEmpty, cartRestaurant])
   useEffect(() => {
     async function Track() {
       await Analytics.track(Analytics.events.NAVIGATE_TO_CART)
@@ -200,14 +207,8 @@ function Cart(props) {
 
   const isBelowMinimumOrder = !!minimumOrder && Number(calculateTotal()) < Number(minimumOrder)
 
-  function didFocus() {
-    const { restaurant } = data
-    setMinimumOrder(restaurant.minimumOrder)
-    setLoadingData(false)
-  }
-
   const { isConnected: connect, setIsConnected: setConnect } = useNetworkStatus()
-  if (!connect) return <ErrorView refetchFunctions={[]} />
+  if (!connect) return <ErrorView refetchFunctions={[refetchRestaurant]} />
 
   function emptyCart() {
     return (
@@ -279,16 +280,24 @@ function Cart(props) {
       modal.open()
     }
   }
-  if (loading || loadingData) return loadginScreen()
+  // Only show the blocking loader while we genuinely have nothing to render.
+  if (loadingData || (loading && !data && !isCartEmpty)) return loadginScreen()
+  // Cart has items but the restaurant/menu couldn't load — offer a retry
+  // instead of an endless spinner.
+  if (!isCartEmpty && !restaurant && error) {
+    return <ErrorView refetchFunctions={[refetchRestaurant]} />
+  }
 
   let deliveryTime = Math.floor((orderDate - Date.now()) / 1000 / 60)
   if (deliveryTime < 1) deliveryTime += restaurant?.deliveryTime
   return (
     <>
       <View style={styles(currentTheme).mainContainer}>
-        {cart?.length === 0 ? (
-          emptyCart()
-        ) : (
+        {cart?.length === 0
+          ? (
+              emptyCart()
+            )
+          : (
           <>
             <ScrollView showsVerticalScrollIndicator={false} style={[styles().flex, styles().cartItems]}>
               <View
@@ -369,7 +378,8 @@ function Cart(props) {
                     {t('exclusiveVAt')}
                   </TextDefault>
                 </View>
-                {isLoggedIn && profile ? (
+                {isLoggedIn && profile
+                  ? (
                   <TouchableOpacity
                     activeOpacity={0.7}
                     disabled={isBelowMinimumOrder}
@@ -388,7 +398,8 @@ function Cart(props) {
                       {t('checkoutBtn')}
                     </TextDefault>
                   </TouchableOpacity>
-                ) : (
+                    )
+                  : (
                   <TouchableOpacity
                     activeOpacity={0.7}
                     onPress={() => {
@@ -400,11 +411,11 @@ function Cart(props) {
                       {t('loginOrSignUp')}
                     </TextDefault>
                   </TouchableOpacity>
-                )}
+                    )}
               </View>
             </View>
           </>
-        )}
+            )}
       </View>
     </>
   )

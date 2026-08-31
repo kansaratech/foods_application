@@ -9,7 +9,7 @@ import { IDateFilter } from "@/lib/utils/interfaces/rider-earnings.interface";
 import { useState } from "react";
 
 // Safe Area
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EarningsDetailScreen() {
   // Hooks
@@ -21,7 +21,7 @@ export default function EarningsDetailScreen() {
     endDate: "",
   });
   return (
-    <SafeAreaView
+    <SafeAreaView edges={["bottom", "left", "right"]}
       style={{ backgroundColor: appTheme.themeBackground }}
       className="h-full w-full"
     >

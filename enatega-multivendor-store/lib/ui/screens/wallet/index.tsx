@@ -1,5 +1,5 @@
 // Core
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Components
 import { useApptheme } from "@/lib/context/theme.context";
@@ -10,7 +10,7 @@ export default function WalletScreen() {
   const { appTheme } = useApptheme();
 
   return (
-    <SafeAreaView
+    <SafeAreaView edges={["bottom", "left", "right"]}
       className="w-full h-full"
       style={{
         backgroundColor: appTheme.themeBackground,

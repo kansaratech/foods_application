@@ -18,6 +18,7 @@ import { paymentResolvers } from './payment.resolvers';
 import { notificationResolvers } from './notification.resolvers';
 import { supportResolvers } from './support.resolvers';
 import { chatResolvers } from './chat.resolvers';
+import { compatResolvers } from './compat.resolvers';
 
 type ResolverMap = Record<string, Record<string, unknown>>;
 
@@ -50,4 +51,5 @@ export const resolvers = mergeResolvers([
   notificationResolvers,
   supportResolvers,
   chatResolvers,
+  compatResolvers,
 ]);

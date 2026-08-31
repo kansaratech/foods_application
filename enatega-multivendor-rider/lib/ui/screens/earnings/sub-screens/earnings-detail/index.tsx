@@ -1,7 +1,7 @@
 import EarningDetailsMain from "@/lib/ui/screen-components/earning-details/view";
 import { IDateFilter } from "@/lib/utils/interfaces/rider-earnings.interface";
 import { useState } from "react";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function EarningsDetailScreen() {
   const [dateFilter, setDateFilter] = useState<IDateFilter>({
@@ -9,7 +9,7 @@ export default function EarningsDetailScreen() {
     endDate: "",
   });
   return (
-    <SafeAreaView className="bg-white">
+    <SafeAreaView edges={["bottom", "left", "right"]} className="bg-white">
       <EarningDetailsMain
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}

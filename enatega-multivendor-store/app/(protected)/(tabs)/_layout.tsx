@@ -41,7 +41,10 @@ const RootLayout = () => {
             zIndex: 0,
           },
           android: {
-            position: "absolute",
+            // Not absolutely positioned: the bar takes real layout space so
+            // screen content never renders behind it, and @react-navigation
+            // adds the bottom safe-area inset automatically (SafeAreaProvider
+            // is mounted at the app root).
             backgroundColor: appTheme.tabNaviatorBackground,
             display: pathName.startsWith("/wallet/success") ? "none" : "flex",
             borderTopLeftRadius: 20,

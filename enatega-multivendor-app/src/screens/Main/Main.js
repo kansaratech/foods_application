@@ -1,6 +1,7 @@
 /* eslint-disable react/display-name */
 import React, { useRef, useContext, useLayoutEffect, useState, useEffect, useCallback, useMemo } from 'react'
-import { View, SafeAreaView, TouchableOpacity, StatusBar, Platform, ScrollView, Image, RefreshControl, InteractionManager } from 'react-native'
+import { View, TouchableOpacity, StatusBar, Platform, ScrollView, Image, RefreshControl, InteractionManager } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { AntDesign, SimpleLineIcons } from '@expo/vector-icons'
 import { useMutation, useQuery, gql } from '@apollo/client'
 import { useLocation } from '../../ui/hooks'

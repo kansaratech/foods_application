@@ -33,6 +33,10 @@ import AnimatedSplashScreen from "@/lib/ui/useable-components/splash/AnimatedSpl
 import UnavailableStatus from "@/lib/ui/useable-components/unavailable-status";
 
 import { Slot } from "expo-router";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -86,27 +90,29 @@ function RootLayout() {
   }
 
   return (
-    <ApolloProvider client={client}>
-      <AppThemeProvidor>
-        <AnimatedSplashScreen>
-          <InternetProvider>
-            <ConfigurationProvider>
-              <AuthProvider client={client}>
-                <StatusBar
-                  style={currentTheme ?? "dark"}
-                  backgroundColor={appTheme.themeBackground ?? ""}
-                />
-                <UserProvider>
-                  <UnavailableStatus />
-                  <Slot />
-                </UserProvider>
-              </AuthProvider>
-            </ConfigurationProvider>
-          </InternetProvider>
-        </AnimatedSplashScreen>
-        <FlashMessage position="center" />
-      </AppThemeProvidor>
-    </ApolloProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <ApolloProvider client={client}>
+        <AppThemeProvidor>
+          <AnimatedSplashScreen>
+            <InternetProvider>
+              <ConfigurationProvider>
+                <AuthProvider client={client}>
+                  <StatusBar
+                    style={currentTheme ?? "dark"}
+                    backgroundColor={appTheme.themeBackground ?? ""}
+                  />
+                  <UserProvider>
+                    <UnavailableStatus />
+                    <Slot />
+                  </UserProvider>
+                </AuthProvider>
+              </ConfigurationProvider>
+            </InternetProvider>
+          </AnimatedSplashScreen>
+          <FlashMessage position="center" />
+        </AppThemeProvidor>
+      </ApolloProvider>
+    </SafeAreaProvider>
   );
 }
 

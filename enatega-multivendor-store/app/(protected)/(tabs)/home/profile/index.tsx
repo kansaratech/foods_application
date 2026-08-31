@@ -1,6 +1,6 @@
 import { useApptheme } from "@/lib/context/theme.context";
 import { ProfileScreen } from "@/lib/ui/screens";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Profile() {
   const { appTheme } = useApptheme();

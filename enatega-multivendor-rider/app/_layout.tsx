@@ -37,6 +37,10 @@ import { useEffect, useState } from "react";
 
 import "../global.css";
 import PublicAccessTokenService from "@/lib/services/public-access-token.service";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
 
 initSentry();
 
@@ -104,32 +108,34 @@ function RootLayout() {
   const appReady = loaded && isPublicTokenReady;
 
   return (
-    <AnimatedSplashScreen ready={appReady}>
-      {appReady ? (
-        <AppThemeProvidor>
-        <ApolloProvider client={client}>
-          <AuthProvider client={client}>
-            <UserProvider>
-              <InternetProvider>
-                <ConfigurationProvider>
-                  <LocationProvider>
-                    <SoundProvider>
-                      <LocationPermissionComp>
-                        <RootStackLayout />
-                        <UnavailableStatus />
-                      </LocationPermissionComp>
-                      <StatusBar style="inverted" />
-                      <FlashMessage position="bottom" />
-                    </SoundProvider>
-                  </LocationProvider>
-                </ConfigurationProvider>
-              </InternetProvider>
-            </UserProvider>
-          </AuthProvider>
-        </ApolloProvider>
-      </AppThemeProvidor>
-      ) : null}
-    </AnimatedSplashScreen>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AnimatedSplashScreen ready={appReady}>
+        {appReady ? (
+          <AppThemeProvidor>
+          <ApolloProvider client={client}>
+            <AuthProvider client={client}>
+              <UserProvider>
+                <InternetProvider>
+                  <ConfigurationProvider>
+                    <LocationProvider>
+                      <SoundProvider>
+                        <LocationPermissionComp>
+                          <RootStackLayout />
+                          <UnavailableStatus />
+                        </LocationPermissionComp>
+                        <StatusBar style="inverted" />
+                        <FlashMessage position="bottom" />
+                      </SoundProvider>
+                    </LocationProvider>
+                  </ConfigurationProvider>
+                </InternetProvider>
+              </UserProvider>
+            </AuthProvider>
+          </ApolloProvider>
+        </AppThemeProvidor>
+        ) : null}
+      </AnimatedSplashScreen>
+    </SafeAreaProvider>
   );
 }
 

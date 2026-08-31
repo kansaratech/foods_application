@@ -17,22 +17,14 @@ export const GET_REVIEWS_BY_RESTAURANT = gql`
         description
         isActive
         createdAt
-        updatedAt
         order {
-          _id
           user {
             _id
             name
             email
           }
         }
-        restaurant {
-          _id
-          name
-        }
       }
-      ratings
-      total
     }
   }
 `
@@ -681,7 +673,6 @@ export const getConfiguration = `query Configuration{
     skipEmailVerification
     costType
     publishableKey
-    secretKey
     enableCustomerDemoMode
     customerDemoZoneId
   }
@@ -885,17 +876,20 @@ export const restaurant = `query Restaurant($id:String){
     }
     addons{
       _id
-      options
+      options{
+        _id
+        title
+        description
+        price
+      }
       title
       description
       quantityMinimum
       quantityMaximum
-      
     }
     zone{
       _id
       title
-      tax
     }
     rating
     isAvailable
@@ -924,7 +918,7 @@ export const getCuisines = `query Cuisines{
   }
 }`
 
-export const rider = `query Rider($id:String){
+export const rider = `query Rider($id:String!){
   rider(id:$id){
     _id
     location {coordinates}
@@ -990,7 +984,12 @@ export const FavouriteRestaurant = `query UserFavourite ($latitude:Float,$longit
       }
       addons{
         _id
-        options
+        options{
+          _id
+          title
+          description
+          price
+        }
         title
         description
         quantityMinimum
