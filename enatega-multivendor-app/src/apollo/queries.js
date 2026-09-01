@@ -800,7 +800,7 @@ export const restaurantListPreview = `query Restaurants($latitude:Float,$longitu
 }`
 export const topRatedVendorsInfo = gql`
   ${restaurantCarouselPreviewFragment}
-  query TopRatedVendors($latitude: Float!, $longitude: Float!) {
+  query TopRatedVendors($latitude: Float, $longitude: Float) {
     topRatedVendorsPreview(latitude: $latitude, longitude: $longitude) {
       ...RestaurantCarouselPreviewFields
     }
@@ -1125,7 +1125,7 @@ export const chat = `query Chat($order: ID!) {
 
 export const recentOrderRestaurantsQuery = gql`
   ${restaurantCarouselPreviewFragment}
-  query GetRecentOrderRestaurants($latitude: Float!, $longitude: Float!) {
+  query GetRecentOrderRestaurants($latitude: Float, $longitude: Float) {
     recentOrderRestaurantsPreview(latitude: $latitude, longitude: $longitude) {
       ...RestaurantCarouselPreviewFields
     }
@@ -1159,7 +1159,7 @@ export const recentOrderRestaurantsPreviewQuery = gql`
 
 export const mostOrderedRestaurantsQuery = gql`
   ${restaurantCarouselPreviewFragment}
-  query GetMostOrderedRestaurants($latitude: Float!, $longitude: Float!, $shopType: String, $page: Int, $limit: Int) {
+  query GetMostOrderedRestaurants($latitude: Float, $longitude: Float, $shopType: String, $page: Int, $limit: Int) {
     mostOrderedRestaurantsPreview(latitude: $latitude, longitude: $longitude, shopType: $shopType, page: $page, limit: $limit) {
       ...RestaurantCarouselPreviewFields
     }

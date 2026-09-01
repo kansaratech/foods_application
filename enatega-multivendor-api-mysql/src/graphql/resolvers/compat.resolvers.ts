@@ -43,6 +43,21 @@ export const compatResolvers: IResolvers<unknown, GraphQLContext> = {
         .slice(0, 10);
     },
 
+    fetchCategoryDetailsByStoreIdForMobile: async (_parent, args: { storeId: string }) => {
+      const categories = await prisma.category.findMany({
+        where: { restaurantId: args.storeId },
+        include: { foods: { where: { isActive: true }, select: { id: true, image: true } } },
+      });
+      return categories.flatMap((c) =>
+        c.foods.map((f) => ({
+          id: `${c.id}:${f.id}`,
+          category_name: c.title,
+          url: f.image ?? null,
+          food_id: f.id,
+        })),
+      );
+    },
+
     getVersions: () => ({
       customerAppVersion: NO_FORCED_UPDATE,
       riderAppVersion: NO_FORCED_UPDATE,

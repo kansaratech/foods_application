@@ -20,9 +20,13 @@ export default function useHomeRestaurants() {
     limit: 15
   }), [locationVariables])
 
+  const hasLocation =
+    Number.isFinite(locationVariables.latitude) &&
+    Number.isFinite(locationVariables.longitude)
+
   const recentOrderRestaurants = useQuery(recentOrderRestaurantsQuery, {
     variables: locationVariables,
-    skip: !isLoggedIn,
+    skip: !isLoggedIn || !hasLocation,
     fetchPolicy: 'cache-and-network'
   })
 
@@ -31,6 +35,7 @@ export default function useHomeRestaurants() {
   // from this single call, instead of firing a second grocery-filtered request.
   const mostOrderedRestaurants = useQuery(mostOrderedRestaurantsQuery, {
     variables: mostOrderedVariables,
+    skip: !hasLocation,
     fetchPolicy: 'cache-and-network'
   })
 

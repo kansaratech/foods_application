@@ -91,9 +91,24 @@ export const restaurantTypeDefs = /* GraphQL */ `
     reviewCount: Int
   }
 
+  # offers/sections are object lists (kept for the legacy mobile query shape;
+  # this API always returns []). restaurants is the real payload.
+  type RestaurantListOffer {
+    _id: ID
+    name: String
+    tag: String
+    restaurants: [String!]
+  }
+
+  type RestaurantListSection {
+    _id: ID
+    name: String
+    restaurants: [String!]
+  }
+
   type RestaurantList {
-    offers: [String!]
-    sections: [String!]
+    offers: [RestaurantListOffer!]
+    sections: [RestaurantListSection!]
     restaurants: [Restaurant!]!
   }
 
@@ -224,8 +239,8 @@ export const restaurantTypeDefs = /* GraphQL */ `
   extend type Query {
     nearByRestaurants(latitude: Float, longitude: Float, radiusKm: Float, shopType: String): RestaurantList!
     nearByRestaurantsPreview(latitude: Float, longitude: Float, shopType: String, page: Int, limit: Int): RestaurantList!
-    recentOrderRestaurantsPreview(latitude: Float!, longitude: Float!): [RestaurantCarouselPreview!]!
-    mostOrderedRestaurantsPreview(latitude: Float!, longitude: Float!, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
+    recentOrderRestaurantsPreview(latitude: Float, longitude: Float): [RestaurantCarouselPreview!]!
+    mostOrderedRestaurantsPreview(latitude: Float, longitude: Float, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
     topRatedVendorsPreview(latitude: Float, longitude: Float, page: Int, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
     popularRestaurantsPreview(latitude: Float, longitude: Float, radiusKm: Float, limit: Int, shopType: String): [RestaurantCarouselPreview!]!
     activeRestaurantCount(latitude: Float, longitude: Float, radiusKm: Float, shopType: String): Int!

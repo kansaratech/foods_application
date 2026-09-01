@@ -13,7 +13,9 @@ const getEnvVars = (env = Updates.channel) => {
     loadDevMessages();
     loadErrorMessages();
   }
-  if (!__DEV__) {
+  // The "demo" channel is a release build that must still talk to the local
+  // (tunnelled) API, not the Enatega production server.
+  if (!__DEV__ && env !== "demo") {
     return {
       GRAPHQL_URL: "https://aws-server-v2.enatega.com/graphql",
       WS_GRAPHQL_URL: "wss://aws-server-v2.enatega.com/graphql",
@@ -26,10 +28,11 @@ const getEnvVars = (env = Updates.channel) => {
   }
 
   return {
-    // Use the machine's LAN IP, not "localhost": on an Android emulator or a
-    // physical device "localhost" is the device itself, not the dev machine.
-    GRAPHQL_URL: "http://192.168.1.127:4000/graphql",
-    WS_GRAPHQL_URL: "ws://192.168.1.127:4000/graphql",
+    // Local API exposed over the internet (office Wi-Fi blocks phone<->PC on
+    // LAN). Keep-alive: scratchpad/tunnel-keepalive.sh. For LAN testing use
+    // http://<PC-LAN-IP>:4000 instead.
+    GRAPHQL_URL: "https://padharokitapi.loca.lt/graphql",
+    WS_GRAPHQL_URL: "wss://padharokitapi.loca.lt/graphql",
     SENTRY_DSN:
       configuration?.riderAppSentryUrl ??
       "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",

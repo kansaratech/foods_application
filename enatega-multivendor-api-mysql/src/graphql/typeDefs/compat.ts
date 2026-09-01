@@ -28,10 +28,19 @@ export const compatTypeDefs = /* GraphQL */ `
     count: Int!
   }
 
+  "Legacy customer-app grocery-detail category/food mapping row."
+  type StoreCategoryDetail {
+    id: ID!
+    category_name: String
+    url: String
+    food_id: ID
+  }
+
   extend type Query {
     tips: [Tip!]!
     relatedItems(itemId: String!, restaurantId: String!): [ID!]!
     popularItems(restaurantId: String!): [PopularItem!]!
+    fetchCategoryDetailsByStoreIdForMobile(storeId: String!): [StoreCategoryDetail!]!
     getVersions: AppVersions!
   }
 `;

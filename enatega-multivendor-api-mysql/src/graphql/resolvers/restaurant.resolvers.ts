@@ -11,6 +11,24 @@ function slugify(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
 }
 
+// Keep location-scoped lists local: when coordinates are given, drop restaurants
+// further than `radiusKm` (default 60km) so legacy stores from other cities
+// never appear. With no coordinates the list is returned unfiltered.
+function withinRadius(
+  restaurants: Restaurant[],
+  latitude?: number | null,
+  longitude?: number | null,
+  radiusKm = 60,
+): Restaurant[] {
+  if (latitude == null || longitude == null) return restaurants;
+  return restaurants.filter(
+    (r) =>
+      r.latitude != null &&
+      r.longitude != null &&
+      distanceKm(latitude, longitude, r.latitude, r.longitude) <= radiusKm,
+  );
+}
+
 async function resolveShopTypeId(shopType?: string | null): Promise<string | undefined> {
   if (!shopType) return undefined;
   const byId = await prisma.shopType.findUnique({ where: { id: shopType } });
@@ -65,6 +83,9 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
       let restaurants = await prisma.restaurant.findMany({ where });
       if (args.latitude != null && args.longitude != null) {
+        // Default to a local radius so stores from other cities (legacy seed
+        // data) never leak into a location-scoped list.
+        const radiusKm = args.radiusKm ?? 60;
         const withDist = restaurants.map((r) => ({
           r,
           dist:
@@ -72,22 +93,24 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
               ? distanceKm(args.latitude as number, args.longitude as number, r.latitude, r.longitude)
               : Number.MAX_SAFE_INTEGER,
         }));
-        const filtered =
-          args.radiusKm != null ? withDist.filter((x) => x.dist <= (args.radiusKm as number)) : withDist;
-        restaurants = filtered.sort((a, b) => a.dist - b.dist).map((x) => x.r);
+        restaurants = withDist
+          .filter((x) => x.dist <= radiusKm)
+          .sort((a, b) => a.dist - b.dist)
+          .map((x) => x.r);
       }
       return { offers: [], sections: [], restaurants };
     },
 
     nearByRestaurantsPreview: async (
       _parent,
-      args: { latitude?: number; longitude?: number; shopType?: string; page?: number; limit?: number },
+      args: { latitude?: number; longitude?: number; radiusKm?: number; shopType?: string; page?: number; limit?: number },
     ) => {
       const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
 
       let restaurants = await prisma.restaurant.findMany({ where });
       if (args.latitude != null && args.longitude != null) {
+        const radiusKm = args.radiusKm ?? 60;
         restaurants = restaurants
           .map((r) => ({
             r,
@@ -96,6 +119,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
                 ? distanceKm(args.latitude as number, args.longitude as number, r.latitude, r.longitude)
                 : Number.MAX_SAFE_INTEGER,
           }))
+          .filter((x) => x.dist <= radiusKm)
           .sort((a, b) => a.dist - b.dist)
           .map((x) => x.r);
       }
@@ -130,7 +154,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     mostOrderedRestaurantsPreview: async (
       _parent,
-      args: { latitude: number; longitude: number; page?: number; limit?: number; shopType?: string },
+      args: { latitude?: number; longitude?: number; page?: number; limit?: number; shopType?: string },
     ) => {
       const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
@@ -140,7 +164,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const grouped = await prisma.order.groupBy({ by: ['restaurantId'], _count: { _all: true } });
       const orderCountByRestaurant = new Map(grouped.map((g) => [g.restaurantId, g._count._all]));
 
-      const restaurants = await prisma.restaurant.findMany({ where });
+      let restaurants = withinRadius(await prisma.restaurant.findMany({ where }), args.latitude, args.longitude);
       restaurants.sort((a, b) => (orderCountByRestaurant.get(b.id) ?? 0) - (orderCountByRestaurant.get(a.id) ?? 0));
       return restaurants.slice((page - 1) * limit, (page - 1) * limit + limit);
     },
@@ -154,7 +178,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const limit = args.limit ?? 20;
       const page = args.page ?? 1;
 
-      const restaurants = await prisma.restaurant.findMany({ where });
+      const restaurants = withinRadius(await prisma.restaurant.findMany({ where }), args.latitude, args.longitude);
       const restaurantIds = restaurants.map((r) => r.id);
       const reviews =
         restaurantIds.length > 0

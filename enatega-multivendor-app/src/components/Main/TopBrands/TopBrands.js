@@ -33,6 +33,9 @@ function TopBrands(props) {
 
   const { loading, error, data } = useQuery(topRatedVendorsInfo, {
     variables: topBrandsVariables,
+    skip:
+      !Number.isFinite(topBrandsVariables.latitude) ||
+      !Number.isFinite(topBrandsVariables.longitude),
     fetchPolicy: 'cache-and-network'
   })
 

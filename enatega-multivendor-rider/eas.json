@@ -15,7 +15,7 @@
         "buildType": "apk"
       }
     },
-    "staging": { 
+    "staging": {
       "developmentClient": false,
       "channel": "staging",
       "distribution": "internal",
@@ -28,6 +28,18 @@
       "channel": "production",
       "ios": {
         "image": "macos-sequoia-15.6-xcode-26.2"
+      }
+    },
+    "demo": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "channel": "demo",
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID": "AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q",
+        "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS": "AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q"
+      },
+      "android": {
+        "buildType": "apk"
       }
     }
   },

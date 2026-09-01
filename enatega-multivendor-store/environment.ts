@@ -6,8 +6,10 @@
 // Use the machine's LAN IP, not "localhost": on an Android emulator or a
 // physical device "localhost" is the device itself, not the dev machine.
 const getEnvVars = () => ({
-  GRAPHQL_URL: "http://192.168.1.127:4000/graphql",
-  WS_GRAPHQL_URL: "ws://192.168.1.127:4000/graphql",
+  // Local API exposed over the internet (office Wi-Fi blocks phone<->PC on LAN).
+  // Keep-alive: scratchpad/tunnel-keepalive.sh. For LAN, use http://<PC-IP>:4000.
+  GRAPHQL_URL: "https://padharokitapi.loca.lt/graphql",
+  WS_GRAPHQL_URL: "wss://padharokitapi.loca.lt/graphql",
 });
 
 export default getEnvVars;

@@ -1,12 +1,13 @@
 const ENV_CONFIG = {
   development: {
-    // A physical phone can't reach "localhost" - that means the phone
-    // itself, not this computer. Point it at the computer's LAN IP instead
-    // (phone and computer must be on the same Wi-Fi network).
-    GRAPHQL_URL: 'http://192.168.1.127:4000/graphql',
-    WS_GRAPHQL_URL: 'ws://192.168.1.127:4000/graphql',
-    SERVER_URL: 'http://192.168.1.127:4000/graphql',
-    SERVER_REST_URL: 'http://192.168.1.127:4000/',
+    // Local API exposed over the internet via localtunnel (the office Wi-Fi
+    // blocks phone <-> PC on the LAN). Restart the tunnel with:
+    //   npx localtunnel --port 4000 --subdomain padharokitapi
+    // For LAN testing instead, swap these back to http://<PC-LAN-IP>:4000.
+    GRAPHQL_URL: 'https://padharokitapi.loca.lt/graphql',
+    WS_GRAPHQL_URL: 'wss://padharokitapi.loca.lt/graphql',
+    SERVER_URL: 'https://padharokitapi.loca.lt/graphql',
+    SERVER_REST_URL: 'https://padharokitapi.loca.lt/',
     CLARITY_ENABLED: true
   },
   staging: {
