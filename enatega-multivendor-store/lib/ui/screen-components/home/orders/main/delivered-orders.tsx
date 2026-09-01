@@ -76,12 +76,11 @@ function HomeDeliveredOrdersMain(props: IOrderTabsComponentProps) {
 
   const renderEmptyState = () => (
     <View
-      className="self-center items-center justify-center rounded-3xl border px-16 py-14"
+      className="self-stretch items-center justify-center rounded-3xl border px-8 py-12"
       style={{
         borderColor: appTheme.borderLineColor,
         backgroundColor: appTheme.cartContainer,
-        marginTop: 48,
-        minWidth: 360,
+        marginTop: 40,
       }}
     >
       <View
@@ -108,8 +107,8 @@ function HomeDeliveredOrdersMain(props: IOrderTabsComponentProps) {
 
   return (
     <View
-      className="pt-5 flex-1 items-center px-5"
-      style={[style.container, { backgroundColor: appTheme.themeBackground }]}
+      className="flex-1 items-center px-5"
+      style={[style.container, { backgroundColor: appTheme.themeBackground, paddingTop: 60 }]}
     >
       <CustomTab
         options={ORDER_DISPATCH_TYPE}

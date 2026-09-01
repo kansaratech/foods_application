@@ -4,6 +4,7 @@ import { IWithdrawModalProps } from "@/lib/utils/interfaces/withdraw.interface";
 // Core
 import { Platform, Text, TextInput, View } from "react-native";
 import { ReactNativeModal } from "react-native-modal";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Components
 import { CustomContinueButton } from "@/lib/ui/useable-components";
@@ -27,6 +28,7 @@ export default function WithdrawModal({
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
   const { symbol, format } = useCurrency();
+  const insets = useSafeAreaInsets();
 
   // States
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -61,6 +63,7 @@ export default function WithdrawModal({
           shadowOpacity: 0.18,
           shadowRadius: 24,
           elevation: 12,
+          paddingBottom: isWeb ? 20 : 20 + insets.bottom,
         }}
         className={`w-[92%] max-w-[420px] p-5 ${
           isWeb ? "rounded-3xl" : "rounded-t-3xl w-full"

@@ -5,13 +5,14 @@ const buildStyles = (props = null) =>
   StyleSheet.create({
     collectionCard: {
       backgroundColor: props != null ? props?.cardBackground : '#181818',
-      height: 130,
-      width: 100,
+      height: 156,
+      width: 112,
       borderRadius: 8,
+      overflow: 'hidden',
       ...subtleCardShadow
     },
     collectionImage: {
-      height: 80,
+      height: 88,
       width: '100%',
       borderTopLeftRadius: 8,
       borderTopRightRadius: 8

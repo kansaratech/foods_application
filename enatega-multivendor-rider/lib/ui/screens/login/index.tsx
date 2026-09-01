@@ -141,10 +141,10 @@ const LoginScreen = () => {
                     <TextInput
                       className="flex-1 h-12 text-base"
                       style={{ color: appTheme.fontMainColor }}
-                      placeholder={t("Email")}
+                      placeholder={t("Username")}
                       placeholderTextColor={appTheme.fontSecondColor}
-                      keyboardType="email-address"
-                      inputMode="email"
+                      autoCapitalize="none"
+                      autoCorrect={false}
                       value={values.username}
                       onChangeText={handleChange("username")}
                       onBlur={handleBlur("username")}

@@ -6,9 +6,8 @@ const NO_FORCED_UPDATE = { android: '0.0.0', ios: '0.0.0' };
 
 export const compatResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
-    tips: async () => [
-      { _id: 'default-tips', tipVariations: [5, 10, 15], enabled: true },
-    ],
+    // Legacy apps read `tips.tipVariations` as a single object, not a list.
+    tips: async () => ({ _id: 'default-tips', tipVariations: [5, 10, 15], enabled: true }),
 
     relatedItems: async (_parent, args: { itemId: string; restaurantId: string }) => {
       const item = await prisma.food.findUnique({ where: { id: args.itemId } });

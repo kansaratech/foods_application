@@ -35,6 +35,7 @@
       "distribution": "internal",
       "channel": "demo",
       "env": {
+        "EXPO_PUBLIC_APP_ENV": "demo",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID": "AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q",
         "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS": "AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q"
       },

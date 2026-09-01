@@ -9,6 +9,7 @@ import { MutationTuple, useMutation } from "@apollo/client";
 import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
 import { showMessage } from "react-native-flash-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomDrawerHeader = () => {
   // Hooks
@@ -16,6 +17,7 @@ const CustomDrawerHeader = () => {
   const { t } = useTranslation();
   const { dataProfile, userId, refetchProfile, loadingProfile } =
     useUserContext();
+  const insets = useSafeAreaInsets();
 
   // Queries
   const [toggleAvailablity, { loading }] = useMutation(UPDATE_AVAILABILITY, {
@@ -49,8 +51,13 @@ const CustomDrawerHeader = () => {
 
   return (
     <View
-      className="w-full h-[176px] flex-row justify-between p-5 pt-8"
-      style={{ backgroundColor: "#8F173F" }}
+      className="w-full flex-row justify-between p-5"
+      style={{
+        backgroundColor: "#8F173F",
+        paddingTop: insets.top + 16,
+        paddingBottom: 20,
+        minHeight: 176,
+      }}
     >
       <View className="justify-between flex-1">
         <View
@@ -115,7 +122,7 @@ const CustomDrawerHeader = () => {
         >
           {t("Availability")}
         </Text>
-        {loading || loadingProfile ? (
+        {loading || (loadingProfile && !dataProfile) ? (
           <SpinnerComponent color={appTheme.white} height={10} />
         ) : (
           <CustomSwitch

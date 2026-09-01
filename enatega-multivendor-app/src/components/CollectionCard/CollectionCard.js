@@ -86,13 +86,11 @@ const CollectionCard = ({ onPress, image, name }) => {
       <TextDefault
         Normal
         bolder
-        style={{ padding: 8 }}
+        style={{ paddingHorizontal: 8, paddingVertical: 6, lineHeight: 16 }}
         textColor={currentTheme.gray700}
         isRTL
         numberOfLines={2}
         ellipsizeMode='tail'
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
       >
         {name}
       </TextDefault>

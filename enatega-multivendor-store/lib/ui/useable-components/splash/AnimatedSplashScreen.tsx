@@ -1,107 +1,35 @@
-import "expo-dev-client";
 import * as SplashScreen from "expo-splash-screen";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
-import SplashVideo from "./SplashVideo";
+import { ReactNode, useEffect, useState } from "react";
+import { Platform, View } from "react-native";
+import AnimatedSplash from "./AnimatedSplash";
 
-export default function AnimatedSplashScreen({ children }) {
-  const opacityAnimation = useSharedValue(1); // Shared value for opacity
-  const scaleAnimation = useSharedValue(1); // Shared value for scale
-  const [isAppReady, setAppReady] = useState(false);
-  const [isSplashVideoComplete, setSplashVideoComplete] = useState(false);
-  const [isSplashAnimationComplete, setAnimationComplete] = useState(false);
+// Keep the native OS splash up until our theme-aware JS splash has painted, so
+// there is no black/white flash at the native -> JS handoff.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-  // Web video playback/events are unreliable across browsers; never let the
-  // splash video block the app from rendering indefinitely.
-  useEffect(() => {
-    if (Platform.OS !== "web") return;
-
-    const timeout = setTimeout(() => {
-      setAppReady(true);
-      setSplashVideoComplete(true);
-    }, 5000);
-
-    return () => clearTimeout(timeout);
-  }, []);
+export default function AnimatedSplashScreen({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [splashDone, setSplashDone] = useState(false);
 
   useEffect(() => {
-    if (isAppReady && isSplashVideoComplete) {
-      // Start fade out and scale down animation when the app is ready and video has completed
-      opacityAnimation.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.out(Easing.exp),
-      });
-
-      scaleAnimation.value = withTiming(
-        2,
-        {
-          duration: 300,
-          easing: Easing.out(Easing.exp),
-        },
-        () => {
-          runOnJS(setAnimationComplete)(true); // Update the animation completion state
-        },
-      );
-    }
-  }, [isAppReady, isSplashVideoComplete]);
-
-  const onImageLoaded = useCallback(async () => {
-    try {
-      await SplashScreen.hideAsync();
-      // Load stuff
-      await Promise.all([]);
-    } catch {
-      // Handle errors
-    } finally {
-      setAppReady(true);
-    }
+    SplashScreen.hideAsync().catch(() => {});
   }, []);
 
-  const videoElement = useMemo(() => {
-    return (
-      <SplashVideo
-        onLoaded={onImageLoaded}
-        onFinish={() => {
-          setSplashVideoComplete(true); // Mark video as complete
-        }}
-      />
-    );
-  }, [onImageLoaded]);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacityAnimation.value, // Use shared value for opacity
-      transform: [{ scale: scaleAnimation.value }], // Use shared value for scale
-    };
-  });
-
-  // The animated video is a native-app launch treatment. Rendering it in the
-  // browser causes a black full-screen layer while web routes are changing or
-  // hot reloading, so web renders the application immediately.
+  // Web renders the app immediately - the animated splash is a native launch
+  // treatment only.
   if (Platform.OS === "web") {
     return <View style={{ flex: 1 }}>{children}</View>;
   }
 
   return (
     <View style={{ flex: 1 }}>
-      {isSplashAnimationComplete ? children : null}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          StyleSheet.absoluteFill,
-          animatedStyle,
-          { backgroundColor: "black" },
-        ]}
-      >
-        {videoElement}
-      </Animated.View>
+      {children}
+      {!splashDone && (
+        <AnimatedSplash ready onFinish={() => setSplashDone(true)} />
+      )}
     </View>
   );
 }

@@ -37,7 +37,7 @@ export const compatTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    tips: [Tip!]!
+    tips: Tip!
     relatedItems(itemId: String!, restaurantId: String!): [ID!]!
     popularItems(restaurantId: String!): [PopularItem!]!
     fetchCategoryDetailsByStoreIdForMobile(storeId: String!): [StoreCategoryDetail!]!

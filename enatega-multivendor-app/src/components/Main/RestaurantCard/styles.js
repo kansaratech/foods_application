@@ -6,7 +6,7 @@ const { width } = Dimensions.get('window')
 
 const CARD_WIDTH = Math.max(scale(228), Math.min(scale(292), width * 0.74))
 const CARD_IMAGE_HEIGHT = Math.max(scale(150), Math.min(scale(198), CARD_WIDTH * 0.62))
-const CARD_DESCRIPTION_MIN_HEIGHT = Math.max(scale(84), Math.min(scale(106), CARD_WIDTH * 0.33))
+const CARD_DESCRIPTION_MIN_HEIGHT = Math.max(scale(96), Math.min(scale(120), CARD_WIDTH * 0.38))
 const CARD_HEIGHT =
   CARD_IMAGE_HEIGHT +
   CARD_DESCRIPTION_MIN_HEIGHT +
@@ -121,16 +121,17 @@ const buildStyles = (props = null) => {
     metaRow: {
       flexDirection: props?.isRTL ? 'row-reverse' : 'row',
       alignItems: 'center',
-      gap: scale(8),
-      flexWrap: 'wrap',
+      gap: scale(6),
+      flexWrap: 'nowrap',
       marginTop: 'auto'
     },
     metaPill: {
       flexDirection: props?.isRTL ? 'row-reverse' : 'row',
       alignItems: 'center',
+      flexShrink: 1,
       gap: scale(4),
       paddingVertical: scale(6),
-      paddingHorizontal: scale(9),
+      paddingHorizontal: scale(8),
       borderRadius: scale(999),
       backgroundColor: chipBackground,
       borderWidth: 1,

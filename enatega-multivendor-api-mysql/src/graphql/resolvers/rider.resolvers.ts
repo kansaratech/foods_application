@@ -87,7 +87,15 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       args: { username?: string; password?: string; notificationToken?: string; timeZone: string },
     ) => {
       if (!args.username || !args.password) throw userInputError('username and password are required');
-      const user = await prisma.user.findFirst({ where: { username: args.username, userType: 'RIDER' } });
+      // Riders often type the email into the "Email" field, or the username with
+      // different casing — accept either identifier, case-insensitively.
+      const identifier = args.username.trim();
+      const user = await prisma.user.findFirst({
+        where: {
+          userType: 'RIDER',
+          OR: [{ username: identifier }, { username: identifier.toLowerCase() }, { email: identifier.toLowerCase() }],
+        },
+      });
       if (!user || !user.password || !(await comparePassword(args.password, user.password))) {
         throw userInputError('Invalid username or password');
       }

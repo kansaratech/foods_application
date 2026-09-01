@@ -18,6 +18,7 @@ import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 // React Native Modal
 import ReactNativeModal from "react-native-modal";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const EMPTY = {
   bool: false,
@@ -40,6 +41,7 @@ export default function EarningBottomBar({
   const { format } = useCurrency();
   const { setStoreOrderEarnings } = useUserContext();
   const isWeb = Platform.OS === "web";
+  const insets = useSafeAreaInsets();
 
   const close = () => setModalVisible(EMPTY);
 
@@ -117,7 +119,10 @@ export default function EarningBottomBar({
         <TouchableOpacity
           onPress={openOrderDetails}
           className="flex-row items-center justify-between px-5 py-4 border-t"
-          style={{ borderColor: appTheme.borderLineColor }}
+          style={{
+            borderColor: appTheme.borderLineColor,
+            marginBottom: isWeb ? 0 : insets.bottom,
+          }}
         >
           <Text
             className="font-semibold"

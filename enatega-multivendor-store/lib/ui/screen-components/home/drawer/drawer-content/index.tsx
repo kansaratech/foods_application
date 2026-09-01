@@ -73,7 +73,7 @@ export default function CustomDrawerContent(
               >
                 <View className="flex-row items-center gap-3">
                   <View
-                    className="h-[30px] w-[40px] rounded-full items-center justify-center"
+                    className="h-[40px] w-[40px] rounded-full items-center justify-center"
                     style={{
                       backgroundColor: appTheme.sidebarIconBackground,
                     }}
@@ -158,7 +158,7 @@ export default function CustomDrawerContent(
         >
           <View className="flex-row items-center gap-3">
             <View
-              className="h-[30px] w-[40px] rounded-full items-center justify-center"
+              className="h-[40px] w-[40px] rounded-full items-center justify-center"
               style={{ backgroundColor: appTheme.sidebarIconBackground }}
             >
               <LogoutIcon width={16} height={16} color={appTheme.iconColor} />

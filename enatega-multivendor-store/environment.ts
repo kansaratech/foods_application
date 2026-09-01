@@ -8,8 +8,8 @@
 const getEnvVars = () => ({
   // Local API exposed over the internet (office Wi-Fi blocks phone<->PC on LAN).
   // Keep-alive: scratchpad/tunnel-keepalive.sh. For LAN, use http://<PC-IP>:4000.
-  GRAPHQL_URL: "https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql",
-  WS_GRAPHQL_URL: "wss://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql",
+  GRAPHQL_URL: "https://cast-characteristics-sport-absolutely.trycloudflare.com/graphql",
+  WS_GRAPHQL_URL: "wss://cast-characteristics-sport-absolutely.trycloudflare.com/graphql",
 });
 
 export default getEnvVars;
