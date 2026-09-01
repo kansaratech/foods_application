@@ -28,6 +28,7 @@ import EditAddress from '../screens/EditAddress/EditAddress'
 import CartAddress from '../screens/CartAddress/CartAddress'
 import Settings from '../screens/Settings/Settings'
 import HelpBrowser from '../screens/HelpBrowser/HelpBrowser'
+import Legal from '../screens/Legal/Legal'
 import Main from '../screens/Main/Main'
 import mainNavigationOptions from '../screens/Main/navigationOptions'
 import Restaurant from '../screens/Restaurant/Restaurant'
@@ -209,6 +210,7 @@ function MainNavigator() {
         options={SLIDE_RIGHT_WITH_CURVE_ANIM}
       />
       <NavigationStack.Screen name='HelpBrowser' component={HelpBrowser} />
+      <NavigationStack.Screen name='Legal' component={Legal} options={SLIDE_RIGHT_WITH_CURVE_ANIM} />
       <NavigationStack.Screen name='About' component={About} options={{ header: () => null, ...SLIDE_RIGHT_WITH_CURVE_ANIM }} />
       <NavigationStack.Screen name='Reviews' component={Reviews} options={SLIDE_RIGHT_WITH_CURVE_ANIM} />
       <NavigationStack.Screen name='Paypal' component={Paypal} />

@@ -103,11 +103,11 @@ export const useCreateAccount = () => {
   }
 
   const openTerms = () => {
-    Linking.openURL(TERMS_AND_CONDITIONS)
+    navigation.navigate('Legal', { type: 'terms' })
   }
 
   const openPrivacyPolicy = () => {
-    Linking.openURL(PRIVACY_POLICY)
+    navigation.navigate('Legal', { type: 'privacy' })
   }
 
   return {

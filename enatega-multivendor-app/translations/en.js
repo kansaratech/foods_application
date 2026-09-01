@@ -598,6 +598,7 @@ export const en = {
   getRegistered: 'Get Registered',
   legal: 'Legal',
   serviceTerms: 'Terms of Service',
+  legalContentUnavailable: 'This content is being updated. Please check back soon.',
   searchTitle: 'Search',
   noResults: 'No Results Found',
   recentSearches: 'Recent Searches',
