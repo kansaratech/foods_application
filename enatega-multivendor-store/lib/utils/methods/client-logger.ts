@@ -1,13 +1,16 @@
-// Best-effort dev error sink → API /client-logs. Never throws, never blocks.
+// Best-effort dev error sink -> API /client-logs. Never throws, never blocks.
 const APP = "store";
-
 const DEFAULT_LOG_BASE = "https://padharokitapi.loca.lt/";
+
 function base(): string {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const g = require("@/environment").default;
     const env = typeof g === "function" ? g() : g;
     const url: string = env?.GRAPHQL_URL || env?.SERVER_URL || "";
-    if (url) return url.replace(//graphql/?$/, "/");
+    if (url) {
+      return url.replace(/\/graphql\/?$/, "/");
+    }
   } catch {
     /* ignore */
   }
@@ -49,7 +52,9 @@ export function logClientIssue(input: {
 export function installGlobalErrorLogger(): void {
   try {
     const g: any = global;
-    if (g.__padharoErrorLoggerInstalled) return;
+    if (g.__padharoErrorLoggerInstalled) {
+      return;
+    }
     g.__padharoErrorLoggerInstalled = true;
     const EU = g.ErrorUtils;
     if (EU?.getGlobalHandler) {
@@ -60,7 +65,9 @@ export function installGlobalErrorLogger(): void {
           message: error?.message || String(error),
           stack: error?.stack || "",
         });
-        if (prev) prev(error, isFatal);
+        if (prev) {
+          prev(error, isFatal);
+        }
       });
     }
   } catch {
