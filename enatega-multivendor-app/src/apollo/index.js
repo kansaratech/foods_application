@@ -21,6 +21,7 @@ import { Platform } from 'react-native'
 import { isJwtTokenExpired } from '../utils/decode-jwt'
 import { invalidateUserSession } from '../utils/session'
 import { FlashMessage } from '../ui/FlashMessage/FlashMessage'
+import { logClientIssue } from '../utils/clientLogger'
 import i18n from '../../i18next'
 
 const getNextFetchPolicy = (currentFetchPolicy, context) => {
@@ -191,6 +192,29 @@ const setupApollo = ({ GRAPHQL_URL, WS_GRAPHQL_URL }) => {
 
   const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
     const gqlErrors = graphQLErrors || []
+
+    // Dev telemetry: record every GraphQL / network failure so it can be
+    // triaged from the server log files (logs/customer.log).
+    try {
+      if (gqlErrors.length || networkError) {
+        logClientIssue({
+          level: networkError ? 'network' : 'graphql',
+          screen: operation?.operationName || '',
+          message:
+            gqlErrors.map((e) => e?.message).filter(Boolean).join(' | ') ||
+            networkError?.message ||
+            'request failed',
+          extra: {
+            op: operation?.operationName,
+            code: gqlErrors[0]?.extensions?.code,
+            status: networkError?.statusCode || networkError?.response?.status,
+            vars: operation?.variables
+          }
+        })
+      }
+    } catch {
+      /* ignore */
+    }
 
     const hasInvalidSession = gqlErrors.some((graphQLError) =>
       USER_SESSION_CODES.has(graphQLError?.extensions?.code)

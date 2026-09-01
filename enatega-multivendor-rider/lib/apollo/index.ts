@@ -9,6 +9,7 @@ import {
   split,
 } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
+import { logClientIssue } from "@/lib/utils/methods/client-logger";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import {
   getMainDefinition,
@@ -213,7 +214,21 @@ const setupApollo = () => {
       }),
   );
 
-  const errorLink = onError(({ graphQLErrors, networkError }) => {
+  const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+    try {
+      if ((graphQLErrors && graphQLErrors.length) || networkError) {
+        logClientIssue({
+          level: networkError ? "network" : "graphql",
+          screen: (operation as any)?.operationName || "",
+          message:
+            (graphQLErrors || []).map((e: any) => e?.message).filter(Boolean).join(" | ") ||
+            (networkError as any)?.message ||
+            "request failed",
+          extra: { op: (operation as any)?.operationName, code: (graphQLErrors as any)?.[0]?.extensions?.code, status: (networkError as any)?.statusCode, vars: (operation as any)?.variables },
+        });
+      }
+    } catch { /* ignore */ }
+
     const hasInvalidSession = (graphQLErrors || []).some(
       (graphQLError) =>
         graphQLError?.extensions?.code === "TOKEN_EXPIRED" ||

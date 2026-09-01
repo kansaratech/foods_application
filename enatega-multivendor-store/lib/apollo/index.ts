@@ -15,6 +15,7 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import getEnvVars from "@/environment";
 import * as SecureStore from "@/lib/services/secure-store";
 import { onError } from "@apollo/client/link/error";
+import { logClientIssue } from "@/lib/utils/methods/client-logger";
 import { router } from "expo-router";
 import { DefinitionNode, FragmentDefinitionNode } from "graphql";
 import { Subscription } from "zen-observable-ts";
@@ -117,7 +118,21 @@ const setupApollo = () => {
       }),
   );
 
-  const errorLink = onError(({ graphQLErrors, networkError }) => {
+  const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+    try {
+      if ((graphQLErrors && graphQLErrors.length) || networkError) {
+        logClientIssue({
+          level: networkError ? "network" : "graphql",
+          screen: (operation as any)?.operationName || "",
+          message:
+            (graphQLErrors || []).map((e: any) => e?.message).filter(Boolean).join(" | ") ||
+            (networkError as any)?.message ||
+            "request failed",
+          extra: { op: (operation as any)?.operationName, code: (graphQLErrors as any)?.[0]?.extensions?.code, status: (networkError as any)?.statusCode, vars: (operation as any)?.variables },
+        });
+      }
+    } catch { /* ignore */ }
+
     const invalidCodes = ["TOKEN_EXPIRED", "INVALID_TOKEN", "UNAUTHENTICATED"];
     const hasInvalidSession = (graphQLErrors || []).some(
       (graphQLError) =>

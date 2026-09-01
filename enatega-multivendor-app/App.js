@@ -13,6 +13,8 @@ import FlashMessage from 'react-native-flash-message'
 import 'react-native-gesture-handler'
 import useEnvVars from './environment'
 import setupApolloClient from './src/apollo/index'
+import { installGlobalErrorLogger } from './src/utils/clientLogger'
+installGlobalErrorLogger()
 import { MessageComponent } from './src/components/FlashMessage/MessageComponent'
 import ReviewModal from './src/components/Review'
 import { AuthProvider } from './src/context/Auth'

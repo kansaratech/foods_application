@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
+import { installGlobalErrorLogger } from "@/lib/utils/methods/client-logger";
+installGlobalErrorLogger();
 
 // Service
 import setupApollo from "@/lib/apollo";

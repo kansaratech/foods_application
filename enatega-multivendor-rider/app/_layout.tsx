@@ -2,6 +2,8 @@
 // Polyfill global.crypto.getRandomValues early so secure random is available
 // app-wide (e.g. device nonce generation). Must be imported before first use.
 import "react-native-get-random-values";
+import { installGlobalErrorLogger } from "@/lib/utils/methods/client-logger";
+installGlobalErrorLogger();
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";

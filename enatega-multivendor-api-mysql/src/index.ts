@@ -12,6 +12,7 @@ import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 import { env } from './config/env';
 import { mapsRouter } from './routes/maps';
+import { clientLogsRouter } from './routes/client-logs';
 import { typeDefs } from './graphql/typeDefs';
 import { resolvers } from './graphql/resolvers';
 import { buildHttpContext, buildWsContext, GraphQLContext } from './context';
@@ -103,6 +104,13 @@ async function main() {
     '/maps',
     cors({ origin: env.corsOrigin === '*' ? true : env.corsOrigin.split(',') }),
     mapsRouter,
+  );
+
+  app.use(
+    '/client-logs',
+    cors({ origin: true }),
+    express.json({ limit: '2mb' }),
+    clientLogsRouter,
   );
 
   app.use(
