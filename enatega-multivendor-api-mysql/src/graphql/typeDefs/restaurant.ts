@@ -85,6 +85,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     isActive: Boolean
     shopType: String
     cuisines: [String!]
+    tags: [String!]
     openingTimes: [OpeningTime!]
     location: Coordinates
     reviewAverage: Float

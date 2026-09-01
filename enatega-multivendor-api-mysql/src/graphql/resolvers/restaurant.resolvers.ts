@@ -716,6 +716,8 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       });
       return links.map((l) => l.cuisine.name);
     },
+    // Legacy customer-app field (badge chips). No tags model on this API yet.
+    tags: () => [],
     reviewCount: (parent: Restaurant) => prisma.review.count({ where: { restaurantId: parent.id } }),
   },
 
