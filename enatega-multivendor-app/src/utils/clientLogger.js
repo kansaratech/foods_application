@@ -5,7 +5,7 @@ import { getEnvironmentConfig } from '../../environment.config'
 // files instead of one screenshot at a time. Never throws, never blocks.
 
 const APP = 'customer'
-const DEFAULT_BASE = 'https://padharokitapi.loca.lt/'
+const DEFAULT_BASE = 'https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/'
 let baseUrl = null
 
 function resolveBase() {

@@ -48,14 +48,10 @@ module.exports = {
           }
         }
       ],
-      [
-        '@sentry/react-native/expo',
-        {
-          organization: 'ninjas-code',
-          project: 'enatega-rider-app',
-          url: 'https://sentry.io/'
-        }
-      ],
+      // Sentry Expo plugin removed: it forces a source-map upload during the
+      // release build which needs SENTRY_AUTH_TOKEN (org "ninjas-code" — not
+      // ours). Runtime Sentry init in app/_layout.tsx stays and no-ops when
+      // unconfigured.
       [
         'expo-image-picker',
         {

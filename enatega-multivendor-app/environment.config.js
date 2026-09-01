@@ -4,10 +4,10 @@ const ENV_CONFIG = {
     // blocks phone <-> PC on the LAN). Restart the tunnel with:
     //   npx localtunnel --port 4000 --subdomain padharokitapi
     // For LAN testing instead, swap these back to http://<PC-LAN-IP>:4000.
-    GRAPHQL_URL: 'https://padharokitapi.loca.lt/graphql',
-    WS_GRAPHQL_URL: 'wss://padharokitapi.loca.lt/graphql',
-    SERVER_URL: 'https://padharokitapi.loca.lt/graphql',
-    SERVER_REST_URL: 'https://padharokitapi.loca.lt/',
+    GRAPHQL_URL: 'https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql',
+    WS_GRAPHQL_URL: 'wss://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql',
+    SERVER_URL: 'https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql',
+    SERVER_REST_URL: 'https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/',
     CLARITY_ENABLED: true
   },
   staging: {

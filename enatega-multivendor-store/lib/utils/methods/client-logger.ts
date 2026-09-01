@@ -1,6 +1,6 @@
 // Best-effort dev error sink -> API /client-logs. Never throws, never blocks.
 const APP = "store";
-const DEFAULT_LOG_BASE = "https://padharokitapi.loca.lt/";
+const DEFAULT_LOG_BASE = "https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/";
 
 function base(): string {
   try {

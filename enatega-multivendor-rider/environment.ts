@@ -31,8 +31,8 @@ const getEnvVars = (env = Updates.channel) => {
     // Local API exposed over the internet (office Wi-Fi blocks phone<->PC on
     // LAN). Keep-alive: scratchpad/tunnel-keepalive.sh. For LAN testing use
     // http://<PC-LAN-IP>:4000 instead.
-    GRAPHQL_URL: "https://padharokitapi.loca.lt/graphql",
-    WS_GRAPHQL_URL: "wss://padharokitapi.loca.lt/graphql",
+    GRAPHQL_URL: "https://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql",
+    WS_GRAPHQL_URL: "wss://accessible-terrorists-chelsea-vegetable.trycloudflare.com/graphql",
     SENTRY_DSN:
       configuration?.riderAppSentryUrl ??
       "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",
