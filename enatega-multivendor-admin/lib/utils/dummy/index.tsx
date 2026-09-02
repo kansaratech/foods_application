@@ -345,6 +345,12 @@ export const generateDummyBanners = (
       screen: `Screen ${(i % 3) + 1}`,
       action: 'navigate',
       parameters: '',
+      startDate: null,
+      endDate: null,
+      placement: 'HOME',
+      priority: 0,
+      couponCode: null,
+      isActive: true,
     });
   }
 

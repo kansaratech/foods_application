@@ -53,8 +53,51 @@ export const BANNERS_TABLE_COLUMNS = ({
       },
     },
     { headerName: t('Title'), propertyName: 'title' },
-    { headerName: t('Description'), propertyName: 'description' },
     { headerName: t('Screen Name'), propertyName: 'screen' },
+    {
+      headerName: t('Placement'),
+      propertyName: 'placement',
+      body: (b: IBannersResponse) => b.placement || 'HOME',
+    },
+    {
+      headerName: t('Priority'),
+      propertyName: 'priority',
+      body: (b: IBannersResponse) => b.priority ?? 0,
+    },
+    {
+      headerName: t('Window'),
+      propertyName: 'startDate',
+      body: (b: IBannersResponse) => {
+        if (!b.startDate && !b.endDate) return t('Always on');
+        const fmt = (d: string | null) =>
+          d ? new Date(d).toLocaleDateString() : '—';
+        return `${fmt(b.startDate)} – ${fmt(b.endDate)}`;
+      },
+    },
+    {
+      headerName: t('Status'),
+      propertyName: 'isActive',
+      body: (b: IBannersResponse) => {
+        const now = Date.now();
+        let label = t('Live');
+        let cls = 'bg-green-100 text-green-700';
+        if (!b.isActive) {
+          label = t('Disabled');
+          cls = 'bg-gray-100 text-gray-600';
+        } else if (b.startDate && now < new Date(b.startDate).getTime()) {
+          label = t('Scheduled');
+          cls = 'bg-amber-100 text-amber-700';
+        } else if (b.endDate && now > new Date(b.endDate).getTime()) {
+          label = t('Expired');
+          cls = 'bg-red-100 text-red-700';
+        }
+        return (
+          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${cls}`}>
+            {label}
+          </span>
+        );
+      },
+    },
     { headerName: t('Actions'), propertyName: 'action' },
     {
       propertyName: 'actions',

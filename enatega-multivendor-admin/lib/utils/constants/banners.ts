@@ -23,3 +23,10 @@ export const SCREEN_NAMES = [
     code: 'Top Brands',
   },
 ];
+
+// Where a campaign banner shows on the storefront.
+export const PLACEMENT_OPTIONS = [
+  { label: 'Home (Discovery)', code: 'HOME' },
+  { label: 'Store pages', code: 'STORE' },
+  { label: 'Landing page', code: 'LANDING' },
+];

@@ -19,6 +19,11 @@ import { MenuItem } from "primereact/menuitem";
 // Context & Hooks
 import useUser from "@/lib/hooks/useUser";
 import useRestaurant from "@/lib/hooks/useRestaurant";
+import useActiveCoupons from "@/lib/hooks/useActiveCoupons";
+
+// Campaign
+import Badge from "@/lib/ui/useable-components/badge";
+import CampaignBanner from "@/lib/ui/screen-components/un-protected/campaign-banner";
 
 // Icons
 import { ClockSvg, HeartSvg, InfoSvg, RatingSvg } from "@/lib/utils/assets/svg";
@@ -86,6 +91,11 @@ export default function StoreDetailsScreen() {
   const [isLiked, setIsLiked] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const { CURRENCY_SYMBOL } = useConfig();
+
+  // Active campaign discount for this store (its own coupons + globals)
+  const { bestDiscountFor } = useActiveCoupons(id);
+  const storeOfferPct = bestDiscountFor(id);
+
   const [subCategoriesForCategories, setSubCategoriesForCategories] = useState<
     ICategoryDetailsResponse[]
   >([]);
@@ -739,6 +749,9 @@ export default function StoreDetailsScreen() {
         </PaddingContainer>
       </div>
 
+      {/* Festival campaign banner for store pages */}
+      <CampaignBanner placement="STORE" />
+
       {/* Category Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -896,6 +909,18 @@ export default function StoreDetailsScreen() {
                      `}
                               onClick={() => handleOpenFoodModal(meal)}
                             >
+                              {(meal.badge || (storeOfferPct && !meal.isOutOfStock)) && (
+                                <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+                                  {meal.badge && (
+                                    <Badge variant="festive">{meal.badge}</Badge>
+                                  )}
+                                  {storeOfferPct && !meal.isOutOfStock && (
+                                    <Badge variant="offer">
+                                      {t("offer_percent_off", { pct: storeOfferPct })}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
                               {/* Image */}
                               <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28">
                                 <Image

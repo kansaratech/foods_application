@@ -13,6 +13,11 @@ import { useQuery } from "@apollo/client";
 import useUser from "@/lib/hooks/useUser";
 import useRestaurant from "@/lib/hooks/useRestaurant";
 import useToast from "@/lib/hooks/useToast";
+import useActiveCoupons from "@/lib/hooks/useActiveCoupons";
+
+// Campaign
+import Badge from "@/lib/ui/useable-components/badge";
+import CampaignBanner from "@/lib/ui/screen-components/un-protected/campaign-banner";
 
 // Icons
 import { ClockSvg, HeartSvg, InfoSvg, RatingSvg } from "@/lib/utils/assets/svg";
@@ -79,6 +84,10 @@ export default function RestaurantDetailsScreen() {
   const [showConfetti, setShowConfetti] = useState(false);
   const { CURRENCY_SYMBOL } = useConfig();
   const [isModalOpen, setIsModalOpen] = useState({ value: false, id: "" });
+
+  // Active campaign discount for this store (its own coupons + globals)
+  const { bestDiscountFor } = useActiveCoupons(id);
+  const storeOfferPct = bestDiscountFor(id);
 
   // Get user profile from context
   const { profile } = useUser();
@@ -648,6 +657,9 @@ export default function RestaurantDetailsScreen() {
         </PaddingContainer>
       </div>
 
+      {/* Festival campaign banner for store pages */}
+      <CampaignBanner placement="STORE" />
+
       {/* Out-of-delivery-range notice */}
       {!loading && outOfDeliveryRange && (
         <div className="border-b border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/25">
@@ -810,6 +822,18 @@ export default function RestaurantDetailsScreen() {
                       }`}
                       onClick={() => handleRestaurantClick(meal)}
                     >
+                      {(meal.badge || (storeOfferPct && !meal.isOutOfStock)) && (
+                        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+                          {meal.badge && (
+                            <Badge variant="festive">{meal.badge}</Badge>
+                          )}
+                          {storeOfferPct && !meal.isOutOfStock && (
+                            <Badge variant="offer">
+                              {t("offer_percent_off", { pct: storeOfferPct })}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                       {/* Image */}
                       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28">
                         <Image

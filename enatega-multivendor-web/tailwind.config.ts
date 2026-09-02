@@ -30,8 +30,12 @@ const config = {
         "primary-light": "var(--primary-light)",
         "primary-dark": "var(--primary-dark)",
         "secondary-color": "var(--secondary-color)",
-        "secondary-border-color": "#111827"
-          
+        "secondary-border-color": "#111827",
+        "brand-maroon": "var(--brand-maroon)",
+        "brand-maroon-dark": "var(--brand-maroon-dark)",
+        "brand-orange": "var(--brand-orange)",
+        "brand-cream": "var(--brand-cream)",
+        "brand-teal": "var(--brand-teal)"
       },
       width: {
         "custom-button": "110px",

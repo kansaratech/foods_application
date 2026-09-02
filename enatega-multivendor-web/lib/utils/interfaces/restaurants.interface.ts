@@ -87,6 +87,7 @@ export interface IFood {
   restaurant: string;
   variations: IVariation[];
   isOutOfStock?: boolean;
+  badge?: string | null;
 }
 
 export interface ISelectedVariation {

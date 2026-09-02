@@ -9,6 +9,7 @@
  */
 import { PrismaClient, Prisma } from '@prisma/client';
 import { hashPassword } from '../src/services/auth.service';
+import { seedFestivalCampaign } from './seed-campaign';
 
 const prisma = new PrismaClient();
 
@@ -349,19 +350,27 @@ async function main() {
       },
     });
 
-  const reviewer = await prisma.user.upsert({
-    where: { email: 'deogarh-diner@padharo.local' },
-    update: {},
-    create: {
-      email: 'deogarh-diner@padharo.local',
-      name: 'Deogarh Diner',
-      phone: '+919829000001',
-      password: await hashPassword('Customer@123'),
-      userType: 'CUSTOMER',
-      emailIsVerified: true,
-      phoneIsVerified: true,
-    },
+  // Reuse whatever demo-diner already exists — matched on email OR phone, because
+  // a prod seed may have created it under a different email domain
+  // (deogarh-diner@padharo.in vs .local) while the phone stays the same.
+  const reviewerEmail = 'deogarh-diner@padharo.local';
+  const reviewerPhone = '+919829000001';
+  let reviewer = await prisma.user.findFirst({
+    where: { OR: [{ email: reviewerEmail }, { phone: reviewerPhone }] },
   });
+  if (!reviewer) {
+    reviewer = await prisma.user.create({
+      data: {
+        email: reviewerEmail,
+        name: 'Deogarh Diner',
+        phone: reviewerPhone,
+        password: await hashPassword('Customer@123'),
+        userType: 'CUSTOMER',
+        emailIsVerified: true,
+        phoneIsVerified: true,
+      },
+    });
+  }
 
   let reviewerAddress = await prisma.address.findFirst({ where: { userId: reviewer.id, label: 'Deogarh Home' } });
   if (!reviewerAddress) {
@@ -532,6 +541,8 @@ async function main() {
 
     created++;
   }
+
+  await seedFestivalCampaign(prisma);
 
   const total = await prisma.restaurant.count({ where: { isActive: true } });
   console.log(`Deogarh seed complete: ${created} stores created, ${skipped} already existed.`);

@@ -933,5 +933,9 @@
   "area_na_notify_busy": "जोड़ा जा रहा है…",
   "area_na_success_title": "आप सूची में शामिल हैं",
   "area_na_success_body": "जिस दिन पधारो {place} पहुँचेगा, हम आपको संदेश भेजेंगे।",
-  "area_na_change": "डिलीवरी स्थान बदलें"
+  "area_na_change": "डिलीवरी स्थान बदलें",
+  "campaign_use_code": "कोड {code} इस्तेमाल करें",
+  "coupon_copied": "कोड कॉपी हो गया",
+  "offer_percent_off": "{pct}% छूट",
+  "festival_offers_title": "त्योहारी ऑफ़र"
 }

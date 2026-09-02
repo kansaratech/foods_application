@@ -12,6 +12,7 @@ import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/uploa
 import {
   ACTION_TYPES,
   BannersErrors,
+  PLACEMENT_OPTIONS,
   SCREEN_NAMES,
 } from '@/lib/utils/constants';
 import {
@@ -75,6 +76,17 @@ const BannersAddForm = ({
           : null
       : null,
     file: banner?.file || '',
+    placement: banner?.placement
+      ? {
+        label: getLabelByCode(PLACEMENT_OPTIONS, banner.placement),
+        code: banner.placement,
+      }
+      : PLACEMENT_OPTIONS[0],
+    priority: banner?.priority ?? 0,
+    couponCode: banner?.couponCode || '',
+    startDate: banner?.startDate ? banner.startDate.split('T')[0] : '',
+    endDate: banner?.endDate ? banner.endDate.split('T')[0] : '',
+    isActive: banner?.isActive ?? true,
   };
 
   // Hooks
@@ -100,6 +112,12 @@ const BannersAddForm = ({
             file: values.file,
             action: values.action?.code,
             screen: values.screen?.code,
+            placement: values.placement?.code ?? 'HOME',
+            priority: Number(values.priority) || 0,
+            couponCode: values.couponCode?.trim() || null,
+            startDate: values.startDate || null,
+            endDate: values.endDate || null,
+            isActive: values.isActive,
           },
         },
         onCompleted: () => {
@@ -252,6 +270,98 @@ const BannersAddForm = ({
                                 ? 'red'
                                 : '',
                             }}
+                          />
+                        </div>
+
+                        <div>
+                          <CustomDropdownComponent
+                            placeholder={t('Placement')}
+                            options={PLACEMENT_OPTIONS}
+                            showLabel={true}
+                            name="placement"
+                            filter={false}
+                            selectedItem={values.placement}
+                            setSelectedItem={setFieldValue}
+                            style={{
+                              borderColor: onErrorMessageMatcher(
+                                'placement',
+                                errors?.placement,
+                                BannersErrors
+                              )
+                                ? 'red'
+                                : '',
+                            }}
+                          />
+                        </div>
+
+                        <div className="flex items-end gap-3">
+                          <div className="flex-1">
+                            <CustomTextField
+                              type="number"
+                              name="priority"
+                              placeholder={t('Priority')}
+                              value={String(values.priority)}
+                              onChange={handleChange}
+                              showLabel={true}
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 pb-2 text-sm">
+                            <input
+                              type="checkbox"
+                              name="isActive"
+                              checked={values.isActive}
+                              onChange={(e) =>
+                                setFieldValue('isActive', e.target.checked)
+                              }
+                            />
+                            {t('Active')}
+                          </label>
+                        </div>
+
+                        <div>
+                          <CustomTextField
+                            type="date"
+                            name="startDate"
+                            placeholder={t('Start Date')}
+                            value={values.startDate}
+                            onChange={(e) =>
+                              setFieldValue('startDate', e.target.value)
+                            }
+                            showLabel={true}
+                          />
+                        </div>
+
+                        <div>
+                          <CustomTextField
+                            type="date"
+                            name="endDate"
+                            placeholder={t('End Date')}
+                            value={values.endDate}
+                            onChange={(e) =>
+                              setFieldValue('endDate', e.target.value)
+                            }
+                            showLabel={true}
+                            style={{
+                              borderColor: onErrorMessageMatcher(
+                                'endDate',
+                                errors?.endDate,
+                                BannersErrors
+                              )
+                                ? 'red'
+                                : '',
+                            }}
+                          />
+                        </div>
+
+                        <div>
+                          <CustomTextField
+                            type="text"
+                            name="couponCode"
+                            placeholder={t('Coupon Code')}
+                            maxLength={35}
+                            value={values.couponCode}
+                            onChange={handleChange}
+                            showLabel={true}
                           />
                         </div>
 

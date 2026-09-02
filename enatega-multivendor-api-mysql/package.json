@@ -12,7 +12,8 @@
     "prisma:migrate": "prisma migrate dev",
     "seed": "ts-node --transpile-only prisma/seed.ts",
     "seed:ahmedabad": "ts-node --transpile-only prisma/seed-ahmedabad.ts",
-    "seed:deogarh": "ts-node --transpile-only prisma/seed-deogarh.ts"
+    "seed:deogarh": "ts-node --transpile-only prisma/seed-deogarh.ts",
+    "seed:campaign": "ts-node --transpile-only prisma/seed-campaign.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",

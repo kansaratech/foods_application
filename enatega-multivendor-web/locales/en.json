@@ -948,5 +948,9 @@
   "area_na_notify_busy": "Adding you…",
   "area_na_success_title": "You’re on the list",
   "area_na_success_body": "We’ll message you the day Padharo reaches {place}.",
-  "area_na_change": "Change delivery location"
+  "area_na_change": "Change delivery location",
+  "campaign_use_code": "Use code {code}",
+  "coupon_copied": "Code copied",
+  "offer_percent_off": "{pct}% OFF",
+  "festival_offers_title": "Festival offers"
 }

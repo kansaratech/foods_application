@@ -28,6 +28,7 @@ interface FoodInputArgs {
   description?: string;
   image?: string;
   images?: string[];
+  badge?: string | null;
   isActive?: boolean;
   category: string;
   subCategory?: string;
@@ -142,6 +143,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           subCategoryId: input.subCategory || undefined,
           title: input.title,
           description: input.description,
+          badge: input.badge ?? null,
           ...foodImageFields(input),
           isActive: input.isActive ?? true,
           variations: {
@@ -171,6 +173,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           subCategoryId: input.subCategory || undefined,
           title: input.title,
           description: input.description,
+          badge: input.badge ?? null,
           ...foodImageFields(input),
           isActive: input.isActive,
         },

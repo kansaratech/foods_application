@@ -36,6 +36,12 @@ export type IBannersResponse = {
   screen: string;
   file: string;
   parameters: string;
+  startDate: string | null;
+  endDate: string | null;
+  placement: string | null;
+  priority: number | null;
+  couponCode: string | null;
+  isActive: boolean;
 };
 
 export interface IBannersDataResponse {

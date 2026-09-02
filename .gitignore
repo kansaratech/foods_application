@@ -71,3 +71,6 @@ web-build/
 enatega-multivendor-app/.env
 goodbite-multivendor-app
 
+# Padharo deploy — real secrets, keep only the .example in git
+deploy/padharo.env
+

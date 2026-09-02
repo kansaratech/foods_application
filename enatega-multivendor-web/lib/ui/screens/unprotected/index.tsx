@@ -7,6 +7,7 @@ import { TbScooter } from "react-icons/tb";
 import Start from "../../screen-components/un-protected/Home/Start";
 import PopularStores from "../../screen-components/un-protected/Home/PopularStores";
 import ServiceAreas from "../../screen-components/un-protected/Home/ServiceAreas";
+import CampaignBanner from "../../screen-components/un-protected/campaign-banner";
 
 const benefits = [
   { icon: FiSmartphone, title: "For customers", copy: "A smooth, reliable experience from discovery to doorstep.", href: "/discovery" },
@@ -18,6 +19,8 @@ export default function Main() {
   return (
     <main className="w-full overflow-x-hidden bg-white text-slate-950 dark:bg-gray-900 dark:text-white">
       <Start />
+
+      <CampaignBanner placement="LANDING" />
 
       <section className="bg-white py-8 dark:bg-gray-900 lg:py-14">
         <div className="relative grid w-full items-stretch px-4 md:px-6 lg:grid-cols-[25%_repeat(3,1fr)] lg:px-0">

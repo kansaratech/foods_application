@@ -5,7 +5,7 @@ import { RESTAURANTS_CAROUSEL_FRAGMENT } from "../restaurants";
 // fragment, not RestaurantPreviewFields, or the server rejects it.
 export const TOP_RATED_VENDORS = gql`
   ${RESTAURANTS_CAROUSEL_FRAGMENT}
-  query TopRatedVendors($latitude: Float!, $longitude: Float!) {
+  query TopRatedVendors($latitude: Float, $longitude: Float) {
     topRatedVendorsPreview(latitude: $latitude, longitude: $longitude) {
       ...RestaurantCarouselPreviewFields
     }

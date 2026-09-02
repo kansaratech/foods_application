@@ -48,6 +48,24 @@ export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
     },
     restaurantCoupons: (_parent, args: { restaurantId: string }) =>
       prisma.coupon.findMany({ where: { restaurantId: args.restaurantId } }),
+    activeCoupons: async (
+      _parent,
+      args: { restaurantId?: string | null; campaignOnly?: boolean },
+    ) => {
+      const now = new Date();
+      // With a restaurantId: that store's coupons + globals. Without one
+      // (discovery/landing): every live coupon, so cards can each show their own.
+      const where = args.restaurantId
+        ? { enabled: true, OR: [{ restaurantId: null }, { restaurantId: args.restaurantId }] }
+        : { enabled: true };
+      const rows = await prisma.coupon.findMany({ where });
+      return rows.filter((c) => {
+        if (args.campaignOnly && (c.lifeTimeActive || (!c.startDate && !c.endDate))) return false;
+        return (
+          c.lifeTimeActive || ((!c.startDate || now >= c.startDate) && (!c.endDate || now <= c.endDate))
+        );
+      });
+    },
     restaurantCouponsPaginated: async (
       _parent,
       args: { restaurantId: string; page?: number; limit?: number; search?: string; enabled?: boolean },

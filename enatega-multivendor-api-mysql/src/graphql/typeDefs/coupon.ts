@@ -7,6 +7,7 @@ export const couponTypeDefs = /* GraphQL */ `
     startDate: String
     endDate: String
     lifeTimeActive: Boolean
+    restaurantId: String
   }
 
   type CouponPaginated {
@@ -37,6 +38,8 @@ export const couponTypeDefs = /* GraphQL */ `
     couponsPaginated(page: Int, limit: Int, search: String, enabled: Boolean, startDate: String, endDate: String): CouponPaginated!
     restaurantCoupons(restaurantId: String!): [Coupon!]!
     restaurantCouponsPaginated(restaurantId: String!, page: Int, limit: Int, search: String, enabled: Boolean): CouponPaginated!
+    "Enabled, in-window coupons for the storefront: globals plus (when restaurantId is given) that store's own. campaignOnly (default false) drops evergreen lifeTimeActive coupons, keeping only date-bounded campaign ones."
+    activeCoupons(restaurantId: ID, campaignOnly: Boolean): [Coupon!]!
   }
 
   extend type Mutation {

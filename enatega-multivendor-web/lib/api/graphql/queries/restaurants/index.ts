@@ -12,6 +12,7 @@ export const FOOD = gql`
     title
     image
     description
+    badge
     subCategory
     isOutOfStock
     variations {
@@ -86,7 +87,7 @@ export const RESTAURANTS_CAROUSEL_FRAGMENT = gql`
 
 export const RECENT_ORDER_RESTAURANTS = gql`
   ${RESTAURANTS_CAROUSEL_FRAGMENT}
-  query GetRecentOrderRestaurants($latitude: Float!, $longitude: Float!) {
+  query GetRecentOrderRestaurants($latitude: Float, $longitude: Float) {
     recentOrderRestaurantsPreview(latitude: $latitude, longitude: $longitude) {
       ...RestaurantCarouselPreviewFields
     }
@@ -96,8 +97,8 @@ export const RECENT_ORDER_RESTAURANTS = gql`
 export const MOST_ORDER_RESTAURANTS = gql`
   ${RESTAURANTS_CAROUSEL_FRAGMENT}
   query GetMostOrderedRestaurants(
-    $latitude: Float!
-    $longitude: Float!
+    $latitude: Float
+    $longitude: Float
     $page: Int
     $limit: Int
     $shopType: String
@@ -225,6 +226,7 @@ export const GET_RESTAURANT_BY_ID_SLUG = gql`
           title
           image
           description
+          badge
           isOutOfStock
           subCategory
           variations {

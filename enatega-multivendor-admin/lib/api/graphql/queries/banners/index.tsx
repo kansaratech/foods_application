@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 export const GET_BANNERS = gql`
   query Banners {
-    banners {
+    banners(activeOnly: false) {
       _id
       title
       description
@@ -10,6 +10,12 @@ export const GET_BANNERS = gql`
       screen
       file
       parameters
+      startDate
+      endDate
+      placement
+      priority
+      couponCode
+      isActive
     }
   }
 `;

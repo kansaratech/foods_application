@@ -1,0 +1,18 @@
+▲ Next.js 16.2.10 (webpack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.1.127:3001
+- Environments: .env.local
+✓ Ready in 634ms
+
+○ Compiling / ...
+groceriesData in hook []
+ GET /discovery 200 in 41s (next.js: 38.5s, application-code: 2.9s)
+ GET / 200 in 2.6s (next.js: 5ms, application-code: 2.6s)
+groceriesData in hook []
+ GET /discovery 200 in 264ms (next.js: 3ms, application-code: 261ms)
+groceriesData in hook []
+ GET /discovery 200 in 215ms (next.js: 4ms, application-code: 211ms)
+groceriesData in hook []
+ GET /discovery 200 in 187ms (next.js: 4ms, application-code: 183ms)
+ GET / 200 in 162ms (next.js: 9ms, application-code: 153ms)
+ GET / 200 in 122ms (next.js: 5ms, application-code: 116ms)

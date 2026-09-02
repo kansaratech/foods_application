@@ -117,6 +117,11 @@ export const BannersErrors: IBannersErrors = {
   action: ['Required'],
   screen: ['Required'],
   file: ['Required'],
+  placement: ['Required'],
+  priority: ['Must be zero or more'],
+  couponCode: [],
+  startDate: [],
+  endDate: ['End date must be after the start date'],
 };
 
 export const CategoryErrors: ICategoryErrors = {

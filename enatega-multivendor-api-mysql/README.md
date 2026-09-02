@@ -15,13 +15,14 @@ This is a **core MVP**: authentication, restaurant/menu browsing & management, c
    ```bash
    npm install
    ```
-4. Create the schema:
+4. Create / sync the schema (this project uses `db push`, not migrations — see `prisma/SEED.md`):
    ```bash
-   npx prisma migrate dev --name init
+   npx prisma db push && npx prisma generate
    ```
-5. Seed sample data (admin/vendor/customer accounts + a sample restaurant & menu item):
+5. Seed data — see **`prisma/SEED.md`** for the full walkthrough. Quick version:
    ```bash
-   npm run seed
+   npm run seed           # base admin/vendor/customer accounts + one sample store
+   npm run seed:deogarh   # Padharo Deogarh marketplace (8 stores) + the demo festival campaign
    ```
 6. Start the dev server:
    ```bash

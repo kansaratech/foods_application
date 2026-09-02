@@ -6,6 +6,12 @@ export type IBannersForm = {
   action: IDropdownSelectItem | null;
   screen: IDropdownSelectItem | null;
   file: string;
+  placement: IDropdownSelectItem | null;
+  priority: number;
+  couponCode: string;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
 };
 
 export interface IBannersErrors {
@@ -14,4 +20,9 @@ export interface IBannersErrors {
   action: string[];
   screen: string[];
   file: string[];
+  placement: string[];
+  priority: string[];
+  couponCode: string[];
+  startDate: string[];
+  endDate: string[];
 }

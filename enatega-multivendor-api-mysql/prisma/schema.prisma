@@ -205,6 +205,7 @@ model Food {
   description   String?  @db.Text
   image         String?
   images        Json?
+  badge         String?  // e.g. "Diwali Special" — shown as a pill on menu cards
   isActive      Boolean  @default(true)
   isOutOfStock  Boolean  @default(false)
   createdAt     DateTime @default(now())
@@ -578,6 +579,15 @@ model Banner {
   screen      String?
   file        String?
   parameters  Json?
+  // Festival-campaign scheduling
+  startDate   DateTime?
+  endDate     DateTime?
+  placement   String?   @default("HOME") // HOME | STORE | LANDING
+  priority    Int       @default(0)
+  couponCode  String?
+  isActive    Boolean   @default(true)
+
+  @@index([placement])
 }
 
 // A visitor whose chosen delivery location no store covers yet. Captured from the

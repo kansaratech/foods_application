@@ -7,6 +7,12 @@ export const bannerTypeDefs = /* GraphQL */ `
     screen: String
     file: String
     parameters: String
+    startDate: String
+    endDate: String
+    placement: String
+    priority: Int
+    couponCode: String
+    isActive: Boolean
   }
 
   input BannerInput {
@@ -16,10 +22,17 @@ export const bannerTypeDefs = /* GraphQL */ `
     file: String
     action: String
     screen: String
+    startDate: String
+    endDate: String
+    placement: String
+    priority: Int
+    couponCode: String
+    isActive: Boolean
   }
 
   extend type Query {
-    banners: [Banner!]!
+    "activeOnly (default true): only banners whose isActive is true and now is inside [startDate, endDate]."
+    banners(placement: String, activeOnly: Boolean): [Banner!]!
   }
 
   extend type Mutation {

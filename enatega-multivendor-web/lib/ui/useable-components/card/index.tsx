@@ -11,12 +11,14 @@ import { CycleSvg } from "@/lib/utils/assets/svg";
 
 // Hooks
 import { useSearchUI } from "@/lib/context/search/search.context";
+import useActiveCoupons from "@/lib/hooks/useActiveCoupons";
 
 // Interface
 import { ICardProps } from "@/lib/utils/interfaces";
 import { saveSearchedKeyword } from "@/lib/utils/methods";
 import { isRestaurantOpen } from "@/lib/utils/constants/isRestaurantOpen";
 import CustomDialog from "../custom-dialog";
+import Badge from "../badge";
 import { Button } from "primereact/button";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 import { useTranslations } from "next-intl";
@@ -35,6 +37,9 @@ const Card: React.FC<ICardProps> = ({
 
   const { DELIVERY_RATE, CURRENCY_SYMBOL } = useConfig();
   const isOpen = isRestaurantOpen(item);
+
+  const { bestDiscountFor } = useActiveCoupons();
+  const offerPct = bestDiscountFor(item._id);
 
   const goToDetail = () => {
     router.push(
@@ -72,6 +77,14 @@ const Card: React.FC<ICardProps> = ({
             {t("closed_label")}
           </span>
         )}
+        {offerPct ? (
+          <Badge
+            variant="offer"
+            className={`absolute left-3 ${!isOpen ? "top-11" : "top-3"}`}
+          >
+            {t("offer_percent_off", { pct: offerPct })}
+          </Badge>
+        ) : null}
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-800 shadow-sm dark:bg-gray-900/90 dark:text-white">
           <FiStar className="h-3 w-3 text-[#f5820a]" />
           {item?.reviewAverage ?? "—"}

@@ -9,6 +9,9 @@ export interface IBannerItemProps {
     parameters?: string[];
     shopType?: string;
     slug?: string;
+    couponCode?: string | null;
+    placement?: string | null;
+    priority?: number | null;
   }
 }
 
@@ -23,6 +26,12 @@ export interface IBanner {
   parameters?: string[];
   shopType?: string;
   slug?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  placement?: string | null;
+  priority?: number | null;
+  couponCode?: string | null;
+  isActive?: boolean;
 }
 
 export interface IGetBannersResponse {

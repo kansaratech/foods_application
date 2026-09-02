@@ -1,15 +1,25 @@
 import { gql } from '@apollo/client';
 
+const BANNER_FIELDS = `
+  _id
+  title
+  description
+  action
+  file
+  screen
+  parameters
+  startDate
+  endDate
+  placement
+  priority
+  couponCode
+  isActive
+`;
+
 export const CREATE_BANNER = gql`
   mutation CreateBanner($bannerInput: BannerInput!) {
     createBanner(bannerInput: $bannerInput) {
-      _id
-      title
-      description
-      action
-      file
-      screen
-      parameters
+      ${BANNER_FIELDS}
     }
   }
 `;
@@ -17,13 +27,7 @@ export const CREATE_BANNER = gql`
 export const EDIT_BANNER = gql`
   mutation editBanner($bannerInput: BannerInput!) {
     editBanner(bannerInput: $bannerInput) {
-      _id
-      title
-      description
-      action
-      file
-      screen
-      parameters
+      ${BANNER_FIELDS}
     }
   }
 `;

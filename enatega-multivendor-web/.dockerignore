@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+cypress
+ios-app
+*.log
+build.log
+start*.log
+.env
+.env.*
+tsconfig.tsbuildinfo
+Dockerfile
+.dockerignore

@@ -1,0 +1,92 @@
+# Padharo — production stack for padharo.kansaratech.com
+#
+#   Build + run:   docker compose --env-file deploy/padharo.env up -d --build
+#   Logs:          docker compose --env-file deploy/padharo.env logs -f
+#   Stop:          docker compose --env-file deploy/padharo.env down
+#
+# Host ports (bound to 127.0.0.1 only — Apache/Sentora reverse-proxies to them):
+#   6000 -> web    (container :3000)   padharo.kansaratech.com
+#   6001 -> admin  (container :3000)   padharo-admin.kansaratech.com
+#   6002 -> api    (container :4000)   padharo-api.kansaratech.com
+#
+# The api joins the EXTERNAL `mysql_config_dev_default` network so it can reach
+# the shared MySQL container by name (same pattern as ams_container).
+
+name: padharo
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  api:
+    build:
+      context: ./enatega-multivendor-api-mysql
+    image: padharo-api:latest
+    container_name: padharo_api
+    restart: unless-stopped
+    env_file:
+      - ./deploy/padharo.env
+    ports:
+      - "127.0.0.1:6002:4000"
+    volumes:
+      - padharo_uploads:/app/uploads
+    networks:
+      - padharo_internal
+      - mysql_config_dev_default
+    logging: *default-logging
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:4000/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  web:
+    build:
+      context: ./enatega-multivendor-web
+      args:
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/padharo.env}
+        NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/padharo.env}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/padharo.env}
+    image: padharo-web:latest
+    container_name: padharo_web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6000:3000"
+    networks:
+      - padharo_internal
+    logging: *default-logging
+
+  admin:
+    build:
+      context: ./enatega-multivendor-admin
+      args:
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/padharo.env}
+        NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/padharo.env}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/padharo.env}
+        NEXT_PUBLIC_ADMIN_EMAIL: ${NEXT_PUBLIC_ADMIN_EMAIL:-}
+        NEXT_PUBLIC_ADMIN_PASSWORD: ${NEXT_PUBLIC_ADMIN_PASSWORD:-}
+    image: padharo-admin:latest
+    container_name: padharo_admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6001:3000"
+    networks:
+      - padharo_internal
+    logging: *default-logging
+
+volumes:
+  padharo_uploads:
+
+networks:
+  padharo_internal:
+    name: padharo_internal
+  mysql_config_dev_default:
+    external: true
