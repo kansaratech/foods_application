@@ -35,7 +35,7 @@ export const VendorSchema = Yup.object().shape({
     .nullable()
     .oneOf([Yup.ref('password'), null], 'Password must match')
     .required('Required'),
-  image: Yup.string().url('Invalid image URL').required('Required'),
+  image: Yup.string().required('Image is required'),
   phoneNumber: Yup.string()
     .required('Required')
     .min(5, 'Minimum 5 Numbers are Required'),
@@ -54,7 +54,7 @@ export const VendorSchemaForStoreForm = Yup.object().shape({
     .nullable()
     .oneOf([Yup.ref('password'), null], 'Password must match')
     .required('Required'),
-  image: Yup.string().url('Invalid image URL').required('Required'),
+  image: Yup.string().required('Image is required'),
 });
 
 export const VendorEditSchema = Yup.object().shape({
@@ -133,7 +133,7 @@ export const VendorSchemaOnStoreCreate = Yup.object().shape({
     .nullable()
     .oneOf([Yup.ref('password'), null], 'Password must match')
     .required('Required'),
-  image: Yup.string().url('Invalid image URL').required('Required'),
+ image: Yup.string().required('Image is required'),
   phoneNumber: Yup.string()
     .required('Required')
     .min(5, 'Minimum 5 Numbers are Required'),
