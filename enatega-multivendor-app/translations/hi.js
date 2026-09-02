@@ -658,4 +658,18 @@ export const hi = {
     "Applied Filters": 'लागू फिल्टर',
     "WhatsApp is not installed on the device": "डिवाइस पर WhatsApp इंस्टॉल नहीं है",
     "Install it": "इसे इंस्टॉल करें",
+    area_na_your_area: 'आपके इलाके',
+    area_na_title: 'अभी हम {{place}} में नहीं पहुँचे हैं',
+    area_na_nearby: 'पधारो अभी {{area}} में डिलीवरी कर रहा है, लगभग {{km}} किमी दूर।',
+    area_na_nearby_nodist: 'पधारो अभी {{area}} में डिलीवरी कर रहा है।',
+    area_na_nearby_generic: 'हम तेज़ी से आगे बढ़ रहे हैं, एक-एक शहर करके।',
+    area_na_expand_more: 'हम तेज़ी से आगे बढ़ रहे हैं — अपनी जानकारी छोड़ें और जैसे ही हम आपके पास पहुँचेंगे, हम आपको बता देंगे।',
+    area_na_success_title: 'आप सूची में शामिल हैं',
+    area_na_success_body: 'जिस दिन पधारो {{place}} पहुँचेगा, हम आपको संदेश भेजेंगे।',
+    area_na_email: 'ईमेल पता',
+    area_na_phone: 'फ़ोन नंबर (वैकल्पिक)',
+    area_na_notify: 'मुझे सूचित करें',
+    area_na_email_invalid: 'मान्य ईमेल पता दर्ज करें',
+    area_na_error: 'कुछ गलत हुआ। कृपया पुनः प्रयास करें',
+    area_na_change: 'दूसरा स्थान चुनें'
   }
