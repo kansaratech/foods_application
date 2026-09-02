@@ -839,6 +839,16 @@ Discovery Caurousal
   max-width: var(--slider-card-column-width) !important;
 }
 
+/* Same left-aligned fixed columns for the cuisine / shop-type / brand rows
+   when there are fewer items than fit the viewport. */
+.discovery-carousel.low-count-carousel .p-carousel-items-container {
+  justify-content: flex-start !important;
+}
+.discovery-carousel.low-count-carousel .p-carousel-item {
+  flex: 0 0 var(--slider-card-column-width) !important;
+  max-width: var(--slider-card-column-width) !important;
+}
+
 /* Remove button on smaller screens */
 @media (max-width: 768px) {
   .discovery-carousel .p-carousel-prev,

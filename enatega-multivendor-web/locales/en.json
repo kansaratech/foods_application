@@ -934,5 +934,19 @@
   "Select_your_address_prompt": "Select your address.",
   "Our-brands": "Our brands",
   "Login": "Login",
-  "You have logged in successfully": "You have logged in successfully."
+  "You have logged in successfully": "You have logged in successfully.",
+  "area_na_your_area": "your area",
+  "area_na_title": "We’re not in {place} yet",
+  "area_na_nearby": "Padharo is delivering in {area}, about {km} km away. We’re expanding fast.",
+  "area_na_nearby_nodist": "Padharo is delivering in {area}. We’re expanding fast.",
+  "area_na_nearby_generic": "We’re expanding fast, one town at a time.",
+  "area_na_prompt": "Leave your details and we’ll tell you the moment we launch near you.",
+  "area_na_email": "Email address",
+  "area_na_phone": "Phone number (optional)",
+  "area_na_email_invalid": "Enter a valid email address.",
+  "area_na_notify": "Notify me",
+  "area_na_notify_busy": "Adding you…",
+  "area_na_success_title": "You’re on the list",
+  "area_na_success_body": "We’ll message you the day Padharo reaches {place}.",
+  "area_na_change": "Change delivery location"
 }

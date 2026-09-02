@@ -1108,5 +1108,15 @@
   "Store Creation Failed - Please select a vendor": "Store Creation Failed - Please select a vendor.",
   "Something went wrong - Please try again": "Something went wrong. Please try again",
   "An error occurred while fetching restaurants - Please try again later": "An error occurred while fetching restaurants. Please try again later.",
-  "We have sent OTP code to your email": "We have sent OTP code to john@email.com"
+  "We have sent OTP code to your email": "We have sent OTP code to john@email.com",
+  "Waitlist": "Waitlist",
+  "Area": "Area",
+  "Contact": "Contact",
+  "Source": "Source",
+  "Notified": "Notified",
+  "Mark notified": "Mark notified",
+  "Search area, email or phone": "Search area, email or phone",
+  "Marked as notified": "Marked as notified",
+  "Marked as not notified": "Marked as not notified",
+  "Could not update this entry - please try again": "Could not update this entry. Please try again."
 }

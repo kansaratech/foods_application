@@ -580,6 +580,22 @@ model Banner {
   parameters  Json?
 }
 
+// A visitor whose chosen delivery location no store covers yet. Captured from the
+// web / customer-app "not available in your area" screen so we know where to expand.
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String?
+  phone     String?
+  latitude  Float
+  longitude Float
+  areaLabel String?
+  source    String?  @default("web") // web | app
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Notification {
   id        String   @id @default(cuid())
   title     String?

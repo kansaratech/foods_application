@@ -23,6 +23,7 @@ import LocationPopover from "./location-popover";
 import { useAuth } from "@/lib/context/auth/auth.context";
 import { useUserAddress } from "@/lib/context/address/address.context";
 import useUser from "@/lib/hooks/useUser";
+import useServiceability from "@/lib/hooks/useServiceability";
 
 import { setUserLocale } from "@/lib/utils/methods/locale";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
@@ -68,22 +69,41 @@ function LocationButton({
   address,
   onClick,
   className = "",
+  unavailable = false,
 }: {
   address: string;
   onClick: () => void;
   className?: string;
+  unavailable?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      title={address || "Set your delivery location"}
-      className={`group flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-left transition hover:border-[#f5820a] dark:border-gray-700 ${className}`}
+      title={
+        unavailable
+          ? `Padharo doesn't deliver to ${address} yet`
+          : address || "Set your delivery location"
+      }
+      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-left transition hover:border-[#f5820a] dark:border-gray-700 ${
+        unavailable ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30" : "border-slate-200"
+      } ${className}`}
     >
-      <Icon icon={faLocationDot} size={13} className="shrink-0" color={MAROON} />
+      <Icon
+        icon={faLocationDot}
+        size={13}
+        className="shrink-0"
+        color={unavailable ? "#b45309" : MAROON}
+      />
       <span className="flex min-w-0 flex-col leading-tight">
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400 dark:text-gray-500">
-          Deliver to
+        <span
+          className={`text-[10px] font-semibold uppercase tracking-wide ${
+            unavailable
+              ? "text-amber-700 dark:text-amber-500"
+              : "text-slate-400 dark:text-gray-500"
+          }`}
+        >
+          {unavailable ? "Not available yet" : "Deliver to"}
         </span>
         <span className="truncate text-[13px] font-semibold text-slate-800 dark:text-gray-100">
           {address ? shortAddress(address) : "Set your location"}
@@ -138,6 +158,9 @@ export default function AppHeader() {
       .toUpperCase() || "U";
 
   const currentAddress = userAddress?.deliveryAddress || "";
+
+  const { serviceable } = useServiceability();
+  const locationUnavailable = serviceable === false;
 
   // Keep the cart sidebar on the reading-end edge in RTL locales.
   useEffect(() => {
@@ -208,6 +231,7 @@ export default function AppHeader() {
             address={currentAddress}
             onClick={openLocation}
             className="max-w-[240px]"
+            unavailable={locationUnavailable}
           />
           <LocationPopover
             open={isLocationOpen}
@@ -345,6 +369,7 @@ export default function AppHeader() {
           address={currentAddress}
           onClick={openLocation}
           className="w-full"
+          unavailable={locationUnavailable}
         />
         <LocationPopover
           open={isLocationOpen}

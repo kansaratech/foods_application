@@ -4,19 +4,26 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Carousel } from "primereact/carousel";
 
 import { ISliderCardComponentProps } from "@/lib/utils/interfaces";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleLeft, faAngleRight } from "@fortawesome/free-solid-svg-icons";
 
 import { useRouter } from "next/navigation";
 
 import Card from "../card";
-import CustomButton from "../button";
+import SectionHeader from "../section-header";
 import { useTranslations } from "next-intl";
+
+const ROW_META: Record<string, { eyebrow?: string; accent?: string }> = {
+  "restaurants-near-you": { eyebrow: "Around you", accent: "right now." },
+  "most-ordered-restaurants": { eyebrow: "Loved locally", accent: "again & again." },
+  "Grocery list": { eyebrow: "Groceries", accent: "at your door." },
+  "Top-grocery-picks": { eyebrow: "Pantry picks", accent: "worth the trip." },
+  "Order it again": { eyebrow: "Welcome back", accent: "pick up where you left off." },
+};
 const responsiveOptions = [
-  { breakpoint: "1280px", numVisible: 4, numScroll: 1 }, // If screen width is ≤ 1280px, show 4 items
-  { breakpoint: "1024px", numVisible: 3, numScroll: 1 }, // If screen width is ≤ 1024px, show 3 items
-  { breakpoint: "640px", numVisible: 2, numScroll: 1 }, // If screen width is ≤ 640px, show 2 items
-  { breakpoint: "425px", numVisible: 1, numScroll: 1 }, // If screen width is ≤ 425px, show 1 item
+  { breakpoint: "1536px", numVisible: 5, numScroll: 2 },
+  { breakpoint: "1280px", numVisible: 4, numScroll: 2 },
+  { breakpoint: "1024px", numVisible: 3, numScroll: 1 },
+  { breakpoint: "768px", numVisible: 2, numScroll: 1 },
+  { breakpoint: "480px", numVisible: 1, numScroll: 1 },
 ];
 
 const SliderCard = <T,>({
@@ -45,10 +52,10 @@ const SliderCard = <T,>({
   const router = useRouter();
 
   function getNumVisible() {
-    if (typeof window === "undefined") return 4;
+    if (typeof window === "undefined") return 5;
 
     const width = window.innerWidth;
-    let visibleItems = 4;
+    let visibleItems = 5;
 
     responsiveOptions.forEach((option) => {
       if (width <= parseInt(option.breakpoint)) {
@@ -107,38 +114,24 @@ const SliderCard = <T,>({
       setIsRTL(document.documentElement.dir === "rtl");
     }, []);
 
+  const meta = ROW_META[title ?? ""] ?? {};
+
   return (
     data?.length > 0 && (
-      <div className={`mt-9 ${last && "mb-20"}`}>
-        <div className="flex justify-between mx-[6px] ">
-          <span className="font-inter font-bold text-xl sm:text-2xl leading-8 tracking-normal text-gray-900 dark:text-white">
-            {headingLabel}
-          </span>
-          <div className="flex items-center justify-end gap-x-2">
-            {/* See All Button */}
-            <CustomButton
-              label={t("see_all")}
-              onClick={onSeeAllClick}
-              className="text-secondary-color transition-colors duration-200 text-sm md:text-base "
-            />
-
-            {/* Navigation Buttons */}
-            <div className="gap-x-2 hidden md:flex">
-              <button
-                className="w-8 h-8 flex items-center justify-center  shadow-md  rounded-full dark:bg-gray-800"
-                onClick={prev}
-              >
-                {isRTL ? <FontAwesomeIcon className="dark:text-white" icon={faAngleRight} /> : <FontAwesomeIcon className="dark:text-white" icon={faAngleLeft} /> } 
-              </button> 
-              <button
-                className="w-8 h-8 flex items-center justify-center  shadow-md rounded-full dark:bg-gray-800"
-                onClick={next}
-              >
-                 {isRTL ? <FontAwesomeIcon className="dark:text-white" icon={faAngleLeft} />  : <FontAwesomeIcon className="dark:text-white" icon={faAngleRight} /> }
-              </button>
-            </div>
-          </div>
-        </div>
+      <div
+        className={`mt-10 px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-[80px] ${last && "mb-20"}`}
+      >
+        <SectionHeader
+          title={headingLabel}
+          accent={meta.accent}
+          eyebrow={meta.eyebrow}
+          isRTL={isRTL}
+          onSeeAll={onSeeAllClick}
+          seeAllLabel={t("see_all")}
+          showNav
+          onPrev={prev}
+          onNext={next}
+        />
 
         <Carousel
           ref={carouselRef}

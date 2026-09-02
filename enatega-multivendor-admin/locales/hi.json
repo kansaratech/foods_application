@@ -1113,5 +1113,15 @@
   "Store Creation Failed - Please select a vendor": "दुकान निर्माण विफल - कृपया एक वेंडर चुनें।",
   "Something went wrong - Please try again": "कुछ गलत हुआ। कृपया पुनः प्रयास करें",
   "An error occurred while fetching restaurants - Please try again later": "रेस्तरां प्राप्त करते समय त्रुटि हुई। कृपया बाद में पुनः प्रयास करें।",
-  "We have sent OTP code to your email": "हमने john@email.com पर OTP कोड भेजा है"
+  "We have sent OTP code to your email": "हमने john@email.com पर OTP कोड भेजा है",
+  "Waitlist": "प्रतीक्षा सूची",
+  "Area": "क्षेत्र",
+  "Contact": "संपर्क",
+  "Source": "स्रोत",
+  "Notified": "सूचित",
+  "Mark notified": "सूचित के रूप में चिह्नित करें",
+  "Search area, email or phone": "क्षेत्र, ईमेल या फ़ोन खोजें",
+  "Marked as notified": "सूचित के रूप में चिह्नित किया गया",
+  "Marked as not notified": "असूचित के रूप में चिह्नित किया गया",
+  "Could not update this entry - please try again": "इस प्रविष्टि को अपडेट नहीं किया जा सका। कृपया पुनः प्रयास करें।"
 }

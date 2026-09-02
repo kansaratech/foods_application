@@ -9,7 +9,7 @@ import {
   PopularRestaurants,
   PopularStores,
   OrderItAgain,
-  CommingSoonScreen,
+  AreaUnavailable,
 } from "@/lib/ui/screen-components/protected/home";
 // ui componnet
 import CuisinesSection from "@/lib/ui/useable-components/cuisines-section";
@@ -17,6 +17,8 @@ import CuisinesSection from "@/lib/ui/useable-components/cuisines-section";
 import useGetCuisines from "@/lib/hooks/useGetCuisines";
 import useNearByRestaurantsPreview from "@/lib/hooks/useNearByRestaurantsPreview";
 import useMostOrderedRestaurants from "@/lib/hooks/useMostOrderedRestaurants";
+import useServiceability from "@/lib/hooks/useServiceability";
+import { useUserAddress } from "@/lib/context/address/address.context";
 import ShopTypes from "@/lib/ui/screen-components/protected/home/discovery/shop-types";
 
 export default function DiscoveryScreen() {
@@ -43,6 +45,27 @@ export default function DiscoveryScreen() {
     groceriesData,
     error: restaurantsError,
   } = useNearByRestaurantsPreview(true, 1, 6);
+
+  const { userAddress } = useUserAddress();
+  const {
+    hasLocation,
+    loading: serviceabilityLoading,
+    serviceable,
+    nearestArea,
+    nearestDistanceKm,
+  } = useServiceability();
+
+  // The visitor picked a delivery location and no active store covers it — be
+  // honest about it and capture their interest instead of showing an empty page.
+  if (hasLocation && !serviceabilityLoading && serviceable === false) {
+    return (
+      <AreaUnavailable
+        areaLabel={userAddress?.deliveryAddress}
+        nearestArea={nearestArea}
+        nearestDistanceKm={nearestDistanceKm}
+      />
+    );
+  }
 
   // Show loader/skeleton while fetching
   // if (loading && restaurantsLoading) {
@@ -100,7 +123,13 @@ export default function DiscoveryScreen() {
     !loading &&
     !restaurantsLoading
   ) {
-    return <CommingSoonScreen />;
+    return (
+      <AreaUnavailable
+        areaLabel={userAddress?.deliveryAddress}
+        nearestArea={nearestArea}
+        nearestDistanceKm={nearestDistanceKm}
+      />
+    );
   }
 
   return (

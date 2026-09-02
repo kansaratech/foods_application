@@ -25,12 +25,15 @@ export default function DiscoveryBannerSection() {
   if (loading) {
     return <DiscoveryBannerSkeleton />;
   }
-  if (error) {
-    return;
+  if (error || !data?.banners?.length) {
+    return null;
   }
 
   return (
-    <div dir={isRTL ? "rtl" : "ltr"} className="mt-10 sm:mt-0">
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      className="mt-6 px-4 md:px-6 lg:px-12 xl:px-20 2xl:px-[80px]"
+    >
     <Carousel
       className={`discovery-carousel ${isRTL ? "rtl-carousel" : ""}`} // Add RTL class
       value={data?.banners}

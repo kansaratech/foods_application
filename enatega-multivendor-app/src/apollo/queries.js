@@ -1328,3 +1328,14 @@ query NearByRestaurantsCuisines(
   }
 }
 `;
+
+export const serviceabilityQuery = gql`
+  query Serviceability($latitude: Float!, $longitude: Float!) {
+    serviceability(latitude: $latitude, longitude: $longitude) {
+      serviceable
+      storeCount
+      nearestArea
+      nearestDistanceKm
+    }
+  }
+`

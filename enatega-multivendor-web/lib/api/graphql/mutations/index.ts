@@ -3,4 +3,5 @@ export * from "./auth";
 export * from "./coupon";
 export * from "./Notification";
 export * from "./orders";
+export * from "./waitlist";
 

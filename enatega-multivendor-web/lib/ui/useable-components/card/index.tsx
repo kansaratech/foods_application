@@ -1,14 +1,13 @@
 "use client";
 
 // core
-import Image from '@/lib/ui/useable-components/safe-image';
+import Image from "@/lib/ui/useable-components/safe-image";
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 // Assets
-import { FiClock } from "react-icons/fi";
-import { CycleSvg, FaceSvg } from "@/lib/utils/assets/svg";
-import IconWithTitle from "../icon-with-title";
+import { FiClock, FiStar } from "react-icons/fi";
+import { CycleSvg } from "@/lib/utils/assets/svg";
 
 // Hooks
 import { useSearchUI } from "@/lib/context/search/search.context";
@@ -37,86 +36,80 @@ const Card: React.FC<ICardProps> = ({
   const { DELIVERY_RATE, CURRENCY_SYMBOL } = useConfig();
   const isOpen = isRestaurantOpen(item);
 
+  const goToDetail = () => {
+    router.push(
+      `/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item?.slug}/${item._id}`,
+    );
+    setFilter("");
+    setIsSearchFocused(false);
+    saveSearchedKeyword(filter);
+  };
+
   return (
     <div
-      className={`relative rounded-md shadow-md cursor-pointer hover:scale-102 hover:opacity-95 transition-transform duration-500 max-h-[272px] w-[96%] ml-[2%] ${
-        pathname === "/restaurants" || pathname === "/store"
-          ? "my-[2%]"
-          : "my-[4%]"
-      } dark:bg-gray-800 dark:text-white`}
+      className={`group relative m-2 cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(140,29,64,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#f5820a]/40 hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)] dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
       onClick={() => {
         if (!isOpen) {
           handleUpdateIsModalOpen(true, item._id);
           return;
         }
-
-        router.push(
-          `/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item?.slug}/${item._id}`,
-        );
-
-        setFilter("");
-        setIsSearchFocused(false);
-        saveSearchedKeyword(filter);
+        goToDetail();
       }}
     >
-      {/* Image Container */}
+      {/* Image */}
       <div
-        className={`relative w-full ${isSearchFocused ? "h-[160px]" : "h-[160px]"}`}
+        className={`relative w-full overflow-hidden ${isSearchFocused ? "h-[150px]" : "h-[150px]"}`}
       >
         <Image
           src={item?.image}
           alt={item?.name}
           fill
-          className="object-cover rounded-t-md"
+          className={`object-cover transition duration-500 group-hover:scale-105 ${!isOpen ? "grayscale-[0.55] brightness-90" : ""}`}
           unoptimized
         />
+        {!isOpen && (
+          <span className="absolute left-3 top-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+            {t("closed_label")}
+          </span>
+        )}
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-800 shadow-sm dark:bg-gray-900/90 dark:text-white">
+          <FiStar className="h-3 w-3 text-[#f5820a]" />
+          {item?.reviewAverage ?? "—"}
+        </span>
       </div>
 
-      {/* Overlay if closed */}
-      {!isOpen && (
-        <div className="absolute rounded-md top-0 left-0 w-full h-[160px] bg-black/50 opacity-75 z-20 flex items-center justify-center">
-          <div className="text-white text-center z-30">
-            <p className="text-lg font-bold">{t("closed_label")}</p>
-            <p className="text-sm">{t("currently_closed_message")}</p>
-          </div>
-        </div>
-      )}
+      {/* Content */}
+      <div className="px-3.5 py-3">
+        <p
+          title={shouldTruncate ? item?.name : ""}
+          className="line-clamp-1 text-[15px] font-bold tracking-[-0.01em] text-slate-900 dark:text-white"
+        >
+          {item?.name}
+        </p>
+        <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 dark:text-gray-400">
+          {item?.cuisines?.map((cuisine) => cuisine).join(" • ")}
+        </p>
 
-      {/* Content Section */}
-      <div className="p-2 flex flex-col justify-between flex-shrink">
-        {/* Name & Cuisines */}
-        <div className="flex flex-row justify-between items-center relative border-b border-dashed pb-1 dark:border-gray-700">
-          <div className="w-[70%]">
-            <p
-              title={shouldTruncate ? item?.name : ""}
-              className="text-base lg:text-lg text-[#374151] font-semibold line-clamp-1 dark:text-white"
-            >
-              {item?.name}
-            </p>
-            <p className="text-xs xl:text-sm text-[#4B5563] font-light line-clamp-1 dark:text-gray-400 hover:line-clamp-2">
-              {item?.cuisines.map((cuisine) => cuisine).join(", ")}
-            </p>
-          </div>
-
-          {/* Delivery Time */}
-          <div className="bg-primary-light dark:bg-gray-700 rounded-md flex items-center justify-center px-2 py-2 h-[40px] gap-1">
-            <FiClock className="text-sm text-primary-color" />
-            <p className="text-xs text-primary-color font-light lg:font-normal text-center flex justify-center items-center dark:text-primary-color">
-              {`${item?.deliveryTime}`} min
-            </p>
-          </div>
-        </div>
-
-        {/* Icons Section */}
-        <div className="flex flex-row justify-between w-[80%] sm:w-[100%] lg:w-[75%] pt-1">
-          <div className="flex items-center justify-center gap-1 text-secondary-color dark:text-primary-color">
-            <span>{CURRENCY_SYMBOL}</span>
-            <p className="font-light text-[10px]">{item?.minimumOrder}</p>
-          </div>
-          {DELIVERY_RATE && (
-            <IconWithTitle logo={CycleSvg} title={DELIVERY_RATE} />
-          )}
-          <IconWithTitle logo={FaceSvg} title={item?.reviewAverage} />
+        <div className="mt-2 flex items-center gap-2 overflow-hidden whitespace-nowrap border-t border-dashed border-slate-200 pt-2 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:text-gray-300">
+          <span className="inline-flex items-center gap-1">
+            <FiClock className="h-3 w-3 text-[#f5820a]" />
+            {item?.deliveryTime}m
+          </span>
+          <span className="text-slate-300 dark:text-gray-600">•</span>
+          <span title="Minimum order">
+            {CURRENCY_SYMBOL}
+            {item?.minimumOrder}
+          </span>
+          {DELIVERY_RATE ? (
+            <>
+              <span className="text-slate-300 dark:text-gray-600">•</span>
+              <span className="inline-flex items-center gap-1">
+                <CycleSvg />
+                {CURRENCY_SYMBOL}
+                {DELIVERY_RATE}
+              </span>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -126,18 +119,18 @@ const Card: React.FC<ICardProps> = ({
         visible={isModalOpen.value && isModalOpen.id === item._id}
         onHide={() => handleUpdateIsModalOpen(false, item._id)}
       >
-        <div className="text-center pt-10 dark:text-white">
-          <p className="text-lg font-bold pb-3">
+        <div className="pt-10 text-center dark:text-white">
+          <p className="pb-3 text-lg font-bold">
             {item.shopType === "restaurant" ? "Restaurant" : "Store"}{" "}
             {t("is_closed_label")}
           </p>
           <p className="text-sm">{t("see_menu_prompt")}</p>
-          <div className="flex pt-9 px-2 pb-2 flex-row justify-center items-center gap-2 w-full">
+          <div className="flex w-full flex-row items-center justify-center gap-2 px-2 pb-2 pt-9">
             <Button
               style={{ fontSize: "14px", fontWeight: "normal" }}
               onClick={() => handleUpdateIsModalOpen(false, item._id)}
               label={t("close_label")}
-              className="w-1/2 bg-red-300 text-base font-normal text-black rounded-md min-h-10 dark:bg-red-500 dark:text-white"
+              className="min-h-10 w-1/2 rounded-xl bg-slate-100 text-base font-normal text-slate-800 dark:bg-gray-700 dark:text-white"
             />
             <Button
               style={{ fontSize: "14px", fontWeight: "normal" }}
@@ -145,15 +138,10 @@ const Card: React.FC<ICardProps> = ({
                 handleUpdateIsModalOpen(false, item._id);
                 setFilter("");
                 setIsSearchFocused(false);
-
-                setTimeout(() => {
-                  router.push(
-                    `/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item?.slug}/${item._id}`,
-                  );
-                }, 100);
+                setTimeout(goToDetail, 100);
               }}
               label={t("see_menu_label")}
-              className="w-1/2 bg-primary-color text-base font-normal text-black rounded-md min-h-10 dark:text-black"
+              className="min-h-10 w-1/2 rounded-xl bg-[#f5820a] text-base font-normal text-white"
             />
           </div>
         </div>

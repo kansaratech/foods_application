@@ -16,6 +16,7 @@ import { notificationTypeDefs } from './notification';
 import { supportTypeDefs } from './support';
 import { chatTypeDefs } from './chat';
 import { compatTypeDefs } from './compat';
+import { serviceabilityTypeDefs } from './serviceability';
 
 export const typeDefs = [
   commonTypeDefs,
@@ -36,4 +37,5 @@ export const typeDefs = [
   supportTypeDefs,
   chatTypeDefs,
   compatTypeDefs,
+  serviceabilityTypeDefs,
 ];

@@ -163,6 +163,12 @@ export default function MakeSidebar() {
           isParent: false,
         },
         {
+          text: 'Waitlist',
+          label: t('Waitlist'),
+          route: '/management/waitlist',
+          isParent: false,
+        },
+        {
           text: 'Tipping',
           label: t('Tipping'),
           route: '/management/tippings',

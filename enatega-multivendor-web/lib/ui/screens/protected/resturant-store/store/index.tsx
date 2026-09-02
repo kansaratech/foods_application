@@ -622,37 +622,38 @@ export default function StoreDetailsScreen() {
         {loading ? (
           <Skeleton width="100%" height="20rem" borderRadius="0" />
         ) : (
-          <div className="relative">
+          <div className="relative h-[280px] w-full sm:h-[320px]">
             <Image
               src={restaurantInfo.image}
-              alt="McDonald's banner with a burger and fries"
-              width={1200}
-              height={300}
-              className="w-full h-72 object-cover"
+              alt={restaurantInfo.name}
+              width={1600}
+              height={400}
+              className="h-full w-full object-cover"
             />
-            {/* Dark overlay */}
-            <div className="absolute inset-0 bg-black/10" />
+            {/* Readability scrim — matches the landing/discovery card treatment */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/10" />
           </div>
         )}
 
         {!loading && (
           <div
-            className={`${direction === "rtl" ? "right-0 md:right-20" : "left-0 md:left-20"} absolute bottom-0  p-4`}
+            className={`${direction === "rtl" ? "right-0 md:right-20" : "left-0 md:left-20"} absolute bottom-0 w-full px-4 pb-6 md:w-auto md:px-0`}
           >
-            <div className="flex flex-col items-start">
-              <Image
-                src={restaurantInfo.logo}
-                alt={`${restaurantInfo.name} logo`}
-                width={50}
-                height={50}
-                className="w-12 h-12 mb-2 object-cover"
-              />
-
-              <div className="text-white space-y-2">
-                <h1 className="font-inter font-extrabold text-[32px] leading-[100%] sm:text-[40px] md:text-[48px] drop-shadow-lg">
+            <div className="flex items-end gap-4">
+              <span className="hidden h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/70 bg-white shadow-lg sm:block">
+                <Image
+                  src={restaurantInfo.logo}
+                  alt={`${restaurantInfo.name} logo`}
+                  width={64}
+                  height={64}
+                  className="h-full w-full object-cover"
+                />
+              </span>
+              <div className="min-w-0 text-white">
+                <h1 className="font-black tracking-[-0.035em] text-[30px] leading-[1.05] drop-shadow-md sm:text-[40px] md:text-[46px]">
                   {restaurantInfo.name}
                 </h1>
-                <p className="font-inter font-medium text-[18px] leading-[28px] sm:text-[20px] sm:leading-[30px] md:text-[24px] md:leading-[32px]">
+                <p className="mt-1.5 line-clamp-1 text-sm font-medium text-white/90 sm:text-base">
                   {restaurantInfo.address}
                 </p>
               </div>
@@ -663,7 +664,7 @@ export default function StoreDetailsScreen() {
         <button
           onClick={handleFavoriteClick}
           disabled={addFavoriteLoading}
-          className={`absolute top-4 ${direction === "rtl" ? "left-4 md:left-4" : "right-4 md:right-4"} md:bottom-4 md:top-auto rounded-full bg-white dark:bg-gray-700 h-8 w-8 flex justify-center items-center transform transition-transform duration-300 hover:scale-110 active:scale-95`}
+          className={`absolute top-4 ${direction === "rtl" ? "left-4" : "right-4"} flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition hover:scale-105 active:scale-95 dark:bg-gray-700`}
         >
           {addFavoriteLoading ? (
             <Loader style={{ width: "1.5rem", height: "1.5rem" }} />
@@ -767,15 +768,11 @@ export default function StoreDetailsScreen() {
                     return (
                       <li key={index} className="shrink-0">
                         <button
-                          className={`bg-${
+                          className={`whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition sm:text-sm ${
                             selectedCategory === _slug
-                              ? "secondary-color"
-                              : "gray-100"
-                          } text-${
-                            selectedCategory === _slug
-                              ? "primary-color"
-                              : "gray-600"
-                          } rounded-full px-3 py-2 text-[10px] sm:text-sm md:text-base font-medium whitespace-nowrap`}
+                              ? "bg-[#8c1d40] text-white"
+                              : "bg-slate-100 text-slate-600 dark:bg-gray-800 dark:text-gray-300"
+                          }`}
                           onClick={() => handleScroll(_slug, true, 100)}
                         >
                           {category.label}
@@ -833,24 +830,37 @@ export default function StoreDetailsScreen() {
           </div>
         ) : (
           <div className="flex flex-col md:flex-row w-full">
-            <div className="hidden md:block md:w-1/5 p-3 h-screen z-10  sticky top-14 left-0">
-              <div className="h-full overflow-hidden group">
-                <div
-                  className={`h-full overflow-y-auto transition-all duration-300 ${
-                    isScrolling
-                      ? "scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent dark:scrollbar-thumb-gray-600"
-                      : "overflow-hidden"
-                  }`}
-                  onScroll={handleMouseEnterCategoryPanel}
-                >
-                  <PanelMenu
-                    model={menuItems}
-                    className="w-full"
-                    expandIcon={<span></span>}
-                    collapseIcon={<span></span>}
-                  />
-                </div>
-              </div>
+            <div className="sticky left-0 top-16 z-10 hidden h-[calc(100vh-5rem)] p-3 md:block md:w-1/5">
+              <nav
+                className="scrollbar-thin scrollbar-thumb-slate-200 h-full overflow-y-auto pr-1"
+                onScroll={handleMouseEnterCategoryPanel}
+              >
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400 dark:text-gray-500">
+                  Menu
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {menuItems?.map(
+                    (category: ICategoryDetailsResponse, index: number) => {
+                      const _slug = toSlug(category.label);
+                      const active = selectedCategory === _slug;
+                      return (
+                        <li key={index}>
+                          <button
+                            onClick={() => handleScroll(_slug, true, 100)}
+                            className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold tracking-[-0.01em] transition ${
+                              active
+                                ? "bg-[#8c1d40] text-white shadow-sm"
+                                : "text-slate-600 hover:bg-[#fff7ef] hover:text-[#8c1d40] dark:text-gray-300 dark:hover:bg-gray-800"
+                            }`}
+                          >
+                            {category.label}
+                          </button>
+                        </li>
+                      );
+                    },
+                  )}
+                </ul>
+              </nav>
             </div>
             {/* right  panel(foods) */}
             <div className="w-full md:w-4/5 p-3">
@@ -877,70 +887,65 @@ export default function StoreDetailsScreen() {
                           </h3>
                         )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 items-start ">
+                        <div className="grid grid-cols-1 gap-4 items-stretch md:grid-cols-2 xl:grid-cols-3">
                           {subCategory.foods.map((meal: IFood, mealIndex) => (
                             <div
                               key={mealIndex}
-                              className={`flex items-center gap-4 rounded-lg border shadow-sm p-3 relative transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:cursor-pointer
-                       ${meal.isOutOfStock ? "bg-gray-200 dark:bg-gray-950 border-gray-400 dark:border-gray-600" : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700"}
+                              className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:-translate-y-1 hover:cursor-pointer hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)]
+                       ${meal.isOutOfStock ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950" : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(140,29,64,0.06)] hover:border-[#f5820a]/40 dark:border-gray-700 dark:bg-gray-800"}
                      `}
                               onClick={() => handleOpenFoodModal(meal)}
                             >
+                              {/* Image */}
+                              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28">
+                                <Image
+                                  alt={meal.title}
+                                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                                  src={meal.image}
+                                  width={120}
+                                  height={120}
+                                />
+                              </div>
+
                               {/* Text Content */}
-                              <div className="flex-grow text-left md:text-left space-y-2 ">
-                                <div className="flex flex-col lg:flex-row justify-between flex-wrap">
-                                  <h3 className="text-gray-900 text-lg font-semibold font-inter dark:text-gray-200">
-                                    {meal.title}
-                                  </h3>
+                              <div className="flex min-w-0 flex-grow flex-col">
+                                <h3 className="line-clamp-1 text-[15px] font-bold tracking-[-0.01em] text-slate-900 dark:text-gray-100">
+                                  {meal.title}
+                                </h3>
+                                <p
+                                  className={`mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-gray-400 ${direction === "rtl" ? "text-right" : "text-left"}`}
+                                >
+                                  {meal.description}
+                                </p>
+                                <div className="mt-auto flex items-center justify-between pt-2">
+                                  <span className="text-[15px] font-black text-[#8c1d40] dark:text-primary-color">
+                                    {CURRENCY_SYMBOL}
+                                    {meal.variations[0].price}
+                                  </span>
                                   {meal.isOutOfStock && (
-                                    <span className="text-red-500">
+                                    <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">
                                       {t("out_of_stock_label")}
                                     </span>
                                   )}
                                 </div>
-                                <p
-                                  className={`text-gray-500 text-sm dark:text-gray-400 line-clamp-2 hover:line-clamp-none ${direction === "rtl" ? "text-right" : "text-left"}`}
-                                >
-                                  {meal.description}
-                                </p>
-
-                                <div className="flex items-center gap-2">
-                                  <span className="text-secondary-color dark:text-primary-color text-lg font-semibold">
-                                    {CURRENCY_SYMBOL} {meal.variations[0].price}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {/* Image */}
-                              <div className="flex-shrink-0 w-24 h-24 md:w-28 md:h-28">
-                                <Image
-                                  alt={meal.title}
-                                  className="w-full h-full rounded-md object-cover mx-auto md:mx-0"
-                                  src={meal.image}
-                                  width={100}
-                                  height={100}
-                                />
                               </div>
 
                               {/* Add Button */}
-                              <div
-                                className={`${direction === "rtl" ? "left-2" : "right-2"} absolute top-2`}
+                              <button
+                                className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-md transition hover:scale-110 ${
+                                  meal.isOutOfStock
+                                    ? "bg-slate-400 dark:bg-gray-600"
+                                    : "bg-[#f5820a]"
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenFoodModal(meal);
+                                }}
+                                type="button"
+                                aria-label={`Add ${meal.title}`}
                               >
-                                <button
-                                  className={`rounded-full shadow-md w-6 h-6 flex items-center justify-center ${
-                                    meal.isOutOfStock
-                                      ? "bg-gray-400 dark:bg-gray-600"
-                                      : "bg-secondary-color dark:bg-primary-dark"
-                                  }`}
-                                  onClick={() => handleOpenFoodModal(meal)}
-                                  type="button"
-                                >
-                                  <FontAwesomeIcon
-                                    icon={faPlus}
-                                    color="white"
-                                  />
-                                </button>
-                              </div>
+                                <FontAwesomeIcon icon={faPlus} color="white" />
+                              </button>
 
                               {/* create a modal that will be show that this restaurant is closed do want to see menu or want to close if click on the see menu then will move to the next page other wise modal will be closed */}
                               <CustomDialog

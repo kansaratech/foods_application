@@ -22,3 +22,4 @@ export * from './earnings';
 export * from './concurrent';
 export * from './shop-types'
 export * from './audit';
+export * from './waitlist';

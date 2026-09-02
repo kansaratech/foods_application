@@ -1,98 +1,206 @@
 "use client";
 
-import CustomButton from "@/lib/ui/useable-components/button";
-import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
-import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
+import { useState } from "react";
+import { useMutation } from "@apollo/client";
 import { useTranslations } from "next-intl";
 
-export default function ComingSoonScreen() {
+import { JOIN_WAITLIST } from "@/lib/api/graphql/mutations";
+import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
+import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
+import { useUserAddress } from "@/lib/context/address/address.context";
 
-  //  // API
-  //   const { loading, error, data, refetch } = useQuery(GET_ZONES);
+interface IAreaUnavailableProps {
+  areaLabel?: string | null;
+  nearestArea?: string | null;
+  nearestDistanceKm?: number | null;
+}
 
-  //   console.log("Zones",{loading, error, data});
-  // trnaslations
+const MAROON = "#8c1d40";
+const ORANGE = "#f5820a";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function AreaUnavailable({
+  areaLabel,
+  nearestArea,
+  nearestDistanceKm,
+}: IAreaUnavailableProps) {
   const t = useTranslations();
-  // handle click
-  const handleClick = () => {
-    onUseLocalStorage(
-      "save",
-      USER_CURRENT_LOCATION_LS_KEY,
-      JSON.stringify({
-        label: "Home",
-        location: {
-          coordinates: [73.036187, 33.699619],
+  const { userAddress, setUserAddress } = useUserAddress();
+
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const [joinWaitlist, { loading }] = useMutation(JOIN_WAITLIST, {
+    onCompleted: () => setDone(true),
+  });
+
+  const latitude = Number(userAddress?.location?.coordinates?.[1]);
+  const longitude = Number(userAddress?.location?.coordinates?.[0]);
+  const emailValid = EMAIL_RE.test(email.trim());
+
+  const place =
+    areaLabel?.trim() ||
+    userAddress?.deliveryAddress?.trim() ||
+    t("area_na_your_area");
+
+  const nearLine = nearestArea
+    ? nearestDistanceKm
+      ? t("area_na_nearby", {
+          area: nearestArea,
+          km: Math.round(nearestDistanceKm),
+        })
+      : t("area_na_nearby_nodist", { area: nearestArea })
+    : t("area_na_nearby_generic");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTouched(true);
+    if (!emailValid || loading) return;
+    joinWaitlist({
+      variables: {
+        input: {
+          email: email.trim(),
+          phone: phone.trim() || null,
+          latitude,
+          longitude,
+          areaLabel: place,
+          source: "web",
         },
-        _id: "",
+      },
+    });
+  };
 
-        deliveryAddress: "Islamabad, Pakistan",
-      })
-    );
-    // reload window
-    window.location.reload(); 
-  };  
+  const handleChangeLocation = () => {
+    onUseLocalStorage("delete", USER_CURRENT_LOCATION_LS_KEY);
+    setUserAddress(null);
+  };
+
   return (
-    <div onClick={handleClick} className=" cursor-pointer relative flex flex-col rounded-lg items-center justify-center py-8  overflow-hidden  mt-10 text-center bg-gradient-to-b from-primary-color to-primary-dark hover:from-primary-dark hover:to-primary-color  text-white">
-      {/* Floating Food Emojis */}
-      <span
-        aria-hidden="true"
-        className="absolute top-10 left-10 text-4xl opacity-20 animate-bounce"
-      >
-        🍕
-      </span>
-      <span
-        aria-hidden="true"
-        className="absolute top-1/3 right-10 text-5xl opacity-20 animate-pulse"
-      >
-        🍔
-      </span>
-      <span
-        aria-hidden="true"
-        className="absolute bottom-16 left-1/4 text-3xl opacity-20 animate-bounce"
-      >
-        🥗
-      </span>
-      <span
-        aria-hidden="true"
-        className="absolute bottom-24 right-1/3 text-4xl opacity-20 animate-pulse"
-      >
-        🍣
-      </span>
-      <span
-        aria-hidden="true"
-        className="absolute top-1/4 left-36 text-4xl opacity-20 animate-bounce"
-      >
-        🍩
-      </span>
-      <span
-        aria-hidden="true"
-        className="absolute bottom-10 right-1/4 text-4xl opacity-20 animate-pulse"
-      >
-        🌮
-      </span>
+    <div className="mx-auto my-10 max-w-3xl px-4">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(140,29,64,0.10)] dark:border-gray-700 dark:bg-gray-900">
+        {/* Banner */}
+        <div
+          className="px-6 py-10 text-center sm:px-12"
+          style={{
+            background:
+              "linear-gradient(160deg, #fdf3e7 0%, #f9e3ea 55%, #f4d3dd 100%)",
+          }}
+        >
+          <span
+            className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl text-white"
+            style={{ background: MAROON }}
+            aria-hidden="true"
+          >
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 21s-6.5-5.6-6.5-10.2A6.5 6.5 0 0 1 12 4a6.5 6.5 0 0 1 6.5 6.8C18.5 15.4 12 21 12 21Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="10.5" r="2.4" stroke="currentColor" strokeWidth="1.8" />
+            </svg>
+          </span>
+          <h2
+            className="text-2xl font-black leading-tight tracking-tight sm:text-3xl"
+            style={{ color: MAROON }}
+          >
+            {t("area_na_title", { place })}
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-700 sm:text-base">
+            {nearLine}
+          </p>
+        </div>
 
-      {/* Main Illustration */}
-      <div className="w-40 h-40 md:w-56 md:h-56 rounded-full flex items-center justify-center bg-white/20 mb-8">
-        <span className="text-5xl md:text-7xl">🍴</span>
+        {/* Body */}
+        <div className="px-6 py-8 sm:px-12">
+          {done ? (
+            <div className="flex flex-col items-center py-4 text-center">
+              <span
+                className="mb-4 flex h-12 w-12 items-center justify-center rounded-full text-white"
+                style={{ background: ORANGE }}
+                aria-hidden="true"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="m5 13 4 4L19 7"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <p className="text-lg font-bold text-slate-900 dark:text-white">
+                {t("area_na_success_title")}
+              </p>
+              <p className="mt-1 max-w-sm text-sm text-slate-600 dark:text-gray-300">
+                {t("area_na_success_body", { place })}
+              </p>
+              <button
+                type="button"
+                onClick={handleChangeLocation}
+                className="mt-6 text-sm font-bold underline-offset-4 hover:underline"
+                style={{ color: MAROON }}
+              >
+                {t("area_na_change")}
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-center text-sm font-semibold text-slate-900 dark:text-white">
+                {t("area_na_prompt")}
+              </p>
+              <form
+                onSubmit={handleSubmit}
+                className="mx-auto mt-5 flex max-w-md flex-col gap-3"
+              >
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setTouched(true)}
+                  placeholder={t("area_na_email")}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#8c1d40] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  aria-invalid={touched && !emailValid}
+                />
+                {touched && !emailValid && (
+                  <span className="-mt-1 text-xs font-medium text-red-600">
+                    {t("area_na_email_invalid")}
+                  </span>
+                )}
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={t("area_na_phone")}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#8c1d40] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-1 rounded-xl px-5 py-3 text-sm font-bold text-white transition hover:brightness-95 disabled:opacity-60"
+                  style={{ background: ORANGE }}
+                >
+                  {loading ? t("area_na_notify_busy") : t("area_na_notify")}
+                </button>
+              </form>
+              <div className="mt-5 text-center">
+                <button
+                  type="button"
+                  onClick={handleChangeLocation}
+                  className="text-sm font-bold underline-offset-4 hover:underline"
+                  style={{ color: MAROON }}
+                >
+                  {t("area_na_change")}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-
-      {/* Heading */}
-      <h1 className="text-3xl md:text-5xl font-extrabold mb-3 drop-shadow-lg">
-        {t("coming_soon_in_your_area_label")}
-      </h1>
-
-      {/* Sub Text */}
-      <p className="text-lg md:text-xl text-white/90 max-w-xl mb-8">
-        {t("coming_soon_in_your_area_message")}
-      </p>
-
-      {/* Explore Another Region Button */}
-      <CustomButton
-        label={"Click anywhere on this screen to explore restaurants."}
-        // onClick={handleClick}
-        className="px-8 py-3 rounded-full font-semibold bg-white text-primary-color shadow-lg 
-                   hover:bg-white/90 hover:scale-105 transition-transform duration-200"
-      />
     </div>
   );
 }

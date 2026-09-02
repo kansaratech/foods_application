@@ -6,7 +6,7 @@ import { AntDesign, SimpleLineIcons } from '@expo/vector-icons'
 import { useMutation, useQuery, gql } from '@apollo/client'
 import { useLocation } from '../../ui/hooks'
 import UserContext from '../../context/User'
-import { FetchAllShopTypes, getBanners, getCuisines, restaurantListPreview } from '../../apollo/queries'
+import { FetchAllShopTypes, getBanners, getCuisines, restaurantListPreview, serviceabilityQuery } from '../../apollo/queries'
 import { selectAddress } from '../../apollo/mutations'
 import { scale } from '../../utils/scaling'
 import styles from './styles'
@@ -43,6 +43,7 @@ import useNetworkStatus from '../../utils/useNetworkStatus'
 import ModalDropdown from '../../components/Picker/ModalDropdown'
 import { useRestaurantQueries } from '../../ui/hooks/useRestaurantQueries'
 import HorizontalFlashList from '../../components/Lists/HorizontalFlashList'
+import AreaUnavailable from '../../components/Main/AreaUnavailable/AreaUnavailable'
 
 const RESTAURANTS = gql`
   ${restaurantListPreview}
@@ -56,6 +57,7 @@ const GET_BANNERS = gql`
 const GET_CUISINES = gql`
   ${getCuisines}
 `
+const SERVICEABILITY = serviceabilityQuery
 const FETCH_ALL_SHOPTYPES = FetchAllShopTypes
 
 // Number of times a transient network failure is silently retried before the
@@ -140,6 +142,22 @@ function Main(props) {
     fetchPolicy: 'cache-first',
     nextFetchPolicy: 'cache-first'
   })
+
+  // Is the customer's chosen delivery location covered by any active store? When
+  // it isn't, we show an honest "not available yet" screen with a waitlist form
+  // instead of an empty Discovery page.
+  const { data: serviceabilityData } = useQuery(SERVICEABILITY, {
+    variables: {
+      latitude: Number(location?.latitude),
+      longitude: Number(location?.longitude)
+    },
+    skip: !location?.latitude || !location?.longitude,
+    fetchPolicy: 'cache-and-network'
+  })
+  const notServiceable =
+    !!location?.latitude &&
+    serviceabilityData?.serviceability &&
+    serviceabilityData.serviceability.serviceable === false
   const { data: allCuisines } = useQuery(GET_CUISINES, {
     fetchPolicy: 'cache-and-network'
   })
@@ -483,6 +501,24 @@ function Main(props) {
   const isAutoRetrying = !!error && isTransientNetworkError && !retriesExhausted
   const showErrorView = !!error && (!isTransientNetworkError || retriesExhausted)
   if (showErrorView) return <ErrorView refetchFunctions={[refetchRestaurants, refetchBanners]} errorMessage={userFriendlyErrorMessage} />
+  if (connect && notServiceable) {
+    return (
+      <>
+        <AreaUnavailable
+          location={location}
+          nearestArea={serviceabilityData?.serviceability?.nearestArea}
+          nearestDistanceKm={serviceabilityData?.serviceability?.nearestDistanceKm}
+          onChangeLocation={() => setCitiesModalVisible(true)}
+        />
+        <ModalDropdown
+          theme={currentTheme}
+          visible={citiesModalVisible}
+          onItemPress={handleMarkerPress}
+          onClose={() => setCitiesModalVisible(false)}
+        />
+      </>
+    )
+  }
   return (
     <>
       {!connect ? (

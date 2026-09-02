@@ -452,3 +452,9 @@ export const VERIFY_OTP = gql`
     }
 }
 `
+
+export const joinWaitlistMutation = gql`
+  mutation JoinWaitlist($input: JoinWaitlistInput!) {
+    joinWaitlist(input: $input)
+  }
+`
