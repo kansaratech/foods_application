@@ -73,8 +73,6 @@ services:
         NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/padharo.env}
         NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/padharo.env}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/padharo.env}
-        NEXT_PUBLIC_ADMIN_EMAIL: ${NEXT_PUBLIC_ADMIN_EMAIL:-}
-        NEXT_PUBLIC_ADMIN_PASSWORD: ${NEXT_PUBLIC_ADMIN_PASSWORD:-}
     image: padharo-admin:latest
     container_name: padharo_admin
     restart: unless-stopped

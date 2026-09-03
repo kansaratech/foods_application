@@ -1,0 +1,10 @@
+# Keep deploy-critical files LF so they work when shipped to a Linux host
+# (CRLF breaks shell scripts and can trip Dockerfile line-continuations).
+*.sh              text eol=lf
+Dockerfile        text eol=lf
+*.Dockerfile      text eol=lf
+.dockerignore     text eol=lf
+docker-compose*.yml text eol=lf
+*.conf            text eol=lf
+deploy/**         text eol=lf
+nginx.conf        text eol=lf
