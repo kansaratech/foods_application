@@ -9,13 +9,15 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-ENV NODE_ENV=production
 
+# NOTE: do NOT set NODE_ENV=production before `npm ci` — npm would then skip
+# devDependencies (typescript, @types/*), and `npm run build` (tsc) would fail.
 COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
 RUN npx prisma generate && npm run build
 
+ENV NODE_ENV=production
 EXPOSE 4000
 CMD ["node", "dist/index.js"]

@@ -14,29 +14,33 @@ copy‑paste ready; replace the `CHANGE_ME` / `<...>` placeholders.
 | Customer web (storefront) | `enatega-multivendor-web` | `padharo_web` | 3000 | **6000** | `padharo.kansaratech.com` |
 | Admin panel | `enatega-multivendor-admin` | `padharo_admin` | 3000 | **6001** | `padharo-admin.kansaratech.com` |
 | GraphQL API + WS + `/uploads` | `enatega-multivendor-api-mysql` | `padharo_api` | 4000 | **6002** | `padharo-api.kansaratech.com` |
+| Store / merchant app (Expo web export) | `enatega-multivendor-store` | `padharo_store` | 80 | **6004** | `padharo-store.kansaratech.com` |
 
-- All three run from one **`docker-compose.yml`** (repo root).
+- All four run from one **`docker-compose.yml`** (repo root).
 - Host ports bind to `127.0.0.1` only. Apache (Sentora) reverse‑proxies each
   public hostname to its local port and terminates TLS.
 - `padharo_api` also joins the **existing** `mysql_config_dev_default` Docker
   network so it can reach the shared MySQL container by name — the same pattern
   used for `ams_container`.
-- The 3 mobile apps (customer / rider / store) are **out of scope** for this
-  deployment — see §12.
+- **Store** is the Expo merchant app exported as a static web bundle
+  (`expo export --platform web`) and served by nginx. It is deployed so orders
+  can be accepted for end‑to‑end testing. The customer/rider Expo apps are still
+  out of scope (rider can be added the same way — see §14).
 
 **Architecture:**
 
 ```
-                      Internet (HTTPS / WSS)
-                              │
-              ┌───────────────┼───────────────────┐
-              ▼               ▼                   ▼
-  padharo.kansaratech.com  padharo-admin...   padharo-api...
-              │               │                   │
-        Apache / Sentora reverse proxy (TLS, ws upgrade)
-              │               │                   │
-      127.0.0.1:6000   127.0.0.1:6001      127.0.0.1:6002
-        padharo_web      padharo_admin        padharo_api
+                          Internet (HTTPS / WSS)
+                                  │
+        ┌──────────────┬──────────┼───────────┬──────────────┐
+        ▼              ▼          ▼           ▼              ▼
+  padharo...      padharo-      padharo-    padharo-      (browser talks to
+  (customer)      admin...      store...    api...         padharo-api for
+        │              │          │           │            data + WS)
+            Apache / Sentora reverse proxy (TLS, ws upgrade on -api)
+        │              │          │           │
+  127.0.0.1:6000  :6001      :6004       :6002
+   padharo_web   padharo_admin padharo_store padharo_api
                                                   │
                             docker network: mysql_config_dev_default
                                                   │
@@ -73,12 +77,13 @@ openssl rand -base64 24  # -> padharo MySQL user password
 
 ## 3. DNS
 
-Add three records in the `kansaratech.com` zone, pointing at the server's public IP:
+Add four records in the `kansaratech.com` zone, pointing at the server's public IP:
 
 ```
 padharo         A   <server-public-ip>
 padharo-api     A   <server-public-ip>
 padharo-admin   A   <server-public-ip>
+padharo-store   A   <server-public-ip>
 ```
 
 Wait for propagation (`dig +short padharo.kansaratech.com` returns the IP)
@@ -88,22 +93,73 @@ before requesting TLS certificates in §10.
 
 ## 4. Get the code onto the server
 
+Target location, e.g. alongside the other Sentora hostdata apps:
+`/var/sentora/hostdata/kansaratech/public_html/padharo_kansaratech_com`
+
+### Option A — git clone (preferred; enables `git pull` redeploys in §13)
+
 ```bash
-# pick a stable location, e.g. alongside the other Sentora hostdata apps
 cd /var/sentora/hostdata/kansaratech/public_html/
 git clone <REPO_URL> padharo_kansaratech_com
 cd padharo_kansaratech_com
 git checkout <BRANCH>          # the branch that contains the Dockerfiles + docker-compose.yml
 ```
 
-Confirm these files exist (they are committed in the repo):
+### Option B — zip + FTP (no git on the server)
 
+**Docker rebuilds all dependencies from `package-lock.json`, so never ship
+`node_modules` or build output — it only bloats the upload and the
+Windows‑built native binaries are useless in a Linux container.** Each service's
+`.dockerignore` already keeps them out of the image; this just keeps them out of
+the zip.
+
+Build the archive on the dev machine (PowerShell):
+
+```powershell
+$src   = "d:\my-workspace\maekotech\project\kitchen\foods_application"
+$stage = "$env:TEMP\padharo-deploy"
+$zip   = "$env:USERPROFILE\Desktop\padharo-deploy.zip"
+
+# copy the repo to a staging folder, skipping everything Docker regenerates
+robocopy $src $stage /MIR /NFL /NDL /NJH /NJS `
+  /XD node_modules .next .git .expo .cache dist build coverage `
+      "enatega-multivendor-store\android" "enatega-multivendor-store\ios" `
+      enatega-multivendor-app enatega-multivendor-rider `
+  /XF *.log tsconfig.tsbuildinfo *.tsbuildinfo
+
+if (Test-Path $zip) { Remove-Item $zip }
+Compress-Archive -Path "$stage\*" -DestinationPath $zip
+"Made $zip  ($([math]::Round((Get-Item $zip).Length/1MB,1)) MB)"
 ```
-docker-compose.yml
-deploy/padharo.env.example
-enatega-multivendor-api-mysql/Dockerfile
-enatega-multivendor-web/Dockerfile
-enatega-multivendor-admin/Dockerfile
+
+> Keeps `enatega-multivendor-rider` if you want to add it later (§14); the line
+> above drops it — remove it from `/XD` to keep it.
+> **Must be in the zip:** every `package.json` **and** `package-lock.json`,
+> all `Dockerfile`s, `docker-compose.yml`, `deploy/`, `prisma/`,
+> `enatega-multivendor-store/nginx.conf`, and every `.dockerignore` / `.npmrc`
+> / `.nvmrc`.
+
+Upload with your FTP client **in binary mode** (not ASCII — ASCII mode corrupts
+files), then on the server:
+
+```bash
+cd /var/sentora/hostdata/kansaratech/public_html/
+mkdir -p padharo_kansaratech_com
+cd padharo_kansaratech_com
+unzip ~/padharo-deploy.zip        # or extract where your FTP client dropped it
+```
+
+### Verify (either option)
+
+```bash
+ls docker-compose.yml deploy/padharo.env.example \
+   enatega-multivendor-api-mysql/Dockerfile \
+   enatega-multivendor-web/Dockerfile \
+   enatega-multivendor-admin/Dockerfile \
+   enatega-multivendor-store/Dockerfile \
+   enatega-multivendor-store/nginx.conf
+# each package-lock.json must be present too:
+ls enatega-multivendor-*/package-lock.json
 ```
 
 ---
@@ -178,11 +234,13 @@ Set every value:
 | `DATABASE_URL` | `mysql://padharo:<db-pw>@<mysql_container>:3306/padharo` |
 | `JWT_SECRET` | output of `openssl rand -hex 32` |
 | `REFRESH_TOKEN_SECRET` | a **different** `openssl rand -hex 32` |
-| `CORS_ORIGIN` | `https://padharo.kansaratech.com,https://padharo-admin.kansaratech.com` |
+| `CORS_ORIGIN` | `https://padharo.kansaratech.com,https://padharo-admin.kansaratech.com,https://padharo-store.kansaratech.com` |
 | `PUBLIC_UPLOAD_URL` | `https://padharo-api.kansaratech.com/uploads` |
 | `NEXT_PUBLIC_SERVER_URL` | `https://padharo-api.kansaratech.com/` (keep trailing slash) |
 | `NEXT_PUBLIC_WS_SERVER_URL` | `wss://padharo-api.kansaratech.com/` |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | `AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q` |
+| `EXPO_PUBLIC_GRAPHQL_URL` | `https://padharo-api.kansaratech.com/graphql` (store web build) |
+| `EXPO_PUBLIC_WS_GRAPHQL_URL` | `wss://padharo-api.kansaratech.com/graphql` (store web build) |
 
 `deploy/padharo.env` is git‑ignored. It serves **two** purposes:
 `docker compose --env-file` uses it to (a) fill the frontend build ARGs and
@@ -204,11 +262,13 @@ docker compose --env-file deploy/padharo.env up -d
 docker compose --env-file deploy/padharo.env ps
 ```
 
-First build takes a while (three Node images). Watch logs:
+First build takes a while (four images — three Node apps + one Expo web export).
+The `store` build runs `expo export` and can take several minutes on its own.
+Watch logs:
 
 ```bash
 docker compose --env-file deploy/padharo.env logs -f api
-docker compose --env-file deploy/padharo.env logs -f web admin
+docker compose --env-file deploy/padharo.env logs -f web admin store
 ```
 
 ### 7b. Reconcile the Prisma schema
@@ -226,22 +286,24 @@ docker compose --env-file deploy/padharo.env exec api npx prisma db push --skip-
 curl -s http://127.0.0.1:6002/health          # -> {"status":"ok"}
 curl -sI http://127.0.0.1:6000/ | head -n1     # -> HTTP/1.1 200 OK  (web)
 curl -sI http://127.0.0.1:6001/ | head -n1     # -> HTTP/1.1 200 OK  (admin)
+curl -sI http://127.0.0.1:6004/ | head -n1     # -> HTTP/1.1 200 OK  (store)
 ```
 
-If all three respond, the containers are healthy — move to the proxy layer.
+If all four respond, the containers are healthy — move to the proxy layer.
 
 ---
 
 ## 8. Sentora — create the subdomains
 
 In the Sentora panel, under **Domains → Sub Domains** (account `kansaratech`),
-create three subdomains of `kansaratech.com`:
+create four subdomains of `kansaratech.com`:
 
 | Sub domain | Full hostname |
 |---|---|
 | `padharo` | `padharo.kansaratech.com` |
 | `padharo-api` | `padharo-api.kansaratech.com` |
 | `padharo-admin` | `padharo-admin.kansaratech.com` |
+| `padharo-store` | `padharo-store.kansaratech.com` |
 
 This makes Sentora generate an Apache vhost + a docroot for each. The docroot
 content is irrelevant (we proxy everything), but the docroot path is used for
@@ -282,7 +344,21 @@ ProxyPass        / http://127.0.0.1:6001/
 ProxyPassReverse / http://127.0.0.1:6001/
 ```
 
-### 9c. API — `padharo-api.kansaratech.com` (needs WebSocket upgrade)
+### 9c. Store — `padharo-store.kansaratech.com`
+
+Static nginx, plain HTTP proxy (the store bundle talks to `padharo-api` for
+data + WebSocket, so this vhost needs no upgrade rule).
+
+```apache
+ProxyPreserveHost On
+ProxyRequests Off
+RequestHeader set X-Forwarded-Proto "https"
+
+ProxyPass        / http://127.0.0.1:6004/
+ProxyPassReverse / http://127.0.0.1:6004/
+```
+
+### 9d. API — `padharo-api.kansaratech.com` (needs WebSocket upgrade)
 
 GraphQL subscriptions (order tracking, live order lists) run over WebSocket at
 `/graphql`. The `RewriteRule … [P]` handles the `Upgrade: websocket` handshake;
@@ -304,7 +380,7 @@ ProxyPassReverse / http://127.0.0.1:6002/
 LimitRequestBody 26214400
 ```
 
-### 9d. Enable modules + reload
+### 9e. Enable modules + reload
 
 ```bash
 a2enmod proxy proxy_http proxy_wstunnel rewrite headers   # Debian/Ubuntu
@@ -331,6 +407,7 @@ certbot certonly --webroot \
 
 certbot certonly --webroot -w <api-docroot>   -d padharo-api.kansaratech.com
 certbot certonly --webroot -w <admin-docroot> -d padharo-admin.kansaratech.com
+certbot certonly --webroot -w <store-docroot> -d padharo-store.kansaratech.com
 ```
 
 Then point each Sentora SSL vhost (port 443) at the issued cert
@@ -339,7 +416,7 @@ Then point each Sentora SSL vhost (port 443) at the issued cert
 or use the Sentora Let's Encrypt module if installed.
 
 **Option B — Sentora Let's Encrypt module:** request a cert for each of the
-three subdomains from the module UI, then re‑apply the proxy blocks from §9 to
+four subdomains from the module UI, then re‑apply the proxy blocks from §9 to
 the regenerated `:443` vhosts.
 
 Set up auto‑renew: `certbot renew --dry-run` and confirm the cron/timer exists.
@@ -350,8 +427,9 @@ Set up auto‑renew: `certbot renew --dry-run` and confirm the cron/timer exists
 
 1. **Google Maps API key referrer allow‑list** (Google Cloud Console →
    *APIs & Services → Credentials →* the key):
-   - Add HTTP referrers: `https://padharo.kansaratech.com/*` and
-     `https://padharo-admin.kansaratech.com/*`
+   - Add HTTP referrers: `https://padharo.kansaratech.com/*`,
+     `https://padharo-admin.kansaratech.com/*`,
+     `https://padharo-store.kansaratech.com/*`
    - The API's server‑side `/maps/*` proxy also uses this key. If the key is
      referrer‑restricted it will reject server calls — either add the server's
      public IP under a separate key, or relax to "None" for testing.
@@ -385,11 +463,27 @@ In a browser:
       location shows the "area unavailable" waitlist screen
 - [ ] Customer login works (`deogarh-diner@padharo.in` / `Customer@123` if the
       dump was imported)
-- [ ] Place a test order → the tracking page updates **live** (this proves the
-      WebSocket proxy in §9c works)
 - [ ] Admin login works; upload an image on any store → it renders from
       `https://padharo-api.kansaratech.com/uploads/...`
 - [ ] Admin → Management → Waitlist shows entries
+
+### End‑to‑end order flow (customer web ↔ store web)
+
+1. `https://padharo-store.kansaratech.com` loads; log in as a store
+   (`dgh-<slug>@store.padharo` / `Store@123`, e.g.
+   `dgh-shrinath-mishthan-bhandar@store.padharo`).
+2. On the customer site, place an order from that same store → "Click to order".
+3. The store tab shows the order under **New Orders within a few seconds**
+   (this proves the store's WebSocket subscription reaches `padharo-api`).
+4. Store → **Accept** → pick prep time → order moves to Processing; the
+   customer tracking page reflects it live.
+5. Rider hand‑off needs the rider app — not deployed here. Either use the rider
+   Expo app on a device pointed at `padharo-api`, or deploy `padharo-rider`
+   the same way as store (§14), or use the admin **Dispatch** screen to assign
+   and progress the order manually.
+
+> Store‑app note: `react-native-web` `TouchableOpacity` buttons work for real
+> clicks but not synthetic/automated ones — verify the store flow by hand.
 
 ---
 
@@ -399,19 +493,25 @@ In a browser:
 
 ```bash
 cd /var/sentora/hostdata/kansaratech/public_html/padharo_kansaratech_com
-git pull
+git pull        # git option — OR: re-upload the zip (§4B) and unzip over the folder,
+                # keeping deploy/padharo.env in place
 docker compose --env-file deploy/padharo.env up -d --build
 # if the Prisma schema changed:
 docker compose --env-file deploy/padharo.env exec api npx prisma db push --skip-generate
 ```
 
+> Zip redeploys: extract **over** the existing folder so `deploy/padharo.env`
+> (git‑ignored, created on the server) is not overwritten. If your unzip wipes
+> the target first, back that one file up and restore it before building.
+
 ### Changed an API URL / Maps key
 
-The frontends must be rebuilt (values are compile‑time):
+The frontends must be rebuilt (values are compile‑time — `NEXT_PUBLIC_*` for
+web/admin, `EXPO_PUBLIC_*` for store):
 
 ```bash
-docker compose --env-file deploy/padharo.env build web admin
-docker compose --env-file deploy/padharo.env up -d web admin
+docker compose --env-file deploy/padharo.env build web admin store
+docker compose --env-file deploy/padharo.env up -d web admin store
 ```
 
 ### Logs / status / restart
@@ -446,16 +546,31 @@ gunzip < /var/backups/padharo-db-<date>.sql.gz \
 
 ---
 
-## 14. Mobile apps (separate task — not part of this deploy)
+## 14. Rider + customer apps
 
-The customer / rider / store Expo apps currently point at a temporary
-cloudflared tunnel. Once the API is live at `padharo-api.kansaratech.com`:
+### Rider as a website (recommended for full E2E — same pattern as store)
 
-1. Update the `environment` config in each app
-   (`enatega-multivendor-app`, `-rider`, `-store`) to
-   `https://padharo-api.kansaratech.com` (+ `wss://…` for subscriptions).
-2. Rebuild via EAS (`eas build --profile <demo|development> --platform android`).
-   Note: the EAS free‑plan build quota resets monthly.
+The rider Expo app is already web‑runnable (`metro.config.js` stubs
+`react-native-maps`). To add `padharo-rider.kansaratech.com`:
+
+1. Make `enatega-multivendor-rider/environment.ts` read
+   `process.env.EXPO_PUBLIC_GRAPHQL_URL` / `EXPO_PUBLIC_WS_GRAPHQL_URL` with the
+   tunnel as fallback (as done for store).
+2. Copy `enatega-multivendor-store/Dockerfile` + `nginx.conf` +
+   `.dockerignore` into `enatega-multivendor-rider/`.
+3. Add a `rider` service to `docker-compose.yml` on host port **6005**
+   (6003 = money_visior, 6004 = store on this host), with the same
+   `EXPO_PUBLIC_*` build args.
+4. Add `CORS_ORIGIN += https://padharo-rider.kansaratech.com`, create the
+   Sentora subdomain, add the §9c‑style (store) plain proxy block, issue a cert.
+5. Rider login: `rider1` / `Rider@123`.
+
+### Native mobile builds
+
+Once the API is live, point each app's `environment` at
+`https://padharo-api.kansaratech.com` (+ `wss://…`) and rebuild via EAS
+(`eas build --profile <demo|development> --platform android`). The EAS
+free‑plan build quota resets monthly.
 
 ---
 
@@ -468,11 +583,14 @@ cloudflared tunnel. Once the API is live at `padharo-api.kansaratech.com`:
 | API up but DB errors | wrong MySQL host (used `localhost`) or user lacks grant | host must be the **container name**; re‑check §5 GRANT |
 | `P1001: Can't reach database server` | api not on `mysql_config_dev_default` | `docker network inspect mysql_config_dev_default` — confirm `padharo_api` is listed |
 | Site loads but no data / CSP errors in console | `NEXT_PUBLIC_SERVER_URL` wrong, or `CORS_ORIGIN` missing the site origin | fix env, rebuild frontends (URL) or restart api (CORS) |
-| Order tracking / live lists frozen | WebSocket not proxied | add the `RewriteRule … [P]` block (§9c); `a2enmod proxy_wstunnel` |
+| Order tracking / live lists frozen | WebSocket not proxied | add the `RewriteRule … [P]` block (§9d); `a2enmod proxy_wstunnel` |
 | Maps / address search broken | Maps key referrer restriction | add `https://padharo*.kansaratech.com/*` referrers (§11) |
 | Uploaded images 404 | `PUBLIC_UPLOAD_URL` wrong, or `LimitRequestBody` too small on upload | set `PUBLIC_UPLOAD_URL=https://padharo-api.kansaratech.com/uploads`; raise `LimitRequestBody` |
 | Admin `/uploads` images blocked by Next | host not in `next.config.mjs` `remotePatterns` | admin derives it from `NEXT_PUBLIC_SERVER_URL` automatically; for web add `padharo-api.kansaratech.com` |
 | 502 from Apache | container down or wrong port | `docker compose ps`; port in `ProxyPass` must match §1 table |
+| `store` build fails on `expo export` | missing `EXPO_PUBLIC_*` arg, or a config plugin needs a native file | check `deploy/padharo.env`; read `docker compose logs store` |
+| Store site loads but login/orders fail | `EXPO_PUBLIC_GRAPHQL_URL` wrong, or origin missing from `CORS_ORIGIN` | rebuild `store` (URL is compile‑time) / restart `api` (CORS) |
+| Store shows no new orders live | store WS can't reach `padharo-api` | confirm §9d websocket rule; check browser console for `wss://` errors |
 
 ---
 
@@ -482,11 +600,13 @@ Created in the repo for this deployment:
 
 | Path | Purpose |
 |---|---|
-| `docker-compose.yml` | the 3‑service stack; joins external `mysql_config_dev_default` |
+| `docker-compose.yml` | the 4‑service stack; joins external `mysql_config_dev_default` |
 | `deploy/padharo.env.example` | template — copy to `deploy/padharo.env` and fill |
 | `enatega-multivendor-api-mysql/Dockerfile` + `.dockerignore` | API image (keeps Prisma CLI for `db push` / seeds) |
 | `enatega-multivendor-web/Dockerfile` + `.dockerignore` | customer web image (Next 16) |
 | `enatega-multivendor-admin/Dockerfile` + `.dockerignore` | admin image (Next 14) |
+| `enatega-multivendor-store/Dockerfile` + `nginx.conf` + `.dockerignore` | store web: `expo export --platform web` → nginx |
+| `enatega-multivendor-store/environment.ts` | changed to read `EXPO_PUBLIC_GRAPHQL_URL` / `EXPO_PUBLIC_WS_GRAPHQL_URL` (tunnel fallback) |
 | `.gitignore` | now excludes `deploy/padharo.env` |
 
 Key facts for reviewers:
@@ -498,4 +618,8 @@ Key facts for reviewers:
   `JWT_EXPIRES_IN`, `REFRESH_TOKEN_EXPIRES_IN`, `UPLOAD_DIR`, `PUBLIC_UPLOAD_URL`.
 - Web & admin are **not** `output: standalone` — the images run `next start`
   with full `node_modules`.
-- Node 20.16.0 across all three (`.nvmrc`).
+- Store is `expo-router` web output `single` (SPA) → static files, nginx serves
+  with an `index.html` fallback. It has no maps code (safe on web) and connects
+  to `padharo-api` over `wss://…/graphql` (legacy `graphql-ws` sub‑protocol,
+  which this API supports).
+- Node 20.16.0 across all four (`.nvmrc`).

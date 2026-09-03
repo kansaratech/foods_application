@@ -8,6 +8,8 @@
 #   6000 -> web    (container :3000)   padharo.kansaratech.com
 #   6001 -> admin  (container :3000)   padharo-admin.kansaratech.com
 #   6002 -> api    (container :4000)   padharo-api.kansaratech.com
+#   6004 -> store  (container :80)     padharo-store.kansaratech.com  (Expo web static export)
+#        (6003 is taken by the money_visior container on this host)
 #
 # The api joins the EXTERNAL `mysql_config_dev_default` network so it can reach
 # the shared MySQL container by name (same pattern as ams_container).
@@ -78,6 +80,21 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:6001:3000"
+    networks:
+      - padharo_internal
+    logging: *default-logging
+
+  store:
+    build:
+      context: ./enatega-multivendor-store
+      args:
+        EXPO_PUBLIC_GRAPHQL_URL: ${EXPO_PUBLIC_GRAPHQL_URL:?set it in deploy/padharo.env}
+        EXPO_PUBLIC_WS_GRAPHQL_URL: ${EXPO_PUBLIC_WS_GRAPHQL_URL:?set it in deploy/padharo.env}
+    image: padharo-store:latest
+    container_name: padharo_store
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6004:80"
     networks:
       - padharo_internal
     logging: *default-logging

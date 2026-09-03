@@ -5,11 +5,20 @@
 
 // Use the machine's LAN IP, not "localhost": on an Android emulator or a
 // physical device "localhost" is the device itself, not the dev machine.
+//
+// `EXPO_PUBLIC_*` values are inlined by Metro at bundle/export time, so the web
+// build (padharo-store.kansaratech.com) is pointed at the production API via
+// docker-compose build args. When they are unset (local dev) the cloudflared
+// tunnel below is used.
+const DEFAULT_GRAPHQL_URL =
+  "https://cast-characteristics-sport-absolutely.trycloudflare.com/graphql";
+const DEFAULT_WS_GRAPHQL_URL =
+  "wss://cast-characteristics-sport-absolutely.trycloudflare.com/graphql";
+
 const getEnvVars = () => ({
-  // Local API exposed over the internet (office Wi-Fi blocks phone<->PC on LAN).
-  // Keep-alive: scratchpad/tunnel-keepalive.sh. For LAN, use http://<PC-IP>:4000.
-  GRAPHQL_URL: "https://cast-characteristics-sport-absolutely.trycloudflare.com/graphql",
-  WS_GRAPHQL_URL: "wss://cast-characteristics-sport-absolutely.trycloudflare.com/graphql",
+  GRAPHQL_URL: process.env.EXPO_PUBLIC_GRAPHQL_URL || DEFAULT_GRAPHQL_URL,
+  WS_GRAPHQL_URL:
+    process.env.EXPO_PUBLIC_WS_GRAPHQL_URL || DEFAULT_WS_GRAPHQL_URL,
 });
 
 export default getEnvVars;
