@@ -172,6 +172,14 @@ export const orderTypeDefs = /* GraphQL */ `
       instructions: String
     ): Order!
     abortOrder(id: String!): Order!
+    "Customer (or admin) changes fulfilment type / payment method while the order is still PENDING. Recomputes the delivery fee + total."
+    modifyOrder(
+      id: ID!
+      isPickedUp: Boolean
+      paymentMethod: String
+      address: AddressInput
+      deliveryCharges: Float
+    ): Order!
     updateOrderStatus(id: String!, status: String!): Order!
     updateStatus(id: String!, orderStatus: String!): Order!
     assignRider(id: String!, riderId: String!): Order!

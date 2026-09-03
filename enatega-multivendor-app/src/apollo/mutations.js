@@ -392,6 +392,20 @@ export const cancelOrder = `
             }
           }`
 
+// Customer switches delivery <-> pickup or COD <-> online while the order is
+// still PENDING. Server recomputes the delivery fee + total.
+export const modifyOrder = `
+          mutation modifyOrder($id: ID!, $isPickedUp: Boolean, $paymentMethod: String){
+            modifyOrder(id: $id, isPickedUp: $isPickedUp, paymentMethod: $paymentMethod) {
+              _id
+              orderStatus
+              isPickedUp
+              paymentMethod
+              deliveryCharges
+              orderAmount
+            }
+          }`
+
 export const createActivity = `
    mutation createActivity(
       $groupId: String!

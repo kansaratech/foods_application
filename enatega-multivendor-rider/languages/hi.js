@@ -355,7 +355,6 @@ export const hi = {
   "Oops!": "उफ़!",
   "My Cash": "मेरा नकद",
   "Cash you owe the platform": "प्लेटफ़ॉर्म को आपका देय नकद",
-  "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle": "डिलीवरी पर वसूला गया COD नकद, आपकी फीस और टिप घटाकर — इसे निपटाने के लिए एडमिन को दें",
   "Lifetime collected": "कुल वसूला",
   "Lifetime handed over": "कुल सौंपा",
   "Unsettled deliveries": "बिना निपटान डिलीवरी",
@@ -363,5 +362,11 @@ export const hi = {
   "you kept": "आपने रखा",
   "Handovers": "सौंपना",
   "cash": "नकद",
-  "deliveries": "डिलीवरी"
+  "deliveries": "डिलीवरी",
+  "Hand the full COD cash you collected to the admin — your fees and tips are paid separately into your wallet": "आपने जो पूरा COD नकद वसूला है वह एडमिन को दें — आपकी फीस और टिप अलग से आपके वॉलेट में जमा होती है",
+  "deposit to take cash orders again": "नकद ऑर्डर फिर से लेने के लिए जमा करें",
+  "cash order limit": "नकद ऑर्डर सीमा",
+  "Wallet balance": "वॉलेट शेष",
+  "Available to withdraw": "निकासी के लिए उपलब्ध",
+  "to wallet": "वॉलेट में",
 };

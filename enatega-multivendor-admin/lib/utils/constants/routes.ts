@@ -24,6 +24,10 @@ export const ROUTES = [
     route: '/management/commission-rates',
   },
   {
+    text: 'Finance',
+    route: '/management/finance',
+  },
+  {
     text: 'Commission Bills',
     route: '/management/commission-bills',
   },

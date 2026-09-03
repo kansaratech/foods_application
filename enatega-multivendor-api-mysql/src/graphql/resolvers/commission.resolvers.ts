@@ -40,7 +40,9 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
     commissionPeriodPreview: async (_parent, _args, context) => {
       requireRole(context, ['ADMIN']);
       const cycle = await billingCycle();
-      const unbilled = await prisma.commissionRecord.findMany({ where: { billId: null } });
+      const unbilled = await prisma.commissionRecord.findMany({
+        where: { billId: null, selfCollected: false },
+      });
       const byVendor = groupByVendor(unbilled);
       const vendors = await vendorLiteMap([...byVendor.keys()]);
 
@@ -111,8 +113,10 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       const period = currentPeriod(cycle);
 
       const [unbilled, bills] = await Promise.all([
+        // Only orders the store will actually be billed for (COD-pickup) — the
+        // rest was already netted from the store's payout.
         prisma.commissionRecord.findMany({
-          where: { vendorId: currentUser.id, billId: null },
+          where: { vendorId: currentUser.id, billId: null, selfCollected: false },
         }),
         prisma.commissionBill.findMany({
           where: { vendorId: currentUser.id },
@@ -170,19 +174,25 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       const rider = await prisma.user.findUnique({ where: { id: args.riderId } });
       if (!rider || rider.userType !== 'RIDER') throw notFoundError('Rider not found');
 
-      const [entries, remittances] = await Promise.all([
+      const [entries, remittances, profile, config] = await Promise.all([
         prisma.riderCashEntry.findMany({ where: { riderId: args.riderId }, orderBy: { deliveredAt: 'desc' } }),
         prisma.riderCashRemittance.findMany({ where: { riderId: args.riderId }, orderBy: { createdAt: 'desc' } }),
+        prisma.riderProfile.findUnique({ where: { userId: args.riderId } }),
+        prisma.configuration.findFirst(),
       ]);
       const outstanding = entries.filter((e) => !e.remittanceId).reduce((s, e) => s + e.owedToPlatform, 0);
       const lifetimeCollected = entries.reduce((s, e) => s + e.owedToPlatform, 0);
       const lifetimeRemitted = remittances.reduce((s, r) => s + r.amount, 0);
+      const walletBalance = profile?.currentWalletAmount ?? 0;
 
       return {
         rider: { _id: rider.id, name: rider.name, username: rider.username, phone: rider.phone },
         outstanding: round2(outstanding),
         lifetimeCollected: round2(lifetimeCollected),
         lifetimeRemitted: round2(lifetimeRemitted),
+        cashLimit: config?.riderCashLimit ?? 3000,
+        walletBalance: round2(walletBalance),
+        availableToWithdraw: round2(Math.max(0, walletBalance - outstanding)),
         entries,
         remittances,
       };
@@ -211,8 +221,11 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const orderVolume = deliveredOrders.reduce((s, o) => s + o.orderAmount, 0);
       const riderPayouts = deliveredOrders.reduce((s, o) => s + o.deliveryCharges + o.tipping, 0);
+      const taxCollected = deliveredOrders.reduce((s, o) => s + o.taxationAmount, 0);
       const commissionAccrued = commissionRecords.reduce((s, r) => s + r.commissionAmount, 0);
-      const storePayouts = commissionRecords.reduce((s, r) => s + (r.foodSubtotal - r.commissionAmount), 0);
+      // The store keeps food − commission, plus the tax it remits as GST.
+      const storePayouts =
+        commissionRecords.reduce((s, r) => s + (r.foodSubtotal - r.commissionAmount), 0) + taxCollected;
 
       const commissionBilled = bills
         .filter((b) => b.createdAt >= start && b.createdAt <= end)
@@ -296,6 +309,7 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
         commissionPaid: round2(commissionPaid),
         commissionOutstanding: round2(commissionOutstanding),
         storePayouts: round2(storePayouts),
+        taxCollected: round2(taxCollected),
         riderPayouts: round2(riderPayouts),
         codCashCollected: round2(codCashCollected),
         codCashRemitted: round2(codCashRemitted),

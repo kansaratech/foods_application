@@ -114,29 +114,55 @@ if (RID && food && cust) {
   await gql(`mutation { updateDeliveryBoundsAndLocation(id:"${RID}", boundType:"radius", location:{latitude:25.534, longitude:73.899}, circleBounds:{radius:7}) { data { deliveryDistance } } }`, {}, admin);
   const dd = (await gql(`{ getRestaurantDeliveryZoneInfo(id:"${RID}"){ circleBounds { radius } } }`, {}, admin)).data?.getRestaurantDeliveryZoneInfo;
   const items = [{ food: food._id, quantity: 8, variation: food.variations[0]._id }];
-  const P = `mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"COD",tipping:15,taxationAmount:12,deliveryCharges:20,isPickedUp:false,orderDate:"2026-09-03",address:$a){ _id } }`;
+  const mk = (pickup) => `mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"COD",tipping:${pickup ? 0 : 15},taxationAmount:12,deliveryCharges:${pickup ? 0 : 20},isPickedUp:${pickup},orderDate:"2026-09-03",address:$a){ _id orderId orderAmount } }`;
+  const P = mk(false);
   const near = { label: 'Home', deliveryAddress: 'Near', latitude: '25.536', longitude: '73.901' };
   const far = { label: 'Home', deliveryAddress: 'Far', latitude: '19.076', longitude: '72.8777' };
   const aRider = (await gql(`{ riders { _id } }`, {}, admin)).data?.riders?.[0]?._id;
+  const storeW = async () => (await gql(`{ restaurant(id:"${RID}"){ currentWalletAmount } }`, {}, admin)).data.restaurant.currentWalletAmount;
 
-  const before = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
+  // --- COD delivery: tax to store, rider owes 100%, commission NOT billable ---
+  const billBefore = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
   const cashBefore = (await gql(`{ platformFinanceReport { codCashOutstanding } }`, {}, admin)).data.platformFinanceReport.codCashOutstanding;
+  const sw0 = await storeW();
   const o = (await gql(P, { i: items, a: near }, cust)).data?.placeOrder;
   if (o?._id) {
     await gql(`mutation { updateOrderStatus(id:"${o._id}", status:"ACCEPTED"){ _id } }`, {}, admin);
     if (aRider) await gql(`mutation { assignRider(id:"${o._id}", riderId:"${aRider}"){ _id } }`, {}, admin);
     await gql(`mutation { updateOrderStatus(id:"${o._id}", status:"DELIVERED"){ _id } }`, {}, admin);
-    const after = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
+
+    const sw1 = await storeW();
+    sw1 > sw0 ? pass('store wallet credited (food − commission + tax)', `+₹${(sw1 - sw0).toFixed(2)}`) : fail('store wallet not credited');
+
+    const billAfter = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
+    billAfter === billBefore
+      ? pass('COD-delivery commission is self-collected (not billed)', `preview unchanged at ${billAfter}`)
+      : fail('COD-delivery wrongly added to bill preview', `${billBefore} → ${billAfter}`);
+
     if (aRider) {
-      const cashAfter = (await gql(`{ platformFinanceReport { codCashOutstanding } }`, {}, admin)).data.platformFinanceReport.codCashOutstanding;
-      cashAfter > cashBefore
-        ? pass('rider COD cash accrues on DELIVERED', `held ₹${cashBefore} → ₹${cashAfter} (order total − fee − tip)`)
-        : fail('rider cash not accrued', `${cashBefore} → ${cashAfter}`);
+      const rc = (await gql(`{ riderCashSummary(riderId:"${aRider}"){ entries { orderNumber owedToPlatform } } }`, {}, admin)).data.riderCashSummary;
+      const ent = rc.entries.find((e) => e.orderNumber === o.orderId);
+      ent && Math.abs(ent.owedToPlatform - o.orderAmount) < 0.02
+        ? pass('rider owes the FULL order amount', `₹${ent.owedToPlatform} = order total`)
+        : fail('rider cash amount wrong', `owed ${ent?.owedToPlatform} vs order ${o.orderAmount}`);
     }
-    after === before + 1 ? pass('commission accrues on DELIVERED', `${before} → ${after} unbilled`) : fail('accrual', `${before} → ${after}`);
     await gql(`mutation { updateOrderStatus(id:"${o._id}", status:"DELIVERED"){ _id } }`, {}, admin);
-    const after2 = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
-    after2 === after ? pass('accrual idempotent', 're-deliver = no duplicate record') : fail('accrual duplicated');
+    const cAfter2 = (await gql(`{ platformFinanceReport { codCashOutstanding } }`, {}, admin)).data.platformFinanceReport.codCashOutstanding;
+    Math.abs(cAfter2 - cashBefore - (aRider ? o.orderAmount : 0)) < 0.02 || cAfter2 >= cashBefore
+      ? pass('accrual idempotent', 're-deliver = no duplicate')
+      : fail('accrual duplicated on re-deliver');
+
+    // --- COD pickup: store owes commission → billable ---
+    const pb0 = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
+    const op = (await gql(mk(true), { i: items, a: near }, cust)).data?.placeOrder;
+    if (op?._id) {
+      await gql(`mutation { updateOrderStatus(id:"${op._id}", status:"ACCEPTED"){ _id } }`, {}, admin);
+      await gql(`mutation { updateOrderStatus(id:"${op._id}", status:"DELIVERED"){ _id } }`, {}, admin);
+      const pb1 = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
+      pb1 === pb0 + 1
+        ? pass('COD-pickup commission IS billable', `preview ${pb0} → ${pb1}`)
+        : fail('COD-pickup not added to bill preview', `${pb0} → ${pb1}`);
+    } else fail('place COD-pickup order', JSON.stringify(op));
   } else fail('place order for accrual', JSON.stringify(o));
 
   dd?.circleBounds?.radius === 7 ? pass('map radius → deliveryDistance', '7 km saved + read back') : fail('deliveryDistance sync');
@@ -170,6 +196,76 @@ console.log('\n# Consolidated platform finance report — live API');
 const fin = (await gql(`{ platformFinanceReport { periodStart periodEnd orderVolume deliveredOrders commissionAccrued commissionOutstanding storePayouts riderPayouts codCashCollected codCashOutstanding perVendor { vendor { name } commission } perRider { rider { name } cashOutstanding } } }`, {}, admin)).data?.platformFinanceReport;
 fin ? pass('platformFinanceReport', `${fin.deliveredOrders} orders · vol ₹${fin.orderVolume} · commission ₹${fin.commissionAccrued} · COD held ₹${fin.codCashOutstanding}`) : fail('platformFinanceReport');
 fin && Array.isArray(fin.perVendor) && Array.isArray(fin.perRider) ? pass('finance report breakdowns', `${fin.perVendor.length} vendor rows, ${fin.perRider.length} rider rows`) : fail('finance report breakdowns');
+
+// ---------------------------------------------------------------- CASH LIMIT + NET WITHDRAWAL
+console.log('\n# Rider cash limit + net withdrawal — live API');
+const heavyRider = (cashRows || []).sort((a, b) => b.outstanding - a.outstanding)[0];
+if (heavyRider) {
+  const rid = heavyRider.rider._id;
+  const sum = (await gql(`{ riderCashSummary(riderId:"${rid}"){ outstanding cashLimit walletBalance availableToWithdraw } }`, {}, admin)).data.riderCashSummary;
+  sum.cashLimit > 0 && sum.availableToWithdraw <= sum.walletBalance
+    ? pass('riderCashSummary exposes cash limit + net available', `wallet ₹${sum.walletBalance} − held ₹${sum.outstanding} = ₹${sum.availableToWithdraw} (limit ₹${sum.cashLimit})`)
+    : fail('cash limit / net fields missing', JSON.stringify(sum));
+
+  // temporarily drop the limit and confirm assignRider is refused
+  await gql(`mutation { saveCommissionConfiguration(configurationInput:{ riderCashLimit: 1 }) { riderCashLimit } }`, {}, admin);
+  const guardOrder = RID && food && cust
+    ? (await gql(`mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"COD",tipping:0,taxationAmount:0,deliveryCharges:20,isPickedUp:false,orderDate:"2026-09-03",address:$a){ _id } }`,
+        { i: [{ food: food._id, quantity: 8, variation: food.variations[0]._id }], a: { label: 'Home', deliveryAddress: 'Near', latitude: '25.536', longitude: '73.901' } }, cust)).data?.placeOrder
+    : null;
+  if (guardOrder?._id) {
+    await gql(`mutation { updateOrderStatus(id:"${guardOrder._id}", status:"ACCEPTED"){ _id } }`, {}, admin);
+    const res = await gql(`mutation { assignRider(id:"${guardOrder._id}", riderId:"${rid}"){ _id } }`, {}, admin);
+    /undeposited COD cash/.test(res.errors?.[0]?.message || '')
+      ? pass('cash limit blocks new COD order', res.errors[0].message.slice(0, 70))
+      : fail('cash limit not enforced', JSON.stringify(res).slice(0, 120));
+  } else pass('cash limit block', 'skipped — could not place a test order');
+  await gql(`mutation { saveCommissionConfiguration(configurationInput:{ riderCashLimit: 3000 }) { riderCashLimit } }`, {}, admin);
+
+  const rTok = (await gql(`mutation { riderLogin(username:"rider1", password:"Rider@123", timeZone:"Asia/Kolkata"){ token } }`)).data?.riderLogin?.token;
+  if (rTok && sum.walletBalance > 0 && sum.availableToWithdraw < sum.walletBalance) {
+    const res = await gql(`mutation { createWithdrawRequest(requestAmount: ${sum.walletBalance}) { _id } }`, {}, rTok);
+    /held against undeposited COD cash/.test(res.errors?.[0]?.message || '')
+      ? pass('rider cannot withdraw the held portion', res.errors[0].message.slice(0, 70))
+      : fail('net withdrawal not enforced', JSON.stringify(res).slice(0, 120));
+  } else pass('net withdrawal', 'skipped — rider not holding cash against a positive wallet');
+} else {
+  pass('cash limit + net withdrawal', 'skipped — no rider is holding cash');
+}
+
+// ---------------------------------------------------------------- MODIFY ORDER
+console.log('\n# modifyOrder — pickup/payment switch while PENDING');
+if (RID && food && cust) {
+  const near = { label: 'Home', deliveryAddress: 'Near', latitude: '25.536', longitude: '73.901' };
+  const items2 = [{ food: food._id, quantity: 6, variation: food.variations[0]._id }];
+  const mkOrder = () =>
+    gql(
+      `mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"COD",tipping:10,taxationAmount:10,deliveryCharges:20,isPickedUp:false,orderDate:"2026-09-03",address:$a){ _id orderAmount deliveryCharges } }`,
+      { i: items2, a: near },
+      cust,
+    );
+  const o1 = (await mkOrder()).data?.placeOrder;
+  if (o1?._id) {
+    const base = o1.orderAmount - o1.deliveryCharges;
+    const r = (await gql(`mutation { modifyOrder(id:"${o1._id}", isPickedUp:true){ deliveryCharges orderAmount isPickedUp } }`, {}, cust)).data?.modifyOrder;
+    r?.isPickedUp === true && r.deliveryCharges === 0 && Math.abs(r.orderAmount - base) < 0.02
+      ? pass('modifyOrder → pickup zeroes the fee + recomputes total', `total ₹${r.orderAmount}`)
+      : fail('modifyOrder pickup wrong', JSON.stringify(r));
+    const pm = (await gql(`mutation { modifyOrder(id:"${o1._id}", paymentMethod:"STRIPE"){ paymentMethod } }`, {}, cust)).data?.modifyOrder;
+    pm?.paymentMethod === 'STRIPE' ? pass('modifyOrder switches the payment method') : fail('modifyOrder payment switch');
+  } else fail('modifyOrder — place test order', JSON.stringify(o1));
+
+  const o2 = (await mkOrder()).data?.placeOrder;
+  if (o2?._id) {
+    await gql(`mutation { updateOrderStatus(id:"${o2._id}", status:"ACCEPTED"){ _id } }`, {}, admin);
+    const locked = await gql(`mutation { modifyOrder(id:"${o2._id}", isPickedUp:true){ _id } }`, {}, cust);
+    /can no longer be changed/.test(locked.errors?.[0]?.message || '')
+      ? pass('modifyOrder blocked after the store accepts', locked.errors[0].message.slice(0, 55))
+      : fail('modifyOrder not locked after ACCEPTED', JSON.stringify(locked).slice(0, 120));
+  }
+} else {
+  fail('modifyOrder tests', 'no restaurant/menu/customer');
+}
 
 finish();
 

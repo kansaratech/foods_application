@@ -1,35 +1,44 @@
-# Padharo — Platform commission
+# Padharo — Platform money model
 
-How the platform earns and collects money from vendors, and how delivery areas
-are enforced. Built 2026‑09‑03.
+How the platform earns, how COD cash settles, and how delivery areas are
+enforced. Built 2026‑09‑03; money model reworked to the four‑path design in
+`Padharo Money Model` (design brief).
 
 ## The model
 
-- The platform runs a **COD‑only** marketplace. It never touches order money —
-  the customer pays cash to whoever delivers.
-- The platform earns a **commission** on every completed order and **invoices
-  each vendor per period**. The vendor pays the platform out‑of‑band (bank / UPI
-  transfer); an admin marks the invoice paid.
-- **Commission = rate % of the food subtotal** of a `DELIVERED`/`COMPLETED`
-  order. Food subtotal = `orderAmount − deliveryCharges − tipping − tax`.
-  Delivery fee, tip and tax are **not** commissionable.
-- **Rate resolution:** the store's own `Restaurant.commissionRate` if set (> 0),
-  otherwise `Configuration.defaultCommissionRate` (default **20%**).
-- **Billing cycle:** `Configuration.commissionBillingCycle` = `MONTHLY` (default)
-  or `YEARLY`. Informational — it labels bills and drives the "current period"
-  window shown to vendors.
+**Every order** `total = food subtotal + delivery fee + tip + tax`. The split
+never changes:
+
+- **Store** keeps `food subtotal − commission`, **plus the tax** it remits as GST.
+- **Rider** gets `delivery fee + tip` (into their wallet).
+- **Platform** keeps the **commission** = `rate% × food subtotal`.
+  Rate = the store's own `Restaurant.commissionRate` if > 0, else
+  `Configuration.defaultCommissionRate` (default **20%**).
+
+**How the platform actually collects the commission** depends on who first holds
+the customer's money:
+
+| Order | First holder | Who owes the platform | Commission collected via |
+|-------|-------------|-----------------------|--------------------------|
+| **Online** (delivery or pickup) | payment gateway → platform | nobody | platform already holds it |
+| **COD · delivery** | the **rider** | rider — the **full order total** | the rider's deposit |
+| **COD · pickup** | the **store** | store — the **commission only** | the monthly bill |
+
+So the **commission bill exists only for COD‑pickup orders**. On online and
+COD‑delivery orders the commission is `selfCollected` — it's kept through the
+money flow and only counts toward "commission earned" in reports.
 
 ## Data
 
 | Table | What it is |
 |-------|-----------|
-| `CommissionRecord` | Immutable per‑order ledger row. Written **once**, the moment an order is first marked `DELIVERED` (`order.resolvers.ts` → `recordOrderCommission`). Snapshots the rate so later rate changes never rewrite history. `billId` is null until it's rolled into a bill. |
-| `CommissionBill` | One invoice per vendor per close. `status` = `PENDING` → `PAID` \| `WAIVED`. |
-| `RiderCashEntry` | One per COD delivery that had a rider. `owedToPlatform = orderAmount − (deliveryCharges + tipping)` — the cash the rider is holding for the platform. `remittanceId` links it to the settlement it was cleared in. |
+| `CommissionRecord` | Immutable per‑order ledger row, written once on first `DELIVERED` (`recordOrderCommission`). `selfCollected` = true (online / COD‑delivery — never invoiced) or false (COD‑pickup — the store owes it, `billId` null until billed). Snapshots the rate + `paymentMethod` + `isPickedUp`. |
+| `CommissionBill` | One invoice per vendor per close, over `selfCollected = false` records. `status` = `PENDING` → `PAID` \| `WAIVED`. |
+| `RiderCashEntry` | One per COD‑**delivery** order. `owedToPlatform = orderAmount` (the rider deposits **100%**; their fee + tip is paid back into their wallet). `remittanceId` links it to the deposit that cleared it. |
 | `RiderCashRemittance` | A rider handing collected cash back. Clears `RiderCashEntry` rows oldest‑first, up to `amount` (or all). |
 
 `Configuration` gained `defaultCommissionRate`, `commissionBillingCycle`,
-`defaultLatitude`, `defaultLongitude`.
+`riderCashLimit` (default ₹3000), `defaultLatitude`, `defaultLongitude`.
 
 ## Admin workflow (super‑admin → **Management → Commission Bills**)
 
@@ -59,28 +68,55 @@ and their past bills with status. Backed by `myCommissionSummary`.
 
 ## Rider COD cash (super‑admin → **Management → Rider Cash**)
 
-Because the rider physically collects the customer's cash, the platform must
-track what each rider is holding on its behalf.
+The rider collects the customer's cash and **deposits 100% of it**; their fee +
+tip is paid back into their wallet (Swiggy/Zomato model).
 
-- On every COD delivery with a rider, a `RiderCashEntry` is written:
-  `owedToPlatform = orderAmount − deliveryFee − tip` (the rider keeps the fee +
-  tip; the rest belongs to the store + platform).
-- **Rider Cash** screen: per‑rider outstanding table → open a rider for the list
-  of unremitted deliveries + remittance history. **Record remittance** (cash /
-  bank / UPI, optional amount cap — clears oldest deliveries first) when the
-  rider hands the money over.
+- On every COD‑delivery order a `RiderCashEntry` is written with
+  `owedToPlatform = orderAmount`.
+- **Cash limit** — `Configuration.riderCashLimit` (default ₹3000). Once a rider's
+  undeposited COD cash + a new order would exceed it, `assignOrder` /
+  `assignRider` refuse the order until they deposit. The rider's **My Cash**
+  screen shows the progress bar.
+- **Net settlement** — a rider can only withdraw `wallet − undeposited cash`
+  (`createWithdrawRequest` enforces it). Their earnings are held against the
+  cash they still owe.
+- **Rider Cash** screen: per‑rider outstanding table → open a rider for the
+  unremitted deliveries, cash limit, wallet balance, available‑to‑withdraw and
+  remittance history. **Record remittance** (cash / bank / UPI, optional amount
+  cap — clears oldest deliveries first) when the rider hands the money over.
 - The rider's own Expo app has a **My Cash** screen (home drawer): what they
-  owe, the unsettled deliveries behind it, lifetime collected / handed‑over, and
-  handover history. Read‑only — recording a handover stays with the admin.
-- The rider/store wallet crediting on delivery is unchanged — this ledger is the
-  *cash* side that was previously untracked.
+  owe, the cash‑limit progress bar, wallet vs available‑to‑withdraw, the
+  unsettled deliveries, and handover history. Read‑only.
 
-## Consolidated report (super‑admin → **Management → Finance Report**)
+## Admin — one **Finance** section (super‑admin → **Management → Finance**)
 
-Date‑range report with `platformFinanceReport`: order volume, store/rider
-payouts, commission (accrued / billed / paid / outstanding), COD cash
-(collected / remitted / outstanding with riders), plus per‑vendor and per‑rider
-breakdown tables.
+Five tabs, all mounting the existing screen components:
+
+| Tab | What | Backed by |
+|-----|------|-----------|
+| **Overview** | order volume, payouts, commission, COD cash, per‑vendor + per‑rider | `platformFinanceReport(startDate,endDate)` |
+| **Vendor settlements** | commission settings (rate / cycle / rider cash limit), current‑period preview, bills — mark paid / waive | `commissionPeriodPreview`, `commissionBills`, `closeCommissionPeriod` |
+| **Commission rates** | per‑store rate overrides | `commissionRate` / `updateCommission` |
+| **Rider cash** | per‑rider outstanding, cash limit, wallet vs available, record a deposit | `riderCashOutstanding`, `riderCashSummary`, `recordRiderCashRemittance` |
+| **Payouts** | store & rider withdrawal requests | withdraw‑request screen |
+
+The old routes (`/management/commission-bills`, `/rider-cash`, `/finance-report`,
+`/commission-rates`) still resolve; they're just gone from the sidebar.
+
+## Order changes — `modifyOrder` (customer, PENDING only)
+
+`modifyOrder(id, isPickedUp, paymentMethod, address, deliveryCharges)`:
+
+- Owner (or admin), and **only while `orderStatus === 'PENDING'`** — after the
+  store accepts, it's locked ("This order can no longer be changed…").
+- → pickup: delivery fee → 0, rider cleared, total recomputed.
+- → delivery: re‑checks the delivery‑area radius; fee = caller's value, else the
+  order's, else `restaurant.deliveryFee` / `Configuration.deliveryRate`.
+- COD ↔ online: flips `paymentMethod` (no gateway wired — nominal for this launch).
+- No accounting to unwind because money only moves on `DELIVERED`.
+- Web: a "Change this order" panel on the tracking page while PENDING. App:
+  `modifyOrder` mutation string is in `src/apollo/mutations.js`; screen is a
+  fast‑follow.
 
 ## GraphQL
 
@@ -89,9 +125,12 @@ breakdown tables.
 - `closeCommissionPeriod(periodStart,periodEnd)` (ADMIN),
   `updateCommissionBillStatus(id,status,paidAmount,note)` (ADMIN)
 - `saveCommissionConfiguration(configurationInput)` (ADMIN)
-- `riderCashOutstanding` (ADMIN), `riderCashSummary(riderId)` (ADMIN | that RIDER),
+- `riderCashOutstanding` (ADMIN), `riderCashSummary(riderId)` (ADMIN | that RIDER
+  — returns `cashLimit`, `walletBalance`, `availableToWithdraw`),
   `recordRiderCashRemittance(riderId,amount,method,note)` (ADMIN)
-- `platformFinanceReport(startDate,endDate)` (ADMIN)
+- `platformFinanceReport(startDate,endDate)` (ADMIN) — includes `taxCollected`
+  (GST that flows to stores)
+- `closeCompletedCommissionPeriods` (ADMIN) — manual equivalent of the scheduler
 - `createRestaurant` now accepts `commissionRate`; when omitted the store
   inherits `Configuration.defaultCommissionRate`.
 

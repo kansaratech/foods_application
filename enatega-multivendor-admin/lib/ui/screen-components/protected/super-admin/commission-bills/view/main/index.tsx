@@ -50,7 +50,11 @@ export default function CommissionBillsMain() {
   const config = configData?.configuration;
   const [saveConfig] = useMutation(SAVE_COMMISSION_CONFIGURATION);
 
-  const persistConfig = async (input: { defaultCommissionRate?: number; commissionBillingCycle?: string }) => {
+  const persistConfig = async (input: {
+    defaultCommissionRate?: number;
+    commissionBillingCycle?: string;
+    riderCashLimit?: number;
+  }) => {
     setSavingConfig(true);
     try {
       await saveConfig({ variables: { configurationInput: input } });
@@ -185,6 +189,21 @@ export default function CommissionBillsMain() {
               <option value="MONTHLY">{t('Monthly')}</option>
               <option value="YEARLY">{t('Yearly')}</option>
             </select>
+          </label>
+          <label className="flex flex-col text-sm">
+            <span className="mb-1 text-gray-500">{t('Rider cash limit')} (₹)</span>
+            <input
+              type="number"
+              min={0}
+              step={100}
+              defaultValue={config?.riderCashLimit ?? 3000}
+              disabled={savingConfig}
+              onBlur={(e) => {
+                const v = parseFloat(e.target.value);
+                if (!Number.isNaN(v) && v !== config?.riderCashLimit) persistConfig({ riderCashLimit: v });
+              }}
+              className="h-10 w-32 rounded border border-gray-300 px-2 dark:bg-dark-950"
+            />
           </label>
           <p className="max-w-md text-xs text-gray-400">{t('commission_settings_help')}</p>
         </div>

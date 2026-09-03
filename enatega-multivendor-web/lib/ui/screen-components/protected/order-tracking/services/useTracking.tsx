@@ -41,6 +41,7 @@ function useTracking({ orderId }: { orderId: string }) {
   });
 
   return {
+    refetch,
     orderTrackingDetails: orderTrackingDetails?.orderDetails,
     // Only surface the loading state on the very first fetch (before we have
     // any data). Background refetches keep the previous data visible so the

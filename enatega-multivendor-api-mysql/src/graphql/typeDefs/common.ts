@@ -81,6 +81,7 @@ export const commonTypeDefs = /* GraphQL */ `
 
     defaultCommissionRate: Float
     commissionBillingCycle: String
+    riderCashLimit: Float
     defaultLatitude: Float
     defaultLongitude: Float
   }
@@ -165,6 +166,7 @@ export const commonTypeDefs = /* GraphQL */ `
   input CommissionConfigurationInput {
     defaultCommissionRate: Float
     commissionBillingCycle: String
+    riderCashLimit: Float
     defaultLatitude: Float
     defaultLongitude: Float
   }

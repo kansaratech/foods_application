@@ -358,7 +358,6 @@ export const en = {
   "Oops!": "Oops!",
   "My Cash": "My Cash",
   "Cash you owe the platform": "Cash you owe the platform",
-  "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle": "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle",
   "Lifetime collected": "Lifetime collected",
   "Lifetime handed over": "Lifetime handed over",
   "Unsettled deliveries": "Unsettled deliveries",
@@ -366,5 +365,11 @@ export const en = {
   "you kept": "you kept",
   "Handovers": "Handovers",
   "cash": "cash",
-  "deliveries": "deliveries"
+  "deliveries": "deliveries",
+  "Hand the full COD cash you collected to the admin — your fees and tips are paid separately into your wallet": "Hand the full COD cash you collected to the admin — your fees and tips are paid separately into your wallet",
+  "deposit to take cash orders again": "deposit to take cash orders again",
+  "cash order limit": "cash order limit",
+  "Wallet balance": "Wallet balance",
+  "Available to withdraw": "Available to withdraw",
+  "to wallet": "to wallet",
 };

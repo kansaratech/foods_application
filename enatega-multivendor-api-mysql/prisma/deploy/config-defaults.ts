@@ -20,6 +20,7 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
     currencySymbol: process.env.CURRENCY_SYMBOL || '₹',
     defaultCommissionRate: Number(process.env.DEFAULT_COMMISSION_RATE || 20),
     commissionBillingCycle: (process.env.COMMISSION_CYCLE || 'MONTHLY').toUpperCase(),
+    riderCashLimit: Number(process.env.RIDER_CASH_LIMIT || 3000),
     defaultLatitude: process.env.MARKETPLACE_LAT ? Number(process.env.MARKETPLACE_LAT) : 25.534,
     defaultLongitude: process.env.MARKETPLACE_LNG ? Number(process.env.MARKETPLACE_LNG) : 73.899,
     // COD-only launch, no SMTP/WhatsApp wired — users are born verified.
@@ -42,6 +43,7 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
   if (!existing.defaultCommissionRate || existing.defaultCommissionRate <= 0)
     patch.defaultCommissionRate = defaults.defaultCommissionRate;
   if (!existing.commissionBillingCycle) patch.commissionBillingCycle = defaults.commissionBillingCycle;
+  if (!existing.riderCashLimit || existing.riderCashLimit <= 0) patch.riderCashLimit = defaults.riderCashLimit;
   if (existing.defaultLatitude == null) patch.defaultLatitude = defaults.defaultLatitude;
   if (existing.defaultLongitude == null) patch.defaultLongitude = defaults.defaultLongitude;
 

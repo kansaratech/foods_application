@@ -12,6 +12,7 @@ export const PERMISSIONS = [
   { label: 'Banners', code: 'Banners' },
   { label: 'Tipping', code: 'Tipping' },
   { label: 'Commission Rate', code: 'Commission Rate' },
+  { label: 'Finance', code: 'Finance' },
   { label: 'Commission Bills', code: 'Commission Bills' },
   { label: 'Rider Cash', code: 'Rider Cash' },
   { label: 'Finance Report', code: 'Finance Report' },

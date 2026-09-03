@@ -52,7 +52,11 @@ export async function closeCommissionBills(opts: {
 }): Promise<CommissionBill[]> {
   const cycle = await billingCycle();
   const unbilled = await prisma.commissionRecord.findMany({
-    where: { billId: null, ...(opts.before ? { orderDeliveredAt: { lt: opts.before } } : {}) },
+    where: {
+      billId: null,
+      selfCollected: false, // only COD-pickup: the store holds the cash and owes the commission
+      ...(opts.before ? { orderDeliveredAt: { lt: opts.before } } : {}),
+    },
   });
   if (unbilled.length === 0) return [];
 

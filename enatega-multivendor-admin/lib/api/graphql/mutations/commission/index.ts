@@ -61,6 +61,7 @@ export const SAVE_COMMISSION_CONFIGURATION = gql`
       _id
       defaultCommissionRate
       commissionBillingCycle
+      riderCashLimit
       defaultLatitude
       defaultLongitude
     }

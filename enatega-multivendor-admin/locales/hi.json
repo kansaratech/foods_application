@@ -1214,5 +1214,18 @@
   "year": "साल",
   "The platform charges commission on the food total of every delivered order and invoices you each": "प्लेटफ़ॉर्म हर पहुँचाए गए ऑर्डर के भोजन योग पर कमीशन लेता है और आपको हर",
   "rider_cash_help": "राइडर द्वारा वसूला गया COD नकद जो अभी प्लेटफ़ॉर्म को नहीं लौटाया गया",
-  "auto_close_note": "पूरी हो चुकी अवधियाँ हर 6 घंटे में स्वतः बंद हो जाती हैं। यह बटन चालू (अधूरी) अवधि का बिल भी अभी बना देता है।"
+  "auto_close_note": "पूरी हो चुकी अवधियाँ हर 6 घंटे में स्वतः बंद हो जाती हैं। यह बटन चालू (अधूरी) अवधि का बिल भी अभी बना देता है।",
+  "Rider cash limit": "राइडर नकद सीमा",
+  "Cash limit": "नकद सीमा",
+  "Wallet balance": "वॉलेट शेष",
+  "Available to withdraw": "निकासी के लिए उपलब्ध",
+  "Order total (cash)": "ऑर्डर कुल (नकद)",
+  "Rider earns (wallet)": "राइडर कमाई (वॉलेट)",
+  "Deposit owed": "देय जमा",
+  "of which GST (to stores)": "जिसमें GST (स्टोर को)",
+  "Finance": "वित्त",
+  "Overview": "अवलोकन",
+  "Vendor settlements": "विक्रेता निपटान",
+  "Commission rates": "कमीशन दरें",
+  "Payouts": "भुगतान"
 }

@@ -293,6 +293,7 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
         configurationInput: {
           defaultCommissionRate?: number;
           commissionBillingCycle?: string;
+          riderCashLimit?: number;
           defaultLatitude?: number;
           defaultLongitude?: number;
         };

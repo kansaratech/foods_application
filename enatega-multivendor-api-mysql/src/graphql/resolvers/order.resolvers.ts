@@ -7,7 +7,7 @@ import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../s
 import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
-import { recordOrderCommission, recordRiderCash } from '../../utils/commission';
+import { recordOrderCommission, recordRiderCash, resolveCommissionRate, riderOutstandingCash } from '../../utils/commission';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
 const PAST_STATUSES: OrderStatus[] = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
@@ -49,6 +49,43 @@ async function publishRiderAssigned(order: Order) {
   await pubsub.publish(TOPICS.SUBSCRIPTION_ASSIGN_RIDER(order.riderId), {
     subscriptionAssignRider: { origin: 'order_service', order },
   });
+}
+
+/**
+ * Blocks a rider from picking up another COD order once the cash they are
+ * carrying (undeposited) plus this order would exceed `Configuration.riderCashLimit`.
+ * No-op for non-COD orders. (Swiggy/Zomato-style cash limit.)
+ */
+/** A non-pickup order's address must sit inside the store's delivery radius. */
+async function assertAddressInDeliveryArea(restaurantId: string, addressId: string | null): Promise<void> {
+  if (!addressId) throw userInputError('A delivery address is required for delivery orders.');
+  const [restaurant, addr] = await Promise.all([
+    prisma.restaurant.findUnique({ where: { id: restaurantId } }),
+    prisma.address.findUnique({ where: { id: addressId } }),
+  ]);
+  if (!restaurant || restaurant.latitude == null || restaurant.longitude == null) return;
+  if (addr?.latitude == null || addr?.longitude == null) return;
+  const reachKm = restaurant.deliveryDistance && restaurant.deliveryDistance > 0 ? restaurant.deliveryDistance : 60;
+  const dist = distanceKm(addr.latitude, addr.longitude, restaurant.latitude, restaurant.longitude);
+  if (dist > reachKm) {
+    throw userInputError(
+      `This address is outside ${restaurant.name}'s delivery area (${dist.toFixed(1)} km away, limit ${reachKm} km).`,
+    );
+  }
+}
+
+async function assertRiderUnderCashLimit(riderId: string, orderId: string): Promise<void> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || order.paymentMethod !== 'COD') return;
+  const config = await prisma.configuration.findFirst();
+  const limit = config?.riderCashLimit ?? 3000;
+  if (limit <= 0) return;
+  const held = await riderOutstandingCash(riderId);
+  if (held + order.orderAmount > limit) {
+    throw userInputError(
+      `You're carrying ₹${held.toFixed(0)} in undeposited COD cash. Deposit some before taking more cash orders (limit ₹${limit.toFixed(0)}).`,
+    );
+  }
 }
 
 // Pushes the order to riders subscribed to whichever zone(s) the restaurant's
@@ -117,13 +154,16 @@ async function applyOrderStatusUpdate(
   });
 
   // Credit store and rider wallets once, the moment the order lands as
-  // DELIVERED. Split matches the `earnings` report: commission (on the food
-  // subtotal, at the restaurant's own commissionRate) stays with the
-  // platform; the rest of the food subtotal goes to the store; the full
-  // delivery fee + tip goes to the rider.
+  // DELIVERED. The store keeps its food subtotal minus the platform commission,
+  // plus the tax it remits as GST; the rider gets the delivery fee + tip; the
+  // platform keeps the commission. See PADHARO_COMMISSION.md for how the cash
+  // (COD vs online, delivery vs pickup) actually settles.
   if (status === 'DELIVERED' && order.orderStatus !== 'DELIVERED') {
+    const config = await prisma.configuration.findFirst();
+    const rate = resolveCommissionRate(restaurant.commissionRate, config?.defaultCommissionRate);
     const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
-    const storeEarning = foodAmount - foodAmount * (restaurant.commissionRate / 100);
+    const commission = Math.round(foodAmount * (rate / 100) * 100) / 100;
+    const storeEarning = foodAmount - commission + order.taxationAmount;
     await prisma.restaurant.update({
       where: { id: restaurant.id },
       data: {
@@ -142,11 +182,9 @@ async function applyOrderStatusUpdate(
       });
     }
 
-    // Accrue the platform's commission for this order into the billing ledger.
-    // The platform invoices the vendor per period; it does not touch order cash
-    // (COD). Idempotent on the order id.
+    // Record the commission (for reporting + a bill only when the store holds
+    // the cash) and the COD cash the rider now carries. Both idempotent.
     await recordOrderCommission({ ...order, deliveredAt: updated.deliveredAt });
-    // Track the COD cash the rider is now holding on the platform's behalf.
     await recordRiderCash({ ...order, deliveredAt: updated.deliveredAt });
   }
 
@@ -435,27 +473,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const addressId = await resolveOrderAddress(currentUser.id, args.address);
 
-      // Delivery-area enforcement: a delivery order must land within the store's
-      // delivery radius (its own `deliveryDistance`, else a 60 km fallback).
-      // Pickup orders skip this. Only enforced when both ends have coordinates.
-      if (!args.isPickedUp && restaurant.latitude != null && restaurant.longitude != null) {
-        const deliveryAddress = await prisma.address.findUnique({ where: { id: addressId } });
-        if (deliveryAddress?.latitude != null && deliveryAddress?.longitude != null) {
-          const reachKm =
-            restaurant.deliveryDistance && restaurant.deliveryDistance > 0 ? restaurant.deliveryDistance : 60;
-          const dist = distanceKm(
-            deliveryAddress.latitude,
-            deliveryAddress.longitude,
-            restaurant.latitude,
-            restaurant.longitude,
-          );
-          if (dist > reachKm) {
-            throw userInputError(
-              `This address is outside ${restaurant.name}'s delivery area (${dist.toFixed(1)} km away, limit ${reachKm} km).`,
-            );
-          }
-        }
-      }
+      // A delivery order must land within the store's delivery radius. Pickup skips it.
+      if (!args.isPickedUp) await assertAddressInDeliveryArea(args.restaurant, addressId);
 
       let discountAmount = 0;
       if (args.couponCode) {
@@ -505,6 +524,74 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       return order;
     },
 
+    modifyOrder: async (
+      _parent,
+      args: {
+        id: string;
+        isPickedUp?: boolean;
+        paymentMethod?: string;
+        address?: PlaceOrderArgs['address'];
+        deliveryCharges?: number;
+      },
+      context,
+    ) => {
+      const currentUser = requireAuth(context);
+      const order = await prisma.order.findUnique({ where: { id: args.id } });
+      if (!order) throw notFoundError('Order not found');
+      const isOwner = order.userId === currentUser.id;
+      const isAdmin = currentUser.userType === 'ADMIN';
+      if (!isOwner && !isAdmin) throw notFoundError('Order not found');
+      if (order.orderStatus !== 'PENDING') {
+        throw userInputError('This order can no longer be changed — the store has already accepted it.');
+      }
+
+      const pickup = args.isPickedUp ?? order.isPickedUp;
+      const data: Record<string, unknown> = {};
+
+      if (args.paymentMethod && args.paymentMethod !== order.paymentMethod) {
+        // No payment gateway is wired for this launch (COD only) — switching to
+        // "online" just changes the flag; a real integration would capture /
+        // refund here.
+        data.paymentMethod = args.paymentMethod;
+      }
+
+      // Resolve the address if the caller passed a new one, else keep the order's.
+      let addressId = order.addressId;
+      if (args.address) addressId = await resolveOrderAddress(order.userId, args.address);
+
+      // Delivery fee: 0 for pickup; for delivery use the caller's value, else the
+      // order's existing fee, else the store's default.
+      let deliveryCharges = order.deliveryCharges;
+      if (pickup) {
+        deliveryCharges = 0;
+        if (order.riderId) data.riderId = null;
+      } else {
+        await assertAddressInDeliveryArea(order.restaurantId, addressId);
+        if (args.deliveryCharges != null) deliveryCharges = args.deliveryCharges;
+        else if (order.isPickedUp) {
+          const rest = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+          const config = await prisma.configuration.findFirst();
+          deliveryCharges = rest?.deliveryFee ?? config?.deliveryRate ?? 0;
+        }
+      }
+
+      if (args.isPickedUp != null && args.isPickedUp !== order.isPickedUp) data.isPickedUp = args.isPickedUp;
+      if (addressId !== order.addressId) data.addressId = addressId;
+      if (deliveryCharges !== order.deliveryCharges) {
+        data.deliveryCharges = deliveryCharges;
+        // itemsBase = itemsTotal − discount, which is invariant to fulfilment.
+        const itemsBase = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
+        data.orderAmount =
+          Math.round((itemsBase + deliveryCharges + order.tipping + order.taxationAmount) * 100) / 100;
+      }
+
+      if (Object.keys(data).length === 0) return order;
+
+      const updated = await prisma.order.update({ where: { id: args.id }, data });
+      await publishOrderUpdate(updated);
+      return updated;
+    },
+
     abortOrder: async (_parent, args: { id: string }, context) => {
       const currentUser = requireAuth(context);
       const order = await prisma.order.findUnique({ where: { id: args.id } });
@@ -530,6 +617,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       requireRole(context, ['ADMIN', 'VENDOR']);
       const rider = await prisma.user.findUnique({ where: { id: args.riderId } });
       if (!rider || rider.userType !== 'RIDER') throw userInputError('Rider not found');
+      await assertRiderUnderCashLimit(args.riderId, args.id);
 
       const updated = await prisma.order.update({
         where: { id: args.id },
@@ -549,6 +637,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       if (order.riderId && order.riderId !== currentUser.id) {
         throw userInputError('Order already assigned to another rider');
       }
+      await assertRiderUnderCashLimit(currentUser.id, args.id);
 
       const updated = await prisma.order.update({
         where: { id: args.id },

@@ -109,6 +109,9 @@ export interface IRiderCashSummary {
   outstanding: number;
   lifetimeCollected: number;
   lifetimeRemitted: number;
+  cashLimit: number;
+  walletBalance: number;
+  availableToWithdraw: number;
   entries: IRiderCashEntryRow[];
   remittances: IRiderCashRemittanceRow[];
 }
@@ -139,6 +142,7 @@ export interface IPlatformFinanceReport {
   commissionPaid: number;
   commissionOutstanding: number;
   storePayouts: number;
+  taxCollected: number;
   riderPayouts: number;
   codCashCollected: number;
   codCashRemitted: number;

@@ -31,10 +31,25 @@ export function orderFoodSubtotal(order: {
  * order is first marked DELIVERED. Safe to call again for the same order — the
  * unique `orderId` makes a repeat a no-op.
  */
+/**
+ * Whether the platform already keeps this order's commission through the money
+ * flow itself (so it must never be invoiced): online payments and COD-delivery
+ * (where the rider deposits the full cash). Only COD-**pickup** — the store
+ * holds the cash — leaves the commission owed on a bill.
+ */
+export function isCommissionSelfCollected(order: {
+  paymentMethod: string;
+  isPickedUp: boolean;
+}): boolean {
+  return !(order.paymentMethod === 'COD' && order.isPickedUp);
+}
+
 export async function recordOrderCommission(order: {
   id: string;
   orderId: string;
   restaurantId: string;
+  paymentMethod: string;
+  isPickedUp: boolean;
   orderAmount: number;
   deliveryCharges: number;
   tipping: number;
@@ -63,16 +78,21 @@ export async function recordOrderCommission(order: {
       foodSubtotal,
       commissionRate: rate,
       commissionAmount,
+      paymentMethod: order.paymentMethod,
+      isPickedUp: order.isPickedUp,
+      selfCollected: isCommissionSelfCollected(order),
       orderDeliveredAt: order.deliveredAt ?? new Date(),
     },
   });
 }
 
 /**
- * Record the COD cash a rider is now holding on the platform's behalf. Called
- * once, when a COD order with a rider is first marked DELIVERED. The rider keeps
- * `deliveryCharges + tipping`; everything else in the cash they took from the
- * customer (`owedToPlatform`) must be remitted. Idempotent on the order id.
+ * Record the COD cash a rider collected on delivery. Called once, when a COD
+ * order with a rider is first marked DELIVERED. The rider must deposit **the
+ * full order amount** — their delivery fee + tip is paid back separately into
+ * their wallet (`riderKeeps` here is that wallet credit, for display only).
+ * Idempotent on the order id. Pickup orders have no rider, so this is
+ * COD-delivery only.
  */
 export async function recordRiderCash(order: {
   id: string;
@@ -88,18 +108,24 @@ export async function recordRiderCash(order: {
   const existing = await prisma.riderCashEntry.findUnique({ where: { orderId: order.id } });
   if (existing) return;
 
-  const riderKeeps = order.deliveryCharges + order.tipping;
-  const owedToPlatform = Math.round((order.orderAmount - riderKeeps) * 100) / 100;
-
   await prisma.riderCashEntry.create({
     data: {
       orderId: order.id,
       orderNumber: order.orderId,
       riderId: order.riderId,
       collectedTotal: order.orderAmount,
-      riderKeeps,
-      owedToPlatform,
+      riderKeeps: order.deliveryCharges + order.tipping, // paid back via wallet
+      owedToPlatform: order.orderAmount, // deposit 100%
       deliveredAt: order.deliveredAt ?? new Date(),
     },
   });
+}
+
+/** A rider's undeposited COD cash right now (what they owe the platform). */
+export async function riderOutstandingCash(riderId: string): Promise<number> {
+  const open = await prisma.riderCashEntry.findMany({
+    where: { riderId, remittanceId: null },
+    select: { owedToPlatform: true },
+  });
+  return Math.round(open.reduce((s, e) => s + e.owedToPlatform, 0) * 100) / 100;
 }

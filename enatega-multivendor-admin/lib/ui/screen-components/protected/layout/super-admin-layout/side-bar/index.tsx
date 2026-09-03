@@ -175,27 +175,9 @@ export default function MakeSidebar() {
           isParent: false,
         },
         {
-          text: 'Commission Rate',
-          label: t('Commission Rate'),
-          route: '/management/commission-rates',
-          isParent: false,
-        },
-        {
-          text: 'Commission Bills',
-          label: t('Commission Bills'),
-          route: '/management/commission-bills',
-          isParent: false,
-        },
-        {
-          text: 'Rider Cash',
-          label: t('Rider Cash'),
-          route: '/management/rider-cash',
-          isParent: false,
-        },
-        {
-          text: 'Finance Report',
-          label: t('Finance Report'),
-          route: '/management/finance-report',
+          text: 'Finance',
+          label: t('Finance'),
+          route: '/management/finance',
           isParent: false,
         },
 

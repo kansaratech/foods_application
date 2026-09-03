@@ -58,9 +58,58 @@ export default function CashMain() {
         </Text>
         <Text className="text-center text-[12px]" style={{ color: appTheme.secondaryTextColor }}>
           {t(
-            "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle",
+            "Hand the full COD cash you collected to the admin — your fees and tips are paid separately into your wallet",
           )}
         </Text>
+        {!!s?.cashLimit && (
+          <View className="w-full mt-1">
+            <View
+              className="h-2 rounded-full overflow-hidden"
+              style={{ backgroundColor: appTheme.borderLineColor }}
+            >
+              <View
+                style={{
+                  width: `${Math.min(100, ((s?.outstanding ?? 0) / s.cashLimit) * 100)}%`,
+                  height: "100%",
+                  backgroundColor:
+                    (s?.outstanding ?? 0) >= s.cashLimit ? "#C0392B" : appTheme.primary,
+                }}
+              />
+            </View>
+            <Text
+              className="text-center text-[11px] mt-1"
+              style={{ color: appTheme.secondaryTextColor }}
+            >
+              {money(s?.outstanding ?? 0)} / {money(s.cashLimit)} —{" "}
+              {(s?.outstanding ?? 0) >= s.cashLimit
+                ? t("deposit to take cash orders again")
+                : t("cash order limit")}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Wallet vs held */}
+      <View
+        className="flex-row justify-around mx-4 mb-2 p-4 rounded-lg"
+        style={{ backgroundColor: appTheme.themeBackground }}
+      >
+        <View className="items-center">
+          <Text className="text-[12px]" style={{ color: appTheme.secondaryTextColor }}>
+            {t("Wallet balance")}
+          </Text>
+          <Text className="font-semibold text-[16px]" style={{ color: appTheme.fontMainColor }}>
+            {money(s?.walletBalance ?? 0)}
+          </Text>
+        </View>
+        <View className="items-center">
+          <Text className="text-[12px]" style={{ color: appTheme.secondaryTextColor }}>
+            {t("Available to withdraw")}
+          </Text>
+          <Text className="font-semibold text-[16px]" style={{ color: appTheme.fontMainColor }}>
+            {money(s?.availableToWithdraw ?? 0)}
+          </Text>
+        </View>
       </View>
 
       {/* Lifetime */}
@@ -118,7 +167,7 @@ export default function CashMain() {
                   {e.orderNumber}
                 </Text>
                 <Text className="text-[12px]" style={{ color: appTheme.secondaryTextColor }}>
-                  {day(e.deliveredAt)} · {t("collected")} {money(e.collectedTotal)} · {t("you kept")}{" "}
+                  {day(e.deliveredAt)} · {t("cash")} {money(e.collectedTotal)} · {t("to wallet")}{" "}
                   {money(e.riderKeeps)}
                 </Text>
               </View>

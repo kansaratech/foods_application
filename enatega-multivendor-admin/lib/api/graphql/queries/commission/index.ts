@@ -100,6 +100,9 @@ export const GET_RIDER_CASH_SUMMARY = gql`
       outstanding
       lifetimeCollected
       lifetimeRemitted
+      cashLimit
+      walletBalance
+      availableToWithdraw
       entries {
         _id
         orderNumber
@@ -133,6 +136,7 @@ export const GET_PLATFORM_FINANCE_REPORT = gql`
       commissionPaid
       commissionOutstanding
       storePayouts
+      taxCollected
       riderPayouts
       codCashCollected
       codCashRemitted

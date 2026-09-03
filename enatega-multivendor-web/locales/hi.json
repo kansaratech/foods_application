@@ -937,5 +937,16 @@
   "campaign_use_code": "कोड {code} इस्तेमाल करें",
   "coupon_copied": "कोड कॉपी हो गया",
   "offer_percent_off": "{pct}% छूट",
-  "festival_offers_title": "त्योहारी ऑफ़र"
+  "festival_offers_title": "त्योहारी ऑफ़र",
+  "Change this order": "यह ऑर्डर बदलें",
+  "You can still switch until the restaurant accepts it": "रेस्टोरेंट के स्वीकार करने तक आप बदल सकते हैं",
+  "Fulfilment": "पूर्ति",
+  "Delivery": "डिलीवरी",
+  "Pickup": "पिकअप",
+  "Payment": "भुगतान",
+  "Cash": "नकद",
+  "Pay online": "ऑनलाइन भुगतान",
+  "Order updated": "ऑर्डर अपडेट किया गया",
+  "Your order has been updated": "आपका ऑर्डर अपडेट कर दिया गया है",
+  "Could not update the order": "ऑर्डर अपडेट नहीं किया जा सका"
 }

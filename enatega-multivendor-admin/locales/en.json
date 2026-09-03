@@ -1208,5 +1208,18 @@
   "year": "year",
   "The platform charges commission on the food total of every delivered order and invoices you each": "The platform charges commission on the food total of every delivered order and invoices you each",
   "rider_cash_help": "COD cash riders have collected but not yet handed back to the platform",
-  "auto_close_note": "Completed periods close automatically every 6h. This button also bills the current, in-progress period right now."
+  "auto_close_note": "Completed periods close automatically every 6h. This button also bills the current, in-progress period right now.",
+  "Rider cash limit": "Rider cash limit",
+  "Cash limit": "Cash limit",
+  "Wallet balance": "Wallet balance",
+  "Available to withdraw": "Available to withdraw",
+  "Order total (cash)": "Order total (cash)",
+  "Rider earns (wallet)": "Rider earns (wallet)",
+  "Deposit owed": "Deposit owed",
+  "of which GST (to stores)": "of which GST (to stores)",
+  "Finance": "Finance",
+  "Overview": "Overview",
+  "Vendor settlements": "Vendor settlements",
+  "Commission rates": "Commission rates",
+  "Payouts": "Payouts"
 }

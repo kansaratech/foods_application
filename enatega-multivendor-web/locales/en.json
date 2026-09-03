@@ -952,5 +952,16 @@
   "campaign_use_code": "Use code {code}",
   "coupon_copied": "Code copied",
   "offer_percent_off": "{pct}% OFF",
-  "festival_offers_title": "Festival offers"
+  "festival_offers_title": "Festival offers",
+  "Change this order": "Change this order",
+  "You can still switch until the restaurant accepts it": "You can still switch until the restaurant accepts it",
+  "Fulfilment": "Fulfilment",
+  "Delivery": "Delivery",
+  "Pickup": "Pickup",
+  "Payment": "Payment",
+  "Cash": "Cash",
+  "Pay online": "Pay online",
+  "Order updated": "Order updated",
+  "Your order has been updated": "Your order has been updated",
+  "Could not update the order": "Could not update the order"
 }

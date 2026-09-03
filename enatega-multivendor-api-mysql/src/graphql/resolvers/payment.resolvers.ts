@@ -5,6 +5,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
+import { riderOutstandingCash } from '../../utils/commission';
 
 const nanoid = customAlphabet('0123456789', 8);
 type CurrentUser = { id: string; userType: string };
@@ -85,11 +86,10 @@ async function notifyAdminsOfWithdrawRequest(body: string) {
   await prisma.webNotification.createMany({ data: admins.map((a) => ({ userId: a.id, body, navigateTo: '/finance/withdraw-requests' })) });
 }
 
-// Earnings split: commission (on the food subtotal, using the restaurant's own
-// commissionRate) plus tax go to the platform; the full delivery fee and tip
-// go to the rider; the remaining food subtotal goes to the store. There's no
-// separate platform delivery cut or flat fee in this model - keeping it to
-// what real order fields actually support rather than inventing a number.
+// Earnings split: the platform keeps the commission (on the food subtotal, at
+// the restaurant's own commissionRate). The rider gets the full delivery fee +
+// tip. The store gets the rest of the food subtotal PLUS the tax it remits as
+// GST. No separate platform delivery cut or flat fee.
 function computeEarningRow(
   order: {
     id: string;
@@ -112,8 +112,8 @@ function computeEarningRow(
   const deliveryCommission = 0;
   const tax = order.taxationAmount;
   const platformFee = 0;
-  const platformTotal = marketplaceCommission + deliveryCommission + tax + platformFee;
-  const storeTotal = foodAmount - marketplaceCommission;
+  const platformTotal = marketplaceCommission + deliveryCommission + platformFee; // tax is the store's to remit
+  const storeTotal = foodAmount - marketplaceCommission + tax;
   const riderTotal = order.deliveryCharges + order.tipping;
 
   return {
@@ -126,7 +126,7 @@ function computeEarningRow(
     platformEarnings: {
       marketplaceCommission,
       deliveryCommission,
-      tax,
+      tax: 0, // tax passes through to the store (GST), not the platform
       platformFee,
       totalEarnings: platformTotal,
     },
@@ -313,7 +313,7 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
       >();
       for (const order of orders) {
         const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
-        const storeEarning = foodAmount - foodAmount * (restaurant.commissionRate / 100);
+        const storeEarning = foodAmount - foodAmount * (restaurant.commissionRate / 100) + order.taxationAmount;
         const dateKey = order.createdAt.toISOString().slice(0, 10);
         const entry = byDate.get(dateKey) ?? { totalOrderAmount: 0, totalEarnings: 0, orderDetails: [] };
         entry.totalOrderAmount += order.orderAmount;
@@ -392,8 +392,16 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
       if (currentUser.userType === 'RIDER') {
         const profile = await prisma.riderProfile.findUnique({ where: { userId: currentUser.id } });
         if (!profile) throw notFoundError('Rider profile not found');
-        if (args.requestAmount > profile.currentWalletAmount) {
-          throw userInputError('Withdraw amount exceeds your available balance');
+        // Net settlement: undeposited COD cash is held against earnings. A rider
+        // can only withdraw wallet balance beyond what they still owe.
+        const owed = await riderOutstandingCash(currentUser.id);
+        const available = Math.max(0, profile.currentWalletAmount - owed);
+        if (args.requestAmount > available) {
+          throw userInputError(
+            owed > 0
+              ? `You can withdraw ₹${available.toFixed(0)}. ₹${owed.toFixed(0)} of your balance is held against undeposited COD cash — deposit it to release the rest.`
+              : 'Withdraw amount exceeds your available balance',
+          );
         }
         const request = await prisma.withdrawRequest.create({
           data: { requestId: `WR-${nanoid()}`, riderId: currentUser.id, requestAmount: args.requestAmount },

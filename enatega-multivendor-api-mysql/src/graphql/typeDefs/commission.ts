@@ -110,6 +110,9 @@ export const commissionTypeDefs = /* GraphQL */ `
     outstanding: Float!
     lifetimeCollected: Float!
     lifetimeRemitted: Float!
+    cashLimit: Float!
+    walletBalance: Float!
+    availableToWithdraw: Float!
     entries: [RiderCashEntryRow!]!
     remittances: [RiderCashRemittanceRow!]!
   }
@@ -141,6 +144,7 @@ export const commissionTypeDefs = /* GraphQL */ `
     commissionPaid: Float!
     commissionOutstanding: Float!
     storePayouts: Float!
+    taxCollected: Float!
     riderPayouts: Float!
     codCashCollected: Float!
     codCashRemitted: Float!

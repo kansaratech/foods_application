@@ -72,10 +72,11 @@ export default function FinanceReportMain() {
             <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">
               {t('Order volume & payouts')}
             </h3>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
               <Card label={t('Delivered orders')} value={String(r.deliveredOrders)} />
               <Card label={t('Order volume')} value={money(r.orderVolume)} />
               <Card label={t('Store payouts')} value={money(r.storePayouts)} />
+              <Card label={t('of which GST (to stores)')} value={money(r.taxCollected)} />
               <Card label={t('Rider payouts')} value={money(r.riderPayouts)} />
             </div>
           </section>

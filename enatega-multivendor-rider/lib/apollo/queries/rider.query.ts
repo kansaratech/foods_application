@@ -46,6 +46,9 @@ export const RIDER_CASH_SUMMARY = gql`
       outstanding
       lifetimeCollected
       lifetimeRemitted
+      cashLimit
+      walletBalance
+      availableToWithdraw
       entries {
         _id
         orderNumber

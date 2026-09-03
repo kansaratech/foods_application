@@ -57,6 +57,7 @@ export const GET_CONFIGURATION = gql`
       customerDemoZoneId
       defaultCommissionRate
       commissionBillingCycle
+      riderCashLimit
       defaultLatitude
       defaultLongitude
     }

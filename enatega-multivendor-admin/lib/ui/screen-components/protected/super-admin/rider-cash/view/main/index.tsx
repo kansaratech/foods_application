@@ -128,7 +128,9 @@ export default function RiderCashMain() {
           <div className="flex flex-col gap-4 text-sm">
             <div className="flex flex-wrap gap-x-8 gap-y-1">
               <span><b>{t('Outstanding')}:</b> {money(summary.outstanding)}</span>
-              <span><b>{t('Lifetime collected')}:</b> {money(summary.lifetimeCollected)}</span>
+              <span><b>{t('Cash limit')}:</b> {money(summary.cashLimit)}</span>
+              <span><b>{t('Wallet balance')}:</b> {money(summary.walletBalance)}</span>
+              <span><b>{t('Available to withdraw')}:</b> {money(summary.availableToWithdraw)}</span>
               <span><b>{t('Lifetime remitted')}:</b> {money(summary.lifetimeRemitted)}</span>
             </div>
 
@@ -173,9 +175,9 @@ export default function RiderCashMain() {
                   <tr className="border-b text-left text-gray-500">
                     <th className="py-1">{t('Order')}</th>
                     <th className="py-1">{t('Delivered')}</th>
-                    <th className="py-1 text-right">{t('Collected')}</th>
-                    <th className="py-1 text-right">{t('Rider keeps')}</th>
-                    <th className="py-1 text-right">{t('Owed to platform')}</th>
+                    <th className="py-1 text-right">{t('Order total (cash)')}</th>
+                    <th className="py-1 text-right">{t('Rider earns (wallet)')}</th>
+                    <th className="py-1 text-right">{t('Deposit owed')}</th>
                   </tr>
                 </thead>
                 <tbody>
