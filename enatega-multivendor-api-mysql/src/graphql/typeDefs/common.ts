@@ -78,6 +78,11 @@ export const commonTypeDefs = /* GraphQL */ `
     isPaidVersion: Boolean
     enableCustomerDemoMode: Boolean
     customerDemoZoneId: String
+
+    defaultCommissionRate: Float
+    commissionBillingCycle: String
+    defaultLatitude: Float
+    defaultLongitude: Float
   }
 
   input EmailConfigurationInput {
@@ -155,6 +160,13 @@ export const commonTypeDefs = /* GraphQL */ `
   input DeliveryCostConfigurationInput {
     deliveryRate: Float
     costType: String
+  }
+
+  input CommissionConfigurationInput {
+    defaultCommissionRate: Float
+    commissionBillingCycle: String
+    defaultLatitude: Float
+    defaultLongitude: Float
   }
 
   input PaypalConfigurationInput {
@@ -292,6 +304,7 @@ export const commonTypeDefs = /* GraphQL */ `
     saveTwilioConfiguration(configurationInput: TwilioConfigurationInput!): Configuration!
     saveVerificationsToggle(configurationInput: VerificationConfigurationInput!): Configuration!
     saveCurrencyConfiguration(configurationInput: CurrencyConfigurationInput!): Configuration!
+    saveCommissionConfiguration(configurationInput: CommissionConfigurationInput!): Configuration!
   }
 
   type Subscription {

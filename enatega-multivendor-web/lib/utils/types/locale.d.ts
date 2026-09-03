@@ -1,2 +1,2 @@
 
-  export type TLocale = "en" | "kk" | "ru";
+  export type TLocale = "en" | "hi";

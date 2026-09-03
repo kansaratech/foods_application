@@ -356,4 +356,15 @@ export const en = {
   "has overlapping slots": "has overlapping slots",
   "Loading...": "Loading...",
   "Oops!": "Oops!",
+  "My Cash": "My Cash",
+  "Cash you owe the platform": "Cash you owe the platform",
+  "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle": "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle",
+  "Lifetime collected": "Lifetime collected",
+  "Lifetime handed over": "Lifetime handed over",
+  "Unsettled deliveries": "Unsettled deliveries",
+  "collected": "collected",
+  "you kept": "you kept",
+  "Handovers": "Handovers",
+  "cash": "cash",
+  "deliveries": "deliveries"
 };

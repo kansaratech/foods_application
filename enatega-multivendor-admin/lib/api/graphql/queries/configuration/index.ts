@@ -55,6 +55,10 @@ export const GET_CONFIGURATION = gql`
       vapidKey
       enableCustomerDemoMode
       customerDemoZoneId
+      defaultCommissionRate
+      commissionBillingCycle
+      defaultLatitude
+      defaultLongitude
     }
   }
 `;

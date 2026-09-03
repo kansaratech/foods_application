@@ -27,6 +27,7 @@ if (!i18next.isInitialized) {
 
 const LANGUAGE_LOADERS = {
   en: () => import("./languages/en").then((module) => module.en),
+  hi: () => import("./languages/hi").then((module) => module.hi),
   zh: () => import("./languages/zh").then((module) => module.zh),
   de: () => import("./languages/de").then((module) => module.de),
   fr: () => import("./languages/fr").then((module) => module.fr),

@@ -87,6 +87,26 @@ From the admin panel: **Management → Banners → Add Banner**. Set *Placement*
 Code* (create the coupon first under **Management → Coupons** with matching
 dates). The table's *Status* column shows Live / Scheduled / Expired.
 
+## 4. Platform commission backfill (one-off, after upgrading)
+
+```bash
+npx ts-node prisma/backfill-commission.ts
+```
+
+Run this **once** after deploying the commission-billing feature. It:
+
+1. sets `commissionRate` = the Configuration default (20%) on every store still
+   at 0 — otherwise the platform earns nothing;
+2. sets `deliveryDistance` on every store missing one (from the delivery circle
+   the vendor drew, else a 60 km fallback) — this is the radius serviceability
+   and order placement enforce;
+3. writes a `CommissionRecord` for every already-`DELIVERED` order so the first
+   generated bill is not empty;
+4. writes a `RiderCashEntry` for every historical COD delivery that had a rider,
+   so the Rider Cash screen shows the real outstanding balance.
+
+Safe to re-run. See `PADHARO_COMMISSION.md` for the billing workflow.
+
 ## Point a frontend at this API
 
 ```

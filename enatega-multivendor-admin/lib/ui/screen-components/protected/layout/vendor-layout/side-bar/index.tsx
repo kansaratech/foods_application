@@ -18,6 +18,7 @@ import {
   faHome,
   faUser,
   faStore,
+  faPercent,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Components
@@ -79,6 +80,13 @@ export default function MakeVendorSidebar() {
       route: '/admin/vendor/stores',
       isParent: true,
       icon: faStore,
+      isClickable: true,
+    },
+    {
+      text: t('Commission'),
+      route: '/admin/vendor/commission',
+      isParent: true,
+      icon: faPercent,
       isClickable: true,
     },
   ];

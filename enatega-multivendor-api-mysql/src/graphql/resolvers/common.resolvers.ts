@@ -286,6 +286,19 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
 
     saveCurrencyConfiguration: (_parent, args: { configurationInput: { currency?: string; currencySymbol?: string } }, context) =>
       saveConfiguration(context, args.configurationInput),
+
+    saveCommissionConfiguration: (
+      _parent,
+      args: {
+        configurationInput: {
+          defaultCommissionRate?: number;
+          commissionBillingCycle?: string;
+          defaultLatitude?: number;
+          defaultLongitude?: number;
+        };
+      },
+      context,
+    ) => saveConfiguration(context, args.configurationInput),
   },
   Configuration: {
     _id: (parent: { id: string }) => parent.id,

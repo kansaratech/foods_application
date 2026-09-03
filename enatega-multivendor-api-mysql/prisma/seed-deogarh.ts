@@ -278,14 +278,23 @@ function scatter(i: number): { lat: number; lng: number } {
 }
 
 async function main() {
-  // ---- Currency ----
+  // ---- Currency + platform config ----
   const config = await prisma.configuration.findFirst();
-  if (config && (config.currency !== 'INR' || config.currencySymbol !== RUPEE)) {
+  if (config) {
     await prisma.configuration.update({
       where: { id: config.id },
-      data: { currency: 'INR', currencySymbol: RUPEE, deliveryRate: 20 },
+      data: {
+        currency: 'INR',
+        currencySymbol: RUPEE,
+        deliveryRate: 20,
+        // Platform commission billing + map-centre fallback for the launch town.
+        defaultCommissionRate: config.defaultCommissionRate || 20,
+        commissionBillingCycle: config.commissionBillingCycle || 'MONTHLY',
+        defaultLatitude: DEOGARH_LAT,
+        defaultLongitude: DEOGARH_LNG,
+      },
     });
-    console.log(`Configuration currency set to INR (${RUPEE}).`);
+    console.log(`Configuration set: INR (${RUPEE}), commission ${config.defaultCommissionRate || 20}% / ${config.commissionBillingCycle || 'MONTHLY'}, map centre Deogarh.`);
   }
 
   // ---- Shop types ----

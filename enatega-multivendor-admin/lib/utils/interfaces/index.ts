@@ -35,6 +35,7 @@ export * from './users.interface';
 export * from './vendor.interface';
 export * from './zone.interface';
 export * from './waitlist.interface';
+export * from './commission.interface';
 export * from './payment.card.interface';
 export * from './profile/restaurant.profile.interface';
 export * from './food.interface';

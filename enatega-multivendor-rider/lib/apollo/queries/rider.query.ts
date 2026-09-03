@@ -40,6 +40,32 @@ export const RIDER_CURRENT_WITHDRAW_REQUEST = gql`
   }
 `;
 
+export const RIDER_CASH_SUMMARY = gql`
+  query RiderCashSummary($riderId: ID!) {
+    riderCashSummary(riderId: $riderId) {
+      outstanding
+      lifetimeCollected
+      lifetimeRemitted
+      entries {
+        _id
+        orderNumber
+        collectedTotal
+        riderKeeps
+        owedToPlatform
+        deliveredAt
+        remitted
+      }
+      remittances {
+        _id
+        amount
+        entryCount
+        method
+        createdAt
+      }
+    }
+  }
+`;
+
 export const RIDER_PROFILE = gql`
   query rider($id: String!) {
     rider(id: $id) {

@@ -43,16 +43,10 @@ import { useTranslation } from 'react-i18next'
 import useNetworkStatus from '../../utils/useNetworkStatus'
 import ErrorView from '../../components/ErrorView/ErrorView'
 
+// Launch scope is English + Hindi only.
 const languageTypes = [
   { value: 'English', code: 'en', index: 0 },
-  { value: 'français', code: 'fr', index: 1 },
-  { value: 'ភាសាខ្មែរ', code: 'km', index: 2 },
-  { value: '中文', code: 'zh', index: 3 },
-  { value: 'Deutsche', code: 'de', index: 4 },
-  { value: 'العربية', code: 'ar', index: 5 },
-  { value: 'עִברִית', code: 'he', index: 6 },
-  { value: 'Қазақша', code: 'kk', index: 7 },
-  { value: 'русский', code: 'ru', index: 8 }
+  { value: 'हिंदी', code: 'hi', index: 1 }
 ]
 
 const PUSH_TOKEN = gql`

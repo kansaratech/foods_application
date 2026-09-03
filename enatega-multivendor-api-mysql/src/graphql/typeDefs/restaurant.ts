@@ -132,6 +132,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     password: String
     shopType: String
     salesTax: Float
+    commissionRate: Float
     cuisines: [String!]
     latitude: Float
     longitude: Float

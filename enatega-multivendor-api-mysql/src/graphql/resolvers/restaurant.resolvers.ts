@@ -55,6 +55,7 @@ interface RestaurantInputArgs {
   password?: string;
   shopType?: string;
   salesTax?: number;
+  commissionRate?: number;
   cuisines?: string[];
   latitude?: number;
   longitude?: number;
@@ -404,6 +405,12 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const input = args.restaurant;
       const cuisineIds = await resolveCuisineIds(input.cuisines);
+      const config = await prisma.configuration.findFirst();
+      // A new store inherits the platform default commission unless the form
+      // set an explicit rate. `Restaurant.commissionRate` otherwise defaults to
+      // 0, which silently means "the platform earns nothing from this store".
+      const commissionRate =
+        input.commissionRate != null ? input.commissionRate : (config?.defaultCommissionRate ?? 20);
 
       const restaurant = await prisma.restaurant.create({
         data: {
@@ -418,6 +425,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           password: input.password ? await hashPassword(input.password) : undefined,
           shopTypeId: await resolveShopTypeId(input.shopType),
           tax: input.salesTax ?? 0,
+          commissionRate,
           latitude: input.latitude,
           longitude: input.longitude,
           slug: slugify(input.name),
@@ -563,12 +571,18 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!restaurant) throw notFoundError('Restaurant not found');
       assertOwnsRestaurant(currentUser, restaurant);
 
+      // The delivery radius (km) drawn here is the single source of truth for
+      // "does this store deliver there?" — serviceability, the storefront range
+      // banner and order placement all read `deliveryDistance`. Keep it in sync
+      // with the circle the vendor set so the map and the rules never disagree.
+      const radiusKm = args.circleBounds?.radius;
       const data = await prisma.restaurant.update({
         where: { id: args.id },
         data: {
           boundType: args.boundType,
           deliveryBounds: args.bounds ?? undefined,
           circleBounds: args.circleBounds ?? undefined,
+          ...(radiusKm && radiusKm > 0 ? { deliveryDistance: radiusKm } : {}),
           latitude: args.location.latitude,
           longitude: args.location.longitude,
           address: args.address,

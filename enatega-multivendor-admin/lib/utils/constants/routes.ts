@@ -24,6 +24,18 @@ export const ROUTES = [
     route: '/management/commission-rates',
   },
   {
+    text: 'Commission Bills',
+    route: '/management/commission-bills',
+  },
+  {
+    text: 'Rider Cash',
+    route: '/management/rider-cash',
+  },
+  {
+    text: 'Finance Report',
+    route: '/management/finance-report',
+  },
+  {
     text: 'Withdraw Request',
     route: '/management/withdraw-requests',
   },

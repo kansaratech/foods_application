@@ -17,6 +17,7 @@ import { typeDefs } from './graphql/typeDefs';
 import { resolvers } from './graphql/resolvers';
 import { buildHttpContext, buildWsContext, GraphQLContext } from './context';
 import { idAwareDefaultFieldResolver } from './utils/defaultFieldResolver';
+import { startSchedulers } from './scheduler';
 
 // WebSocket sub-protocols. The frontends in this repo are split across both:
 //   * "graphql-transport-ws" -> modern graphql-ws client
@@ -125,6 +126,8 @@ async function main() {
   await new Promise<void>((resolve) => httpServer.listen({ port: env.port }, resolve));
   console.log(`GraphQL server ready at http://localhost:${env.port}/graphql`);
   console.log(`GraphQL subscriptions ready at ws://localhost:${env.port}/graphql (graphql-transport-ws + legacy graphql-ws)`);
+
+  startSchedulers();
 }
 
 main().catch((error) => {

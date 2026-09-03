@@ -23,3 +23,4 @@ export * from './concurrent';
 export * from './shop-types'
 export * from './audit';
 export * from './waitlist';
+export * from './commission';

@@ -21,3 +21,4 @@ export * from './app-versions';
 export * from './shop-type';
 export * from './upload';
 export * from './waitlist';
+export * from './commission';

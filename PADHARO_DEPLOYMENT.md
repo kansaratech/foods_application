@@ -138,35 +138,35 @@ in a Linux container).
 
 ### Zip + FTP (primary method)
 
-PowerShell on the dev machine:
+**One command on the dev machine** builds the bundle (right excludes, sanity
+check, and a `SERVER-DEPLOY.sh` helper dropped into the zip root):
 
 ```powershell
-$src   = "d:\my-workspace\maekotech\project\kitchen\foods_application"
-$stage = "$env:TEMP\padharo-deploy"
-$zip   = "$env:USERPROFILE\Desktop\padharo-deploy.zip"
-
-robocopy $src $stage /MIR /NFL /NDL /NJH /NJS `
-  /XD node_modules .next .expo .cache .git dist build coverage cypress `
-      "enatega-multivendor-store\android" "enatega-multivendor-store\ios" `
-      "enatega-multivendor-app" "enatega-multivendor-rider" `
-      assets brand lib scripts .github `
-  /XF *.log *.tsbuildinfo *.pdf index.html bash.exe.stackdump
-
-if (Test-Path $zip) { Remove-Item $zip }
-Compress-Archive -Path "$stage\*" -DestinationPath $zip
-"Made $zip  ($([math]::Round((Get-Item $zip).Length/1MB,1)) MB)"
+powershell -ExecutionPolicy Bypass -File scripts\make-deploy-zip.ps1
+#   -> <Desktop>\padharo-deploy.zip   (~58 MB)
+#
+# add -Lean to also drop web/public/assets/images/png (~44 MB of unoptimised
+# marketing images not referenced by any rendered component) -> ~14 MB zip;
+# eyeball the web marketing pages after deploying.
+#
+# add -Out <path> to write it elsewhere.
 ```
 
-**Must be in the zip:** every `package.json` + `package-lock.json`, all
-`Dockerfile`s + `.dockerignore`, `docker-compose.yml`, `deploy/`, each app's
-`prisma/` / `nginx.conf` / `.npmrc` / `.nvmrc`, and the four service source
-folders (`enatega-multivendor-{web,admin,api-mysql,store}`).
+It excludes `node_modules` / build output / `.git` / the customer & rider Expo
+apps / root `assets|brand|lib|scripts|.github` / every real `.env`, and **keeps**
+every `package-lock.json`, all `Dockerfile`s, `docker-compose.yml`,
+`deploy/padharo.env.example`, each app's `prisma/` + its own `lib/`, and
+`api-mysql/scripts/` (so `npm run verify` runs on the server). It aborts if any
+required file is missing.
 
-Upload the zip **in binary mode**, then:
+Upload the zip **in binary mode**, then on the server:
 
 ```bash
 cd <project dir>
-unzip ~/padharo-deploy.zip
+unzip -o ~/padharo-deploy.zip     # -o overwrites; keeps deploy/padharo.env
+bash SERVER-DEPLOY.sh             # build + start + db:deploy + checks  (redeploys)
+#   first ever deploy: create deploy/padharo.env first (section 6), then also
+#   run section 8 for the Maps key + demo data.
 ```
 
 ### git clone (alternative, if the host has git)
@@ -231,31 +231,36 @@ curl -sI http://127.0.0.1:6004/ | head -n1           # 200  store
 ## 8. Schema + data
 
 `prisma/migrations/` is stale for this DB — use `db push`, then seed (see the
-§4 warning about not importing a Windows dump).
+§4 warning about not importing a Windows dump). **All of it is wrapped in one
+idempotent command**, `npm run db:deploy` (`prisma/deploy/` — see its README):
+schema sync → client → Configuration defaults (currency, commission billing, map
+centre, verification skips — non‑destructive) → commission/delivery backfill.
 
 ```bash
 cd <project dir>
 DBPW=$(cat /root/padharo_db_pw.txt)
 
-# 1. create the schema (PascalCase tables)
-docker compose --env-file deploy/padharo.env exec api npx prisma db push --skip-generate
+# 1. schema + config defaults + backfill (safe to re-run on every redeploy)
+docker compose --env-file deploy/padharo.env exec api npm run db:deploy
+#    first launch only — also load the 8 demo Deogarh stores:
+docker compose --env-file deploy/padharo.env exec api npm run db:deploy -- --demo
 
-# 2. seed base data + the Deogarh stores
-docker compose --env-file deploy/padharo.env exec api npm run seed
-docker compose --env-file deploy/padharo.env exec api npm run seed:deogarh
-
-# 3. the seed does NOT set the Maps key — add it
+# 2. the deploy does NOT set the Maps key — add it once
 docker exec -it mysql_dev_3308 mysql -upadharo -p"$DBPW" padharo \
   -e "UPDATE Configuration SET googleMapsApiKey='<MAPS_KEY>';"
 
-# 4. pick up the config change
+# 3. pick up the config change
 docker compose --env-file deploy/padharo.env restart api
 ```
 
-`npm run seed` prints all base logins (admin `admin@enatega.local` / `Admin@123`,
-etc.). `seed:deogarh` adds 8 stores and flips `Configuration` to INR / ₹.
+`db:deploy -- --demo` runs `npm run seed` (prints base logins — admin
+`admin@enatega.local` / `Admin@123`, etc.) and `seed:deogarh` (8 stores, flips
+`Configuration` to INR / ₹, commission 20% / MONTHLY, map centre Deogarh).
 Store‑app logins: `dgh-<slug>@store.padharo` / `Store@123`
 (e.g. `dgh-shrinath-mishthan-bhandar@store.padharo`).
+
+**On every later redeploy after a schema change:** just
+`docker compose … exec api npm run db:deploy` (no `--demo`).
 
 ---
 
@@ -339,6 +344,24 @@ certbot renew --dry-run
 
 ### 9c. Phase 2 — HTTP→HTTPS redirect + TLS proxy
 
+> **Apache 2.4.6 (CentOS 7) — MUST also set `SSLCertificateChainFile`.** Reading the
+> intermediate + cross-sign out of `fullchain.pem` via `SSLCertificateFile` needs
+> httpd ≥ 2.4.8. On 2.4.6 the server sends **only the leaf**; desktop browsers
+> tolerate it (AIA fetch / cached intermediates) but **Android okhttp fails the
+> handshake** — worse now that the Let's Encrypt chain runs
+> `leaf → YR1 → ISRG Root YR → ISRG Root X1` and `ISRG Root YR` (2026) isn't in
+> device trust stores yet. Every `*:443` block below includes
+> `SSLCertificateChainFile .../chain.pem`. Verify after reload (**must use
+> `-showcerts`** — plain `s_client` output only ever contains the leaf, so
+> `grep -c "BEGIN CERTIFICATE"` on it always says `1` and proves nothing):
+> `echo | openssl s_client -connect <host>:443 -servername <host> -showcerts 2>/dev/null | grep -c "BEGIN CERTIFICATE"` → **3**, and `Verify return code: 0 (ok)`.
+>
+> **Duplicate vhost note:** if the domain was also added through the Sentora panel,
+> there is a second auto-generated `*:443` vhost at
+> `/etc/sentora/configs/apache/domains/ssl_<host>.conf`. `conf.d/*.conf` loads first
+> (httpd.conf line ~354) so the hand-written vhost wins, but keep the SSL block in
+> both correct (Sentora's regenerates with `cert.pem`+`chain.pem` already).
+
 ```bash
 for pair in "padharo:6000" "padharo-admin:6001" "padharo-store:6004"; do
   name=${pair%:*}; port=${pair#*:}
@@ -359,8 +382,9 @@ for pair in "padharo:6000" "padharo-admin:6001" "padharo-store:6004"; do
 <VirtualHost *:443>
     ServerName ${name}.kansaratech.com
     SSLEngine On
-    SSLCertificateFile    /etc/letsencrypt/live/${name}.kansaratech.com/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/${name}.kansaratech.com/privkey.pem
+    SSLCertificateFile      /etc/letsencrypt/live/${name}.kansaratech.com/cert.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/${name}.kansaratech.com/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/${name}.kansaratech.com/chain.pem
     ProxyPreserveHost On
     ProxyRequests Off
     RequestHeader set X-Forwarded-Proto "https"
@@ -395,8 +419,9 @@ cat > /etc/httpd/conf.d/padharo-api.kansaratech.com.conf <<'EOF'
 <VirtualHost *:443>
     ServerName padharo-api.kansaratech.com
     SSLEngine On
-    SSLCertificateFile    /etc/letsencrypt/live/padharo-api.kansaratech.com/fullchain.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/padharo-api.kansaratech.com/privkey.pem
+    SSLCertificateFile      /etc/letsencrypt/live/padharo-api.kansaratech.com/cert.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/padharo-api.kansaratech.com/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/padharo-api.kansaratech.com/chain.pem
     ProxyPreserveHost On
     ProxyRequests Off
     RequestHeader set X-Forwarded-Proto "https"
@@ -419,7 +444,29 @@ apachectl configtest && systemctl reload httpd
 ```
 
 `certbot renew` deploy‑hook: add `--deploy-hook "systemctl reload httpd"` on the
-first issue, or rely on the packaged renew timer + a global reload hook.
+first issue, or install a global one:
+
+```bash
+mkdir -p /etc/letsencrypt/renewal-hooks/deploy
+printf '#!/bin/sh\nsystemctl reload httpd\n' > /etc/letsencrypt/renewal-hooks/deploy/reload-httpd.sh
+chmod +x /etc/letsencrypt/renewal-hooks/deploy/reload-httpd.sh
+```
+
+The `chain.pem` / `fullchain.pem` paths under `live/` stay valid across renewals,
+so the `SSLCertificateChainFile` lines never need re‑editing.
+
+**Retrofit an already‑deployed box** (adds the missing `SSLCertificateChainFile`
+to all 4 vhosts in place):
+
+```bash
+cd /etc/httpd/conf.d
+for h in padharo padharo-admin padharo-store padharo-api; do
+  f=${h}.kansaratech.com.conf
+  grep -q SSLCertificateChainFile "$f" || sed -i \
+    "\|SSLCertificateKeyFile /etc/letsencrypt/live/${h}.kansaratech.com/privkey.pem|a\\    SSLCertificateChainFile /etc/letsencrypt/live/${h}.kansaratech.com/chain.pem" "$f"
+done
+apachectl configtest && systemctl reload httpd
+```
 
 ---
 
@@ -471,11 +518,12 @@ Browser:
 ```bash
 cd <project dir>
 
-# redeploy after a code change
-unzip -o ~/padharo-deploy.zip          # re-upload first; -o overwrites, keeps deploy/padharo.env
-#   (git: git pull)
-docker compose --env-file deploy/padharo.env up -d --build
-docker compose --env-file deploy/padharo.env exec api npx prisma db push --skip-generate   # if schema changed
+# redeploy after a code change:
+#   dev machine:  powershell -File scripts\make-deploy-zip.ps1   (upload the zip)
+#   server:
+unzip -o ~/padharo-deploy.zip          # -o overwrites, keeps deploy/padharo.env
+bash SERVER-DEPLOY.sh                   # up -d --build + db:deploy + checks
+#   (git host instead of zip: git pull, then `bash SERVER-DEPLOY.sh`)
 
 # URL / Maps-key change → rebuild the affected bundles (values are compile-time)
 docker compose --env-file deploy/padharo.env up -d --build web admin store
@@ -494,6 +542,77 @@ docker run --rm -v padharo_padharo_uploads:/data -v /var/backups:/out \
 
 Rollback: re‑deploy the previous zip / `git checkout <sha>` + `up -d --build`;
 restore the DB from a dump only if a schema/data change caused the problem.
+
+---
+
+## 12.1 Deploying the commission / language / location / rider‑cash release
+
+What changed and what each needs on the server:
+
+| Change | Server action |
+|---|---|
+| **DB schema** — 4 new tables (`CommissionRecord`, `CommissionBill`, `RiderCashEntry`, `RiderCashRemittance`) + `Configuration` columns (`defaultCommissionRate`, `commissionBillingCycle`, `defaultLatitude/Longitude`) | `db:deploy` (below) — additive `prisma db push`, no data loss |
+| **API** — commission/rider‑cash resolvers, `placeOrder` delivery‑range check, in‑process **scheduler** (`src/scheduler.ts`, auto‑closes completed commission periods every 6 h) | rebuild `api` image; scheduler starts itself on boot |
+| **Admin** — 4 new screens (Commission Bills, Rider Cash, Finance Report, vendor "My Commission"), proxy address‑search on the store‑location map | rebuild `admin` image |
+| **Web + Store** — language pickers trimmed to EN/HI, new store‑app `hi.js` | rebuild `web` + `store` images (locale files are compiled in) |
+| **Rider app** — new "My Cash" drawer screen | **not a server service** — see note at the end |
+
+No new **required** env vars. Optional: `COMMISSION_AUTOCLOSE=off` in
+`deploy/padharo.env` to disable the scheduler (default: on).
+
+### Steps
+
+```powershell
+# 1. dev machine — build the bundle
+powershell -ExecutionPolicy Bypass -File scripts\make-deploy-zip.ps1
+#    -> <Desktop>\padharo-deploy.zip   (upload it in binary mode)
+```
+
+```bash
+# 2. server
+cd <project dir>
+unzip -o ~/padharo-deploy.zip          # -o overwrites; keeps deploy/padharo.env
+bash SERVER-DEPLOY.sh
+#    SERVER-DEPLOY.sh does, in order:
+#      docker compose ... up -d --build          (api, web, admin, store)
+#      docker compose ... exec api npm run db:deploy
+#          -> Configuration filled: ... / Stores: N ... backfilled /
+#             Commission records: K created / Rider cash entries: J created / ✅
+#      grep the scheduler line
+#          -> [scheduler] commission auto-close armed (every 6h ...)
+#      read-only check that the new Query fields exist
+#          -> OK  commissionPeriodPreview / OK riderCashOutstanding / OK platformFinanceReport
+```
+
+`SERVER-DEPLOY.sh` is safe to re-run for every future redeploy. It stops with a
+clear message if `deploy/padharo.env` is missing (first deploy — create it from
+§6, then re-run; the Maps key + demo data are still §8).
+
+> `npm run verify` (`scripts/verify-launch.mjs`) is the full end‑to‑end check but
+> it **writes** test orders / a paid bill / a remittance — run it only on a
+> staging or `--demo` deploy, not production. It assumes the seed logins exist.
+
+### Browser checks
+
+- Admin → **Management → Commission Bills / Rider Cash / Finance Report** load.
+- A vendor login shows **Commission** in its sidebar.
+- Place → deliver one COD test order → *Commission Bills → Current period*
+  shows it; if a rider was assigned, *Rider Cash* shows the held amount.
+- Store‑location map (admin → a store → General → Location): opens on the store /
+  Deogarh (not Australia), address search returns predictions.
+
+### Rider app ("My Cash" screen)
+
+Not deployed by Docker. The screen is in the Expo JS bundle:
+
+- **Now:** restart Metro (`npx expo start` for the rider app) — installed
+  dev‑client apps pick it up on reload, as long as the phone can reach Metro.
+- **For a standalone APK:** new EAS build (`eas build --profile demo …`) —
+  blocked until the free‑plan quota resets (see the mobile notes).
+
+Rollback for this release: redeploy the previous zip + `up -d --build`. The new
+tables are additive — leaving them in place after a rollback is harmless; only
+restore a DB dump if the backfill itself is suspected.
 
 ---
 

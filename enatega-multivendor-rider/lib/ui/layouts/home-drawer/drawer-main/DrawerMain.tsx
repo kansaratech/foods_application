@@ -13,6 +13,7 @@ import {
   // UserIcon,
   HomeIcon,
   LanguageIcon,
+  WalletIcon,
 } from "@/lib/ui/useable-components/svg";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -127,6 +128,20 @@ const DrawerMain = ({
           title: t("Work Schedule"),
           drawerIcon: ({ color, size }) => (
             <ClockIcon
+              color={appTheme.iconColor ?? color}
+              height={size}
+              width={size}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="cash"
+        options={{
+          drawerLabel: t("My Cash"),
+          title: t("My Cash"),
+          drawerIcon: ({ color, size }) => (
+            <WalletIcon
               color={appTheme.iconColor ?? color}
               height={size}
               width={size}

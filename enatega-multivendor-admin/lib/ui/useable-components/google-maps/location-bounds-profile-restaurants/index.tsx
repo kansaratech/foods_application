@@ -19,11 +19,17 @@ import { throttle } from '@/lib/utils/methods';
 
 // API and GraphQL
 import {
+  GET_CONFIGURATION,
   GET_RESTAURANT_DELIVERY_ZONE_INFO,
   GET_RESTAURANT_PROFILE,
   GET_ZONES,
   UPDATE_DELIVERY_BOUNDS_AND_LOCATION,
 } from '@/lib/api/graphql';
+
+// Map-centre fallback for a store that has no pin yet. Overridden by the
+// Configuration `defaultLatitude/Longitude` when set. (Was hard-coded to the
+// centre of Australia, which made every new store start on the wrong continent.)
+const FALLBACK_CENTER = { lat: 25.534, lng: 73.899 };
 
 // Context
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -53,21 +59,17 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Circle, GoogleMap, Marker, Polygon } from '@react-google-maps/api';
-import parse from 'autosuggest-highlight/parse';
 import { AutoComplete, AutoCompleteSelectEvent } from 'primereact/autocomplete';
 
 // Components
 import CustomButton from '../../button';
 import CustomRadiusInputField from '../../custom-radius-input';
-import CustomShape from '../shapes';
 import calculateZoom from '@/lib/utils/methods/zoom-calculator';
 import { useTranslations } from 'next-intl';
 import { darkMapStyle } from '@/lib/utils/map-style/mapStyle';
 import { useTheme } from 'next-themes';
-
-const autocompleteService: {
-  current: google.maps.places.AutocompleteService | null;
-} = { current: null };
+import { placeAutocomplete, placeDetail, reverseGeocode } from '@/lib/api/google-maps';
+import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 const CustomGoogleMapsLocationBounds: React.FC<
   ICustomGoogleMapsLocationBoundsComponentProps
@@ -80,21 +82,18 @@ const CustomGoogleMapsLocationBounds: React.FC<
   // States
   const [zoom, setZoom] = useState(14);
   const [UpdateLocationAddress, setUpdateLocationAddress] = useState('');
-  const [deliveryZoneType, setDeliveryZoneType] = useState('point');
-  const [center, setCenter] = useState({
-    lat: -25.2744, // Central latitude of Australia
-    lng: 133.7751, // Central longitude of Australia
-  });
-
-  const [marker, setMarker] = useState({
-    lat: -25.2744, // Marker at the same central point
-    lng: 133.7751, // Marker at the same central point
-  });
+  // A radius (km) from the store pin is the single delivery-area concept the
+  // platform enforces (serviceability + order placement read `deliveryDistance`).
+  const [deliveryZoneType, setDeliveryZoneType] = useState('radius');
+  const [center, setCenter] = useState(FALLBACK_CENTER);
+  const [marker, setMarker] = useState(FALLBACK_CENTER);
   const [path, setPath] = useState<ILocationPoint[]>([]);
-  const [distance, setDistance] = useState(1);
+  const [distance, setDistance] = useState(5);
+  const [hasStorePin, setHasStorePin] = useState(false);
   // Hooks
   const t = useTranslations();
   const { theme } = useTheme();
+  const { SERVER_URL } = useConfiguration();
 
   // States
   const [options, setOptions] = useState<IPlaceSelectedOption[]>([]);
@@ -149,17 +148,37 @@ const CustomGoogleMapsLocationBounds: React.FC<
       }
     },
   });
+  useQuery(GET_CONFIGURATION, {
+    onCompleted: (data) => {
+      const lat = data?.configuration?.defaultLatitude;
+      const lng = data?.configuration?.defaultLongitude;
+      // Only re-centre on the marketplace default while the store still has no
+      // pin of its own — never yank the map away from a real saved location.
+      if (!hasStorePin && lat != null && lng != null) {
+        setCenter({ lat, lng });
+        setMarker({ lat, lng });
+      }
+    },
+  });
 
   // Memos
   const radiusInMeter = useMemo(() => {
     return distance * 1000;
   }, [distance]);
-  const fetch = React.useMemo(
+  // Address type-ahead through the API `/maps` proxy (Google key server-side).
+  const runAutocomplete = React.useMemo(
     () =>
-      throttle((request, callback) => {
-        autocompleteService?.current?.getPlacePredictions(request, callback);
-      }, 1500),
-    []
+      throttle(async (input: string) => {
+        try {
+          const preds = await placeAutocomplete({ serverUrl: SERVER_URL ?? '', input });
+          setOptions(
+            preds.map((p) => ({ description: p.description, place_id: p.placeId }) as IPlaceSelectedOption),
+          );
+        } catch {
+          setOptions([]);
+        }
+      }, 400),
+    [SERVER_URL]
   );
 
   // API Handlers
@@ -208,6 +227,7 @@ const CustomGoogleMapsLocationBounds: React.FC<
       +restaurant?.location?.coordinates[1] === 0;
     if (!restaurant || isLocationZero) return;
 
+    setHasStorePin(true);
     setCenter({
       lat: +restaurant?.location?.coordinates[1],
       lng: +restaurant?.location?.coordinates[0],
@@ -259,6 +279,7 @@ const CustomGoogleMapsLocationBounds: React.FC<
       +location?.coordinates[0] === 0 && +location?.coordinates[1] === 0;
 
     if (!isLocationZero) {
+      setHasStorePin(true);
       setCenter(coordinates);
       setMarker(coordinates);
     }
@@ -324,39 +345,26 @@ const CustomGoogleMapsLocationBounds: React.FC<
   const handleInputChange = (value: string) => {
     setInputValue(value);
   };
-  const onHandlerAutoCompleteSelectionChange = (
+  const onHandlerAutoCompleteSelectionChange = async (
     event: AutoCompleteSelectEvent
   ) => {
     const selectedOption = event?.value as IPlaceSelectedOption;
-    if (selectedOption) {
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode(
-        { placeId: selectedOption.place_id },
-        (results: google.maps.GeocoderResult[] | null) => {
-          if (
-            results &&
-            results[0] &&
-            results[0]?.geometry &&
-            results[0]?.geometry.location
-          ) {
-            const location = results[0]?.geometry?.location;
-
-            setUpdateLocationAddress(selectedOption.description);
-
-            setCenter({
-              lat: location?.lat() ?? 0,
-              lng: location?.lng() ?? 0,
-            });
-            setMarker({
-              lat: location?.lat() ?? 0,
-              lng: location?.lng() ?? 0,
-            });
-
-            setInputValue(selectedOption?.description ?? '');
-          }
-        }
-      );
+    if (!selectedOption?.place_id) return;
+    try {
+      const d = await placeDetail({ serverUrl: SERVER_URL ?? '', placeId: selectedOption.place_id });
+      const address = d.formattedAddress || selectedOption.description;
+      setUpdateLocationAddress(address);
+      setCenter({ lat: d.latitude, lng: d.longitude });
+      setMarker({ lat: d.latitude, lng: d.longitude });
+      setInputValue(address);
       setSelectedPlaceObject(selectedOption);
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: t('Search Address'),
+        message: (err as Error).message,
+        duration: 2500,
+      });
     }
   };
   const onClickGoogleMaps = (e: google.maps.MapMouseEvent) => {
@@ -459,7 +467,7 @@ const CustomGoogleMapsLocationBounds: React.FC<
   const removeMarker = () => {
     setMarker({ lat: 0, lng: 0 });
   };
-  const onDragEnd = (mapMouseEvent: google.maps.MapMouseEvent) => {
+  const onDragEnd = async (mapMouseEvent: google.maps.MapMouseEvent) => {
     const newLatLng = {
       lat: mapMouseEvent?.latLng?.lat() ?? 0,
       lng: mapMouseEvent?.latLng?.lng() ?? 0,
@@ -472,6 +480,21 @@ const CustomGoogleMapsLocationBounds: React.FC<
     if (deliveryZoneType === 'polygon') {
       const newPath = getPolygonPathFromCircle(newLatLng, radiusInMeter ?? 1);
       setPath(newPath);
+    }
+
+    // Fill the address from the new pin so it's not saved empty.
+    try {
+      const geo = await reverseGeocode({
+        serverUrl: SERVER_URL ?? '',
+        latitude: newLatLng.lat,
+        longitude: newLatLng.lng,
+      });
+      if (geo.formattedAddress) {
+        setUpdateLocationAddress(geo.formattedAddress);
+        setInputValue(geo.formattedAddress);
+      }
+    } catch {
+      /* keep whatever address was there */
     }
   };
   // Submit Handler
@@ -525,38 +548,12 @@ const CustomGoogleMapsLocationBounds: React.FC<
 
   // Use Effects
   useEffect(() => {
-    let active = true;
-
-    if (!autocompleteService.current && google) {
-      autocompleteService.current =
-        new google.maps.places.AutocompleteService();
-    }
-    if (!autocompleteService.current) {
-      return undefined;
-    }
-
-    if (search === '') {
+    if (search.trim().length < 3) {
       setOptions(selectedPlaceObject ? [selectedPlaceObject] : []);
-      return undefined;
+      return;
     }
-
-    fetch({ input: search }, (results: IPlaceSelectedOption[]) => {
-      if (active) {
-        let newOptions: IPlaceSelectedOption[] = [];
-        if (selectedPlaceObject) {
-          newOptions = [selectedPlaceObject];
-        }
-        if (results) {
-          newOptions = [...newOptions, ...results];
-        }
-        setOptions(newOptions);
-      }
-    });
-
-    return () => {
-      active = false;
-    };
-  }, [selectedPlaceObject, search, fetch]);
+    runAutocomplete(search);
+  }, [search, selectedPlaceObject, runAutocomplete]);
 
   useEffect(() => {
     const zoomVal = calculateZoom(distance);
@@ -605,49 +602,12 @@ const CustomGoogleMapsLocationBounds: React.FC<
                     loadingIcon={null}
                     placeholder={t('Search Address')}
                     style={{ width: '100%' }}
-                    itemTemplate={(item) => {
-                      const matches =
-                        item.structured_formatting
-                          ?.main_text_matched_substrings;
-                      let parts = null;
-                      if (matches) {
-                        parts = parse(
-                          item.structured_formatting.main_text,
-                          matches.map(
-                            (match: { offset: number; length: number }) => [
-                              match.offset,
-                              match.offset + match.length,
-                            ]
-                          )
-                        );
-                      }
-
-                      return (
-                        <div className="flex flex-col">
-                          <div className="flex items-center">
-                            <FontAwesomeIcon
-                              icon={faMapMarker}
-                              className="mr-2"
-                            />
-                            {parts &&
-                              parts.map((part, index) => (
-                                <span
-                                  key={index}
-                                  style={{
-                                    fontWeight: part.highlight ? 700 : 400,
-                                    marginRight: '2px',
-                                  }}
-                                >
-                                  {part.text}
-                                </span>
-                              ))}
-                          </div>
-                          <small>
-                            {item.structured_formatting?.secondary_text}
-                          </small>
-                        </div>
-                      );
-                    }}
+                    itemTemplate={(item) => (
+                      <div className="flex items-center">
+                        <FontAwesomeIcon icon={faMapMarker} className="mr-2 text-gray-400" />
+                        <span>{item?.description}</span>
+                      </div>
+                    )}
                   />
                   <div className="absolute right-8 top-0 flex h-full items-center pr-2">
                     {inputValue && (
@@ -762,42 +722,21 @@ const CustomGoogleMapsLocationBounds: React.FC<
 
       {!hideControls && (
         <>
-          {/* Radius Input */}
-          {deliveryZoneType === 'radius' && (
-            <div className="mt-2 w-[8rem]">
-              <CustomRadiusInputField
-                type="number"
-                name="radius"
-                placeholder={t('Radius')}
-                maxLength={35}
-                min={0}
-                // max={100}
-                value={distance}
-                onChange={handleDistanceChange}
-                showLabel={true}
-                loading={false}
-              />
-            </div>
-          )}
-
-          {/* Shapes */}
-          <CustomShape
-            selected={deliveryZoneType}
-            onClick={(val: string) => {
-              switch (val) {
-                case 'polygon':
-                  setPath(getPolygonPathFromCircle(center, radiusInMeter));
-                  break;
-                case 'point':
-                  setPath([]);
-                  break;
-                default:
-                  break;
-              }
-
-              setDeliveryZoneType(val);
-            }}
-          />
+          {/* Delivery radius (km) from the store pin — the area the platform
+              actually enforces. Drag the marker to move the pin. */}
+          <div className="mt-2 w-[10rem]">
+            <CustomRadiusInputField
+              type="number"
+              name="radius"
+              placeholder={t('Delivery radius (km)')}
+              maxLength={35}
+              min={0}
+              value={distance}
+              onChange={handleDistanceChange}
+              showLabel={true}
+              loading={false}
+            />
+          </div>
 
           <div className="mt-4 flex justify-end">
             <CustomButton

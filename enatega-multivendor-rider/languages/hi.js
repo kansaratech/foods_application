@@ -353,4 +353,15 @@ export const hi = {
   "has overlapping slots": "ओवरलैपिंग स्लॉट हैं",
   "Loading...": "लोड हो रहा है...",
   "Oops!": "उफ़!",
+  "My Cash": "मेरा नकद",
+  "Cash you owe the platform": "प्लेटफ़ॉर्म को आपका देय नकद",
+  "COD cash you collected on delivery, minus your fees and tips — hand it to the admin to settle": "डिलीवरी पर वसूला गया COD नकद, आपकी फीस और टिप घटाकर — इसे निपटाने के लिए एडमिन को दें",
+  "Lifetime collected": "कुल वसूला",
+  "Lifetime handed over": "कुल सौंपा",
+  "Unsettled deliveries": "बिना निपटान डिलीवरी",
+  "collected": "वसूला",
+  "you kept": "आपने रखा",
+  "Handovers": "सौंपना",
+  "cash": "नकद",
+  "deliveries": "डिलीवरी"
 };

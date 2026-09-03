@@ -17,6 +17,7 @@ import { supportTypeDefs } from './support';
 import { chatTypeDefs } from './chat';
 import { compatTypeDefs } from './compat';
 import { serviceabilityTypeDefs } from './serviceability';
+import { commissionTypeDefs } from './commission';
 
 export const typeDefs = [
   commonTypeDefs,
@@ -38,4 +39,5 @@ export const typeDefs = [
   chatTypeDefs,
   compatTypeDefs,
   serviceabilityTypeDefs,
+  commissionTypeDefs,
 ];

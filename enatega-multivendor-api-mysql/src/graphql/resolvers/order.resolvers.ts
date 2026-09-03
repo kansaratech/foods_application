@@ -5,8 +5,9 @@ import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../services/order.service';
 import { notFoundError, userInputError } from '../../utils/errors';
-import { pointInPolygon } from '../../utils/geo';
+import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
+import { recordOrderCommission, recordRiderCash } from '../../utils/commission';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
 const PAST_STATUSES: OrderStatus[] = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
@@ -140,6 +141,13 @@ async function applyOrderStatusUpdate(
         },
       });
     }
+
+    // Accrue the platform's commission for this order into the billing ledger.
+    // The platform invoices the vendor per period; it does not touch order cash
+    // (COD). Idempotent on the order id.
+    await recordOrderCommission({ ...order, deliveredAt: updated.deliveredAt });
+    // Track the COD cash the rider is now holding on the platform's behalf.
+    await recordRiderCash({ ...order, deliveredAt: updated.deliveredAt });
   }
 
   await publishOrderUpdate(updated);
@@ -426,6 +434,28 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       const addressId = await resolveOrderAddress(currentUser.id, args.address);
+
+      // Delivery-area enforcement: a delivery order must land within the store's
+      // delivery radius (its own `deliveryDistance`, else a 60 km fallback).
+      // Pickup orders skip this. Only enforced when both ends have coordinates.
+      if (!args.isPickedUp && restaurant.latitude != null && restaurant.longitude != null) {
+        const deliveryAddress = await prisma.address.findUnique({ where: { id: addressId } });
+        if (deliveryAddress?.latitude != null && deliveryAddress?.longitude != null) {
+          const reachKm =
+            restaurant.deliveryDistance && restaurant.deliveryDistance > 0 ? restaurant.deliveryDistance : 60;
+          const dist = distanceKm(
+            deliveryAddress.latitude,
+            deliveryAddress.longitude,
+            restaurant.latitude,
+            restaurant.longitude,
+          );
+          if (dist > reachKm) {
+            throw userInputError(
+              `This address is outside ${restaurant.name}'s delivery area (${dist.toFixed(1)} km away, limit ${reachKm} km).`,
+            );
+          }
+        }
+      }
 
       let discountAmount = 0;
       if (args.couponCode) {
