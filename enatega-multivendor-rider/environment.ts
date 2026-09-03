@@ -22,8 +22,8 @@ const getEnvVars = (env = Updates.channel) => {
   // (tunnelled) API, not the Enatega production server.
   if (!__DEV__ && !isDemo) {
     return {
-      GRAPHQL_URL: "https://aws-server-v2.enatega.com/graphql",
-      WS_GRAPHQL_URL: "wss://aws-server-v2.enatega.com/graphql",
+      GRAPHQL_URL: "https://padharo-api.kansaratech.com/graphql",
+      WS_GRAPHQL_URL: "wss://padharo-api.kansaratech.com/graphql",
       SENTRY_DSN:
         configuration?.riderAppSentryUrl ??
         "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",
@@ -33,11 +33,10 @@ const getEnvVars = (env = Updates.channel) => {
   }
 
   return {
-    // Local API exposed over the internet (office Wi-Fi blocks phone<->PC on
-    // LAN). Keep-alive: scratchpad/tunnel-keepalive.sh. For LAN testing use
+    // Deployed Padharo backend (Sentora VPS). For LAN testing use
     // http://<PC-LAN-IP>:4000 instead.
-    GRAPHQL_URL: "https://cast-characteristics-sport-absolutely.trycloudflare.com/graphql",
-    WS_GRAPHQL_URL: "wss://cast-characteristics-sport-absolutely.trycloudflare.com/graphql",
+    GRAPHQL_URL: "https://padharo-api.kansaratech.com/graphql",
+    WS_GRAPHQL_URL: "wss://padharo-api.kansaratech.com/graphql",
     SENTRY_DSN:
       configuration?.riderAppSentryUrl ??
       "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",

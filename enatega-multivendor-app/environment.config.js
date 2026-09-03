@@ -1,13 +1,11 @@
 const ENV_CONFIG = {
   development: {
-    // Local API exposed over the internet via localtunnel (the office Wi-Fi
-    // blocks phone <-> PC on the LAN). Restart the tunnel with:
-    //   npx localtunnel --port 4000 --subdomain padharokitapi
-    // For LAN testing instead, swap these back to http://<PC-LAN-IP>:4000.
-    GRAPHQL_URL: 'https://cast-characteristics-sport-absolutely.trycloudflare.com/graphql',
-    WS_GRAPHQL_URL: 'wss://cast-characteristics-sport-absolutely.trycloudflare.com/graphql',
-    SERVER_URL: 'https://cast-characteristics-sport-absolutely.trycloudflare.com/graphql',
-    SERVER_REST_URL: 'https://cast-characteristics-sport-absolutely.trycloudflare.com/',
+    // Deployed Padharo backend (Sentora VPS). For LAN testing swap these to
+    // http://<PC-LAN-IP>:4000.
+    GRAPHQL_URL: 'https://padharo-api.kansaratech.com/graphql',
+    WS_GRAPHQL_URL: 'wss://padharo-api.kansaratech.com/graphql',
+    SERVER_URL: 'https://padharo-api.kansaratech.com/graphql',
+    SERVER_REST_URL: 'https://padharo-api.kansaratech.com/',
     CLARITY_ENABLED: true
   },
   staging: {
