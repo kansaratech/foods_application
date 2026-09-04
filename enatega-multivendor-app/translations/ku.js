@@ -599,7 +599,7 @@ export const ku = {
     Done: 'تەواو',
     addMessage: 'پەیام زیاد بکە',
     kindlyBeAdvisedText: 'تکایە ئاگادار بە کە پەیامەکەت دەتوانرێت لە لایەن هاوبەشی گەیاندنەوە ببینرێت کە بەرپرسی گەیاندنی داواکارییەکەتە بۆ شوێنەکە.',
-    explorePadharoCities: 'شارەکانی ئیناتیگا بگەڕە',
+    exploreLocalSellCities: 'شارەکانی ئیناتیگا بگەڕە',
     Card: 'کارت',
     lebelAlreadyExist: "لەیبڵی '{{selectedLabel}}' پێشتر هەیە. تکایە یەکێکی جیاواز هەڵبژێرە.",
     UpdateAvailable: 'نوێکردنەوە بەردەستە',

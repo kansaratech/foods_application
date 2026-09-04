@@ -9,6 +9,8 @@ export interface AppThemeContext {
 
 export interface AppTheme {
   primary: string;
+  brand: string;
+  brandDark: string;
   themeBackground: string;
   iconColor: string;
   tagColor: string;

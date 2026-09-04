@@ -53,7 +53,7 @@ const CustomDrawerHeader = () => {
     <View
       className="w-full flex-row justify-between p-5"
       style={{
-        backgroundColor: "#8F173F",
+        backgroundColor: appTheme.brand,
         paddingTop: insets.top + 16,
         paddingBottom: 20,
         minHeight: 176,
@@ -75,7 +75,7 @@ const CustomDrawerHeader = () => {
             <Text
               className="text-[16px] font-semibold"
               style={{
-                color: "#8F173F",
+                color: appTheme.brand,
               }}
             >
               {(() => {

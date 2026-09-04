@@ -1,29 +1,48 @@
 // Core
-import { Animated } from "react-native";
+import { useEffect, useRef } from "react";
+import { Animated, Easing } from "react-native";
 
 // Hooks
 import { useApptheme } from "@/lib/context/theme.context";
-export default function CustomSpinner() {
+
+interface ICustomSpinnerProps {
+  /** Diameter of the spinner in px. Defaults to 32. */
+  size?: number;
+  /** Colour of the moving arc. Defaults to the theme's main font colour. */
+  color?: string;
+}
+
+export default function CustomSpinner({ size = 32, color }: ICustomSpinnerProps) {
   // Hooks
   const { appTheme } = useApptheme();
+  const spinValue = useRef(new Animated.Value(0)).current;
 
-  // Spin Value
-  const spinValue = new Animated.Value(0);
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 900,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [spinValue]);
 
-  Animated.loop(
-    Animated.timing(spinValue, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }),
-  ).start();
+  const arcColor = color ?? appTheme.fontMainColor;
 
   return (
     <Animated.View
-      className=" w-8 h-8 rounded-full m-auto self-center"
+      className="self-center"
       style={{
-        borderLeftColor: appTheme.fontMainColor,
-        borderLeftWidth: 2,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        borderWidth: Math.max(2, size / 12),
+        borderColor: "transparent",
+        borderTopColor: arcColor,
+        borderRightColor: arcColor,
         transform: [
           {
             rotate: spinValue.interpolate({

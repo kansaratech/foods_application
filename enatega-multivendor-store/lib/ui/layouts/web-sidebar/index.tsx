@@ -4,9 +4,10 @@ import { useApptheme } from "@/lib/context/theme.context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { useContext, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import ConfirmModal from "@/lib/ui/useable-components/confirm-modal";
+import { IMAGES } from "@/lib/assets/images";
 
 const navigation = [
   { label: "Orders", icon: "receipt-outline" as const, route: "/home/orders" },
@@ -55,7 +56,7 @@ export default function WebSidebar() {
     return pathname === route || pathname.startsWith(`${route}/`);
   };
 
-  const initials = (dataProfile?.name ?? "Padharo Store")
+  const initials = (dataProfile?.name ?? "LocalSell Store")
     .split(" ")
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
@@ -131,11 +132,11 @@ export default function WebSidebar() {
       >
         <View
           className={collapsed ? "px-3 pt-5 pb-4" : "px-5 pt-5 pb-5"}
-          style={{ backgroundColor: "#8F173F" }}
+          style={{ backgroundColor: appTheme.brand }}
         >
           <View className="flex-row items-center">
             <View className="h-12 w-12 rounded-2xl bg-white items-center justify-center">
-              <Text className="font-bold" style={{ color: "#8F173F" }}>
+              <Text className="font-bold" style={{ color: appTheme.brand }}>
                 {initials}
               </Text>
             </View>
@@ -145,34 +146,36 @@ export default function WebSidebar() {
                   className="text-white text-lg font-bold"
                   numberOfLines={1}
                 >
-                  Padharo
+                  {dataProfile?.name ?? "Restaurant"}
                 </Text>
-                <Text className="text-white/70 text-xs">
-                  Merchant workspace
-                </Text>
+                <View className="flex-row items-center mt-1">
+                  <View
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      backgroundColor: dataProfile?.isAvailable
+                        ? "#4ADE80"
+                        : "#FBBF24",
+                    }}
+                  />
+                  <Text className="text-white/70 text-xs ml-2">
+                    {dataProfile?.isAvailable
+                      ? "Accepting orders"
+                      : "Store offline"}
+                  </Text>
+                </View>
               </View>
             )}
           </View>
           {!collapsed && (
-            <View className="mt-4">
-              <Text className="text-white font-semibold" numberOfLines={1}>
-                {dataProfile?.name ?? "Restaurant"}
+            <View className="mt-4 flex-row items-center">
+              <Image
+                source={IMAGES.brandLogoInverse}
+                style={{ width: 88, height: 24 }}
+                resizeMode="contain"
+              />
+              <Text className="text-white/40 text-[10px] tracking-[2px] uppercase ml-2">
+                Merchant
               </Text>
-              <View className="flex-row items-center mt-1">
-                <View
-                  className="h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor: dataProfile?.isAvailable
-                      ? "#4ADE80"
-                      : "#FBBF24",
-                  }}
-                />
-                <Text className="text-white/70 text-xs ml-2">
-                  {dataProfile?.isAvailable
-                    ? "Accepting orders"
-                    : "Store offline"}
-                </Text>
-              </View>
             </View>
           )}
         </View>

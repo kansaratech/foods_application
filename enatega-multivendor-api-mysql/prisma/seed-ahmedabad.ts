@@ -1,5 +1,5 @@
 /**
- * Padharo — Ahmedabad marketplace seed.
+ * LocalSell — Ahmedabad marketplace seed.
  *
  * Creates a realistic set of Ahmedabad stores (restaurants, sweet shops and
  * grocers) so the localized landing page ("Popular in Ahmedabad") renders real
@@ -380,7 +380,7 @@ async function main() {
     update: {},
     create: {
       email: 'ahmedabad-vendors@padharo.local',
-      name: 'Padharo Ahmedabad Partners',
+      name: 'LocalSell Ahmedabad Partners',
       password: await hashPassword('Vendor@123'),
       userType: 'VENDOR',
       emailIsVerified: true,

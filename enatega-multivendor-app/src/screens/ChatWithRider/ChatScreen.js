@@ -25,7 +25,7 @@ const renderInputToolbar = (props) => {
     <InputToolbar
       {...props}
       containerStyle={{
-        backgroundColor: '#F5820A',
+        backgroundColor: '#1c5bc7',
         paddingVertical: scale(20)
       }}
     />

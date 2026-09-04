@@ -11,8 +11,8 @@ import {
 
 import useLocationSearch from "@/lib/hooks/useLocationSearch";
 
-const ORANGE = "#f5820a";
-const MAROON = "#8c1d40";
+const ORANGE = "#1c5bc7";
+const MAROON = "#16293f";
 
 /**
  * Lightweight delivery-location picker for the header. Two ways in: the
@@ -133,7 +133,7 @@ export default function LocationPopover({
         type="button"
         onClick={pickCurrent}
         disabled={locating}
-        className="mb-2 flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold text-slate-800 transition hover:border-[#f5820a] hover:bg-orange-50/50 disabled:opacity-60 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800"
+        className="mb-2 flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold text-slate-800 transition hover:border-[#1c5bc7] hover:bg-blue-50/50 disabled:opacity-60 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800"
       >
         <FontAwesomeIcon
           icon={locating ? faSpinner : faLocationCrosshairs}
@@ -157,7 +157,7 @@ export default function LocationPopover({
             search(e.target.value);
           }}
           placeholder="Search area, society, landmark…"
-          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#f5820a] focus:ring-2 focus:ring-[#f5820a]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
         />
         {searching && (
           <FontAwesomeIcon
@@ -183,7 +183,7 @@ export default function LocationPopover({
                 type="button"
                 onClick={() => pick(p.placeId, p.description)}
                 disabled={locating}
-                className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-orange-50 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-gray-800"
+                className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 <FontAwesomeIcon
                   icon={faMagnifyingGlass}

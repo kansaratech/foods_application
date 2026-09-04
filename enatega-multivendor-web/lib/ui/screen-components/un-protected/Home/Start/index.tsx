@@ -63,7 +63,7 @@ export default function Start() {
           </p>
           <h1 className="text-[34px] font-black leading-[1.05] tracking-[-0.04em] text-slate-950 dark:text-white sm:text-5xl sm:leading-[1.03] lg:text-[58px]">
             Everything you need,
-            <span className="mt-2 block font-serif text-[34px] font-normal italic leading-none tracking-[-0.03em] text-[#8c1d40] dark:text-orange-300 sm:text-[52px] lg:text-[60px]">
+            <span className="mt-2 block font-serif text-[34px] font-normal italic leading-none tracking-[-0.03em] text-[#16293f] dark:text-blue-300 sm:text-[52px] lg:text-[60px]">
               beautifully delivered.
             </span>
           </h1>
@@ -79,10 +79,10 @@ export default function Start() {
               e.preventDefault();
               showStores();
             }}
-            className="mt-8 flex max-w-[640px] flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_45px_rgba(140,29,64,0.09)] dark:border-gray-700 dark:bg-gray-800 sm:flex-row sm:items-center"
+            className="mt-8 flex max-w-[640px] flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_45px_rgba(22,41,63,0.09)] dark:border-gray-700 dark:bg-gray-800 sm:flex-row sm:items-center"
           >
             <div className="flex flex-1 items-center gap-3 px-2">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-[#f5820a]" />
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[#1c5bc7]" />
               <input
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
@@ -93,13 +93,13 @@ export default function Start() {
             <button
               type="button"
               onClick={useCurrentLocation}
-              className="shrink-0 px-2 text-sm font-bold text-[#8c1d40] transition hover:text-[#f5820a] dark:text-orange-300"
+              className="shrink-0 px-2 text-sm font-bold text-[#16293f] transition hover:text-[#1c5bc7] dark:text-blue-300"
             >
               Current location
             </button>
             <button
               type="submit"
-              className="shrink-0 rounded-xl bg-[#f5820a] px-5 py-3 text-sm font-bold text-white transition hover:brightness-95"
+              className="shrink-0 rounded-xl bg-[#1c5bc7] px-5 py-3 text-sm font-bold text-white transition hover:brightness-95"
             >
               Browse stores <span aria-hidden="true">→</span>
             </button>
@@ -113,7 +113,7 @@ export default function Start() {
                 aria-current={i === 0 ? "page" : undefined}
                 className={`-mb-px border-b-[3px] px-1 pb-3 transition ${
                   i === 0
-                    ? "border-[#8c1d40] text-[#8c1d40] dark:border-orange-300 dark:text-orange-300"
+                    ? "border-[#16293f] text-[#16293f] dark:border-blue-300 dark:text-blue-300"
                     : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-950 dark:text-gray-300 dark:hover:text-white"
                 }`}
               >
@@ -128,21 +128,21 @@ export default function Start() {
           <div className="hero-orbit hero-orbit-primary" aria-hidden="true" />
           <div className="hero-orbit hero-orbit-secondary" aria-hidden="true" />
           <Image
-            src="/assets/images/hero/padharo-delivery-collage.png"
-            alt="Food, groceries and everyday essentials delivered by Padharo"
+            src="/assets/images/hero/localsell-delivery-collage.png"
+            alt="Food, groceries and everyday essentials delivered by LocalSell"
             fill
             priority
             className="hero-collage relative z-10 object-contain p-3 sm:p-5"
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 460px, 560px"
           />
           <span className="absolute right-[8%] top-[2%] z-20 px-2 py-1 text-[9px] font-bold tracking-[0.08em] text-slate-500 sm:px-3 sm:text-[11px]">
-            <b className="text-[#f5820a]">01</b> EAT
+            <b className="text-[#1c5bc7]">01</b> EAT
           </span>
           <span className="absolute bottom-[6%] right-[1%] z-20 px-2 py-1 text-[9px] font-bold tracking-[0.08em] text-slate-500 sm:px-3 sm:text-[11px]">
-            <b className="text-[#f5820a]">02</b> SHOP
+            <b className="text-[#1c5bc7]">02</b> SHOP
           </span>
           <span className="absolute left-[1%] top-[43%] z-20 px-2 py-1 text-[9px] font-bold tracking-[0.08em] text-slate-500 sm:px-3 sm:text-[11px]">
-            <b className="text-[#f5820a]">03</b> ESSENTIALS
+            <b className="text-[#1c5bc7]">03</b> ESSENTIALS
           </span>
         </div>
       </div>

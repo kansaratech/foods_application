@@ -32,6 +32,7 @@ import InternetProvider from "@/lib/context/global/internet-provider";
 // UI
 import AppThemeProvidor, { useApptheme } from "@/lib/context/theme.context";
 import AnimatedSplashScreen from "@/lib/ui/useable-components/splash/AnimatedSplashScreen";
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import UnavailableStatus from "@/lib/ui/useable-components/unavailable-status";
 
 import { Slot } from "expo-router";
@@ -88,7 +89,7 @@ function RootLayout() {
   }, [client]);
 
   if (!isTokenReady || !isI18nReady) {
-    return null;
+    return <BrandLoader />;
   }
 
   return (

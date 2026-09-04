@@ -78,37 +78,36 @@ export default function GrowthOverView() {
       ],
       datasets: [
         {
-          label: t('Stores'),
-          data: dashboardUsersByYear?.restaurantsCount ?? [],
-          fill: false,
-          borderColor: documentStyle.getPropertyValue('--pink-500'),
-          backgroundColor: documentStyle.getPropertyValue('--pink-100'),
-          tension: 0.5,
+          label: t('Users'),
+          data: dashboardUsersByYear?.usersCount ?? [],
+          fill: true,
+          borderColor: '#1C5BC7',
+          backgroundColor: 'rgba(28,91,199,0.12)',
+          tension: 0.4,
         },
         {
           label: t('Vendors'),
           data: dashboardUsersByYear?.vendorsCount ?? [],
           fill: false,
-          borderColor: documentStyle.getPropertyValue('--blue-500'),
-          backgroundColor: documentStyle.getPropertyValue('--blue-100'),
-          tension: 0.5,
+          borderColor: '#16293F',
+          backgroundColor: 'rgba(22,41,63,0.12)',
+          tension: 0.4,
+        },
+        {
+          label: t('Stores'),
+          data: dashboardUsersByYear?.restaurantsCount ?? [],
+          fill: false,
+          borderColor: '#3E93DB',
+          backgroundColor: 'rgba(62,147,219,0.12)',
+          tension: 0.4,
         },
         {
           label: t('Riders'),
           data: dashboardUsersByYear?.ridersCount ?? [],
           fill: false,
-          borderColor: documentStyle.getPropertyValue('--yellow-500'),
-          backgroundColor: documentStyle.getPropertyValue('--yellow-100'),
-          tension: 0.5,
-        },
-        {
-          label: t('Users'),
-          data: dashboardUsersByYear?.usersCount ?? [],
-          fill: true,
-
-          borderColor: 'rgba(90, 193, 47, 1)',
-          backgroundColor: 'rgba(201, 232, 189, 0.2)',
-          tension: 0.5,
+          borderColor: '#94A3B8',
+          backgroundColor: 'rgba(148,163,184,0.12)',
+          tension: 0.4,
         },
       ],
     };
@@ -156,12 +155,14 @@ export default function GrowthOverView() {
   }, [dashboardUsersByYear]);
 
   return (
-    <div className={`w-full p-3`}>
-      <h2 className="text-lg font-semibold">{t('Growth Overview')}</h2>
-      <p className="text-gray-500">
+    <div className="h-full rounded-xl border border-gray-200 bg-white p-5 dark:border-dark-600 dark:bg-dark-900">
+      <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+        {t('Growth Overview')}
+      </h2>
+      <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
         {t('Tracking Stakeholders Growth Over the Year')}
       </p>
-      <div className="mt-4 bg-white dark:bg-dark-950">
+      <div className="mt-4">
         {loading ? (
           <DashboardUsersByYearStatsSkeleton />
         ) : (

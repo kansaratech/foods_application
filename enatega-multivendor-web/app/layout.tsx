@@ -7,8 +7,8 @@ import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
 
 export const metadata = {
-  title: "Padharo",
-  description: "Jo Chahiye, Padharo Par Mile.",
+  title: "LocalSell",
+  description: "Shop Local. Find More.",
   manifest: "/manifest.json",
 };
 
@@ -66,7 +66,7 @@ export default async function RootLayout({
         </Script>
 
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#f5820a" />
+        <meta name="theme-color" content="#1c5bc7" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 

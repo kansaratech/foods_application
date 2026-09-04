@@ -70,7 +70,7 @@ const buildStyles = (props = null) =>
       // marginHorizontal: scale(10),
     },
     seeAllBtn: {
-      backgroundColor: props != null ? props?.newButtonBackground : '#F3FFEE',
+      backgroundColor: props != null ? props?.newButtonBackground : '#e8f0fc',
       borderRadius: 4,
       paddingTop: 8,
       paddingBottom: 8,

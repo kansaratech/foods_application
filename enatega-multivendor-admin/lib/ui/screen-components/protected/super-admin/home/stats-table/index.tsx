@@ -51,7 +51,7 @@ export default function StatesTable() {
   }, [salesData]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 p-3">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-1">
       <DashboardStatsTable
         loading={loading}
         title={t('Orders')}

@@ -18,30 +18,33 @@ export default function DashboardStatsTable({
   if (loading) return <DashboardStatsTableSkeleton />;
 
   return (
-    <div className="w-full mx-auto">
-      <div className="bg-white dark:bg-dark-900 dark:text-white shadow-md rounded-lg border border-gray-300 dark:border-dark-600">
-        <div className="flex justify-between items-center bg-gray-100 dark:bg-dark-900 p-4 rounded-t-lg">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+    <div className="w-full">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-dark-600 dark:bg-dark-900 dark:text-white">
+        <div className="border-b border-gray-100 px-5 py-3.5 dark:border-dark-600">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
             {t(title)}
           </h2>
-          <i className="fas fa-arrow-down text-primary-dark"></i>
         </div>
-        <div className="p-4 max-h-40 overflow-y-auto ">
+        <div className="max-h-52 overflow-y-auto px-5 py-2">
+          {data.length === 0 && (
+            <p className="py-4 text-sm text-gray-400">{t('No data')}</p>
+          )}
           {data.map((item, index: number) => (
             <div
               key={index}
-              className={`flex justify-between py-2 ${index !== data.length - 1 ? 'border-b border-gray-300 dark:border-dark-600' : ''}`}
+              className={`flex items-center justify-between py-2.5 text-sm ${
+                index !== data.length - 1
+                  ? 'border-b border-gray-100 dark:border-dark-600'
+                  : ''
+              }`}
             >
-              <span className="text-gray-800 dark:text-white">
+              <span className="text-gray-500 dark:text-gray-300">
                 {t(item.label)}
               </span>
-              <span className="text-gray-800 dark:text-white">
+              <span className="font-semibold text-gray-900 dark:text-white">
                 {amountConfig
                   ? amountConfig?.format === 'currency'
-                    ? formatNumberWithCurrency(
-                        item.value,
-                        amountConfig.currency
-                      )
+                    ? formatNumberWithCurrency(item.value, amountConfig.currency)
                     : formatNumber(item.value)
                   : item.value}
               </span>

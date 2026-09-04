@@ -84,12 +84,45 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       requireRole(context, ['ADMIN']);
       return prisma.user.findMany({ where: { userType: 'CUSTOMER' } });
     },
-    usersPaginated: async (_parent, args: { page?: number; limit?: number; search?: string }, context) => {
+    usersPaginated: async (
+      _parent,
+      args: {
+        page?: number;
+        limit?: number;
+        search?: string;
+        registrationMethod?: string;
+        status?: string;
+      },
+      context,
+    ) => {
       requireRole(context, ['ADMIN']);
       const limit = args.limit ?? 10;
       const page = args.page ?? 1;
+
+      // Registration method: no dedicated column, so infer from what's set.
+      const methodFilter =
+        args.registrationMethod === 'apple'
+          ? { appleId: { not: null } }
+          : args.registrationMethod === 'default'
+            ? { password: { not: null } }
+            : args.registrationMethod === 'google'
+              ? { appleId: null, password: null }
+              : {};
+
+      const statusMap: Record<string, string> = {
+        active: 'ACTIVE',
+        blocked: 'BLOCKED',
+        deactivate: 'DEACTIVATED',
+      };
+      const statusFilter =
+        args.status && statusMap[args.status]
+          ? { status: statusMap[args.status] }
+          : {};
+
       const where = {
         userType: 'CUSTOMER' as const,
+        ...methodFilter,
+        ...statusFilter,
         ...(args.search
           ? {
               OR: [

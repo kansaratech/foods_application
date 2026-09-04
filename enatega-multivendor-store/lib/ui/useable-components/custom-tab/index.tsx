@@ -24,76 +24,60 @@ const CustomTab = ({
         className="h-14 w-full flex-row p-1.5 justify-center items-center rounded-2xl"
         style={{ backgroundColor: appTheme.sidebarIconBackground }}
       >
-        {options.map((option) => (
-          <TouchableOpacity
-            key={String(option)}
-            onPress={() => setSelectedTab(option)}
-            className="h-full px-4 w-1/2 flex-row gap-2 items-center justify-center rounded-xl"
-            style={{
-              backgroundColor:
-                selectedTab === option
-                  ? appTheme.primary
-                  : "transparent",
-            }}
-          >
-            <Text
+        {options.map((option) => {
+          const isSelected = selectedTab === option;
+          const count =
+            option === "Delivery Orders"
+              ? deliveryCount
+              : option === "Pick up Orders"
+                ? pickupCount
+                : undefined;
+          const showBadge = count !== undefined && Number(count) > 0;
+
+          return (
+            <TouchableOpacity
+              key={String(option)}
+              onPress={() => setSelectedTab(option)}
+              className="h-full px-4 w-1/2 flex-row gap-2 items-center justify-center rounded-xl"
               style={{
-                color:
-                  selectedTab === option
-                    ? appTheme.fontMainColor
-                    : appTheme.fontSecondColor,
+                backgroundColor: isSelected ? appTheme.primary : "transparent",
               }}
             >
-              {t(option)}
-            </Text>
-            {option === "Delivery Orders" && (
-              <View
+              <Text
+                className="font-semibold"
                 style={{
-                  backgroundColor: appTheme.error,
-                  borderRadius: 100,
-                  width: 20,
-                  height: 20,
-                  alignItems: "center",
-                  justifyContent: "center",
-                    marginLeft: 8,
+                  color: isSelected ? appTheme.white : appTheme.fontSecondColor,
                 }}
               >
-                <Text
+                {t(option)}
+              </Text>
+              {showBadge && (
+                <View
                   style={{
-                    textAlign: "center",
-                    color: appTheme.white,
-                    alignSelf: "center",
-                  }}
-                >
-                  {deliveryCount}
-                </Text>
-              </View>
-            )}
-            {option === "Pick up Orders" && (
-              <View
-                style={{
-                  backgroundColor: appTheme.error,
-                  borderRadius: 100,
-                  width: 20,
-                  height: 20,
-                  alignItems: "center",
-                  justifyContent: "center",
+                    backgroundColor: isSelected ? appTheme.white : appTheme.error,
+                    borderRadius: 100,
+                    minWidth: 20,
+                    height: 20,
+                    paddingHorizontal: 5,
+                    alignItems: "center",
+                    justifyContent: "center",
                     marginLeft: 8,
-                }}
-              >
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: appTheme.white,
-                    alignSelf: "center",
                   }}
                 >
-                  {pickupCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        ))}
+                  <Text
+                    className="text-xs font-bold"
+                    style={{
+                      textAlign: "center",
+                      color: isSelected ? appTheme.primary : appTheme.white,
+                    }}
+                  >
+                    {count}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );

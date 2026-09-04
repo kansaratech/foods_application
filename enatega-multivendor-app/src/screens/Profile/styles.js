@@ -61,7 +61,7 @@ const styles = (props = null) =>
       ...alignment.PLmedium
     },
     saveContainer: {
-      backgroundColor: props !== null ? props?.main : '#F5820A',
+      backgroundColor: props !== null ? props?.main : '#1c5bc7',
       padding: scale(8),
       borderRadius: scale(16),
       justifyContent: 'center',
@@ -253,7 +253,7 @@ const styles = (props = null) =>
       ...alignment.MTlarge,
     },
     seeAll: {
-      backgroundColor: props !== null ? props?.newButtonBackground : '#F3FFEE',
+      backgroundColor: props !== null ? props?.newButtonBackground : '#e8f0fc',
       ...alignment.Psmall,
       borderRadius: scale(5),
     },

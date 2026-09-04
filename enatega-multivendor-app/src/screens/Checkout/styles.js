@@ -303,7 +303,7 @@ const styles = (props = null) =>
       height: scale(37)
     },
     headerContainer: {
-      backgroundColor: props !== null ? props?.themeBackground : '#F5820A'
+      backgroundColor: props !== null ? props?.themeBackground : '#1c5bc7'
     },
     mapView: {
       height: scale(119)

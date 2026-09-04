@@ -55,14 +55,14 @@ export default function LandingHeader() {
         <Link
           href="/"
           className="flex shrink-0 items-center"
-          aria-label="Padharo home"
+          aria-label="LocalSell home"
         >
           <Logo fillColor="#000000" darkmode="#FFFFFF" />
         </Link>
 
         <form
           onSubmit={submitSearch}
-          className="mx-auto hidden max-w-2xl flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#f5820a] focus-within:ring-2 focus-within:ring-[#f5820a]/15 md:flex"
+          className="mx-auto hidden max-w-2xl flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#1c5bc7] focus-within:ring-2 focus-within:ring-[#1c5bc7]/15 md:flex"
         >
           <input
             value={searchTerm}
@@ -74,7 +74,7 @@ export default function LandingHeader() {
           <button
             type="submit"
             aria-label="Search"
-            className="p-1 text-slate-600 transition hover:text-[#8c1d40]"
+            className="p-1 text-slate-600 transition hover:text-[#16293f]"
           >
             <i className="pi pi-search" aria-hidden="true" />
           </button>
@@ -84,17 +84,17 @@ export default function LandingHeader() {
           <button
             type="button"
             onClick={toggleLocale}
-            className="transition hover:text-[#8c1d40] dark:hover:text-orange-300"
+            className="transition hover:text-[#16293f] dark:hover:text-blue-300"
             aria-label="Toggle language"
           >
             <span
-              className={isHindi ? "text-[#8c1d40] dark:text-orange-300" : ""}
+              className={isHindi ? "text-[#16293f] dark:text-blue-300" : ""}
             >
               हिन्दी
             </span>
             <span className="mx-1 text-slate-300">/</span>
             <span
-              className={!isHindi ? "text-[#8c1d40] dark:text-orange-300" : ""}
+              className={!isHindi ? "text-[#16293f] dark:text-blue-300" : ""}
             >
               EN
             </span>
@@ -102,7 +102,7 @@ export default function LandingHeader() {
 
           <Link
             href="/discovery"
-            className="hidden transition hover:text-[#8c1d40] dark:hover:text-orange-300 sm:inline"
+            className="hidden transition hover:text-[#16293f] dark:hover:text-blue-300 sm:inline"
           >
             Cart{cartCount > 0 ? ` (${cartCount})` : ""}
           </Link>
@@ -111,16 +111,16 @@ export default function LandingHeader() {
             <>
               <Link
                 href="/discovery"
-                className="hidden rounded-full bg-[#f5820a] px-4 py-1.5 font-bold text-white transition hover:brightness-95 sm:inline"
+                className="hidden rounded-full bg-[#1c5bc7] px-4 py-1.5 font-bold text-white transition hover:brightness-95 sm:inline"
               >
                 Browse stores
               </Link>
               <Link
                 href="/profile"
                 title={displayName}
-                className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3 transition hover:border-[#f5820a] dark:border-gray-600"
+                className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-3 transition hover:border-[#1c5bc7] dark:border-gray-600"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#8c1d40] text-xs font-bold text-white">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#16293f] text-xs font-bold text-white">
                   {initials}
                 </span>
                 <span className="hidden max-w-[120px] truncate sm:inline">
@@ -132,7 +132,7 @@ export default function LandingHeader() {
             <button
               type="button"
               onClick={() => setIsAuthModalVisible(true)}
-              className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#f5820a] hover:text-[#8c1d40] dark:border-gray-600 dark:text-white sm:px-4"
+              className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
             >
               Log in
             </button>

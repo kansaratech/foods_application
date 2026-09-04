@@ -22,7 +22,7 @@ import { useAuth } from "@/lib/context/auth/auth.context";
 
 const AppLayout = ({ children }: IProvider) => {
   // One header on every route — landing, discovery, store, checkout, profile.
-  // AppHeader carries the Padharo chrome + the working cart sidebar, delivery-
+  // AppHeader carries the LocalSell chrome + the working cart sidebar, delivery-
   // location picker and profile menu.
 
   // Hooks

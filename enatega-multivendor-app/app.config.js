@@ -33,14 +33,14 @@ module.exports = () => {
   ]
 
   return {
-    name: 'Padharo',
+    name: 'LocalSell',
     scheme: 'enategamultivendor',
     version: '1.1.31',
     description:
-      "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
+      'LocalSell — order from the shops and restaurants around you. Shop Local. Find More.',
     slug: 'enategamultivendor',
     androidStatusBar: {
-      backgroundColor: '#8C1D40'
+      backgroundColor: '#16293f'
     },
     // Native OS splash (before JS boots) is theme-aware via the
     // expo-splash-screen plugin below — a solid per-theme background that
@@ -85,10 +85,10 @@ module.exports = () => {
     },
     notification: {
       iosDisplayInForeground: true,
-      color: '#90E36D',
+      color: '#1c5bc7',
       icon: './assets/not-icon.png',
       androidMode: 'default',
-      androidCollapsedTitle: 'Padharo'
+      androidCollapsedTitle: 'LocalSell'
     },
     android: {
       versionCode: 131,
@@ -137,8 +137,8 @@ module.exports = () => {
         }
       ],
       adaptiveIcon: {
-        foregroundImage: './assets/icon.png',
-        backgroundColor: '#8C1D40'
+        foregroundImage: './assets/adaptive-icon.png',
+        backgroundColor: '#FFFFFF'
       }
     },
     plugins: [
@@ -150,12 +150,12 @@ module.exports = () => {
           // a 1x1 transparent PNG — only the background color shows. The animated
           // pin / wordmark is drawn by the JS AnimatedSplash component, whose
           // first frame uses these same colors so the handoff shows no flash.
-          backgroundColor: '#8C1D40', // light (Padharo maroon)
+          backgroundColor: '#16293f', // light (LocalSell navy)
           image: './assets/splashTransparent.png',
           imageWidth: 1,
           resizeMode: 'contain',
           dark: {
-            backgroundColor: '#6E1732', // dark
+            backgroundColor: '#0e1b2b', // dark
             image: './assets/splashTransparent.png'
           }
         }
@@ -172,7 +172,7 @@ module.exports = () => {
         'expo-location',
         {
           locationAlwaysAndWhenInUsePermission:
-            'Allow Padharo to use your location.'
+            'Allow LocalSell to use your location.'
         }
       ],
       '@react-native-firebase/app',
@@ -202,8 +202,8 @@ module.exports = () => {
       liveActivity: {
         appGroupId: 'group.com.enatega.multivendor.shared',
         appScheme: 'enategamultivendor',
-        brandName: 'Padharo',
-        primaryColor: '#F5820A',
+        brandName: 'LocalSell',
+        primaryColor: '#1c5bc7',
         accentColor: '#FFA921',
         logoResourceName: 'enatega_logo',
         riderResourceName: 'enatega_rider'

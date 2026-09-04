@@ -10,11 +10,11 @@ interface StratingImageProps {
 
 const StartingImage: React.FC<StratingImageProps> = ({
   image,
-  alt = "Padharo delivery partner",
+  alt = "LocalSell delivery partner",
 }) => {
   return (
     <div className="mx-auto mt-10 w-full max-w-5xl px-4 sm:mt-12">
-      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 shadow-[0_28px_70px_rgba(140,29,64,0.14)] dark:border-gray-700">
+      <div className="relative overflow-hidden rounded-[2rem] border border-slate-200 shadow-[0_28px_70px_rgba(22,41,63,0.14)] dark:border-gray-700">
         <div className="relative h-[240px] w-full sm:h-[340px] lg:h-[420px]">
           <Image
             src={image}

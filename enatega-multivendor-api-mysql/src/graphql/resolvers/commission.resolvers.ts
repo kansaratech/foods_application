@@ -108,7 +108,7 @@ async function buildCommissionInvoice(bill: CommissionBill, records: CommissionR
     invoiceNumber: bill.invoiceNumber ?? `PDR-INV-${bill.id.slice(-8).toUpperCase()}`,
     issuedOn: bill.createdAt.toISOString(),
     periodLabel: periodLabel(bill.periodStart, bill.periodEnd),
-    platformName: config?.platformLegalName || 'Padharo',
+    platformName: config?.platformLegalName || 'LocalSell',
     platformAddress: config?.platformAddress ?? null,
     platformGstin: config?.platformGstin ?? null,
     vendorName: vendor?.name || vendor?.email || 'Vendor',

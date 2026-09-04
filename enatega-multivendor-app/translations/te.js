@@ -634,7 +634,7 @@ export const te = {
     Done: 'పూర్తయింది',
     addMessage: 'సందేశం జోడించండి',
     kindlyBeAdvisedText: 'దయచేసి గమనించండి, మీ సందేశం మీ ఆర్డర్‌ను డెలివరీ చేసే కొరియర్ భాగస్వామికి కూడా కనిపించవచ్చు.',
-    explorePadharoCities: 'ఎనాటెగా నగరాలను ఆనందించండి',
+    exploreLocalSellCities: 'ఎనాటెగా నగరాలను ఆనందించండి',
     Card: 'కార్డ్',
     lebelAlreadyExist: "'{{selectedLabel}}' లేబుల్ ఇప్పటికే ఉంది. దయచేసి వేరొకదాన్ని ఎంచుకోండి.",
     UpdateAvailable: 'నవీకరణ అందుబాటులో ఉంది',

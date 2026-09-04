@@ -410,8 +410,8 @@ export default function MenuMain() {
               className="h-12 flex-row items-center gap-2 px-5 rounded-xl"
               style={{ backgroundColor: appTheme.primary }}
             >
-              <Ionicons name="add" size={18} color={appTheme.black} />
-              <Text style={{ color: appTheme.black }}>
+              <Ionicons name="add" size={18} color={appTheme.white} />
+              <Text className="font-semibold" style={{ color: appTheme.white }}>
                 {activeTab === "menu" ? t("Category") : t("Addon")}
               </Text>
             </TouchableOpacity>

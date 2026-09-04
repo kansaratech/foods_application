@@ -1,6 +1,6 @@
 const ENV_CONFIG = {
   development: {
-    // Deployed Padharo backend (Sentora VPS). For LAN testing swap these to
+    // Deployed LocalSell backend (Sentora VPS). For LAN testing swap these to
     // http://<PC-LAN-IP>:4000.
     GRAPHQL_URL: 'https://padharo-api.kansaratech.com/graphql',
     WS_GRAPHQL_URL: 'wss://padharo-api.kansaratech.com/graphql',

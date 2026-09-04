@@ -28,7 +28,9 @@ export default function UnavailableStatus() {
   return (
     <View
       style={{
-        backgroundColor: "#8F173F",
+        // Warning amber — matches the "Store offline" status colour used
+        // elsewhere; deliberately not the brand navy so it reads as an alert.
+        backgroundColor: "#B45309",
         paddingTop: insets.top - 9, // Ensures it stays below the notch
         paddingHorizontal: 16,
         paddingBottom: 5,

@@ -96,7 +96,7 @@ export const ROUTES = [
     route: '/general/riders',
   },
   {
-    text: 'Users',
+    text: 'Customers',
     route: '/general/users',
   },
   {

@@ -600,7 +600,7 @@ export const bn = {
   Done: 'সম্পন্ন',
   addMessage: 'বার্তা যোগ করুন',
   kindlyBeAdvisedText: 'দয়া করে মনে রাখবেন যে আপনার বার্তা আপনার অর্ডার ডেলিভারি করার জন্য দায়ী কুরিয়ার পার্টনারের কাছেও দৃশ্যমান হতে পারে।',
-  explorePadharoCities: 'এনাতেগা সিটিগুলি অন্বেষণ করুন',
+  exploreLocalSellCities: 'এনাতেগা সিটিগুলি অন্বেষণ করুন',
   Card: 'কার্ড',
   lebelAlreadyExist: "লেবেল '{{selectedLabel}}' ইতিমধ্যে বিদ্যমান। অন্য একটি চয়ন করুন।",
   UpdateAvailable: 'আপডেট পাওয়া যায়',

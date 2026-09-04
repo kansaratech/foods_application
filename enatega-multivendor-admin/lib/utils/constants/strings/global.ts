@@ -1,2 +1,2 @@
-export const APP_NAME = 'Padharo';
+export const APP_NAME = 'LocalSell';
 export const LOGO_URL = '/';

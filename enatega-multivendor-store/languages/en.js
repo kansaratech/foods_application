@@ -169,6 +169,7 @@ export const en = {
   "Send Reset Password": "Send Reset Password",
   "Confirm Password": "Confirm Password",
   Login: "Login",
+  "Signing in": "Signing in",
   "Recent Activity": "Recent Activity",
   "See More": "See More",
   Status: "Status",

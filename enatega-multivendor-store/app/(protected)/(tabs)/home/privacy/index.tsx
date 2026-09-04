@@ -21,7 +21,7 @@ const sections = [
   },
   {
     title: "Your choices",
-    text: "Restaurant administrators can review and update store information in the app. For access, correction or deletion requests that are not available in the app, contact your Padharo account manager.",
+    text: "Restaurant administrators can review and update store information in the app. For access, correction or deletion requests that are not available in the app, contact your LocalSell account manager.",
   },
 ];
 
@@ -35,15 +35,15 @@ export default function PrivacyPolicy() {
       contentContainerStyle={{ padding: 24, paddingBottom: 96 }}
     >
       <View className="w-full max-w-4xl self-center">
-        <View className="rounded-3xl p-8" style={{ backgroundColor: "#8F173F" }}>
+        <View className="rounded-3xl p-8" style={{ backgroundColor: appTheme.brand }}>
           <View className="h-12 w-12 rounded-2xl bg-white/10 items-center justify-center mb-5">
-            <Ionicons name="shield-checkmark-outline" size={25} color="#FFD9A7" />
+            <Ionicons name="shield-checkmark-outline" size={25} color="#BFD6F7" />
           </View>
-          <Text className="text-white text-4xl font-bold">Privacy at Padharo</Text>
+          <Text className="text-white text-4xl font-bold">Privacy at LocalSell</Text>
           <Text className="text-white/75 text-base leading-7 mt-4">
-            A clear overview of how information is handled in the Padharo Merchant service.
+            A clear overview of how information is handled in the LocalSell Merchant service.
           </Text>
-          <Text className="text-[#FFD9A7] text-xs font-semibold mt-5">Updated 29 August 2026</Text>
+          <Text className="text-[#BFD6F7] text-xs font-semibold mt-5">Updated 29 August 2026</Text>
         </View>
 
         <View
@@ -72,7 +72,7 @@ export default function PrivacyPolicy() {
         <View className="rounded-3xl p-6 mt-6" style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}>
           <Text className="font-bold" style={{ color: appTheme.fontMainColor }}>Questions about privacy?</Text>
           <Text className="text-sm leading-6 mt-2" style={{ color: appTheme.fontSecondColor }}>
-            Contact your Padharo account manager for privacy questions or account-data requests.
+            Contact your LocalSell account manager for privacy questions or account-data requests.
           </Text>
         </View>
       </View>

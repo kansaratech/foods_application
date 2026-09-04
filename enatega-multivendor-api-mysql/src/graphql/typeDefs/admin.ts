@@ -47,6 +47,7 @@ export const adminTypeDefs = /* GraphQL */ `
     notes: String
     createdAt: String
     updatedAt: String
+    lastLogin: String
     phoneIsVerified: Boolean
     emailIsVerified: Boolean
     isActive: Boolean
@@ -111,7 +112,13 @@ export const adminTypeDefs = /* GraphQL */ `
     getVendor(id: String!): Vendor
 
     users: [AdminUser!]!
-    usersPaginated(page: Int, limit: Int, search: String): UsersPaginated!
+    usersPaginated(
+      page: Int
+      limit: Int
+      search: String
+      registrationMethod: String
+      status: String
+    ): UsersPaginated!
     user(id: ID!): AdminUser
 
     getDashboardUsers: DashboardUsers!

@@ -10,7 +10,7 @@ const WhyChoose: React.FC<WhyChooseProps> = ({ eyebrow, heading, subHeading }) =
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center px-4 text-center">
       {eyebrow && (
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#f5820a]">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#1c5bc7]">
           {eyebrow}
         </p>
       )}

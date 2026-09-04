@@ -105,16 +105,32 @@ async function storeDetailsForVendor(vendorId: string, range: { gte: Date; lte: 
 
 export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
-    adminOpsSnapshot: async (_parent, _args, context) => {
+    adminOpsSnapshot: async (
+      _parent,
+      args: { startDate?: string; endDate?: string },
+      context,
+    ) => {
       requireRole(context, ['ADMIN']);
       const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+
+      // "Window" = the selected range, or today when none is given. `prev` is the
+      // immediately preceding window of equal length, used for the % deltas.
+      const hasRange = Boolean(args.startDate && args.endDate);
+      const windowStart = args.startDate
+        ? new Date(args.startDate)
+        : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const windowEnd = args.endDate ? new Date(args.endDate) : now;
+      if (hasRange) windowEnd.setHours(23, 59, 59, 999);
+      const windowMs = Math.max(1, windowEnd.getTime() - windowStart.getTime());
+      const prevEnd = new Date(windowStart.getTime() - 1);
+      const prevStart = new Date(windowStart.getTime() - windowMs);
 
       const round2 = (n: number | null | undefined) => Math.round((n ?? 0) * 100) / 100;
 
       const [
         ordersDay,
+        ordersPrev,
         ordersWeek,
         activeOrders,
         activeStores,
@@ -126,7 +142,8 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
         openCash,
         waitlist,
       ] = await Promise.all([
-        prisma.order.aggregate({ where: { createdAt: { gte: startOfDay } }, _count: { _all: true }, _sum: { orderAmount: true } }),
+        prisma.order.aggregate({ where: { createdAt: { gte: windowStart, lte: windowEnd } }, _count: { _all: true }, _sum: { orderAmount: true } }),
+        prisma.order.aggregate({ where: { createdAt: { gte: prevStart, lte: prevEnd } }, _count: { _all: true }, _sum: { orderAmount: true } }),
         prisma.order.aggregate({ where: { createdAt: { gte: startOfWeek } }, _count: { _all: true }, _sum: { orderAmount: true } }),
         prisma.order.count({ where: { orderStatus: { in: ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'] } } }),
         prisma.restaurant.count({ where: { isActive: true, isAvailable: true } }),
@@ -144,6 +161,8 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
         gmvToday: round2(ordersDay._sum.orderAmount),
         ordersWeek: ordersWeek._count._all,
         gmvWeek: round2(ordersWeek._sum.orderAmount),
+        ordersPrev: ordersPrev._count._all,
+        gmvPrev: round2(ordersPrev._sum.orderAmount),
         activeOrders,
         activeStores,
         totalStores,

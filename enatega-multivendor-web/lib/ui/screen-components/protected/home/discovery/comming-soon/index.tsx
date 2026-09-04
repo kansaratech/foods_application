@@ -15,8 +15,8 @@ interface IAreaUnavailableProps {
   nearestDistanceKm?: number | null;
 }
 
-const MAROON = "#8c1d40";
-const ORANGE = "#f5820a";
+const MAROON = "#16293f";
+const ORANGE = "#1c5bc7";
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AreaUnavailable({
@@ -79,7 +79,7 @@ export default function AreaUnavailable({
 
   return (
     <div className="mx-auto my-10 max-w-3xl px-4">
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(140,29,64,0.10)] dark:border-gray-700 dark:bg-gray-900">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_rgba(22,41,63,0.10)] dark:border-gray-700 dark:bg-gray-900">
         {/* Banner */}
         <div
           className="px-6 py-10 text-center sm:px-12"
@@ -163,7 +163,7 @@ export default function AreaUnavailable({
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setTouched(true)}
                   placeholder={t("area_na_email")}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#8c1d40] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#16293f] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   aria-invalid={touched && !emailValid}
                 />
                 {touched && !emailValid && (
@@ -176,7 +176,7 @@ export default function AreaUnavailable({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder={t("area_na_phone")}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#8c1d40] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#16293f] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 />
                 <button
                   type="submit"

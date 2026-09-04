@@ -17,8 +17,8 @@ export const fr = {
     "L'âge ne diminue pas la grande déception de voir une boule de glace tomber de la cornet.",
   getStarted: 'Commencer !',
   welcome:
-    "Bienvenue chez Padharo, parfois tout ce dont vous avez besoin, c'est de l'amour. Mais un peu de nourriture de temps en temps ne fait pas de mal.",
-  welcomeScreen: 'Bienvenue chez Padharo',
+    "Bienvenue chez LocalSell, parfois tout ce dont vous avez besoin, c'est de l'amour. Mais un peu de nourriture de temps en temps ne fait pas de mal.",
+  welcomeScreen: 'Bienvenue chez LocalSell',
   loginBtn: 'Se connecter',
   registerBtn: "S'inscrire",
   name: 'Nom',
@@ -181,7 +181,7 @@ export const fr = {
   passErr2:
     'Mot de passe incorrect. Le mot de passe doit être dau moins 8 caractères et contenir 1 lettre majuscule, 1 lettre minuscule, 1 chiffre.',
   letsGetStarted: 'Commençons !',
-  createAccountFirst: 'Créez votre compte Padharo',
+  createAccountFirst: 'Créez votre compte LocalSell',
   firstnameErr1: 'Le prénom est requis !',
   firstnameErr2: 'Prénom non valide !',
   lastnameErr1: 'Le nom de famille est requis !',
@@ -287,7 +287,7 @@ secureAccountWithPhone: 'Nous n’utiliserons votre numéro que si nous devons v
   locationPermissionMessage:
     "Appuyez sur ce message pour ouvrir les paramètres, puis autorisez l'application à utiliser l'emplacement depuis les autorisations.",
   enategaUseYourLocationMessage:
-    'Padharo utilise votre emplacement pour afficher les restaurants à proximité de chez vous !',
+    'LocalSell utilise votre emplacement pour afficher les restaurants à proximité de chez vous !',
   selectAnotherLocation: 'Sélectionner un autre emplacement',
   setLocation: "Définir l'emplacement",
   cartIsEmpty: 'Le panier est vide',
@@ -586,8 +586,8 @@ secureAccountWithPhone: 'Nous n’utiliserons votre numéro que si nous devons v
   yourEmail: 'Connectez-vous facilement en entrant votre adresse e-mail!',
   yourEmailPassword:
     'Veuillez entrer votre mot de passe maintenant pour accéder!',
-    brandName: 'Padharo',
-    welcomeText: 'Bienvenue chez Padharo',    
+    brandName: 'LocalSell',
+    welcomeText: 'Bienvenue chez LocalSell',    
   createAccountDesc:
     'Profitez des meilleurs restaurants ou obtenez ce dont vous avez besoin dans les magasins à proximité, livré!',
     phoneNumber: 'Numéro de téléphone',
@@ -649,7 +649,7 @@ loginRequired: 'Connexion requise',
   "Done": "Terminé",
   "addMessage": "Ajouter un message",
   "kindlyBeAdvisedText": "Veuillez noter que votre message pourrait également être visible pour le partenaire de livraison responsable de la livraison de votre commande sur le site.",
-  explorePadharoCities: 'Découvrir les villes Padharo',
+  exploreLocalSellCities: 'Découvrir les villes LocalSell',
   Card: 'Carte',
   OrderPriceValidation:"Le montant de votre commande est inférieur au montant minimum requis par le restaurant. Veuillez ajouter d'autres articles à votre panier.",
   "Sorry! we can't deliver to your address.": "Désolé ! Nous ne pouvons pas livrer à votre adresse.",

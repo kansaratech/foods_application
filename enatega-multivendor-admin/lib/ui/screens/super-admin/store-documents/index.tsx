@@ -300,7 +300,7 @@ export default function StoreDocumentsScreen() {
           <button onClick={saveDoc} disabled={saving} className="mt-1 h-10 rounded bg-black text-white disabled:opacity-50">
             {t('Save')}
           </button>
-          <p className="text-xs text-gray-400">{t('Saving resets the document to pending review.')}</p>
+          <p className="text-xs text-gray-400">{t('Saving resets the document to pending review')}</p>
         </div>
       </Dialog>
     </div>

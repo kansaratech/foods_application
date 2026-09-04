@@ -599,7 +599,7 @@ export const ur = {
     Done: 'ہو گیا',
     addMessage: 'پیغام شامل کریں',
     kindlyBeAdvisedText: 'براہ کرم یاد رکھیں کہ آپ کا پیغام اس ڈیلیوری کو وینچر پر لے جانے والے کورئیر پارٹنر کے لیے بھی نظر آ سکتا ہے۔',
-    explorePadharoCities: 'انٹیگا کے شہروں کی کھوج کریں',
+    exploreLocalSellCities: 'انٹیگا کے شہروں کی کھوج کریں',
     Card: 'کارڈ',
     lebelAlreadyExist: "لیبل '{{selectedLabel}}' پہلے سے موجود ہے۔ براہ کرم کوئی دوسرا منتخب کریں۔",
     UpdateAvailable: 'اپ ڈیٹ دستیاب ہے',

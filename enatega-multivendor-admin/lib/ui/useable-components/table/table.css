@@ -1,13 +1,19 @@
-.responsive-admin-table {
+.responsive-admin-table,
+.responsive-admin-table .p-datatable,
+.responsive-admin-table .p-datatable-table,
+.responsive-admin-table table {
   width: 100%;
 }
 
 .responsive-admin-table .p-datatable-wrapper {
-  overflow-x: visible;
+  overflow-x: auto;
 }
 
-.responsive-admin-table table {
-  width: 100%;
+/* Let the scroll body use the height passed via scrollHeight (viewport-based),
+   but never collapse smaller than this. */
+.responsive-admin-table .p-datatable-scrollable .p-datatable-wrapper,
+.responsive-admin-table .p-datatable-scrollable-body {
+  min-height: 320px;
 }
 
 @media (max-width: 768px) {

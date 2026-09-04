@@ -310,7 +310,7 @@ export default function RestaurantDetailsScreen() {
 
   // Is this store reachable from the customer's chosen delivery location?
   // `restaurant.deliveryDistance` when the vendor has set one, else the
-  // marketplace radius (every Padharo store serves within it).
+  // marketplace radius (every LocalSell store serves within it).
   const router = useRouter();
   const { showToast } = useToast();
   const { userAddress } = useUserAddress();
@@ -676,7 +676,7 @@ export default function RestaurantDetailsScreen() {
               <button
                 type="button"
                 onClick={() => router.push("/discovery")}
-                className="shrink-0 rounded-full bg-[#f5820a] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
+                className="shrink-0 rounded-full bg-[#1c5bc7] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
               >
                 Browse stores near you →
               </button>
@@ -707,7 +707,7 @@ export default function RestaurantDetailsScreen() {
                 type="text"
                 name="search"
                 placeholder={t("search_for_food_items_placeholder")}
-                className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#f5820a] focus:ring-2 focus:ring-[#f5820a]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
+                className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
               />
               {loading && (
                 <FontAwesomeIcon
@@ -735,8 +735,8 @@ export default function RestaurantDetailsScreen() {
                             type="button"
                             className={`${
                               selectedCategory === _slug
-                                ? "bg-[#8c1d40] text-white"
-                                : "bg-slate-100 text-slate-600 hover:bg-[#fff7ef] hover:text-[#8c1d40] dark:bg-gray-800 dark:text-gray-300"
+                                ? "bg-[#16293f] text-white"
+                                : "bg-slate-100 text-slate-600 hover:bg-[#fff7ef] hover:text-[#16293f] dark:bg-gray-800 dark:text-gray-300"
                             } whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold leading-none transition sm:text-sm`}
                             onClick={() => handleScroll(toSlug(category.title))}
                           >
@@ -815,10 +815,10 @@ export default function RestaurantDetailsScreen() {
                   {category.foods.map((meal: IFood, mealIndex) => (
                     <div
                       key={mealIndex}
-                      className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:-translate-y-1 hover:cursor-pointer hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)] ${
+                      className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:-translate-y-1 hover:cursor-pointer hover:shadow-[0_18px_45px_rgba(22,41,63,0.14)] ${
                         meal.isOutOfStock
                           ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950"
-                          : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(140,29,64,0.06)] hover:border-[#f5820a]/40 dark:border-gray-700 dark:bg-gray-800"
+                          : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(22,41,63,0.06)] hover:border-[#1c5bc7]/40 dark:border-gray-700 dark:bg-gray-800"
                       }`}
                       onClick={() => handleRestaurantClick(meal)}
                     >
@@ -863,7 +863,7 @@ export default function RestaurantDetailsScreen() {
                             : meal.description}
                         </p>
                         <div className="mt-auto flex items-center justify-between pt-2">
-                          <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#8c1d40] dark:text-primary-color">
+                          <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#16293f] dark:text-primary-color">
                             <span>
                               {CURRENCY_SYMBOL}
                               {meal.variations[0].price}
@@ -887,7 +887,7 @@ export default function RestaurantDetailsScreen() {
 
                       {/* Add Button */}
                       <button
-                        className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#f5820a] text-white shadow-md transition hover:scale-110`}
+                        className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#1c5bc7] text-white shadow-md transition hover:scale-110`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRestaurantClick(meal);

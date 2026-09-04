@@ -111,7 +111,7 @@ export default function AreaUnavailable({
               width: scale(64),
               height: scale(64),
               borderRadius: scale(18),
-              backgroundColor: '#8C1D40',
+              backgroundColor: '#16293f',
               justifyContent: 'center',
               alignItems: 'center',
               marginBottom: scale(18)
@@ -187,7 +187,7 @@ export default function AreaUnavailable({
                 disabled={loading}
                 style={{
                   width: '100%',
-                  backgroundColor: '#F5820A',
+                  backgroundColor: '#1c5bc7',
                   borderRadius: scale(8),
                   paddingVertical: scale(12),
                   alignItems: 'center',
@@ -209,7 +209,7 @@ export default function AreaUnavailable({
               )}
 
           <TouchableOpacity activeOpacity={0.7} onPress={onChangeLocation}>
-            <TextDefault bold H6 textColor='#8C1D40'>
+            <TextDefault bold H6 textColor='#16293f'>
               {t('area_na_change')}
             </TextDefault>
           </TouchableOpacity>

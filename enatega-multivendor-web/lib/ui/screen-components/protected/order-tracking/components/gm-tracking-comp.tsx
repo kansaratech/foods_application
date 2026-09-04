@@ -186,7 +186,7 @@ function GoogleMapTrackingComponent({
                 directions: activeDirections,
                 suppressMarkers: true, // Hide default markers
                 polylineOptions: {
-                  strokeColor: "#F5820A",
+                  strokeColor: "#1c5bc7",
                   strokeOpacity: 0.8,
                   strokeWeight: 3,
                   zIndex: 10,

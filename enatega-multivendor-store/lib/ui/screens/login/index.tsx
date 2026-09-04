@@ -1,6 +1,7 @@
 import { Formik } from "formik";
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   Image,
   KeyboardAvoidingView,
@@ -57,27 +58,34 @@ const LoginScreen = () => {
         >
           <View className="flex-1 flex-row">
             {isDesktop && (
-              <View
-                className="w-1/2 min-h-screen px-16 py-14 justify-between overflow-hidden"
-                style={{ backgroundColor: "#8F173F" }}
+              <LinearGradient
+                // LocalSell brand: navy -> blue
+                colors={["#16293F", "#173C74", "#1C5BC7"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: "50%",
+                  minHeight: "100%",
+                  paddingHorizontal: 64,
+                  paddingVertical: 56,
+                  justifyContent: "space-between",
+                  overflow: "hidden",
+                }}
               >
-                <View className="flex-row items-center gap-3">
+                <View className="gap-2">
                   <Image
-                    source={IMAGES.icon}
-                    style={{ width: 48, height: 48, borderRadius: 14 }}
-                    resizeMode="cover"
+                    source={IMAGES.brandLogoInverse}
+                    style={{ width: 190, height: 53 }}
+                    resizeMode="contain"
                   />
-                  <View>
-                    <Text className="text-white text-2xl font-bold">Padharo</Text>
-                    <Text className="text-white/70 text-xs tracking-widest uppercase">
-                      Merchant Hub
-                    </Text>
-                  </View>
+                  <Text className="text-white/60 text-xs tracking-[3px] uppercase ml-1">
+                    Merchant Hub
+                  </Text>
                 </View>
 
                 <View className="max-w-xl">
                   <View className="self-start rounded-full bg-white/10 px-4 py-2 mb-6">
-                    <Text className="text-[#FFD9A7] text-sm font-semibold">
+                    <Text className="text-[#BFD6F7] text-sm font-semibold">
                       Everything your store needs
                     </Text>
                   </View>
@@ -97,7 +105,7 @@ const LoginScreen = () => {
                     </View>
                   ))}
                 </View>
-              </View>
+              </LinearGradient>
             )}
 
             <View className="flex-1 items-center justify-center px-5 py-10">
@@ -105,15 +113,15 @@ const LoginScreen = () => {
                 {!isDesktop && (
                   <View className="items-center mb-9">
                     <Image
-                      source={IMAGES.icon}
-                      style={{ width: 72, height: 72, borderRadius: 20 }}
-                      resizeMode="cover"
+                      source={IMAGES.brandLogo}
+                      style={{ width: 208, height: 58 }}
+                      resizeMode="contain"
                     />
                     <Text
-                      className="text-2xl font-bold mt-3"
-                      style={{ color: appTheme.fontMainColor }}
+                      className="text-xs tracking-[3px] uppercase mt-2"
+                      style={{ color: appTheme.fontSecondColor }}
                     >
-                      Padharo Merchant
+                      Merchant Hub
                     </Text>
                   </View>
                 )}
@@ -215,6 +223,7 @@ const LoginScreen = () => {
 
                       <CustomContinueButton
                         title={t("Login")}
+                        loadingTitle={t("Signing in")}
                         disabled={isLogging}
                         isLoading={isLogging}
                         onPress={() => handleSubmit()}
@@ -227,7 +236,7 @@ const LoginScreen = () => {
                   className="text-center text-xs mt-9"
                   style={{ color: appTheme.fontSecondColor }}
                 >
-                  Need help? Contact your Padharo account manager.
+                  Need help? Contact your LocalSell account manager.
                 </Text>
               </View>
             </View>

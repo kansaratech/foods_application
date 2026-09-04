@@ -20,7 +20,7 @@ const features = [
   },
 ];
 
-export default function AboutPadharo() {
+export default function AboutLocalSell() {
   const { appTheme } = useApptheme();
 
   return (
@@ -30,13 +30,13 @@ export default function AboutPadharo() {
       contentContainerStyle={{ padding: 24, paddingBottom: 96 }}
     >
       <View className="w-full max-w-5xl self-center">
-        <View className="rounded-3xl p-8 overflow-hidden" style={{ backgroundColor: "#8F173F" }}>
+        <View className="rounded-3xl p-8 overflow-hidden" style={{ backgroundColor: appTheme.brand }}>
           <View className="self-start rounded-full bg-white/10 px-4 py-2 mb-5">
-            <Text className="text-[#FFD9A7] text-sm font-semibold">Padharo Merchant</Text>
+            <Text className="text-[#BFD6F7] text-sm font-semibold">LocalSell Merchant</Text>
           </View>
           <Text className="text-white text-4xl font-bold">Made for busy restaurant teams</Text>
           <Text className="text-white/75 text-base leading-7 mt-4 max-w-3xl">
-            Padharo brings daily store operations together so owners and teams can spend less time managing tools and more time serving customers.
+            LocalSell brings daily store operations together so owners and teams can spend less time managing tools and more time serving customers.
           </Text>
         </View>
 
@@ -79,7 +79,7 @@ export default function AboutPadharo() {
           <View className="ml-4 flex-1">
             <Text className="font-bold" style={{ color: appTheme.fontMainColor }}>Need assistance?</Text>
             <Text className="text-sm mt-1" style={{ color: appTheme.fontSecondColor }}>
-              Open Help from the menu or contact your Padharo account manager.
+              Open Help from the menu or contact your LocalSell account manager.
             </Text>
           </View>
         </View>

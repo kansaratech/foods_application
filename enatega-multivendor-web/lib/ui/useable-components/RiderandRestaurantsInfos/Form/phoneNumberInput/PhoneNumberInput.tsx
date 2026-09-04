@@ -6,7 +6,7 @@ const PhoneNumberInput = () => {
   return (
     <div>
       <PhoneInput
-      // Padharo is India-only for now.
+      // LocalSell is India-only for now.
       country={"in"}
       onlyCountries={["in"]}
       countryCodeEditable={false}
@@ -19,7 +19,7 @@ const PhoneNumberInput = () => {
         // not with a typeof-window branch — that produced an SSR/client mismatch.
         className:
           "w-full min-h-12 border border-slate-200 dark:border-gray-600 py-3 rounded-2xl " +
-          "focus:outline-none focus:ring-4 focus:ring-orange-100 active:outline-none " +
+          "focus:outline-none focus:ring-4 focus:ring-blue-100 active:outline-none " +
           "bg-slate-50 text-gray-900 dark:bg-gray-700 dark:text-gray-100 pl-12",
       }}
       containerClass="custom-phone-input w-full"

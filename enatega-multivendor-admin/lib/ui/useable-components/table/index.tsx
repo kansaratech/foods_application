@@ -32,7 +32,9 @@ const Table = <T extends ITableExtends>({
   rowsPerPage = 10,
   className,
   scrollable = true,
-  scrollHeight = '420px',
+  // Fill the viewport instead of a fixed ~420px box. Subtracts the top bar +
+  // a screen's header/filter row + the paginator. Screens can still override.
+  scrollHeight = 'calc(100dvh - 14rem)',
   // Server-side pagination props
   totalRecords,
   onPageChange,
@@ -108,9 +110,9 @@ const Table = <T extends ITableExtends>({
         className={className}
         dataKey="_id"
         tableStyle={{
+          width: '100%',
           minWidth: minWidth ? minWidth : '50rem',
           minHeight: 'auto',
-          maxHeight: '480px',
         }}
         selectionMode={isSelectable ? 'checkbox' : null}
         filters={filters}

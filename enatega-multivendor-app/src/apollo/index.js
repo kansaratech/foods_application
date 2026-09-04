@@ -148,7 +148,7 @@ const setupApollo = ({ GRAPHQL_URL, WS_GRAPHQL_URL }) => {
         authorization: token && !hasExpiredUserToken ? `Bearer ${token}` : '',
         "bop-auth": publicToken ? `Bearer ${publicToken}` : '',
         nonce: nonce,
-        'user-agent': `PadharoApp/${Platform.OS}`,
+        'user-agent': `LocalSellApp/${Platform.OS}`,
         'accept-language': 'en-US',
         'x-platform': Platform.OS
       }

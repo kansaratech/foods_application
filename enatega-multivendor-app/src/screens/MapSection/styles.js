@@ -12,7 +12,7 @@ const styles = (props = null) =>
       height: 40,
       width: 40,
       borderRadius: 20,
-      backgroundColor: props !== null ? props?.main : '#F5820A',
+      backgroundColor: props !== null ? props?.main : '#1c5bc7',
       alignItems: 'center',
       justifyContent: 'center'
     },

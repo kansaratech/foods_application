@@ -52,7 +52,7 @@ const Card: React.FC<ICardProps> = ({
 
   return (
     <div
-      className={`group relative m-2 cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(140,29,64,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#f5820a]/40 hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)] dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
+      className={`group relative m-2 cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(22,41,63,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#1c5bc7]/40 hover:shadow-[0_18px_45px_rgba(22,41,63,0.14)] dark:border-gray-700 dark:bg-gray-800 dark:text-white`}
       onClick={() => {
         if (!isOpen) {
           handleUpdateIsModalOpen(true, item._id);
@@ -86,7 +86,7 @@ const Card: React.FC<ICardProps> = ({
           </Badge>
         ) : null}
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-800 shadow-sm dark:bg-gray-900/90 dark:text-white">
-          <FiStar className="h-3 w-3 text-[#f5820a]" />
+          <FiStar className="h-3 w-3 text-[#1c5bc7]" />
           {item?.reviewAverage ?? "—"}
         </span>
       </div>
@@ -105,7 +105,7 @@ const Card: React.FC<ICardProps> = ({
 
         <div className="mt-2 flex items-center gap-2 overflow-hidden whitespace-nowrap border-t border-dashed border-slate-200 pt-2 text-[11px] font-semibold text-slate-600 dark:border-gray-700 dark:text-gray-300">
           <span className="inline-flex items-center gap-1">
-            <FiClock className="h-3 w-3 text-[#f5820a]" />
+            <FiClock className="h-3 w-3 text-[#1c5bc7]" />
             {item?.deliveryTime}m
           </span>
           <span className="text-slate-300 dark:text-gray-600">•</span>
@@ -154,7 +154,7 @@ const Card: React.FC<ICardProps> = ({
                 setTimeout(goToDetail, 100);
               }}
               label={t("see_menu_label")}
-              className="min-h-10 w-1/2 rounded-xl bg-[#f5820a] text-base font-normal text-white"
+              className="min-h-10 w-1/2 rounded-xl bg-[#1c5bc7] text-base font-normal text-white"
             />
           </div>
         </div>

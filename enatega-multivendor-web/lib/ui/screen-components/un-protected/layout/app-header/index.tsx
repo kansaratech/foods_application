@@ -29,8 +29,8 @@ import { setUserLocale } from "@/lib/utils/methods/locale";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
 
-const ORANGE = "#f5820a";
-const MAROON = "#8c1d40";
+const ORANGE = "#1c5bc7";
+const MAROON = "#16293f";
 
 function shortAddress(address?: string | null, max = 28) {
   if (!address) return "";
@@ -82,10 +82,10 @@ function LocationButton({
       onClick={onClick}
       title={
         unavailable
-          ? `Padharo doesn't deliver to ${address} yet`
+          ? `LocalSell doesn't deliver to ${address} yet`
           : address || "Set your delivery location"
       }
-      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-left transition hover:border-[#f5820a] dark:border-gray-700 ${
+      className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-left transition hover:border-[#1c5bc7] dark:border-gray-700 ${
         unavailable ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30" : "border-slate-200"
       } ${className}`}
     >
@@ -112,7 +112,7 @@ function LocationButton({
       <Icon
         icon={faChevronDown}
         size={10}
-        className="shrink-0 text-slate-400 transition group-hover:text-[#f5820a]"
+        className="shrink-0 text-slate-400 transition group-hover:text-[#1c5bc7]"
       />
     </button>
   );
@@ -120,7 +120,7 @@ function LocationButton({
 
 /**
  * The single application header — same chrome on every route (landing, discovery,
- * store, checkout, profile…). Clean Padharo styling from the old LandingHeader,
+ * store, checkout, profile…). Clean LocalSell styling from the old LandingHeader,
  * with the working pieces from the old AppTopbar folded in: a delivery-location
  * selector, the cart sidebar, and the profile menu.
  */
@@ -221,7 +221,7 @@ export default function AppHeader() {
         <Link
           href="/"
           className="flex shrink-0 items-center"
-          aria-label="Padharo home"
+          aria-label="LocalSell home"
         >
           <Logo fillColor="#000000" darkmode="#FFFFFF" />
         </Link>
@@ -243,7 +243,7 @@ export default function AppHeader() {
 
         <form
           onSubmit={submitSearch}
-          className="mx-auto hidden max-w-2xl flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#f5820a] focus-within:ring-2 focus-within:ring-[#f5820a]/15 md:flex dark:border-gray-700 dark:bg-gray-800"
+          className="mx-auto hidden max-w-2xl flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#1c5bc7] focus-within:ring-2 focus-within:ring-[#1c5bc7]/15 md:flex dark:border-gray-700 dark:bg-gray-800"
         >
           <input
             value={searchTerm}
@@ -255,7 +255,7 @@ export default function AppHeader() {
           <button
             type="submit"
             aria-label="Search"
-            className="p-1 text-slate-500 transition hover:text-[#8c1d40] dark:text-gray-300"
+            className="p-1 text-slate-500 transition hover:text-[#16293f] dark:text-gray-300"
           >
             <Icon icon={faMagnifyingGlass} size={15} />
           </button>
@@ -265,15 +265,15 @@ export default function AppHeader() {
           <button
             type="button"
             onClick={toggleLocale}
-            className="transition hover:text-[#8c1d40] dark:hover:text-orange-300"
+            className="transition hover:text-[#16293f] dark:hover:text-blue-300"
             aria-label="Toggle language"
           >
-            <span className={isHindi ? "text-[#8c1d40] dark:text-orange-300" : ""}>
+            <span className={isHindi ? "text-[#16293f] dark:text-blue-300" : ""}>
               हिन्दी
             </span>
             <span className="mx-1 text-slate-300">/</span>
             <span
-              className={!isHindi ? "text-[#8c1d40] dark:text-orange-300" : ""}
+              className={!isHindi ? "text-[#16293f] dark:text-blue-300" : ""}
             >
               EN
             </span>
@@ -284,7 +284,7 @@ export default function AppHeader() {
               type="button"
               onClick={() => setIsCartOpen(true)}
               aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
-              className="relative flex items-center gap-1.5 transition hover:text-[#8c1d40] dark:hover:text-orange-300"
+              className="relative flex items-center gap-1.5 transition hover:text-[#16293f] dark:hover:text-blue-300"
             >
               <Icon icon={faCartShopping} size={16} />
               <span className="hidden sm:inline">Cart</span>
@@ -307,7 +307,7 @@ export default function AppHeader() {
                 aria-haspopup
                 aria-controls="app_header_profile_menu"
                 title={displayName}
-                className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-2.5 transition hover:border-[#f5820a] dark:border-gray-600"
+                className="flex shrink-0 items-center gap-2 rounded-full border border-slate-200 py-1 pl-1 pr-2.5 transition hover:border-[#1c5bc7] dark:border-gray-600"
               >
                 <span
                   className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
@@ -355,7 +355,7 @@ export default function AppHeader() {
             <button
               type="button"
               onClick={() => setIsAuthModalVisible(true)}
-              className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#f5820a] hover:text-[#8c1d40] dark:border-gray-600 dark:text-white sm:px-4"
+              className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
             >
               Log in
             </button>
@@ -398,7 +398,7 @@ export default function AppHeader() {
         className="w-[92%] max-w-sm rounded-xl bg-white px-6 dark:bg-gray-800 dark:text-white"
         header={
           <span className="block w-full text-center text-lg font-bold">
-            Log out of Padharo?
+            Log out of LocalSell?
           </span>
         }
         headerClassName="!justify-center dark:bg-gray-800"

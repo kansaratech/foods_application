@@ -28,13 +28,22 @@ function getImageKey(src: ImageProps["src"]) {
   return String(src);
 }
 
+// A missing or empty src makes <img> refetch the whole page; treat null /
+// undefined / blank string sources as "no image" and fall back.
+function normalizeSrc(src: ImageProps["src"]) {
+  if (src == null) return FALLBACK_IMAGE_SRC;
+  if (typeof src === "string" && src.trim() === "") return FALLBACK_IMAGE_SRC;
+  return src;
+}
+
 export default function Image(props: ImageProps) {
-  const [imgSrc, setImgSrc] = useState(props.src);
-  const latestSrcRef = useRef(props.src);
+  const [imgSrc, setImgSrc] = useState(() => normalizeSrc(props.src));
+  const latestSrcRef = useRef(normalizeSrc(props.src));
 
   useEffect(() => {
-    latestSrcRef.current = props.src;
-    setImgSrc(props.src);
+    const next = normalizeSrc(props.src);
+    latestSrcRef.current = next;
+    setImgSrc(next);
   }, [props.src]);
 
   return (

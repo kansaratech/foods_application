@@ -46,7 +46,7 @@ const initialValues: VendorFormValues = {
 };
 
 const fieldClass =
-  "w-full min-h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#f5820a] focus:bg-white focus:ring-4 focus:ring-[#f5820a]/10 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100";
+  "w-full min-h-12 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-[#1c5bc7] focus:bg-white focus:ring-4 focus:ring-[#1c5bc7]/10 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100";
 
 const EmailForm: React.FC<formProps> = ({
   heading,
@@ -95,11 +95,11 @@ const EmailForm: React.FC<formProps> = ({
       className="mx-auto grid max-w-6xl scroll-mt-24 items-stretch gap-8 px-4 lg:grid-cols-[0.86fr_1.14fr] lg:gap-10"
     >
       {/* Left — pitch */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-[#8c1d40] p-7 text-white shadow-[0_24px_60px_rgba(140,29,64,0.16)] sm:p-9 lg:p-10">
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#16293f] p-7 text-white shadow-[0_24px_60px_rgba(22,41,63,0.16)] sm:p-9 lg:p-10">
         <div aria-hidden="true" className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full border-[55px] border-white/[0.045]" />
         <div className="relative">
         {eyebrow && (
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#ffad55]">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#8fbdf0]">
             {eyebrow}
           </p>
         )}
@@ -120,7 +120,7 @@ const EmailForm: React.FC<formProps> = ({
               >
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#f5820a] text-[11px] font-black text-white"
+                  className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1c5bc7] text-[11px] font-black text-white"
                 >
                   ✓
                 </span>
@@ -135,8 +135,8 @@ const EmailForm: React.FC<formProps> = ({
       {/* Right — form card */}
       <div className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_28px_80px_rgba(45,24,31,0.10)] dark:border-gray-700 dark:bg-gray-800 sm:p-8 lg:p-10">
         <div className="mb-7 flex items-center justify-between gap-4 border-b border-slate-100 pb-5 dark:border-gray-700">
-          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#f5820a]">Application form</p><h3 className="mt-1 text-xl font-bold tracking-[-0.02em] text-slate-950 dark:text-white">Tell us about yourself</h3></div>
-          <span className="hidden rounded-full bg-[#fff3e7] px-3 py-1 text-[10px] font-bold text-[#b95e08] sm:block">Takes 2 minutes</span>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#1c5bc7]">Application form</p><h3 className="mt-1 text-xl font-bold tracking-[-0.02em] text-slate-950 dark:text-white">Tell us about yourself</h3></div>
+          <span className="hidden rounded-full bg-[#e8f0fc] px-3 py-1 text-[10px] font-bold text-[#b95e08] sm:block">Takes 2 minutes</span>
         </div>
         <Formik
           initialValues={initialValues}
@@ -292,7 +292,7 @@ const EmailForm: React.FC<formProps> = ({
                 type="submit"
                 label={t("register_label")}
                 loading={isSubmitting}
-                className="mt-2 w-full justify-center rounded-2xl border-0 bg-[#f5820a] py-3.5 text-[15px] font-bold text-white shadow-[0_12px_28px_rgba(245,130,10,0.22)] transition hover:-translate-y-0.5 hover:bg-[#e8760a]"
+                className="mt-2 w-full justify-center rounded-2xl border-0 bg-[#1c5bc7] py-3.5 text-[15px] font-bold text-white shadow-[0_12px_28px_rgba(28,91,199,0.22)] transition hover:-translate-y-0.5 hover:bg-[#1a52b4]"
               />
             </Form>
           )}

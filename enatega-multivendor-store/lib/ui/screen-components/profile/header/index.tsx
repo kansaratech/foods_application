@@ -32,7 +32,7 @@ export default function ProfileHeader() {
         <View className="flex-row items-center">
           <View
             className="h-16 w-16 rounded-2xl items-center justify-center overflow-hidden"
-            style={{ backgroundColor: "#8F173F" }}
+            style={{ backgroundColor: appTheme.brand }}
           >
             {dataProfile?.logo ? (
               <Image

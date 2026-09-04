@@ -50,7 +50,7 @@ export default function SectionHeader({
         <h2 className="text-[22px] font-black leading-[1.12] tracking-[-0.035em] text-slate-950 dark:text-white sm:text-[26px]">
           {title}
           {accent ? (
-            <span className="font-serif text-[22px] font-normal italic tracking-[-0.02em] text-[#8c1d40] dark:text-orange-300 sm:text-[26px]">
+            <span className="font-serif text-[22px] font-normal italic tracking-[-0.02em] text-[#16293f] dark:text-blue-300 sm:text-[26px]">
               {" "}
               {accent}
             </span>
@@ -63,7 +63,7 @@ export default function SectionHeader({
           <button
             type="button"
             onClick={onSeeAll}
-            className="group inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm font-bold text-[#8c1d40] transition hover:text-[#f5820a] dark:text-orange-300"
+            className="group inline-flex items-center gap-1 rounded-full px-2 py-1 text-sm font-bold text-[#16293f] transition hover:text-[#1c5bc7] dark:text-blue-300"
           >
             {seeAllLabel}
             <FiArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
@@ -76,7 +76,7 @@ export default function SectionHeader({
               type="button"
               aria-label="Previous"
               onClick={onPrev}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#f5820a] hover:text-[#f5820a] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#1c5bc7] hover:text-[#1c5bc7] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
             >
               <NavIcon.prev className="h-4 w-4" />
             </button>
@@ -84,7 +84,7 @@ export default function SectionHeader({
               type="button"
               aria-label="Next"
               onClick={onNext}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#f5820a] hover:text-[#f5820a] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#1c5bc7] hover:text-[#1c5bc7] dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
             >
               <NavIcon.next className="h-4 w-4" />
             </button>

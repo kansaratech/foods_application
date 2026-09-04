@@ -9,8 +9,8 @@ interface IBadgeProps {
 }
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
-  offer: "bg-[#f5820a] text-white",
-  festive: "bg-[#8c1d40] text-white",
+  offer: "bg-[#1c5bc7] text-white",
+  festive: "bg-[#16293f] text-white",
   neutral: "bg-slate-900/85 text-white backdrop-blur-sm",
 };
 

@@ -17,7 +17,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Partner",
     links: [
       { label: "List your store", href: "/restaurantInfo" },
-      { label: "Ride with Padharo", href: "/rider" },
+      { label: "Ride with LocalSell", href: "/rider" },
       { label: "Store login", href: "/restaurantInfo" },
     ],
   },
@@ -33,7 +33,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
 
 export default function LandingFooter() {
   return (
-    <footer className="bg-[#8c1d40] text-white">
+    <footer className="bg-[#16293f] text-white">
       <div className="grid w-full gap-10 px-4 py-14 md:px-6 lg:grid-cols-[1.4fr_repeat(3,1fr)] lg:px-12 lg:py-16 xl:px-20 2xl:px-[80px]">
         <div className="max-w-xs">
           <Logo fillColor="#FFFFFF" darkmode="#FFFFFF" />
@@ -52,7 +52,7 @@ export default function LandingFooter() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-white/85 transition hover:text-[#f5820a]"
+                    className="text-white/85 transition hover:text-[#1c5bc7]"
                   >
                     {link.label}
                   </Link>
@@ -64,7 +64,7 @@ export default function LandingFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="w-full px-4 py-5 text-xs text-white/50 md:px-6 lg:px-12 xl:px-20 2xl:px-[80px]">
-          © {new Date().getFullYear()} Padharo. All rights reserved.
+          © {new Date().getFullYear()} LocalSell. All rights reserved.
         </div>
       </div>
     </footer>

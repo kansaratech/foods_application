@@ -783,7 +783,7 @@ export default function StoreDetailsScreen() {
                         <button
                           className={`whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold transition sm:text-sm ${
                             selectedCategory === _slug
-                              ? "bg-[#8c1d40] text-white"
+                              ? "bg-[#16293f] text-white"
                               : "bg-slate-100 text-slate-600 dark:bg-gray-800 dark:text-gray-300"
                           }`}
                           onClick={() => handleScroll(_slug, true, 100)}
@@ -862,8 +862,8 @@ export default function StoreDetailsScreen() {
                             onClick={() => handleScroll(_slug, true, 100)}
                             className={`w-full rounded-xl px-3 py-2 text-left text-sm font-semibold tracking-[-0.01em] transition ${
                               active
-                                ? "bg-[#8c1d40] text-white shadow-sm"
-                                : "text-slate-600 hover:bg-[#fff7ef] hover:text-[#8c1d40] dark:text-gray-300 dark:hover:bg-gray-800"
+                                ? "bg-[#16293f] text-white shadow-sm"
+                                : "text-slate-600 hover:bg-[#fff7ef] hover:text-[#16293f] dark:text-gray-300 dark:hover:bg-gray-800"
                             }`}
                           >
                             {category.label}
@@ -904,8 +904,8 @@ export default function StoreDetailsScreen() {
                           {subCategory.foods.map((meal: IFood, mealIndex) => (
                             <div
                               key={mealIndex}
-                              className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:-translate-y-1 hover:cursor-pointer hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)]
-                       ${meal.isOutOfStock ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950" : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(140,29,64,0.06)] hover:border-[#f5820a]/40 dark:border-gray-700 dark:bg-gray-800"}
+                              className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:-translate-y-1 hover:cursor-pointer hover:shadow-[0_18px_45px_rgba(22,41,63,0.14)]
+                       ${meal.isOutOfStock ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950" : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(22,41,63,0.06)] hover:border-[#1c5bc7]/40 dark:border-gray-700 dark:bg-gray-800"}
                      `}
                               onClick={() => handleOpenFoodModal(meal)}
                             >
@@ -943,7 +943,7 @@ export default function StoreDetailsScreen() {
                                   {meal.description}
                                 </p>
                                 <div className="mt-auto flex items-center justify-between pt-2">
-                                  <span className="text-[15px] font-black text-[#8c1d40] dark:text-primary-color">
+                                  <span className="text-[15px] font-black text-[#16293f] dark:text-primary-color">
                                     {CURRENCY_SYMBOL}
                                     {meal.variations[0].price}
                                   </span>
@@ -960,7 +960,7 @@ export default function StoreDetailsScreen() {
                                 className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-md transition hover:scale-110 ${
                                   meal.isOutOfStock
                                     ? "bg-slate-400 dark:bg-gray-600"
-                                    : "bg-[#f5820a]"
+                                    : "bg-[#1c5bc7]"
                                 }`}
                                 onClick={(e) => {
                                   e.stopPropagation();

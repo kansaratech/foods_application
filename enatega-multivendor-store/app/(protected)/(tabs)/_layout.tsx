@@ -24,7 +24,12 @@ const RootLayout = () => {
       screenOptions={{
         tabBarPosition: isDesktopWeb ? "left" : "bottom",
         tabBarLabelPosition: isDesktopWeb ? "beside-icon" : "below-icon",
-        tabBarActiveTintColor: appTheme.primary,
+        // Mobile tab bar sits on a dark surface (tabNaviatorBackground
+        // #1F2937); web sidebar is on a light card. Tints must suit each.
+        tabBarActiveTintColor: isDesktopWeb ? appTheme.primary : "#93B4EA",
+        tabBarInactiveTintColor: isDesktopWeb
+          ? appTheme.fontSecondColor
+          : "#9CA3AF",
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: Platform.select({

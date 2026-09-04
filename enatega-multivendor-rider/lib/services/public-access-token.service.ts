@@ -150,7 +150,7 @@ class PublicAccessTokenService {
               nonce,
               "x-platform": Platform.OS,
               "accept-language": locale,
-              "user-agent": `Padharo-Rider-App/${Platform.OS}`,
+              "user-agent": `LocalSell-Rider-App/${Platform.OS}`,
               "x-skip-public-auth": "true",
             },
           },

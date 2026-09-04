@@ -17,9 +17,9 @@ const androidGoogleMapsApiKey =
 
 module.exports = {
   expo: {
-    name: 'Padharo Rider',
+    name: 'LocalSell Rider',
     description:
-      "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
+      'LocalSell Rider — the delivery partner app for LocalSell. Shop Local. Find More.',
     version: '1.1.87',
     slug: 'food-delivery-rider-multivendor',
     orientation: 'portrait',
@@ -38,12 +38,12 @@ module.exports = {
           // a 1x1 transparent PNG — only the background color shows. The animated
           // pin / wordmark is drawn by the JS AnimatedSplash component, whose
           // first frame uses these same colors so the handoff shows no flash.
-          backgroundColor: '#8C1D40', // light (Padharo maroon)
+          backgroundColor: '#16293f', // light (LocalSell navy)
           image: './lib/assets/images/splashTransparent.png',
           imageWidth: 1,
           resizeMode: 'contain',
           dark: {
-            backgroundColor: '#6E1732', // dark
+            backgroundColor: '#0e1b2b', // dark
             image: './lib/assets/images/splashTransparent.png'
           }
         }
@@ -93,7 +93,7 @@ module.exports = {
       icon: './lib/assets/images/appIcon.png',
       adaptiveIcon: {
         foregroundImage: './lib/assets/images/appIcon.png',
-        backgroundColor: '#F5820A'
+        backgroundColor: '#FFFFFF'
       }
     },
     owner: 'kkansara21',

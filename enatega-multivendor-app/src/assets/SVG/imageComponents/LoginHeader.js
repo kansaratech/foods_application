@@ -14,7 +14,7 @@ function LoginHeader() {
     >
       <Path
         d='M0 -226H393V244C277.5 208.5 143.5 197 0 244V-226Z'
-        fill='#F5820A'
+        fill='#1c5bc7'
       />
     </Svg>
   )

@@ -65,7 +65,7 @@ const styles = (props = null) =>
       alignItems: 'flex-end'
     },
     subContainerButton: {
-      backgroundColor: props !== null ? props?.newheaderColor : '#F5820A',
+      backgroundColor: props !== null ? props?.newheaderColor : '#1c5bc7',
       ...alignment.MTxSmall,
       borderRadius: 40,
       width: '70%',
@@ -159,7 +159,7 @@ const styles = (props = null) =>
       //backgroundColor: props !== null ? props?.gray200 : '#F3F4F6'
     },
     starsStyle: {
-      borderColor: props !== null ? props?.newheaderColor : '#F5820A',
+      borderColor: props !== null ? props?.newheaderColor : '#1c5bc7',
       borderWidth: 1,
       borderRadius: 5,
       justifyContent: 'center',

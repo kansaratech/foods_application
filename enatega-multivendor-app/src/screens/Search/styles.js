@@ -23,7 +23,7 @@ const styles = (props = null) =>
       ...alignment.PRmedium
     },
     tagItem: {
-      backgroundColor: props !== null ? props?.main : '#F5820A',
+      backgroundColor: props !== null ? props?.main : '#1c5bc7',
       minHeight: scale(40),
       maxWidth: scale(220),
       justifyContent: 'center',

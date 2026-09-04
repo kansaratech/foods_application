@@ -119,7 +119,7 @@ export default function ServiceAreas() {
         <button
           type="button"
           onClick={() => refetch()}
-          className="mt-5 rounded-full bg-[#8c1d40] px-5 py-2.5 font-bold text-white"
+          className="mt-5 rounded-full bg-[#16293f] px-5 py-2.5 font-bold text-white"
         >
           Retry
         </button>
@@ -131,20 +131,20 @@ export default function ServiceAreas() {
     <div>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#f5820a]">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1c5bc7]">
             Live service coverage
           </p>
           <h2 className="mt-2 text-3xl font-black tracking-[-0.03em] sm:text-4xl">
             Delivery areas near you
           </h2>
           <p className="mt-2 text-slate-600 dark:text-gray-300">
-            Explore active Padharo zones and start ordering from available
+            Explore active LocalSell zones and start ordering from available
             stores.
           </p>
         </div>
         <Link
           href="/mapview/restaurants"
-          className="rounded-full border border-[#8c1d40] px-5 py-2.5 text-sm font-bold text-[#8c1d40] transition hover:bg-[#8c1d40] hover:text-white"
+          className="rounded-full border border-[#16293f] px-5 py-2.5 text-sm font-bold text-[#16293f] transition hover:bg-[#16293f] hover:text-white"
         >
           Open full map →
         </Link>
@@ -174,9 +174,9 @@ export default function ServiceAreas() {
                   key={zone._id}
                   paths={toPath(zone)}
                   options={{
-                    fillColor: index % 2 === 0 ? "#f5820a" : "#8c1d40",
+                    fillColor: index % 2 === 0 ? "#1c5bc7" : "#16293f",
                     fillOpacity: 0.2,
-                    strokeColor: index % 2 === 0 ? "#e8760a" : "#8c1d40",
+                    strokeColor: index % 2 === 0 ? "#1a52b4" : "#16293f",
                     strokeOpacity: 0.9,
                     strokeWeight: 2,
                   }}
@@ -199,12 +199,12 @@ export default function ServiceAreas() {
               <Link
                 key={zone._id}
                 href="/discovery"
-                className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4 transition hover:border-[#f5820a] hover:bg-orange-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4 transition hover:border-[#1c5bc7] hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-gray-800"
               >
                 <span
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg font-black text-white"
                   style={{
-                    backgroundColor: index % 2 === 0 ? "#f5820a" : "#8c1d40",
+                    backgroundColor: index % 2 === 0 ? "#1c5bc7" : "#16293f",
                   }}
                 >
                   {String(index + 1).padStart(2, "0")}

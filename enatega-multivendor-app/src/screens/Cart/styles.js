@@ -139,7 +139,7 @@ const styles = (props = null) =>
     totalBillContainer: {
       width: '100%',
       height: '20%',
-      backgroundColor: props !== null ? props.newheaderColor : '#F5820A',
+      backgroundColor: props !== null ? props.newheaderColor : '#1c5bc7',
       ...alignment.PLlarge,
       ...alignment.PRlarge
     },
@@ -247,7 +247,7 @@ const styles = (props = null) =>
       height: scale(30)
     },
     headerContainer: {
-      backgroundColor: props !== null ? props.themeBackground : '#F5820A',
+      backgroundColor: props !== null ? props.themeBackground : '#1c5bc7',
       borderBottomRightRadius: 20,
       borderBottomLeftRadius: 20,
       ...alignment.PLsmall,

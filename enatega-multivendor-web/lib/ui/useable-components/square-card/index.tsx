@@ -37,7 +37,7 @@ const SquareCard: React.FC<ICuisinesCardProps> = ({
         onClick={onClickHandler}
         className="group m-1.5 mb-5 flex w-full flex-col items-center gap-2 text-center"
       >
-        <span className="relative block aspect-square w-full max-w-[104px] overflow-hidden rounded-full ring-1 ring-slate-200 transition duration-300 group-hover:-translate-y-1 group-hover:ring-2 group-hover:ring-[#f5820a] dark:ring-gray-700">
+        <span className="relative block aspect-square w-full max-w-[104px] overflow-hidden rounded-full ring-1 ring-slate-200 transition duration-300 group-hover:-translate-y-1 group-hover:ring-2 group-hover:ring-[#1c5bc7] dark:ring-gray-700">
           <Image
             src={getImgSrc || fallback}
             alt={item?.name}
@@ -58,7 +58,7 @@ const SquareCard: React.FC<ICuisinesCardProps> = ({
       <button
         type="button"
         onClick={onClickHandler}
-        className="group relative m-2 mb-5 block aspect-[4/3] w-full max-w-[240px] overflow-hidden rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(140,29,64,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#f5820a]/40 hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)] dark:border-gray-700"
+        className="group relative m-2 mb-5 block aspect-[4/3] w-full max-w-[240px] overflow-hidden rounded-2xl border border-slate-200 shadow-[0_10px_30px_rgba(22,41,63,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#1c5bc7]/40 hover:shadow-[0_18px_45px_rgba(22,41,63,0.14)] dark:border-gray-700"
       >
         <Image
           src={getImgSrc || fallback}
@@ -78,7 +78,7 @@ const SquareCard: React.FC<ICuisinesCardProps> = ({
   return (
     <div
       onClick={onClickHandler}
-      className="group m-2 mb-5 cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(140,29,64,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(140,29,64,0.14)] dark:border-gray-700 dark:bg-gray-800"
+      className="group m-2 mb-5 cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_30px_rgba(22,41,63,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(22,41,63,0.14)] dark:border-gray-700 dark:bg-gray-800"
     >
       <div className="relative h-[120px] w-full">
         <Image src={getImgSrc || fallback} alt={item?.name} fill className="object-cover" />

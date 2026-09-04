@@ -331,7 +331,7 @@ export default function RestaurantsMain() {
         <div className="flex flex-col gap-3 text-sm">
           <p className="text-gray-500">
             {t('Copy every category, item and add-on from')}{' '}
-            <b>{allStores.find((s) => s._id === cloneSourceId)?.name}</b> {t('into another store.')}
+            <b>{allStores.find((s) => s._id === cloneSourceId)?.name}</b> {t('into another store')}
           </p>
           <label className="flex flex-col">
             <span className="mb-1 text-gray-500">{t('Target store')}</span>

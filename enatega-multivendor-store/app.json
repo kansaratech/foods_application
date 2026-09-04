@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Padharo Store",
+    "name": "LocalSell Store",
     "slug": "enatega-multivendor-restaurant",
-    "description": "Padharo — restaurant/store partner app. Jo Chahiye, Padharo Par Mile.",
+    "description": "LocalSell — restaurant/store partner app. Shop Local. Find More.",
     "version": "1.0.83",
     "orientation": "portrait",
     "icon": "./lib/assets/images/icon.png",
@@ -15,7 +15,7 @@
     "splash": {
       "image": "./lib/assets/images/black.png",
       "resizeMode": "cover",
-      "backgroundColor": "#8C1D40"
+      "backgroundColor": "#16293f"
     },
     "plugins": [
       "expo-router",
@@ -68,7 +68,7 @@
       "package": "multivendor.enatega.restaurant",
       "adaptiveIcon": {
         "foregroundImage": "./lib/assets/images/appIcon.png",
-        "backgroundColor": "#F5820A"
+        "backgroundColor": "#FFFFFF"
       }
     },
     "experiments": {
@@ -76,7 +76,8 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "favicon": "./lib/assets/images/favicon.png"
     },
     "extra": {
       "router": {},

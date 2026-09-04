@@ -13,7 +13,7 @@ const SideCard: React.FC<sideCardProps & { index?: number }> = ({
     <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
       <div className={right ? "md:order-2" : "md:order-1"}>
         {typeof index === "number" && (
-          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#f5820a]">
+          <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.24em] text-[#1c5bc7]">
             {String(index + 1).padStart(2, "0")}
           </p>
         )}

@@ -17,7 +17,7 @@ const styles = (props = null) =>
     greenDot: {
       height: 18,
       width: 18,
-      backgroundColor: props !== null ? props?.main : '#F5820A',
+      backgroundColor: props !== null ? props?.main : '#1c5bc7',
       borderRadius: scale(9),
       borderWidth: 1
     },

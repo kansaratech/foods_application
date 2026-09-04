@@ -634,7 +634,7 @@ export const mr = {
     Done: 'झाले',
     addMessage: 'संदेश जोडा',
     kindlyBeAdvisedText: 'कृपया लक्षात ठेवा की आपला संदेश आपली ऑर्डर ठिकाणी वितरित करणाऱ्या कुरियर पार्टनरलाही दिसू शकतो.',
-    explorePadharoCities: 'एनाटेगा शहरे एक्सप्लोर करा',
+    exploreLocalSellCities: 'एनाटेगा शहरे एक्सप्लोर करा',
     Card: 'कार्ड',
     lebelAlreadyExist: "'{{selectedLabel}}' हे लेबल आधीच अस्तित्वात आहे. कृपया वेगळे निवडा.",
     UpdateAvailable: 'अद्यतन उपलब्ध',

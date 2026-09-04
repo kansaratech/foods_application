@@ -1,5 +1,6 @@
 // Core
 import Link from 'next/link';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // Interface
 import { IStatsCardProps } from '@/lib/utils/interfaces';
@@ -16,22 +17,32 @@ export default function StatsCard({
   route,
   loading = false,
   amountConfig,
+  icon,
   isClickable = true,
 }: IStatsCardProps) {
   const stats_card = () => (
     <div
-      className={`card flex flex-col justify-between min-h-28 bg-white border border-gray-200 dark:bg-dark-900 dark:border-dark-600 dark:text-white ${
-        isClickable ? 'cursor-pointer' : 'cursor-default'
+      className={`flex min-h-[112px] flex-col justify-between rounded-xl border border-gray-200 bg-white p-5 transition dark:border-dark-600 dark:bg-dark-900 dark:text-white ${
+        isClickable
+          ? 'cursor-pointer hover:-translate-y-0.5 hover:border-primary-color hover:shadow-md'
+          : 'cursor-default'
       }`}
     >
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-gray-600 dark:text-white">{label}</span>
-
-        <span className="text-gray-600 dark:text-white font-medium">
-          {currencySymbol}
+      <div className="flex items-start justify-between">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          {label}
         </span>
+        {icon ? (
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary-light text-primary-color dark:bg-dark-600">
+            <FontAwesomeIcon icon={icon} className="text-sm" />
+          </span>
+        ) : (
+          currencySymbol && (
+            <span className="text-sm font-medium text-gray-400">{currencySymbol}</span>
+          )
+        )}
       </div>
-      <div className="text-2xl font-bold">
+      <div className="mt-2 text-3xl font-bold leading-none text-gray-900 dark:text-white">
         {currencySymbol ? currencySymbol : ''}
         {amountConfig
           ? amountConfig?.format === 'currency'
@@ -40,7 +51,7 @@ export default function StatsCard({
           : total}
       </div>
       {description && (
-        <div className="text-sm text-primary-dark"> {description}</div>
+        <div className="mt-2 text-xs text-gray-400">{description}</div>
       )}
     </div>
   );

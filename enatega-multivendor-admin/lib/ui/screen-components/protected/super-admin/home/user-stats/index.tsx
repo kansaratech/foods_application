@@ -43,39 +43,40 @@ export default function UserStats() {
   }, [data]);
 
   return (
-    <div className="grid grid-cols-1 items-center gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 p-3 cursor-pointer">
-      <StatsCard
-        label={t('Total Users')}
-        total={dashboardUsers?.usersCount ?? 0}
-        description={t("eight_point_five_up_from_yesterday")}
-        icon={faUsers}
-        route="/general/users"
-        loading={loading}
-      />
-      <StatsCard
-        label={t('Total Vendors')}
-        total={dashboardUsers?.vendorsCount ?? 0}
-        description={t("two_point_four_up_from_yesterday")}
-        icon={faStore}
-        route="/general/vendors"
-        loading={loading}
-      />
-      <StatsCard
-        label={t('Total Stores')}
-        total={dashboardUsers?.restaurantsCount ?? 0}
-        description={t("six_point_one_down_from_yesterday")}
-        icon={faUtensils}
-        route="/general/stores"
-        loading={loading}
-      />
-      <StatsCard
-        label={t('Total Riders')}
-        total={dashboardUsers?.ridersCount ?? 0}
-        description={t("one_point_nine_up_from_yesterday")}
-        icon={faMotorcycle}
-        route="/general/riders"
-        loading={loading}
-      />
-    </div>
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+        {t('Overview')}
+      </h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          label={t('Total Users')}
+          total={dashboardUsers?.usersCount ?? 0}
+          icon={faUsers}
+          route="/general/users"
+          loading={loading}
+        />
+        <StatsCard
+          label={t('Total Vendors')}
+          total={dashboardUsers?.vendorsCount ?? 0}
+          icon={faStore}
+          route="/general/vendors"
+          loading={loading}
+        />
+        <StatsCard
+          label={t('Total Stores')}
+          total={dashboardUsers?.restaurantsCount ?? 0}
+          icon={faUtensils}
+          route="/general/stores"
+          loading={loading}
+        />
+        <StatsCard
+          label={t('Total Riders')}
+          total={dashboardUsers?.ridersCount ?? 0}
+          icon={faMotorcycle}
+          route="/general/riders"
+          loading={loading}
+        />
+      </div>
+    </section>
   );
 }

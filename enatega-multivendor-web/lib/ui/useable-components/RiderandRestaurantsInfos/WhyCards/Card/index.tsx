@@ -8,7 +8,7 @@ interface CardProps extends Cards {
 
 const Card: React.FC<CardProps> = ({ image, icon, heading, text, index }) => {
   return (
-    <div className="group relative flex h-full flex-col rounded-[1.5rem] border border-slate-200 bg-white p-7 transition hover:border-[#f5820a]/50 hover:shadow-[0_20px_50px_rgba(140,29,64,0.10)] dark:border-gray-700 dark:bg-gray-800">
+    <div className="group relative flex h-full flex-col rounded-[1.5rem] border border-slate-200 bg-white p-7 transition hover:border-[#1c5bc7]/50 hover:shadow-[0_20px_50px_rgba(22,41,63,0.10)] dark:border-gray-700 dark:bg-gray-800">
       {typeof index === "number" && (
         <span className="absolute right-6 top-6 text-xs font-black tracking-[0.1em] text-slate-300 dark:text-gray-600">
           {String(index + 1).padStart(2, "0")}
@@ -16,7 +16,7 @@ const Card: React.FC<CardProps> = ({ image, icon, heading, text, index }) => {
       )}
 
       {icon ? (
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f5820a]/10 text-[#c9620a] dark:bg-[#f5820a]/15 dark:text-[#f5943a]">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1c5bc7]/10 text-[#c9620a] dark:bg-[#1c5bc7]/15 dark:text-[#f5943a]">
           {icon}
         </div>
       ) : (

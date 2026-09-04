@@ -1,5 +1,5 @@
 /**
- * Padharo brand raster generator.
+ * LocalSell brand raster generator.
  *
  * Masters (PNG, high-res) live in:
  *   enatega-multivendor-web/public/assets/brand/masters/
@@ -53,9 +53,22 @@ const MASTERS = `${ROOT}/enatega-multivendor-web/public/assets/brand/masters`;
 
 /** master (basename, no ext) -> list of { out, w, h, transparent? } targets */
 const MANIFEST = [
-  // ---- App icon (opaque, orange rounded square) ---------------------------
+  // ---- Native store icons — MUST stay opaque (iOS rejects alpha) ----------
   {
-    src: "padharo-icon",
+    src: "localsell-icon",
+    targets: [
+      { out: "enatega-multivendor-app/assets/icon.png", w: 1024, h: 1024 },
+      { out: "enatega-multivendor-app/assets/appIcon.png", w: 1024, h: 1024 },
+      { out: "enatega-multivendor-rider/lib/assets/images/icon.png", w: 1024, h: 1024 },
+      { out: "enatega-multivendor-rider/lib/assets/images/appIcon.png", w: 1024, h: 1024 },
+      { out: "enatega-multivendor-store/lib/assets/images/icon.png", w: 1024, h: 1024 },
+      { out: "enatega-multivendor-store/lib/assets/images/appIcon.png", w: 1024, h: 1024 },
+    ],
+  },
+  // ---- Favicons / PWA icons / in-app logos — transparent -----------------
+  {
+    src: "localsell-symbol",
+    transparent: true,
     targets: [
       { out: "enatega-multivendor-web/public/512.png", w: 512, h: 512 },
       { out: "enatega-multivendor-web/public/192.png", w: 192, h: 192 },
@@ -67,20 +80,15 @@ const MANIFEST = [
       { out: "enatega-multivendor-admin/public/favicon.png", w: 64, h: 64 },
       { out: "enatega-multivendor-admin/public/favsicons.png", w: 128, h: 128 },
       { out: "enatega-multivendor-admin/public/assets/images/png/logo.png", w: 512, h: 512 },
-      { out: "enatega-multivendor-app/assets/icon.png", w: 1024, h: 1024 },
-      { out: "enatega-multivendor-app/assets/appIcon.png", w: 1024, h: 1024 },
+      { out: "enatega-multivendor-store/lib/assets/images/favicon.png", w: 128, h: 128 },
       { out: "enatega-multivendor-app/src/assets/images/logo.png", w: 512, h: 512 },
       { out: "enatega-multivendor-app/src/assets/images/defaultLogo.png", w: 512, h: 512 },
       { out: "enatega-multivendor-app/src/assets/images/masterIcon.png", w: 512, h: 512 },
-      { out: "enatega-multivendor-rider/lib/assets/images/icon.png", w: 1024, h: 1024 },
-      { out: "enatega-multivendor-rider/lib/assets/images/appIcon.png", w: 1024, h: 1024 },
-      { out: "enatega-multivendor-store/lib/assets/images/icon.png", w: 1024, h: 1024 },
-      { out: "enatega-multivendor-store/lib/assets/images/appIcon.png", w: 1024, h: 1024 },
     ],
   },
   // ---- Transparent symbol, dark P — Android adaptive foreground (bg is orange)
   {
-    src: "padharo-icon-transparent",
+    src: "localsell-icon-transparent",
     transparent: true,
     targets: [
       { out: "enatega-multivendor-app/assets/adaptive-icon.png", w: 1024, h: 1024 },
@@ -88,7 +96,7 @@ const MANIFEST = [
   },
   // ---- Transparent symbol, cream P — splash logo (splash bg is maroon) -----
   {
-    src: "padharo-icon-cream",
+    src: "localsell-icon-cream",
     transparent: true,
     targets: [
       { out: "enatega-multivendor-app/assets/splashTransparent.png", w: 512, h: 512 },
@@ -97,7 +105,7 @@ const MANIFEST = [
   },
   // ---- Notification icon (white silhouette, transparent) -----------------
   {
-    src: "padharo-notification",
+    src: "localsell-notification",
     transparent: true,
     targets: [
       { out: "enatega-multivendor-app/assets/not-icon.png", w: 96, h: 96 },
@@ -107,55 +115,60 @@ const MANIFEST = [
   },
   // ---- Animated-splash pieces -------------------------------------------
   {
-    src: "padharo-wordmark-cream",
+    src: "localsell-wordmark-cream",
     transparent: true,
     targets: [
       { out: "enatega-multivendor-app/src/components/Splash/assets/wordmarkWhite.png", w: 922, h: 154 },
       { out: "enatega-multivendor-app/splash_claud_assets/enatega-animated-splash/assets/wordmarkWhite.png", w: 922, h: 154 },
       { out: "enatega-multivendor-rider/lib/ui/useable-components/splash/assets/wordmarkWhite.png", w: 922, h: 154 },
       { out: "enatega-multivendor-rider/splash_claud_assets/enatega-animated-splash/assets/wordmarkWhite.png", w: 922, h: 154 },
+      { out: "enatega-multivendor-store/lib/ui/useable-components/splash/assets/wordmarkWhite.png", w: 922, h: 154 },
     ],
   },
   {
-    src: "padharo-wordmark-maroon",
+    src: "localsell-wordmark-navy",
     transparent: true,
     targets: [
       { out: "enatega-multivendor-app/src/components/Splash/assets/wordmarkNavy.png", w: 922, h: 154 },
       { out: "enatega-multivendor-app/splash_claud_assets/enatega-animated-splash/assets/wordmarkNavy.png", w: 922, h: 154 },
       { out: "enatega-multivendor-rider/lib/ui/useable-components/splash/assets/wordmarkNavy.png", w: 922, h: 154 },
       { out: "enatega-multivendor-rider/splash_claud_assets/enatega-animated-splash/assets/wordmarkNavy.png", w: 922, h: 154 },
+      { out: "enatega-multivendor-store/lib/ui/useable-components/splash/assets/wordmarkNavy.png", w: 922, h: 154 },
     ],
   },
   {
-    src: "padharo-pin",
+    src: "localsell-pin",
     transparent: true,
     targets: [
       { out: "enatega-multivendor-app/src/components/Splash/assets/pin.png", w: 632, h: 834 },
       { out: "enatega-multivendor-app/splash_claud_assets/enatega-animated-splash/assets/pin.png", w: 632, h: 834 },
       { out: "enatega-multivendor-rider/lib/ui/useable-components/splash/assets/pin.png", w: 632, h: 834 },
       { out: "enatega-multivendor-rider/splash_claud_assets/enatega-animated-splash/assets/pin.png", w: 632, h: 834 },
+      { out: "enatega-multivendor-store/lib/ui/useable-components/splash/assets/pin.png", w: 632, h: 834 },
     ],
   },
-  // ---- Horizontal lockup (mark + "Padharo") for in-app headers/footers --
+  // ---- Horizontal lockup (mark + "LocalSell") for in-app headers/footers --
   {
-    src: "padharo-logo",
+    src: "localsell-logo",
     transparent: true,
     targets: [
-      { out: "enatega-multivendor-web/public/assets/brand/padharo-logo.png", w: 800, h: 222 },
-      { out: "enatega-multivendor-admin/public/assets/brand/padharo-logo.png", w: 800, h: 222 },
+      { out: "enatega-multivendor-web/public/assets/brand/localsell-logo.png", w: 800, h: 222 },
+      { out: "enatega-multivendor-admin/public/assets/brand/localsell-logo.png", w: 800, h: 222 },
+      { out: "enatega-multivendor-store/lib/assets/images/brand-logo.png", w: 800, h: 222 },
     ],
   },
   {
-    src: "padharo-logo-inverse",
+    src: "localsell-logo-inverse",
     transparent: true,
     targets: [
-      { out: "enatega-multivendor-web/public/assets/brand/padharo-logo-inverse.png", w: 800, h: 222 },
-      { out: "enatega-multivendor-admin/public/assets/brand/padharo-logo-inverse.png", w: 800, h: 222 },
+      { out: "enatega-multivendor-web/public/assets/brand/localsell-logo-inverse.png", w: 800, h: 222 },
+      { out: "enatega-multivendor-admin/public/assets/brand/localsell-logo-inverse.png", w: 800, h: 222 },
+      { out: "enatega-multivendor-store/lib/assets/images/brand-logo-inverse.png", w: 800, h: 222 },
     ],
   },
   // ---- Full-bleed splash images ---------------------------------------
   {
-    src: "padharo-splash-portrait",
+    src: "localsell-splash-portrait",
     targets: [
       { out: "enatega-multivendor-store/lib/assets/images/black.png", w: 1080, h: 1920 },
       { out: "enatega-multivendor-web/public/splash-screen.png", w: 1080, h: 1920 },

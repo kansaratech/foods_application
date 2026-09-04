@@ -171,6 +171,7 @@ export const hi = {
   "Send Reset Password": "रीसेट पासवर्ड भेजें",
   "Confirm Password": "पासवर्ड की पुष्टि करें",
   Login: "लॉगिन",
+  "Signing in": "साइन इन हो रहा है",
   "Recent Activity": "हाल की गतिविधि",
   "See More": "और देखें",
   Status: "स्थिति",

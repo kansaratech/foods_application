@@ -1,5 +1,5 @@
 import "primereact/resources/primereact.css";
-import "primereact/resources/themes/lara-light-cyan/theme.css";
+import "primereact/resources/themes/lara-light-blue/theme.css";
 import "./global.css";
 
 import ClientProviders from "./ClientProviders";

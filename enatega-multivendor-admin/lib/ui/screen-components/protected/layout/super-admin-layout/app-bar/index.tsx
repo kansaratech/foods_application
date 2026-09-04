@@ -214,7 +214,7 @@ const AppTopbar = () => {
     template(item: any) {
       return (
         <div
-          className={`hover:bg-primary-color ${currentLocale === lang.code ? 'bg-primary-color' : ''} p-2 cursor-pointer`}
+          className={`hover:bg-primary-color hover:text-white ${currentLocale === lang.code ? 'bg-primary-color text-white' : ''} p-2 cursor-pointer`}
           onClick={() => onLocaleChange(lang.code)}
         >
           {item.label}
@@ -248,7 +248,7 @@ const AppTopbar = () => {
             className={
               pathname === '/zone'
                 ? 'rounded bg-primary-color text-white'
-                : 'bg-transparent hover:rounded hover:bg-secondary-color dark:hover:text-black '
+                : 'bg-transparent hover:rounded hover:bg-primary-light dark:hover:bg-dark-600 '
             }
             iconStyles={{
               color: pathname === '/zone' || isDarkMode ? 'white' : 'gray',
@@ -263,7 +263,7 @@ const AppTopbar = () => {
             className={
               pathname === '/dispatch'
                 ? 'rounded bg-primary-color text-white'
-                : 'bg-transparent hover:rounded hover:bg-secondary-color dark:hover:text-black'
+                : 'bg-transparent hover:rounded hover:bg-primary-light dark:hover:bg-dark-600'
             }
             iconStyles={{
               color: pathname === '/dispatch' || isDarkMode ? 'white' : 'gray',
@@ -321,7 +321,7 @@ const AppTopbar = () => {
                       key={index}
                       className={`p-2 mx-3 rounded-md text-sm cursor-pointer ${notification.read
                         ? 'text-black dark:text-white'
-                        : 'text-[#484848] dark:hover:text-white dark:text-dark-950 bg-secondary-color'
+                        : 'text-white bg-secondary-color'
                         } hover:bg-gray-300 dark:hover:bg-dark-600`}
                       href={`${notification.navigateTo}`}
                       onClick={() => {

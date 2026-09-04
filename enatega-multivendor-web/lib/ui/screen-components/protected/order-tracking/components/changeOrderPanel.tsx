@@ -47,8 +47,8 @@ export default function ChangeOrderPanel({ order, onChanged }: Props) {
       onClick={onClick}
       className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? "bg-[#8c1d40] text-white"
-          : "border border-gray-300 text-gray-600 hover:border-[#8c1d40] hover:text-[#8c1d40] disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
+          ? "bg-[#16293f] text-white"
+          : "border border-gray-300 text-gray-600 hover:border-[#16293f] hover:text-[#16293f] disabled:opacity-50 dark:border-gray-600 dark:text-gray-300"
       }`}
     >
       {children}

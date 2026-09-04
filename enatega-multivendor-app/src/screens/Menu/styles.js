@@ -173,7 +173,7 @@ const styles = (props = null) =>
       paddingVertical: scale(6),
       paddingHorizontal: scale(12),
       borderRadius: scale(999),
-      backgroundColor: props?.newButtonBackground || '#F3FFEE',
+      backgroundColor: props?.newButtonBackground || '#e8f0fc',
       marginBottom: scale(12)
     },
     emptyTitle: {
@@ -228,7 +228,7 @@ const styles = (props = null) =>
       
     },
     seeAllBtn: {
-      backgroundColor: props != null ? props?.newButtonBackground : '#F3FFEE',
+      backgroundColor: props != null ? props?.newButtonBackground : '#e8f0fc',
       borderRadius: 4,
       paddingTop: 8,
       paddingBottom: 8,

@@ -1,5 +1,5 @@
 /**
- * Padharo — demo "Festive Week" campaign seed.
+ * LocalSell — demo "Festive Week" campaign seed.
  *
  * One global 20% coupon, a scheduled banner for each storefront placement
  * (HOME / STORE / LANDING), and a "Festive Special" badge on a couple of dishes.
@@ -49,7 +49,7 @@ export async function seedFestivalCampaign(prisma: PrismaClient): Promise<void> 
     },
     {
       placement: 'LANDING',
-      title: 'Padharo Festive Week',
+      title: 'LocalSell Festive Week',
       description: 'Order your festival feast from Deogarh — 20% off',
       file: U('1606491956689-2ea866880c84'),
     },

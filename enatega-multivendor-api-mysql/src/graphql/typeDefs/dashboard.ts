@@ -104,6 +104,9 @@ export const dashboardTypeDefs = /* GraphQL */ `
     gmvToday: Float!
     ordersWeek: Int!
     gmvWeek: Float!
+    "Orders/GMV for the immediately preceding window of equal length (for deltas)."
+    ordersPrev: Int!
+    gmvPrev: Float!
     activeOrders: Int!
     activeStores: Int!
     totalStores: Int!
@@ -140,7 +143,7 @@ export const dashboardTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    adminOpsSnapshot: AdminOpsSnapshot!
+    adminOpsSnapshot(startDate: String, endDate: String): AdminOpsSnapshot!
     storePerformance(startDate: String, endDate: String, page: Int, limit: Int, search: String): StorePerformanceResult!
     getDashboardUsersByYear(year: Int!): DashboardUsersByYear!
     getDashboardOrdersByType: [DashboardTypeStat!]!

@@ -36,19 +36,19 @@ const THEMES = {
     bg: ["#111c33", "#0b1225", "#070d1e"] as const,
     wordmark: WM_WHITE,
     ring: "rgba(110,224,122,0.85)",
-    underline: "#F5820A",
+    underline: "#1c5bc7",
     orbOpacity: 1,
   },
   light: {
     bg: ["#ffffff", "#f4f8f5", "#e7efe9"] as const,
     wordmark: WM_NAVY,
     ring: "rgba(47,164,87,0.75)",
-    underline: "#F5820A",
+    underline: "#1c5bc7",
     orbOpacity: 0.8,
   },
 };
 
-const GREEN = "#F5820A";
+const GREEN = "#1c5bc7";
 const OUT_CUBIC = Easing.out(Easing.cubic);
 const IN_CUBIC = Easing.in(Easing.cubic);
 const INOUT_CUBIC = Easing.inOut(Easing.cubic);

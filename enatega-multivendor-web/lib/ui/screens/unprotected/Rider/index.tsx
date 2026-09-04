@@ -8,12 +8,12 @@ import riderBanner from "@/public/assets/images/png/riderBanner.webp";
 export default function Rider() {
   return (
     <PartnerLanding
-      eyebrow="Ride with Padharo"
+      eyebrow="Ride with LocalSell"
       heading="Your city. Your time."
       accent="Your way to earn."
       intro="Join Deogarh’s local delivery network, choose when you ride and earn by delivering food, groceries and everyday essentials nearby."
       image={riderBanner}
-      imageAlt="Padharo delivery rider ready for a local delivery"
+      imageAlt="LocalSell delivery rider ready for a local delivery"
       primaryCta="Become a rider"
       heroBadge="Flexible work, local routes"
       metrics={[
@@ -32,7 +32,7 @@ export default function Rider() {
       stepsHeading="Start riding without the runaround."
       steps={[
         { title: "Send your application", copy: "Share your contact details using the form below. Previous delivery experience is not required." },
-        { title: "Complete verification", copy: "Our team reviews your documents and helps set up your Padharo rider account." },
+        { title: "Complete verification", copy: "Our team reviews your documents and helps set up your LocalSell rider account." },
         { title: "Go online and deliver", copy: "Choose your availability, accept a nearby request and earn for each completed trip." },
       ]}
       form={{

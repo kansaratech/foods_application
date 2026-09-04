@@ -62,10 +62,10 @@ const StoreCard = ({
   return (
     <Link
       href={href}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-[#f5820a]/50 hover:shadow-[0_18px_45px_rgba(140,29,64,0.10)] dark:border-gray-800 dark:bg-gray-900"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-1 hover:border-[#1c5bc7]/50 hover:shadow-[0_18px_45px_rgba(22,41,63,0.10)] dark:border-gray-800 dark:bg-gray-900"
     >
       <div
-        className="relative flex h-40 items-center justify-center overflow-hidden border-b border-slate-100 text-[11px] font-medium tracking-wide text-[#8c1d40]/45 dark:border-gray-800"
+        className="relative flex h-40 items-center justify-center overflow-hidden border-b border-slate-100 text-[11px] font-medium tracking-wide text-[#16293f]/45 dark:border-gray-800"
         style={{
           backgroundImage:
             "repeating-linear-gradient(45deg, #f6ece3 0 12px, #efe1d5 12px 24px)",
@@ -152,7 +152,7 @@ export default function PopularStores() {
         </h2>
         <Link
           href="/discovery"
-          className="text-sm font-bold text-[#8c1d40] transition hover:text-[#f5820a] dark:text-orange-300"
+          className="text-sm font-bold text-[#16293f] transition hover:text-[#1c5bc7] dark:text-blue-300"
         >
           {totalCount
             ? `Browse all ${totalCount} stores →`

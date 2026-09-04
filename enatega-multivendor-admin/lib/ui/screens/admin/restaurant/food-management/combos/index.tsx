@@ -172,7 +172,7 @@ export default function CombosScreen() {
       <div className="mb-3 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">{t('Combos')}</h1>
-          <p className="text-xs text-gray-500">{t('Bundle items together at one price, Swiggy/Zomato style.')}</p>
+          <p className="text-xs text-gray-500">{t('Bundle items together at one price, Swiggy/Zomato style')}</p>
         </div>
         <button onClick={startNew} disabled={!categories.length} className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-40">
           {t('New combo')}
@@ -180,7 +180,7 @@ export default function CombosScreen() {
       </div>
       {!categories.length && (
         <p className="mb-3 rounded border border-amber-300 bg-amber-50 p-2 text-xs text-amber-700">
-          {t('Create a category first (a "Combos" category is recommended).')}
+          {t('Create a category first (a "Combos" category is recommended)')}
         </p>
       )}
 

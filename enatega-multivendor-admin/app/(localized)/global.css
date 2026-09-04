@@ -3,7 +3,7 @@
 /* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
 @import 'primereact/resources/primereact.min.css' layer(primereact);
 @import 'primeicons/primeicons.css' layer(primereact);
-@import 'primereact/resources/themes/lara-light-amber/theme.css'
+@import 'primereact/resources/themes/lara-light-blue/theme.css'
 layer(primereact);
 
 @layer tailwind-base {
@@ -16,9 +16,10 @@ layer(primereact);
 }
 
 :root {
-  --primary-color: #f5820a;
-  --primary-dark: #d96d00;
-  --secondary-color: #8c1d40;
+  --primary-color: #1c5bc7;
+  --primary-dark: #17499e;
+  --primary-light: #e8f0fc;
+  --secondary-color: #16293f;
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;

@@ -33,7 +33,7 @@ const getEnvVars = (env = Updates.channel) => {
   }
 
   return {
-    // Deployed Padharo backend (Sentora VPS). For LAN testing use
+    // Deployed LocalSell backend (Sentora VPS). For LAN testing use
     // http://<PC-LAN-IP>:4000 instead.
     GRAPHQL_URL: "https://padharo-api.kansaratech.com/graphql",
     WS_GRAPHQL_URL: "wss://padharo-api.kansaratech.com/graphql",

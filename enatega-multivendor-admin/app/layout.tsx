@@ -5,8 +5,8 @@ import { ThemeProvider } from 'next-themes';
 
 // ✅ Add metadata export for favicon
 export const metadata = {
-  title: 'Padharo Admin',
-  description: 'Jo Chahiye, Padharo Par Mile.',
+  title: 'LocalSell Admin',
+  description: 'Shop Local. Find More.',
   icons: {
     icon: '/favicon.png',
     // You can add more like:

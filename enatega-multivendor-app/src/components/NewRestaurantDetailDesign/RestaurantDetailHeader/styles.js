@@ -120,7 +120,7 @@ const styles = (props = null) =>
       minWidth: 0
     },
     reviewButton: {
-      backgroundColor: props?.newButtonBackground ?? '#F3FFEE',
+      backgroundColor: props?.newButtonBackground ?? '#e8f0fc',
       borderRadius: scale(4),
       paddingVertical: scale(8),
       paddingHorizontal: scale(12),
@@ -147,7 +147,7 @@ const styles = (props = null) =>
       flexShrink: 1
     },
     statusButton: {
-      backgroundColor: props?.newButtonBackground ?? '#F3FFEE',
+      backgroundColor: props?.newButtonBackground ?? '#e8f0fc',
       borderRadius: scale(4),
       paddingVertical: scale(8),
       paddingHorizontal: scale(12),

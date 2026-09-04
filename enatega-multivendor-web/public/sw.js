@@ -1,5 +1,5 @@
 /*
- * Padharo no longer uses a service worker.
+ * LocalSell no longer uses a service worker.
  *
  * The previous file here was a pre-built Workbox bundle with a hard-coded
  * precache manifest pointing at specific `/_next/static/chunks/*.js?v=…` URLs.

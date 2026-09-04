@@ -83,7 +83,10 @@ const CustomMultiSelectComponent = ({
         panelClassName="border-gray-200 border-2"
         display="chip"
         dropdownIcon={(options) => (
-          <FontAwesomeIcon icon={dropDownIcon ?? faChevronDown} {...options} />
+          <FontAwesomeIcon
+            icon={dropDownIcon ?? faChevronDown}
+            className={options.className}
+          />
         )}
         filter={true}
         {...props}

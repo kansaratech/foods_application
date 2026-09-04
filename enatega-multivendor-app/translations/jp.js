@@ -599,7 +599,7 @@ export const jp = {
     Done: '完了',
     addMessage: 'メッセージを追加',
     kindlyBeAdvisedText: 'メッセージは、注文を会場に配達するカーリアーパートナーにも表示される場合があります。',
-    explorePadharoCities: 'エナテガの都市を探索',
+    exploreLocalSellCities: 'エナテガの都市を探索',
     Card: 'カード',
     lebelAlreadyExist: "ラベル '{{selectedLabel}}' はすでに存在します。別のラベルを選択してください。",
     UpdateAvailable: '更新が利用可能です',

@@ -103,8 +103,8 @@ export default function MakeSidebar() {
           isParent: false,
         },
         {
-          text: 'Users',
-          label: t('Users'),
+          text: 'Customers',
+          label: t('Customers'),
           route: '/general/users',
           isParent: false,
         },

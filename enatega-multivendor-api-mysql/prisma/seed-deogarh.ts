@@ -1,5 +1,5 @@
 /**
- * Padharo — Deogarh (Rajsamand, Rajasthan) marketplace seed.
+ * LocalSell — Deogarh (Rajsamand, Rajasthan) marketplace seed.
  *
  * Adds a small set of real-feeling Deogarh stores so the localized landing page
  * shows live data for that location. Safe to re-run: every entity is keyed by a

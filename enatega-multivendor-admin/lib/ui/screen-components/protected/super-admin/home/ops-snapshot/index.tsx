@@ -43,19 +43,27 @@ function Tile({
       type="button"
       onClick={onClick}
       disabled={!onClick}
-      className={`flex flex-col items-start rounded-lg border p-3 text-left transition dark:border-dark-600 ${
-        onClick ? 'hover:border-primary-color hover:shadow-sm' : 'cursor-default'
+      className={`group flex flex-col items-start rounded-xl border border-gray-200 bg-white p-4 text-left transition dark:border-dark-600 dark:bg-dark-900 ${
+        onClick
+          ? 'hover:-translate-y-0.5 hover:border-primary-color hover:shadow-md'
+          : 'cursor-default'
       }`}
     >
-      <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+        {label}
+      </span>
       <span
-        className={`mt-1 text-xl font-bold ${
-          tone === 'warn' ? 'text-amber-600' : tone === 'good' ? 'text-green-600' : 'text-gray-800 dark:text-white'
+        className={`mt-1.5 text-2xl font-bold leading-none ${
+          tone === 'warn'
+            ? 'text-amber-600'
+            : tone === 'good'
+              ? 'text-green-600'
+              : 'text-gray-900 dark:text-white'
         }`}
       >
         {value}
       </span>
-      {sub && <span className="text-[11px] text-gray-400">{sub}</span>}
+      {sub && <span className="mt-1 text-xs text-gray-400">{sub}</span>}
     </button>
   );
 }
@@ -67,14 +75,25 @@ export default function OpsSnapshot() {
   const s: Snap | undefined = data?.adminOpsSnapshot;
 
   if (loading && !s) {
-    return <div className="mb-6 h-24 animate-pulse rounded-lg bg-gray-100 dark:bg-dark-900" />;
+    return (
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-[92px] animate-pulse rounded-xl border border-gray-200 bg-gray-100 dark:border-dark-600 dark:bg-dark-900"
+          />
+        ))}
+      </div>
+    );
   }
   if (!s) return null;
 
   return (
-    <div className="mb-6">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{t('Today')}</h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+        {t('Today')}
+      </h2>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         <Tile label={t('Orders today')} value={String(s.ordersToday)} sub={`${money(s.gmvToday)} GMV`} />
         <Tile label={t('This week')} value={String(s.ordersWeek)} sub={`${money(s.gmvWeek)} GMV`} />
         <Tile
@@ -107,7 +126,7 @@ export default function OpsSnapshot() {
         />
       </div>
       {(s.unbilledCommission > 0 || s.waitlistUnnotified > 0) && (
-        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
+        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
           {s.unbilledCommission > 0 && (
             <span>
               {t('Unbilled commission (COD pickup)')}: <b>{money(s.unbilledCommission)}</b>
@@ -120,6 +139,6 @@ export default function OpsSnapshot() {
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
