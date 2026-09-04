@@ -1,7 +1,7 @@
 'use client';
 
 // Core
-import { createContext, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 
 // Interface
 import {
@@ -41,6 +41,24 @@ export const RestaurantLayoutProvider = ({ children }: IProvider) => {
     useState<boolean>(false);
   const [subCategories, setSubCategories] = useState<ISubCategory[]>([]);
   const [subCategoryParentId, setSubCategoryParentId] = useState<string>('');
+
+  // The initial state is read from localStorage during the first render, which
+  // is `null` on the server and stale if this provider was already mounted from
+  // a previous store visit. Re-sync from localStorage once on the client so
+  // "View Details" always lands on the store that was just clicked.
+  useEffect(() => {
+    const storedId = onUseLocalStorage('get', SELECTED_RESTAURANT);
+    const storedShopType = onUseLocalStorage('get', SELECTED_SHOPTYPE);
+    setRestaurantLayoutContextData((prev) =>
+      prev.restaurantId === storedId && prev.shopType === storedShopType
+        ? prev
+        : {
+            ...prev,
+            restaurantId: storedId as string,
+            shopType: storedShopType as string,
+          }
+    );
+  }, []);
 
   // Handlers
   const onSetRestaurantLayoutContextData = (

@@ -266,7 +266,7 @@ export default function RestaurantsMain() {
   const totalRecords = restaurantData?.totalCount || 0;
 
   return (
-    <div className="p-3">
+    <div className="min-h-0 flex-1 bg-slate-50 p-3 dark:bg-dark-950">
       <Table
         header={
           <RestaurantsTableHeader
@@ -282,6 +282,10 @@ export default function RestaurantsMain() {
         selectedData={selectedProducts}
         columns={RESTAURANT_TABLE_COLUMNS({ menuItems })}
         loading={loading}
+        className="stores-admin-table"
+        scrollable={false}
+        minWidth="78rem"
+        scrollHeight="calc(100dvh - 19rem)"
         rowsPerPage={rowsPerPage}
         // Server-side pagination props
         totalRecords={totalRecords}

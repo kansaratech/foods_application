@@ -31,7 +31,6 @@ import { ConfigurationContext } from '@/lib/context/global/configuration.context
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 // Components
-import CustomButton from '../button';
 import CustomInputSwitch from '../custom-input-switch';
 import TextComponent from '../text-field';
 import CustomLoader from '../custom-progress-indicator';
@@ -99,11 +98,14 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
     }
   );
   const [deleteRestaurant, { loading }] = useMutation(DELETE_RESTAURANT, {
-    onCompleted: () => {
+    onCompleted: (data) => {
+      // Use the server's post-toggle value, not the stale prop, so the toast
+      // reflects what actually happened.
+      const nowActive = data?.deleteRestaurant?.isActive ?? !isActive;
       showToast({
         type: 'success',
         title: t('Store Status'),
-        message: `${t('Store has been marked as')} ${isActive ? t('active') : t('in-active')}`,
+        message: `${t('Store has been marked as')} ${nowActive ? t('active') : t('in-active')}`,
         duration: 2000,
       });
       setRestaurantModifed(!isRestaurantModifed);
@@ -142,14 +144,23 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
     }
   };
 
+  const handleViewDetails = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onUseLocalStorage('save', 'restaurantId', _id);
+    onUseLocalStorage('save', 'shopType', shopType);
+    onUseLocalStorage('save', 'routeStack', JSON.stringify(['Admin']));
+    router.push('/admin/store/dashboard');
+  };
+
   return (
-    <div className="flex flex-col rounded-lg border-2 border-[#F4F4F5] dark:text-white dark:border-dark-600 dark:bg-dark-950 bg-white shadow-md">
-      <div className="mb-4 flex items-center rounded-t-lg bg-gray-200 dark:bg-dark-900 p-4">
+    <div className="grid items-center rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-[#1c5bc7]/40 hover:shadow-md dark:border-dark-600 dark:bg-dark-950 dark:text-white lg:grid-cols-[1.35fr_1fr_1.25fr_auto]">
+      <div className="flex min-w-0 items-center p-4">
         {image ? (
           <Image
             src={image}
             alt={t('Store logo')}
-            className="mr-3 h-10 w-10 flex-shrink-0 rounded-full"
+            className="mr-3 h-11 w-11 flex-shrink-0 rounded-lg object-cover"
             width={40}
             height={40}
           />
@@ -175,24 +186,8 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
             text={shopType}
           />
         </div>
-        <div className="flex space-x-2">
-          <CustomInputSwitch
-            loading={loading}
-            isActive={isActive}
-            onChange={handleCheckboxChange}
-          />
-          {isHardDeleting ? (
-            <CustomLoader size="20px" />
-          ) : (
-            <FontAwesomeIcon
-              icon={faTrash}
-              className="cursor-pointer"
-              onClick={handleDelete}
-            />
-          )}
-        </div>
       </div>
-      <div className="mb-4 flex items-center gap-x-2 truncate px-4 text-sm text-gray-500 dark:text-white">
+      <div className="flex min-w-0 items-center gap-x-2 truncate border-t border-slate-100 px-4 py-3 text-sm text-gray-500 dark:border-dark-600 dark:text-white lg:border-l lg:border-t-0">
         <FontAwesomeIcon icon={faLocationDot} />
 
         <TextComponent
@@ -201,9 +196,9 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-x-2 px-2 sm:grid sm:grid-cols-2 sm:gap-4 lg:flex">
+      <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-3 dark:border-dark-600 lg:border-l lg:border-t-0">
         {/* Delivery Time */}
-        <div className="flex items-center gap-2 rounded-lg border border-gray-300 p-1 mb-2 text-sm">
+        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
           <FrameSVG width="24" height="24" />
           <span>
             {restaurant?.deliveryTime} {t('min')}
@@ -211,7 +206,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         </div>
 
         {/* Delivery Fee */}
-        <div className="flex items-center gap-2 rounded-lg border border-gray-300 p-1 mb-2 text-sm">
+        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
           <CarSVG width="24" height="24" />
           <span>
             {CURRENT_SYMBOL || '$'} {deliveryRate}
@@ -219,7 +214,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         </div>
 
         {/* Minimum Order */}
-        <div className="flex items-center gap-1 rounded-lg border border-gray-300 p-2 mb-2 text-sm">
+        <div className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
           <span>{t('Min Order')}</span>
           <span>
             {CURRENT_SYMBOL || '$'}
@@ -227,18 +222,16 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
           </span>
         </div>
       </div>
-      <div className="mb-2 px-4">
-        <CustomButton
-          className="h-10 w-full bg-primary-color text-black dark:text-white"
-          label={t('View Details')}
-          onClick={() => {
-            onUseLocalStorage('save', 'restaurantId', _id);
-            onUseLocalStorage('save', 'shopType', shopType);
-            const routeStack = ['Admin'];
-            onUseLocalStorage('save', 'routeStack', JSON.stringify(routeStack));
-            router.push(`/admin/store/`);
-          }}
-        />
+      <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-4 dark:border-dark-600 lg:border-l lg:border-t-0">
+        <CustomInputSwitch loading={loading} isActive={isActive} onChange={handleCheckboxChange} />
+        <button
+          type="button"
+          onClick={handleViewDetails}
+          className="h-9 whitespace-nowrap rounded-md px-3 text-sm font-semibold text-[#1c5bc7] transition hover:bg-[#e8f0fc] focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30 dark:text-white"
+        >
+          {t('View Details')}
+        </button>
+        {isHardDeleting ? <CustomLoader size="20px" /> : <button type="button" aria-label={t('Delete')} onClick={handleDelete} className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"><FontAwesomeIcon icon={faTrash}/></button>}
       </div>
     </div>
   );

@@ -13,9 +13,12 @@ export default function RestaurantsTableHeader({
   const t = useTranslations();
 
   return (
-    <div className="mb-4 flex flex-col gap-6">
-      <div className="flex-colm:flex-row flex w-fit flex-wrap items-center gap-2">
-        <div className="w-60">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('All Stores')}</h2>
+        <p className="mt-0.5 text-xs font-normal text-slate-500">Manage store information, approvals and availability</p>
+      </div>
+        <div className="w-full sm:w-80">
           <CustomTextField
             type="text"
             name="vendorFilter"
@@ -23,11 +26,10 @@ export default function RestaurantsTableHeader({
             showLabel={false}
             value={globalFilterValue}
             onChange={onGlobalFilterChange}
-            placeholder={t('Keyword Search')}
-            className="h-12"
+            placeholder={t('Search by store, vendor or email')}
+            className="h-10"
           />
         </div>
-      </div>
     </div>
   );
 }

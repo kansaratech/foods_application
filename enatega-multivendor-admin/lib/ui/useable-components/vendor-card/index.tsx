@@ -149,10 +149,10 @@ export default function VendorCard({
         }
         setPopupOpen(false);
       }}
-      className="relative"
+      className="relative border-b border-slate-100 last:border-b-0 dark:border-dark-600"
     >
       <div
-        className={`flex items-center ${vendorId === _id ? 'bg-black dark:bg-dark-900 ' : 'bg-white dark:bg-dark-950 '}  cursor-pointer p-2 px-3`}
+        className={`group flex min-h-[72px] items-center border-l-2 px-4 py-3 transition ${vendorId === _id ? 'border-[#1c5bc7] bg-[#eef4ff] dark:bg-dark-900' : 'border-transparent bg-white hover:bg-slate-50 dark:bg-dark-950 dark:hover:bg-dark-900'} cursor-pointer`}
       >
         <Image
           width={40}
@@ -163,32 +163,32 @@ export default function VendorCard({
           }
           alt="User avatar"
           style={{ objectFit: 'fill' }}
-          className="mr-3 h-10 w-10 rounded-full"
+          className="mr-3 h-10 w-10 rounded-full border border-slate-200 object-cover"
         />
         <div className="flex flex-1 flex-col gap-y-1">
           <TextComponent
-            className={`text-card-h3 flex flex-1 text-xs ${vendorId === _id ? 'text-white' : 'text-black dark:text-white'}`}
+            className="flex flex-1 truncate text-sm font-semibold text-slate-900 dark:text-white"
             text={name ?? t('Vendor')}
           />
           <TextComponent
-            className={`text-card-h3 flex flex-1 text-xs ${vendorId === _id ? 'text-white' : 'text-black dark:text-white'}`}
+            className="hidden"
             text={uniqueId ?? ''}
           />
           <TextComponent
-            className={`card-h3 ${vendorId === _id ? 'text-white' : 'text-black dark:text-white'}`}
+            className="truncate text-xs text-slate-500 dark:text-slate-300"
             text={email}
           />
 
           <div
-            className={`flex w-fit items-center gap-x-2 rounded-md px-1 bg-${vendorId === _id ? 'primary-color' : 'gray-100'}`}
+            className="mt-1 flex w-fit items-center gap-x-1.5 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-slate-600 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
           >
             <FontAwesomeIcon
               icon={faShop}
-              color={vendorId === _id ? 'white' : 'black'}
+              className="text-slate-500"
               size="xs"
             />
             <span
-              className={`card-h2 text-${vendorId === _id ? 'white' : 'black'}`}
+              className="text-xs font-semibold"
             >
               {totalRestaurants}
             </span>
@@ -199,8 +199,7 @@ export default function VendorCard({
           {vendorId === _id && (
             <FontAwesomeIcon
               icon={faEllipsisVertical}
-              className={`p-1 ${isPopupOpen ? 'text-gray-400' : 'text-white'
-                } cursor-pointer hover:scale-105`}
+              className="cursor-pointer rounded p-2 text-slate-500 hover:bg-white hover:text-slate-900"
               onClick={(e) => {
                 e.stopPropagation();
                 setPopupOpen(!isPopupOpen);

@@ -1,6 +1,6 @@
 // Core
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 // Icons
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
@@ -13,6 +13,13 @@ import { ISidebarMenuItem, SubMenuItemProps } from '@/lib/utils/interfaces';
 import classes from './side-bar.module.css';
 import { onUseLocalStorage } from '@/lib/utils/methods';
 import { SELECTED_SIDEBAR_MENU } from '@/lib/utils/constants';
+
+// Returns true when `route` is the current page or an ancestor of it.
+// Using a segment-aware check avoids false matches like `/general` ⊂ `/general-settings`.
+function isRouteActive(pathname: string, route?: string | null) {
+  if (!route || route.startsWith('http')) return false;
+  return pathname === route || pathname.startsWith(`${route}/`);
+}
 
 // This component is used to render the sub-menu items when hovered
 function HoveredSubMenuItem({ icon, text, active }: SubMenuItemProps) {
@@ -48,14 +55,28 @@ export default function SidebarItem({
   isClickable,
   shouldOpenInNewTab, // <-- add this prop
 }: ISidebarMenuItem) {
-  // States
-  const [expandSubMenu, setExpandSubMenu] = useState(false);
-
   // Hooks
   const pathname = usePathname();
   const router = useRouter();
 
-  // use Effect
+  // Is the current page this exact item, or (for a parent) one of its children?
+  const selfActive = isRouteActive(pathname, route);
+  const containsActiveRoute = useMemo(
+    () => !!subMenu?.some((item) => isRouteActive(pathname, item.route)),
+    [subMenu, pathname]
+  );
+  const isActive = selfActive || containsActiveRoute;
+
+  // States — a parent that owns the active route starts expanded so the user
+  // can immediately see where they are (e.g. after a full page reload).
+  const [expandSubMenu, setExpandSubMenu] = useState(containsActiveRoute);
+
+  // Keep the group open whenever navigation lands inside it.
+  useEffect(() => {
+    if (containsActiveRoute) setExpandSubMenu(true);
+  }, [containsActiveRoute]);
+
+  // Collapse sub-menus when the whole sidebar collapses.
   useEffect(() => {
     if (!expanded) {
       setExpandSubMenu(false);
@@ -67,25 +88,25 @@ export default function SidebarItem({
     ? `${((subMenu?.length || 0) * 41.5 + (subMenu! && 15)).toString()}px`
     : 0;
 
-  // Defaults
-  const bg_color = pathname.includes(route ?? '')
-    ? isParent
-      ? 'primary-color'
-      : 'secondary-color'
-    : '[#71717A]';
+  const hasSubMenu = !!subMenu;
+  // A leaf (submenu entry or a clickable top-level link) gets the solid highlight;
+  // a parent that merely contains the active page gets the subtler tinted state.
+  const isLeafActive = isActive && !hasSubMenu;
+  const isParentHighlighted = isActive && hasSubMenu;
 
-  const text_color = pathname.includes(route ?? '') ? 'white' : '[#71717A]';
-  const isActive = pathname.includes(route ?? '');
+  const buttonStateClass = isLeafActive
+    ? 'bg-primary-color text-white hover:bg-primary-dark'
+    : isParentHighlighted
+      ? 'bg-primary-light text-primary-color font-semibold dark:bg-dark-600 dark:text-white'
+      : 'text-[#71717A] hover:bg-primary-light dark:text-white dark:hover:bg-dark-600';
 
   return (
     <div className={`mt-[0.4rem] flex flex-col`}>
       <div>
         <button
-          className={`group relative flex w-full cursor-pointer items-center rounded-md px-3 py-2 transition-colors ${
-            isActive && !subMenu
-              ? `bg-${isClickable ? bg_color : ''} text-${isClickable ? text_color : '[#71717A]'}`
-              : `bg-${bg_color} text-${text_color} hover:bg-primary-light dark:hover:bg-dark-600`
-          } ${!expanded && 'hidden sm:flex'} dark:text-white`}
+          aria-current={isLeafActive ? 'page' : undefined}
+          aria-expanded={hasSubMenu ? expandSubMenu : undefined}
+          className={`group relative flex w-full cursor-pointer items-center rounded-md px-3 py-2 transition-colors ${buttonStateClass} ${!expanded && 'hidden sm:flex'}`}
           onClick={() => {
             if (!isParent || isClickable) {
               if (
@@ -103,6 +124,11 @@ export default function SidebarItem({
             onUseLocalStorage('save', SELECTED_SIDEBAR_MENU, text);
           }}
         >
+          {/* Active accent bar on the left edge */}
+          {isActive && (
+            <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-primary-color dark:bg-white" />
+          )}
+
           {icon && (
             <span className="card-h1 w-6">
               <FontAwesomeIcon icon={icon} />
@@ -114,8 +140,7 @@ export default function SidebarItem({
               expanded ? 'ml-3 w-44' : 'w-0'
             }`}
           >
-             {label || text}
-            {/* {label} */}
+            {label || text}
           </span>
           {subMenu && (
             <div
@@ -136,7 +161,7 @@ export default function SidebarItem({
                       key={index}
                       text={item.label || item.text}
                       icon={item.icon}
-                      active={isActive}
+                      active={isRouteActive(pathname, item.route)}
                     />
                   ))}
             </div>
@@ -149,13 +174,13 @@ export default function SidebarItem({
       >
         <div className="absolute bottom-0 left-6 top-0 w-px bg-gray-300 dark:bg-dark-600"></div>
 
-        {(expanded ||
+        {(expandSubMenu ||
           onUseLocalStorage('get', SELECTED_SIDEBAR_MENU) === text) &&
           subMenu?.map((item, index) => {
-            const isActive = pathname.includes(item.route ?? '');
+            const childActive = isRouteActive(pathname, item.route);
             return (
               <li key={index} className="relative">
-                {isActive && (
+                {childActive && (
                   <div className="absolute -left-[0.26rem] top-1/2 z-10 h-2 w-2 -translate-y-1/2 transform rounded-full bg-primary-dark"></div>
                 )}
                 <SidebarItem {...item} expanded={expanded} />

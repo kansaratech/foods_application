@@ -131,6 +131,8 @@ export default function RidersMain({
           setCurrentPage(page);
           setRowsPerPage(rowCount);
         }}
+        scrollable={false}
+        className="directory-admin-table"
       />
       <CustomDialog
         loading={mutationLoading}

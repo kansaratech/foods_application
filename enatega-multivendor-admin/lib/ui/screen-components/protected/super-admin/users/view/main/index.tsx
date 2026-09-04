@@ -72,7 +72,7 @@ export default function UsersMain({
   };
 
   return (
-    <div className="flex flex-col gap-3 p-3 w-full overflow-auto">
+    <div className="w-full p-3">
       <Table
         data={loading ? [] : paginatedUsers}
         columns={USERS_TABLE_COLUMNS(openMenuId, setOpenMenuId)}
@@ -86,6 +86,8 @@ export default function UsersMain({
         handleRowClick={handleRowClick}
         loading={loading}
         minWidth="85rem"
+        scrollable={false}
+        className="directory-admin-table"
       />
     </div>
   );

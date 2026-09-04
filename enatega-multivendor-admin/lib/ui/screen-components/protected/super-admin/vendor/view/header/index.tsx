@@ -6,7 +6,6 @@ import { useContext } from 'react';
 import { VendorContext } from '@/lib/context/super-admin/vendor.context';
 
 // Components
-import CustomTextField from '@/lib/ui/useable-components/input-field';
 import TextIconClickable from '@/lib/ui/useable-components/text-icon-clickable';
 
 // Constants
@@ -18,16 +17,18 @@ export default function VendorHeader() {
   const t = useTranslations();
 
   // Context
-  const { onSetVendorFormVisible, globalFilter, onSetGlobalFilter } =
-    useContext(VendorContext);
+  const { onSetVendorFormVisible } = useContext(VendorContext);
 
   return (
-    <div className="hidden w-full flex-shrink-0 border-b dark:border-dark-600 p-3 sm:block dark:bg-dark-950 dark:text-white">
-      <div className="mb-4 flex flex-col items-center justify-between sm:flex-row">
-        <HeaderText text={t('Vendors')} />
+    <div className="hidden w-full flex-shrink-0 border-b bg-slate-50 px-5 py-4 dark:border-dark-600 dark:bg-dark-950 dark:text-white sm:block">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <HeaderText text={`${t('Vendors')} & ${t('Stores')}`} />
+          <p className="mt-1 text-sm text-slate-500">Manage vendor accounts and their store locations</p>
+        </div>
 
         <TextIconClickable
-          className="rounded border border-gray-300 bg-black dark:bg-dark-950  text-white sm:w-auto dark:border-dark-600"
+          className="rounded-lg border border-[#1c5bc7] bg-[#1c5bc7] px-4 text-white shadow-sm sm:w-auto dark:border-dark-600"
           icon={faAdd}
           iconStyles={{ color: 'white' }}
           title={t('Add Vendor')}
@@ -35,20 +36,6 @@ export default function VendorHeader() {
             onSetVendorFormVisible(true);
           }}
         />
-      </div>
-
-      <div className="flex-colm:flex-row flex w-fit items-center space-y-4 sm:space-x-4 sm:space-y-0">
-        <div className="w-60">
-          <CustomTextField
-            type="text"
-            name="vendorFilter"
-            maxLength={35}
-            placeholder={t('Keyword Search')}
-            showLabel={false}
-            value={globalFilter ?? ''}
-            onChange={(e) => onSetGlobalFilter(e.target.value)}
-          />
-        </div>
         {/* <VendorCustomTab
           options={options}
           selectedTab={selectedVendorFilter}

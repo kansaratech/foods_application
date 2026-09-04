@@ -7,31 +7,34 @@ export default function CustomInputSwitch({
   label,
   onChange,
   reverse = false,
-  className
+  className,
 }: ICustomInputSwitchComponentProps) {
   return loading ? (
     <div className="ml-4">
       <CustomLoader size="14.7px" />
     </div>
   ) : (
-    <label className={`ml-2 flex flex-shrink-0 cursor-pointer items-center ${className}`} >
-      <div className="relative">
-        <div
-          className={`flex items-center gap-2 ${reverse && 'flex-row-reverse'}`}
-        >
-          <label className="relative inline-flex cursor-pointer items-center">
-            <input
-              type="checkbox"
-              className="peer sr-only"
-              checked={isActive}
-              onChange={onChange}
-            />
-            <div className="peer h-4 w-8 rounded-full bg-gray-300 peer-checked:bg-primary-color peer-focus:outline-none dark:bg-gray-700"></div>
-            <div className="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-gray-50 transition-transform peer-checked:translate-x-4"></div>
-          </label>
-          {label && <span className="ml-2">{label}</span>}
-        </div>
-      </div>
+    // A single <label> wraps the control. Nesting labels (as this component
+    // previously did) makes the browser dispatch the synthetic click on the
+    // checkbox twice, so onChange fires an even number of times and the toggle
+    // appears frozen.
+    <label
+      className={`ml-2 flex flex-shrink-0 cursor-pointer items-center gap-2 ${
+        reverse ? 'flex-row-reverse' : ''
+      } ${className ?? ''}`}
+    >
+      <span className="relative inline-flex flex-shrink-0 items-center">
+        <input
+          type="checkbox"
+          role="switch"
+          className="peer sr-only"
+          checked={isActive}
+          onChange={onChange}
+        />
+        <span className="block h-4 w-8 rounded-full bg-gray-300 transition-colors peer-checked:bg-primary-color peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary-color dark:bg-gray-700"></span>
+        <span className="pointer-events-none absolute left-0.5 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-gray-50 transition-transform peer-checked:translate-x-4"></span>
+      </span>
+      {label && <span>{label}</span>}
     </label>
   );
 }

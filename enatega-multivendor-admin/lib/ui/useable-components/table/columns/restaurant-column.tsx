@@ -100,6 +100,7 @@ export const RESTAURANT_TABLE_COLUMNS = ({
     {
       headerName: t('Image'),
       propertyName: 'image',
+      hidden: true,
       body: (restaurant: IRestaurantResponse) => {
         return (
           <Image
@@ -116,14 +117,26 @@ export const RESTAURANT_TABLE_COLUMNS = ({
       },
     },
     {
-      headerName: t('ID'), propertyName: 'unique_restaurant_id',
+      headerName: t('Store'),
+      propertyName: 'name',
+      body: (restaurant: IRestaurantResponse) => (
+        <div className="flex min-w-[13rem] items-center gap-3">
+          <Image
+            width={40}
+            height={40}
+            alt={restaurant.name || t('Store')}
+            src={restaurant.image || '/assets/images/png/logo.png'}
+            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{restaurant.name}</p>
+            <p className="max-w-[13rem] truncate text-[11px] text-slate-400">{restaurant.unique_restaurant_id}</p>
+          </div>
+        </div>
+      ),
     },
-    { headerName: t('Name'), propertyName: 'name' },
     { headerName: t('Vendor'), propertyName: 'owner.email' },
-    {
-      headerName: t('Email'),
-      propertyName: 'username',
-    },
+    { headerName: t('Email'), propertyName: 'username' },
     { headerName: t('Address'), propertyName: 'address' },
     {
       headerName: t('Approval'),

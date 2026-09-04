@@ -538,12 +538,22 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     deleteRestaurant: async (_parent, args: { id: string }, context) => {
       requireRole(context, ['ADMIN']);
-      const updated = await prisma.restaurant.update({ where: { id: args.id }, data: { isActive: false } });
+      // This mutation backs the store active/inactive toggle in the admin, so it
+      // has to work both ways. Hardcoding `isActive: false` meant a store could
+      // be switched off but never back on.
+      const existing = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!existing) throw notFoundError('Restaurant not found');
+      const nextActive = !existing.isActive;
+      const updated = await prisma.restaurant.update({
+        where: { id: args.id },
+        data: { isActive: nextActive },
+      });
       await recordAudit(context, {
-        action: 'store.deactivate',
+        action: nextActive ? 'store.activate' : 'store.deactivate',
         targetType: 'Restaurant',
         targetId: args.id,
-        summary: `Store deactivated: ${updated.name}`,
+        summary: `Store ${nextActive ? 'activated' : 'deactivated'}: ${updated.name}`,
+        changes: { isActive: [existing.isActive, nextActive] },
       });
       return updated;
     },
