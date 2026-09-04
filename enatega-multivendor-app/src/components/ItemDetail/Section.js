@@ -27,17 +27,25 @@ const Section = ({ itemId, restaurantId }) => {
   const { loading, error, data } = useQuery(RELATED_ITEMS, {
     variables: { itemId, restaurantId }
   })
-  if (loading) return <View />
-  if (error) return <View />
-  const { relatedItems } = data
-  if (relatedItems.length < 1) return <View />
   const result = client.readQuery({
     query: RESTAURANT,
     variables: { id: restaurantId }
   })
 
-  const slicedItems =
-    relatedItems.length > 3 ? relatedItems.slice(0, 3) : relatedItems
+  // Prefer the merchant's own "frequently bought together" picks for this item;
+  // fall back to the auto-generated relatedItems.
+  const allFoods = (result?.restaurant?.categories ?? []).flatMap((c) => c.foods ?? [])
+  const currentFood = allFoods.find((f) => f._id === itemId)
+  const pairedIds = (currentFood?.pairedFoods ?? [])
+    .filter((p) => !p.isOutOfStock)
+    .map((p) => p._id)
+
+  if (loading && !pairedIds.length) return <View />
+  if (error && !pairedIds.length) return <View />
+  const relatedItems = data?.relatedItems ?? []
+
+  const slicedItems = (pairedIds.length ? pairedIds : relatedItems).slice(0, 3)
+  if (slicedItems.length < 1) return <View />
   return (
     <View>
       <View style={{ marginBottom: scale(15) }}>

@@ -18,6 +18,19 @@ export async function billingCycle(): Promise<string> {
   return config?.commissionBillingCycle === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
 }
 
+/** `PDR-INV-202609-0007` — sequential within the bill's period month. */
+export async function nextInvoiceNumber(periodEnd: Date): Promise<string> {
+  const ym = `${periodEnd.getUTCFullYear()}${String(periodEnd.getUTCMonth() + 1).padStart(2, '0')}`;
+  const prefix = `PDR-INV-${ym}-`;
+  const last = await prisma.commissionBill.findFirst({
+    where: { invoiceNumber: { startsWith: prefix } },
+    orderBy: { invoiceNumber: 'desc' },
+    select: { invoiceNumber: true },
+  });
+  const seq = last?.invoiceNumber ? Number(last.invoiceNumber.slice(prefix.length)) + 1 : 1;
+  return `${prefix}${String(seq).padStart(4, '0')}`;
+}
+
 function groupByVendor(records: CommissionRecord[]) {
   const byVendor = new Map<
     string,
@@ -87,6 +100,7 @@ export async function closeCommissionBills(opts: {
         grossFoodSubtotal: round2(agg.grossFoodSubtotal),
         commissionTotal: round2(agg.commissionTotal),
         status: 'PENDING',
+        invoiceNumber: await nextInvoiceNumber(periodEnd),
       },
     });
     await prisma.commissionRecord.updateMany({

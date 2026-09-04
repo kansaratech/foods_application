@@ -82,6 +82,9 @@ export const commonTypeDefs = /* GraphQL */ `
     defaultCommissionRate: Float
     commissionBillingCycle: String
     riderCashLimit: Float
+    platformLegalName: String
+    platformAddress: String
+    platformGstin: String
     defaultLatitude: Float
     defaultLongitude: Float
   }
@@ -167,6 +170,9 @@ export const commonTypeDefs = /* GraphQL */ `
     defaultCommissionRate: Float
     commissionBillingCycle: String
     riderCashLimit: Float
+    platformLegalName: String
+    platformAddress: String
+    platformGstin: String
     defaultLatitude: Float
     defaultLongitude: Float
   }

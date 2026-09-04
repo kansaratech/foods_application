@@ -5,6 +5,7 @@ import { saveBase64Image } from '../../services/upload.service';
 import { requireRole } from '../../middleware/auth';
 import { GraphQLContext } from '../../context';
 import { notFoundError } from '../../utils/errors';
+import { recordAudit } from '../../utils/audit';
 
 // All 17 "save X configuration" mutations write into this one singleton row.
 // `data` should only contain the keys that mutation actually owns - callers
@@ -14,10 +15,18 @@ async function saveConfiguration(context: GraphQLContext, data: Prisma.Configura
   requireRole(context, ['ADMIN']);
   const clean = Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
   const existing = await prisma.configuration.findFirst();
-  if (!existing) {
-    return prisma.configuration.create({ data: clean });
-  }
-  return prisma.configuration.update({ where: { id: existing.id }, data: clean });
+  const result = existing
+    ? await prisma.configuration.update({ where: { id: existing.id }, data: clean })
+    : await prisma.configuration.create({ data: clean });
+  // Never log secret values.
+  const fields = Object.keys(clean).filter((k) => !/key|secret|token|password|sid/i.test(k));
+  await recordAudit(context, {
+    action: 'config.update',
+    targetType: 'Configuration',
+    summary: `Configuration updated: ${Object.keys(clean).join(', ') || '—'}`,
+    changes: Object.fromEntries(fields.map((k) => [k, (clean as Record<string, unknown>)[k]])),
+  });
+  return result;
 }
 
 function slugify(name: string): string {
@@ -294,6 +303,9 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
           defaultCommissionRate?: number;
           commissionBillingCycle?: string;
           riderCashLimit?: number;
+          platformLegalName?: string;
+          platformAddress?: string;
+          platformGstin?: string;
           defaultLatitude?: number;
           defaultLongitude?: number;
         };

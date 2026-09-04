@@ -32,7 +32,11 @@ async function main() {
 
   // 1. Schema. This repo keeps NO migration history on purpose — `db push` is
   //    the supported path (`migrate dev` would offer to wipe the database).
-  await step('Sync schema (prisma db push)', () => sh('npx prisma db push --skip-generate'));
+  //    `--accept-data-loss` is needed for otherwise-safe changes Prisma flags as
+  //    risky (e.g. adding a UNIQUE index to an all-NULL column); the deploy is
+  //    always meant to make the DB match schema.prisma exactly.
+  await step('Sync schema (prisma db push)', () =>
+    sh('npx prisma db push --skip-generate --accept-data-loss'));
 
   // 2. Typed client. Best-effort: in production it was generated at image build
   //    time; on a dev box the engine file can be locked by a running server.

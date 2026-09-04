@@ -46,6 +46,7 @@ export interface IAddon {
   description?: string;
   quantityMinimum?: number;
   quantityMaximum?: number;
+  isRequired?: boolean;
   options: IAddonOption[];
 }
 

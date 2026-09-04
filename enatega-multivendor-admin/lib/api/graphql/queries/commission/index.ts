@@ -29,6 +29,7 @@ export const GET_COMMISSION_BILLS = gql`
       total
       bills {
         _id
+        invoiceNumber
         vendor {
           _id
           name
@@ -84,6 +85,8 @@ export const GET_RIDER_CASH_OUTSTANDING = gql`
       entryCount
       outstanding
       oldestUnremittedAt
+      pendingDepositCount
+      pendingDepositTotal
     }
   }
 `;
@@ -103,6 +106,7 @@ export const GET_RIDER_CASH_SUMMARY = gql`
       cashLimit
       walletBalance
       availableToWithdraw
+      pendingDepositTotal
       entries {
         _id
         orderNumber
@@ -117,7 +121,10 @@ export const GET_RIDER_CASH_SUMMARY = gql`
         amount
         entryCount
         method
+        reference
         note
+        status
+        confirmedAt
         createdAt
       }
     }
@@ -171,6 +178,7 @@ export const GET_COMMISSION_BILL = gql`
     commissionBill(id: $id) {
       bill {
         _id
+        invoiceNumber
         vendor {
           _id
           name
@@ -194,6 +202,24 @@ export const GET_COMMISSION_BILL = gql`
         commissionRate
         commissionAmount
         orderDeliveredAt
+      }
+      invoice {
+        invoiceNumber
+        issuedOn
+        periodLabel
+        platformName
+        platformAddress
+        platformGstin
+        vendorName
+        vendorEmail
+        vendorPhone
+        storeNames
+        orderCount
+        grossFoodSubtotal
+        commissionRate
+        commissionTotal
+        status
+        note
       }
     }
   }

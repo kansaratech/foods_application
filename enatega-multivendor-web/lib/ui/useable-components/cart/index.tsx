@@ -126,6 +126,26 @@ export default function Cart({ onClose }: CartProps) {
 
   // Slice related items to max 3
   const slicedRelatedItems = (relatedItemsData?.relatedItems || []).slice(0, 3);
+
+  // Merchant-curated "frequently bought together": pull the pairedFoods off every
+  // food currently in the cart, drop anything already in the cart / out of stock,
+  // and de-dupe. Falls back to `relatedItems` when the merchant set none.
+  const menuFoods: IFood[] = (data?.restaurant?.categories || []).flatMap(
+    (c: { foods: IFood[] }) => c.foods,
+  );
+  const cartFoodIds = new Set(cart.map((c) => c._id));
+  const fbtMap = new Map<string, IFood>();
+  for (const cartItem of cart) {
+    const menuFood = menuFoods.find((f) => f._id === cartItem._id);
+    for (const paired of menuFood?.pairedFoods || []) {
+      if (cartFoodIds.has(paired._id) || paired.isOutOfStock || fbtMap.has(paired._id))
+        continue;
+      const full = menuFoods.find((f) => f._id === paired._id);
+      if (full && !full.isCombo) fbtMap.set(paired._id, full);
+    }
+  }
+  const frequentlyBoughtTogether = Array.from(fbtMap.values()).slice(0, 4);
+
   const handleOpenFoodModal = async (food: IFood) => {
     if (food.isOutOfStock) return;
 
@@ -243,8 +263,45 @@ export default function Cart({ onClose }: CartProps) {
             ))}
           </div>
 
+          {/* Frequently bought together (merchant-curated) */}
+          {frequentlyBoughtTogether.length > 0 && (
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 ">
+              <h2 className="font-inter font-semibold text-base text-gray-900 dark:text-white mb-3">
+                {t("frequently_bought_together")}
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                {frequentlyBoughtTogether.map((food) => (
+                  <div
+                    key={food._id}
+                    onClick={() => handleOpenFoodModal(food)}
+                    className="flex-grow basis-[calc(50%-0.75rem)] bg-white dark:bg-gray-800 rounded-lg overflow-hidden relative transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg cursor-pointer group"
+                  >
+                    {food.image && (
+                      <Image
+                        src={food.image}
+                        alt={food.title}
+                        width={600}
+                        height={144}
+                        className="w-full h-36 object-cover group-hover:opacity-80 transition-opacity duration-300"
+                      />
+                    )}
+                    <div className="p-2">
+                      <p className="text-sm font-semibold text-gray-700 dark:text-white truncate">
+                        {food.title}
+                      </p>
+                      <p className="text-secondary-color text-sm font-semibold">
+                        {CURRENCY_SYMBOL}
+                        {food.variations[0]?.price}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Recommended for You Section */}
-          {slicedRelatedItems.length > 0 && (
+          {frequentlyBoughtTogether.length === 0 && slicedRelatedItems.length > 0 && (
             <div className="p-4 bg-gray-50 dark:bg-gray-800 ">
               <h2 className="font-inter font-semibold text-base  text-gray-900 dark:text-white mb-3">
                 {t("recommended_for_you_label")}

@@ -948,5 +948,9 @@
   "Pay online": "ऑनलाइन भुगतान",
   "Order updated": "ऑर्डर अपडेट किया गया",
   "Your order has been updated": "आपका ऑर्डर अपडेट कर दिया गया है",
-  "Could not update the order": "ऑर्डर अपडेट नहीं किया जा सका"
+  "Could not update the order": "ऑर्डर अपडेट नहीं किया जा सका",
+  "combo_label": "कॉम्बो",
+  "whats_in_this_combo": "इस कॉम्बो में क्या है",
+  "you_save": "आपकी बचत",
+  "frequently_bought_together": "अक्सर एक साथ खरीदे जाते हैं"
 }

@@ -465,6 +465,9 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const currentUser = requireAuth(context);
       const restaurant = await prisma.restaurant.findUnique({ where: { id: args.restaurant } });
       if (!restaurant || !restaurant.isActive) throw userInputError('Restaurant not found or unavailable');
+      if (restaurant.approvalStatus && restaurant.approvalStatus !== 'APPROVED') {
+        throw userInputError('This store is not currently accepting orders');
+      }
 
       const { itemsData, itemsTotal } = await buildOrderItems(args.restaurant, args.orderInput);
       if (itemsTotal < restaurant.minimumOrder) {

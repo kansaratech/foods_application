@@ -4,6 +4,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { notFoundError, userInputError } from '../../utils/errors';
+import { recordAudit } from '../../utils/audit';
 
 async function assertOwnsRestaurant(context: GraphQLContext, restaurantId: string) {
   const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -21,6 +22,12 @@ interface VariationInputArgs {
   addons?: string[];
 }
 
+interface ComboItemInputArgs {
+  foodId: string;
+  variationId?: string;
+  quantity?: number;
+}
+
 interface FoodInputArgs {
   _id?: string;
   restaurant: string;
@@ -33,6 +40,29 @@ interface FoodInputArgs {
   category: string;
   subCategory?: string;
   variations: VariationInputArgs[];
+  isCombo?: boolean;
+  comboItems?: ComboItemInputArgs[];
+  compareAtPrice?: number | null;
+  pairedFoodIds?: string[];
+}
+
+// Extra Food columns from the combo / upsell feature. Kept out of the main
+// data literal so createFood/editFood stay readable.
+function foodExtraFields(input: FoodInputArgs) {
+  return {
+    isCombo: input.isCombo ?? undefined,
+    comboItems:
+      input.comboItems !== undefined
+        ? (input.comboItems.map((c) => ({
+            foodId: c.foodId,
+            variationId: c.variationId ?? null,
+            quantity: c.quantity && c.quantity > 0 ? c.quantity : 1,
+          })) as unknown as object)
+        : undefined,
+    compareAtPrice: input.compareAtPrice ?? undefined,
+    pairedFoodIds:
+      input.pairedFoodIds !== undefined ? (input.pairedFoodIds as unknown as object) : undefined,
+  };
 }
 
 // The first image doubles as the legacy single `image` field so every
@@ -65,13 +95,30 @@ interface AddonInputArgs {
   description?: string;
   quantityMinimum?: number;
   quantityMaximum?: number;
+  isRequired?: boolean;
   options?: OptionInputArgs[];
+}
+
+// Keep isRequired and quantityMinimum consistent: a required group forces at
+// least one pick; an optional one allows zero.
+function normalizeAddonRules(input: AddonInputArgs) {
+  const max = input.quantityMaximum ?? 1;
+  let min = input.quantityMinimum ?? 0;
+  if (input.isRequired && min < 1) min = 1;
+  if (input.isRequired === false) min = 0;
+  return { quantityMinimum: min, quantityMaximum: Math.max(max, min), isRequired: min >= 1 };
 }
 
 export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     popularFoodItems: (_parent, args: { restaurantId: string }) =>
       prisma.food.findMany({ where: { restaurantId: args.restaurantId, isActive: true }, take: 10 }),
+
+    restaurantCombos: (_parent, args: { restaurantId: string }) =>
+      prisma.food.findMany({
+        where: { restaurantId: args.restaurantId, isCombo: true, isActive: true },
+        orderBy: { createdAt: 'desc' },
+      }),
 
     subCategories: () => prisma.subCategory.findMany(),
     subCategory: (_parent, args: { id?: string }) =>
@@ -145,6 +192,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           description: input.description,
           badge: input.badge ?? null,
           ...foodImageFields(input),
+          ...foodExtraFields(input),
           isActive: input.isActive ?? true,
           variations: {
             create: input.variations.map((v) => ({
@@ -175,6 +223,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           description: input.description,
           badge: input.badge ?? null,
           ...foodImageFields(input),
+          ...foodExtraFields(input),
           isActive: input.isActive,
         },
       });
@@ -221,6 +270,120 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       return true;
     },
 
+    updateVariationOutOfStock: async (_parent, args: { id: string; restaurant: string }, context) => {
+      await assertOwnsRestaurant(context, args.restaurant);
+      const variation = await prisma.variation.findUnique({ where: { id: args.id } });
+      if (!variation) throw notFoundError('Variation not found');
+      await prisma.variation.update({ where: { id: args.id }, data: { isOutOfStock: !variation.isOutOfStock } });
+      return true;
+    },
+
+    cloneMenu: async (
+      _parent,
+      args: { fromRestaurantId: string; toRestaurantId: string; replace?: boolean },
+      context,
+    ) => {
+      requireRole(context, ['ADMIN']);
+      if (args.fromRestaurantId === args.toRestaurantId) {
+        throw userInputError('Source and target store must be different');
+      }
+      const [source, target] = await Promise.all([
+        prisma.restaurant.findUnique({ where: { id: args.fromRestaurantId } }),
+        prisma.restaurant.findUnique({ where: { id: args.toRestaurantId } }),
+      ]);
+      if (!source) throw notFoundError('Source store not found');
+      if (!target) throw notFoundError('Target store not found');
+
+      if (args.replace) {
+        // A food that appears on a past order can't be hard-deleted (OrderItem
+        // FK). Deactivate everything the target currently has instead, and drop
+        // the categories/addons that carry no order history.
+        const ordered = await prisma.orderItem.count({
+          where: { food: { restaurantId: target.id } },
+        });
+        if (ordered > 0) {
+          await prisma.food.updateMany({ where: { restaurantId: target.id }, data: { isActive: false } });
+        } else {
+          await prisma.category.deleteMany({ where: { restaurantId: target.id } });
+          await prisma.addon.deleteMany({ where: { restaurantId: target.id } });
+        }
+      }
+
+      // 1. Add-ons + options (old id → new id).
+      const srcAddons = await prisma.addon.findMany({
+        where: { restaurantId: source.id },
+        include: { options: true },
+      });
+      const addonIdMap = new Map<string, string>();
+      for (const a of srcAddons) {
+        const created = await prisma.addon.create({
+          data: {
+            restaurantId: target.id,
+            title: a.title,
+            description: a.description,
+            quantityMinimum: a.quantityMinimum,
+            quantityMaximum: a.quantityMaximum,
+            options: {
+              create: a.options.map((o) => ({ title: o.title, description: o.description, price: o.price })),
+            },
+          },
+        });
+        addonIdMap.set(a.id, created.id);
+      }
+
+      // 2. Categories → foods → variations → variation/add-on links.
+      const srcCategories = await prisma.category.findMany({
+        where: { restaurantId: source.id },
+        include: { foods: { include: { variations: { include: { addons: true } } } } },
+      });
+      let items = 0;
+      for (const c of srcCategories) {
+        const newCategory = await prisma.category.create({
+          data: { restaurantId: target.id, title: c.title, image: c.image },
+        });
+        for (const f of c.foods) {
+          const newFood = await prisma.food.create({
+            data: {
+              restaurantId: target.id,
+              categoryId: newCategory.id,
+              title: f.title,
+              description: f.description,
+              image: f.image,
+              images: f.images ?? undefined,
+              badge: f.badge,
+              isActive: f.isActive,
+              isOutOfStock: f.isOutOfStock,
+            },
+          });
+          items += 1;
+          for (const v of f.variations) {
+            const newVariation = await prisma.variation.create({
+              data: {
+                foodId: newFood.id,
+                title: v.title,
+                price: v.price,
+                discounted: v.discounted,
+                isOutOfStock: v.isOutOfStock,
+              },
+            });
+            const links = v.addons
+              .map((link) => addonIdMap.get(link.addonId))
+              .filter((id): id is string => Boolean(id))
+              .map((addonId) => ({ variationId: newVariation.id, addonId }));
+            if (links.length) await prisma.variationAddon.createMany({ data: links });
+          }
+        }
+      }
+
+      await recordAudit(context, {
+        action: 'menu.clone',
+        targetType: 'Restaurant',
+        targetId: target.id,
+        summary: `Cloned menu from ${source.name} to ${target.name} (${srcCategories.length} categories, ${items} items${args.replace ? ', replaced existing' : ''})`,
+      });
+      return prisma.restaurant.findUnique({ where: { id: target.id } });
+    },
+
     createCategory: async (_parent, args: { category: CategoryInputArgs }, context) => {
       await assertOwnsRestaurant(context, args.category.restaurant);
       await prisma.category.create({
@@ -251,8 +414,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           restaurantId: input.restaurant,
           title: input.title,
           description: input.description,
-          quantityMinimum: input.quantityMinimum ?? 0,
-          quantityMaximum: input.quantityMaximum ?? 1,
+          ...normalizeAddonRules(input),
           options: input.options?.length
             ? { create: input.options.map((o) => ({ title: o.title, description: o.description, price: o.price })) }
             : undefined,
@@ -269,8 +431,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
         data: {
           title: input.title,
           description: input.description,
-          quantityMinimum: input.quantityMinimum,
-          quantityMaximum: input.quantityMaximum,
+          ...normalizeAddonRules(input),
         },
       });
       if (input.options) {
@@ -315,6 +476,50 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       if (stored.length > 0) return stored;
       return parent.image ? [parent.image] : [];
     },
+    isCombo: (parent: Food) => parent.isCombo ?? false,
+    compareAtPrice: (parent: Food) => parent.compareAtPrice ?? null,
+    comboItems: async (parent: Food) => {
+      const raw = Array.isArray(parent.comboItems)
+        ? (parent.comboItems as Array<{ foodId: string; variationId?: string | null; quantity?: number }>)
+        : [];
+      if (!raw.length) return [];
+      const foods = await prisma.food.findMany({ where: { id: { in: raw.map((r) => r.foodId) } } });
+      const byId = new Map(foods.map((f) => [f.id, f]));
+      return raw
+        .map((r) => {
+          const f = byId.get(r.foodId);
+          if (!f) return null;
+          return {
+            foodId: r.foodId,
+            variationId: r.variationId ?? null,
+            title: f.title,
+            quantity: r.quantity && r.quantity > 0 ? r.quantity : 1,
+            image: f.image ?? null,
+            isOutOfStock: f.isOutOfStock,
+          };
+        })
+        .filter(Boolean);
+    },
+    pairedFoods: async (parent: Food) => {
+      const ids = Array.isArray(parent.pairedFoodIds) ? (parent.pairedFoodIds as string[]) : [];
+      if (!ids.length) return [];
+      const foods = await prisma.food.findMany({ where: { id: { in: ids }, isActive: true } });
+      const withVariation = await Promise.all(
+        foods.map(async (f) => {
+          const v = await prisma.variation.findFirst({ where: { foodId: f.id }, orderBy: { price: 'asc' } });
+          return {
+            _id: f.id,
+            title: f.title,
+            image: f.image ?? null,
+            price: v?.discounted ?? v?.price ?? null,
+            isOutOfStock: f.isOutOfStock,
+          };
+        }),
+      );
+      // preserve the merchant's ordering
+      const order = new Map(ids.map((id, i) => [id, i]));
+      return withVariation.sort((a, b) => (order.get(a._id) ?? 0) - (order.get(b._id) ?? 0));
+    },
   },
   SubCategory: {
     _id: (parent: SubCategory) => parent.id,
@@ -329,6 +534,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
   },
   Addon: {
     _id: (parent: Addon) => parent.id,
+    isRequired: (parent: Addon) => parent.isRequired ?? (parent.quantityMinimum ?? 0) >= 1,
     options: (parent: Addon) => prisma.option.findMany({ where: { addonId: parent.id } }),
   },
   Option: {

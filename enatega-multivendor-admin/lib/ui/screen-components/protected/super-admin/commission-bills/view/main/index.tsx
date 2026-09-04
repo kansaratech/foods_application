@@ -54,6 +54,9 @@ export default function CommissionBillsMain() {
     defaultCommissionRate?: number;
     commissionBillingCycle?: string;
     riderCashLimit?: number;
+    platformLegalName?: string;
+    platformAddress?: string;
+    platformGstin?: string;
   }) => {
     setSavingConfig(true);
     try {
@@ -153,6 +156,38 @@ export default function CommissionBillsMain() {
   });
   const detail = detailData?.commissionBill;
 
+  const printInvoice = () => {
+    const inv = detail?.invoice;
+    if (!inv) return;
+    const rows = detail.records
+      .map(
+        (r) =>
+          `<tr><td>${r.orderNumber}</td><td>${r.storeName ?? ''}</td><td>${day(r.orderDeliveredAt)}</td><td style="text-align:right">${money(r.foodSubtotal)}</td><td style="text-align:right">${money(r.commissionAmount)}</td></tr>`,
+      )
+      .join('');
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) return;
+    w.document.write(`<!doctype html><html><head><title>${inv.invoiceNumber}</title>
+      <style>body{font:13px/1.5 system-ui,sans-serif;padding:40px;color:#111}h1{font-size:20px;margin:0 0 4px}
+      table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}
+      .muted{color:#666}.tot{font-weight:700;font-size:15px}.row{display:flex;justify-content:space-between;gap:40px;margin-top:20px}</style>
+      </head><body>
+      <h1>${inv.platformName}</h1>
+      <div class="muted">${inv.platformAddress ?? ''}${inv.platformGstin ? ` · GSTIN ${inv.platformGstin}` : ''}</div>
+      <div class="row">
+        <div><b>Invoice</b> ${inv.invoiceNumber}<br/><span class="muted">Issued ${day(inv.issuedOn)}</span><br/><span class="muted">Period ${inv.periodLabel}</span></div>
+        <div style="text-align:right"><b>Billed to</b><br/>${inv.vendorName}<br/><span class="muted">${inv.vendorEmail ?? ''} ${inv.vendorPhone ?? ''}</span><br/><span class="muted">${inv.storeNames.join(', ')}</span></div>
+      </div>
+      <table><thead><tr><th>Order</th><th>Store</th><th>Delivered</th><th style="text-align:right">Food subtotal</th><th style="text-align:right">Commission</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      <div class="row"><div class="muted">${inv.orderCount} orders · effective rate ${inv.commissionRate}% · gross food subtotal ${money(inv.grossFoodSubtotal)}</div>
+      <div class="tot">Amount due: ${money(inv.commissionTotal)} <span class="muted">(${inv.status})</span></div></div>
+      ${inv.note ? `<p class="muted">${inv.note}</p>` : ''}
+      <script>window.print()</script>
+      </body></html>`);
+    w.document.close();
+  };
+
   return (
     <div className="flex flex-col gap-6 p-3">
       {/* ---- Settings ---- */}
@@ -206,6 +241,49 @@ export default function CommissionBillsMain() {
             />
           </label>
           <p className="max-w-md text-xs text-gray-400">{t('commission_settings_help')}</p>
+        </div>
+
+        <div className="mt-4 border-t pt-4 dark:border-dark-600">
+          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            {t('Invoice billing entity')}
+          </h4>
+          <div className="flex flex-wrap items-end gap-4">
+            <label className="flex flex-col text-sm">
+              <span className="mb-1 text-gray-500">{t('Legal name')}</span>
+              <input
+                defaultValue={config?.platformLegalName ?? ''}
+                disabled={savingConfig}
+                onBlur={(e) =>
+                  e.target.value !== (config?.platformLegalName ?? '') &&
+                  persistConfig({ platformLegalName: e.target.value })
+                }
+                className="h-10 w-56 rounded border border-gray-300 px-2 dark:bg-dark-950"
+              />
+            </label>
+            <label className="flex flex-col text-sm">
+              <span className="mb-1 text-gray-500">{t('GSTIN')}</span>
+              <input
+                defaultValue={config?.platformGstin ?? ''}
+                disabled={savingConfig}
+                onBlur={(e) =>
+                  e.target.value !== (config?.platformGstin ?? '') && persistConfig({ platformGstin: e.target.value })
+                }
+                className="h-10 w-44 rounded border border-gray-300 px-2 dark:bg-dark-950"
+              />
+            </label>
+            <label className="flex flex-1 flex-col text-sm">
+              <span className="mb-1 text-gray-500">{t('Address')}</span>
+              <input
+                defaultValue={config?.platformAddress ?? ''}
+                disabled={savingConfig}
+                onBlur={(e) =>
+                  e.target.value !== (config?.platformAddress ?? '') &&
+                  persistConfig({ platformAddress: e.target.value })
+                }
+                className="h-10 min-w-[16rem] rounded border border-gray-300 px-2 dark:bg-dark-950"
+              />
+            </label>
+          </div>
         </div>
       </section>
 
@@ -378,7 +456,10 @@ export default function CommissionBillsMain() {
       >
         {detail && (
           <div className="flex flex-col gap-3 text-sm">
-            <div className="flex flex-wrap gap-x-8 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-1">
+              <span>
+                <b>{t('Invoice')}:</b> {detail.bill.invoiceNumber || '—'}
+              </span>
               <span>
                 <b>{t('Vendor')}:</b> {detail.bill.vendor?.name || detail.bill.vendor?.email || '—'}
               </span>
@@ -391,6 +472,12 @@ export default function CommissionBillsMain() {
               <span>
                 <b>{t('Commission')}:</b> {money(detail.bill.commissionTotal)}
               </span>
+              <button
+                onClick={printInvoice}
+                className="ml-auto rounded border px-3 py-1 text-xs dark:border-dark-600"
+              >
+                {t('Print invoice')}
+              </button>
             </div>
             <table className="w-full border-collapse text-xs">
               <thead>

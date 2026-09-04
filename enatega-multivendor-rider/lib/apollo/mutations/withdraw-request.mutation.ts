@@ -7,3 +7,13 @@ export const CREATE_WITHDRAW_REQUEST = gql`
     }
   }
 `;
+
+export const RIDER_REPORT_DEPOSIT = gql`
+  mutation RiderReportDeposit($amount: Float!, $method: String, $reference: String, $note: String) {
+    riderReportDeposit(amount: $amount, method: $method, reference: $reference, note: $note) {
+      _id
+      amount
+      status
+    }
+  }
+`;

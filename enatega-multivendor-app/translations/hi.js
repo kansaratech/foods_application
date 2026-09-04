@@ -671,5 +671,8 @@ export const hi = {
     area_na_notify: 'मुझे सूचित करें',
     area_na_email_invalid: 'मान्य ईमेल पता दर्ज करें',
     area_na_error: 'कुछ गलत हुआ। कृपया पुनः प्रयास करें',
-    area_na_change: 'दूसरा स्थान चुनें'
-  }
+    area_na_change: 'दूसरा स्थान चुनें',
+  whatsInThisCombo: 'इस कॉम्बो में क्या है',
+  youSave: 'आपकी बचत',
+  outOfStock: 'स्टॉक ख़त्म',
+}

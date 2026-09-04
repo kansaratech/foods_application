@@ -34,6 +34,9 @@ export const restaurantTypeDefs = /* GraphQL */ `
     commissionRate: Float
     isActive: Boolean
     isAvailable: Boolean
+    approvalStatus: String
+    approvalNote: String
+    approvedAt: String
     shopType: String
     cuisines: [String!]
     openingTimes: [OpeningTime!]
@@ -252,7 +255,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     userFavourite(latitude: Float, longitude: Float): [Restaurant!]!
 
     restaurants: [Restaurant!]!
-    restaurantsPaginated(page: Int, limit: Int, search: String): RestaurantPaginated!
+    restaurantsPaginated(page: Int, limit: Int, search: String, approvalStatus: String): RestaurantPaginated!
     restaurantByOwner(id: String!): Vendor
     commissionRate(page: Int, limit: Int): CommissionRatePaginated!
     getRestaurantDeliveryZoneInfo(id: ID!): RestaurantDeliveryZoneInfo
@@ -267,6 +270,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     createRestaurant(restaurant: RestaurantInput!, owner: ID!): Restaurant!
     editRestaurant(restaurant: RestaurantProfileInput!): Restaurant!
     toggleStoreAvailability(restaurantId: String!): Restaurant!
+    setStoreApproval(id: String!, status: String!, note: String): Restaurant!
     deleteRestaurant(id: String!): Restaurant!
     hardDeleteRestaurant(id: String!): Boolean!
     duplicateRestaurant(id: String!, owner: String!): Restaurant!

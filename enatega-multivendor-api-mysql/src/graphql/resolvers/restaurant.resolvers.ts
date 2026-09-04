@@ -6,10 +6,15 @@ import { requireAuth, requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
+import { recordAudit } from '../../utils/audit';
 
 function slugify(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
 }
+
+// A store a customer may see and order from: live, and past the onboarding gate.
+const CUSTOMER_VISIBLE_STORE = { isActive: true, approvalStatus: 'APPROVED' } as const;
+const STORE_APPROVAL_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'];
 
 // Keep location-scoped lists local: when coordinates are given, drop restaurants
 // further than `radiusKm` (default 60km) so legacy stores from other cities
@@ -79,7 +84,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       _parent,
       args: { latitude?: number; longitude?: number; radiusKm?: number; shopType?: string },
     ) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
 
       let restaurants = await prisma.restaurant.findMany({ where });
@@ -106,7 +111,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       _parent,
       args: { latitude?: number; longitude?: number; radiusKm?: number; shopType?: string; page?: number; limit?: number },
     ) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
 
       let restaurants = await prisma.restaurant.findMany({ where });
@@ -148,7 +153,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
         if (!restaurantIds.includes(o.restaurantId)) restaurantIds.push(o.restaurantId);
       }
       if (restaurantIds.length === 0) return [];
-      const restaurants = await prisma.restaurant.findMany({ where: { id: { in: restaurantIds }, isActive: true } });
+      const restaurants = await prisma.restaurant.findMany({ where: { id: { in: restaurantIds }, ...CUSTOMER_VISIBLE_STORE } });
       const byId = new Map(restaurants.map((r) => [r.id, r]));
       return restaurantIds.map((id) => byId.get(id)).filter((r): r is Restaurant => r != null).slice(0, 10);
     },
@@ -157,7 +162,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       _parent,
       args: { latitude?: number; longitude?: number; page?: number; limit?: number; shopType?: string },
     ) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
       const limit = args.limit ?? 20;
       const page = args.page ?? 1;
@@ -174,7 +179,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       _parent,
       args: { latitude?: number; longitude?: number; page?: number; limit?: number; shopType?: string },
     ) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
       const limit = args.limit ?? 20;
       const page = args.page ?? 1;
@@ -195,7 +200,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       _parent,
       args: { latitude?: number; longitude?: number; radiusKm?: number; limit?: number; shopType?: string },
     ) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
       const limit = args.limit ?? 8;
 
@@ -236,7 +241,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       _parent,
       args: { latitude?: number; longitude?: number; radiusKm?: number; shopType?: string },
     ) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
 
       if (args.latitude != null && args.longitude != null) {
@@ -253,7 +258,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     nearByRestaurantsCuisines: async (_parent, args: { latitude?: number; longitude?: number; shopType?: string }) => {
-      const where: { isActive: boolean; shopTypeId?: string } = { isActive: true };
+      const where: { isActive: boolean; approvalStatus: string; shopTypeId?: string } = { ...CUSTOMER_VISIBLE_STORE };
       if (args.shopType) where.shopTypeId = await resolveShopTypeId(args.shopType);
       const restaurants = await prisma.restaurant.findMany({ where, select: { id: true } });
       const restaurantIds = restaurants.map((r) => r.id);
@@ -291,13 +296,20 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       return prisma.restaurant.findMany({ where: { ownerId: currentUser.id } });
     },
 
-    restaurantsPaginated: async (_parent, args: { page?: number; limit?: number; search?: string }, context) => {
+    restaurantsPaginated: async (
+      _parent,
+      args: { page?: number; limit?: number; search?: string; approvalStatus?: string },
+      context,
+    ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
       const limit = args.limit ?? 10;
       const page = args.page ?? 1;
       const where = {
         ...(currentUser.userType === 'VENDOR' ? { ownerId: currentUser.id } : {}),
         ...(args.search ? { name: { contains: args.search } } : {}),
+        ...(args.approvalStatus && args.approvalStatus !== 'ALL'
+          ? { approvalStatus: args.approvalStatus }
+          : {}),
       };
       const [data, totalCount] = await Promise.all([
         prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit }),
@@ -412,6 +424,10 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const commissionRate =
         input.commissionRate != null ? input.commissionRate : (config?.defaultCommissionRate ?? 20);
 
+      // A store an admin creates is live immediately; one a vendor self-onboards
+      // waits in the approval queue and stays hidden from customers until then.
+      const adminCreated = currentUser.userType === 'ADMIN';
+
       const restaurant = await prisma.restaurant.create({
         data: {
           name: input.name,
@@ -431,6 +447,9 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           slug: slugify(input.name),
           orderPrefix: input.name.slice(0, 3).toUpperCase(),
           ownerId: owner.id,
+          approvalStatus: adminCreated ? 'APPROVED' : 'PENDING',
+          approvedAt: adminCreated ? new Date() : null,
+          approvedById: adminCreated ? currentUser.id : null,
           cuisines: { create: cuisineIds.map((cuisineId) => ({ cuisineId })) },
         },
       });
@@ -439,7 +458,48 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
         await prisma.user.update({ where: { id: owner.id }, data: { userType: 'VENDOR' } });
       }
 
+      await recordAudit(context, {
+        action: 'store.create',
+        targetType: 'Restaurant',
+        targetId: restaurant.id,
+        summary: `Store created: ${restaurant.name} (commission ${commissionRate}%, ${restaurant.approvalStatus})`,
+      });
       return restaurant;
+    },
+
+    setStoreApproval: async (
+      _parent,
+      args: { id: string; status: string; note?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN']);
+      if (!STORE_APPROVAL_STATUSES.includes(args.status)) {
+        throw userInputError(`status must be one of ${STORE_APPROVAL_STATUSES.join(', ')}`);
+      }
+      const existing = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!existing) throw notFoundError('Restaurant not found');
+
+      const approved = args.status === 'APPROVED';
+      const updated = await prisma.restaurant.update({
+        where: { id: args.id },
+        data: {
+          approvalStatus: args.status,
+          approvalNote: args.note ?? null,
+          approvedAt: approved ? new Date() : existing.approvedAt,
+          approvedById: approved ? currentUser.id : existing.approvedById,
+          // A rejected or suspended store must also drop out of every live list.
+          isActive: args.status === 'REJECTED' || args.status === 'SUSPENDED' ? false : existing.isActive,
+        },
+      });
+
+      await recordAudit(context, {
+        action: 'store.approval',
+        targetType: 'Restaurant',
+        targetId: updated.id,
+        summary: `Store ${existing.name}: ${existing.approvalStatus} → ${args.status}`,
+        changes: { note: args.note ?? null },
+      });
+      return updated;
     },
 
     editRestaurant: async (_parent, args: { restaurant: RestaurantProfileInputArgs }, context) => {
@@ -478,7 +538,14 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     deleteRestaurant: async (_parent, args: { id: string }, context) => {
       requireRole(context, ['ADMIN']);
-      return prisma.restaurant.update({ where: { id: args.id }, data: { isActive: false } });
+      const updated = await prisma.restaurant.update({ where: { id: args.id }, data: { isActive: false } });
+      await recordAudit(context, {
+        action: 'store.deactivate',
+        targetType: 'Restaurant',
+        targetId: args.id,
+        summary: `Store deactivated: ${updated.name}`,
+      });
+      return updated;
     },
 
     hardDeleteRestaurant: async (_parent, args: { id: string }, context) => {
@@ -516,9 +583,21 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       });
     },
 
-    updateCommission: (_parent, args: { id: string; commissionRate: number }, context) => {
+    updateCommission: async (_parent, args: { id: string; commissionRate: number }, context) => {
       requireRole(context, ['ADMIN']);
-      return prisma.restaurant.update({ where: { id: args.id }, data: { commissionRate: args.commissionRate } });
+      const before = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      const updated = await prisma.restaurant.update({
+        where: { id: args.id },
+        data: { commissionRate: args.commissionRate },
+      });
+      await recordAudit(context, {
+        action: 'commission.rate.update',
+        targetType: 'Restaurant',
+        targetId: args.id,
+        summary: `Commission rate ${before?.commissionRate ?? '?'}% → ${args.commissionRate}% for ${updated.name}`,
+        changes: { commissionRate: [before?.commissionRate ?? null, args.commissionRate] },
+      });
+      return updated;
     },
 
     updateDeliveryOptions: async (
@@ -649,6 +728,9 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
   Restaurant: {
     _id: (parent: Restaurant) => parent.id,
     unique_restaurant_id: (parent: Restaurant) => parent.id,
+    approvalStatus: (parent: Restaurant) => parent.approvalStatus ?? 'APPROVED',
+    approvalNote: (parent: Restaurant) => parent.approvalNote ?? null,
+    approvedAt: (parent: Restaurant) => parent.approvedAt?.toISOString() ?? null,
     location: (parent: Restaurant) =>
       parent.latitude != null && parent.longitude != null
         ? { coordinates: [parent.longitude, parent.latitude] }

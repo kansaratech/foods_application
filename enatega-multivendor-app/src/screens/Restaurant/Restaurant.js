@@ -791,10 +791,21 @@ const FoodRow = React.memo(function FoodRow({ configuration, currentTheme, item,
               />
               <View style={[styles(currentTheme).flex, { backgroundColor: 'transparent' }]}>
                 <View style={[styles(currentTheme).dealDescription, { backgroundColor: 'transparent' }]}>
-                  <TextDefault textColor={currentTheme.fontMainColor} style={[styles(currentTheme).headerText, { backgroundColor: 'transparent' }]} numberOfLines={1} bolder isRTL>
-                    {item?.title}
-                  </TextDefault>
-                  {item?.description ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: scale(4) }}>
+                    {item?.isCombo && (
+                      <View style={{ backgroundColor: currentTheme.newButtonBackground, borderRadius: scale(4), paddingHorizontal: scale(5), paddingVertical: scale(1) }}>
+                        <TextDefault textColor={currentTheme.themeBackground} style={{ fontSize: scale(9), fontWeight: '800' }}>COMBO</TextDefault>
+                      </View>
+                    )}
+                    <TextDefault textColor={currentTheme.fontMainColor} style={[styles(currentTheme).headerText, { backgroundColor: 'transparent' }]} numberOfLines={1} bolder isRTL>
+                      {item?.title}
+                    </TextDefault>
+                  </View>
+                  {item?.isCombo && item?.comboItems?.length > 0 ? (
+                    <TextDefault style={styles(currentTheme).priceText} small numberOfLines={2} isRTL>
+                      {item.comboItems.map((ci) => `${ci.quantity}× ${ci.title}`).join(' + ')}
+                    </TextDefault>
+                  ) : item?.description ? (
                     <TextDefault style={styles(currentTheme).priceText} small isRTL>
                       {wrapContentAfterWords(item?.description, 5)}
                     </TextDefault>
@@ -803,11 +814,15 @@ const FoodRow = React.memo(function FoodRow({ configuration, currentTheme, item,
                     <TextDefault numberOfLines={1} textColor={currentTheme.fontMainColor} style={styles(currentTheme).priceText} bolder small isRTL>
                       {configuration.currencySymbol} {parseFloat(item?.variations?.[0]?.price ?? 0).toFixed(2)}
                     </TextDefault>
-                    {item?.variations?.[0]?.discounted > 0 && (
+                    {item?.isCombo && item?.compareAtPrice > 0 && item?.compareAtPrice > (item?.variations?.[0]?.price ?? 0) ? (
+                      <TextDefault numberOfLines={1} textColor={pressed ? currentTheme.themeBackground : currentTheme.fontSecondColor} style={styles(currentTheme).priceText} small lineOver isRTL>
+                        {configuration.currencySymbol} {item.compareAtPrice.toFixed(2)}
+                      </TextDefault>
+                    ) : item?.variations?.[0]?.discounted > 0 ? (
                       <TextDefault numberOfLines={1} textColor={pressed ? currentTheme.themeBackground : currentTheme.fontSecondColor} style={styles(currentTheme).priceText} small lineOver isRTL>
                         {configuration.currencySymbol} {(item?.variations?.[0]?.price + item?.variations?.[0]?.discounted).toFixed(2)}
                       </TextDefault>
-                    )}
+                    ) : null}
                   </View>
                 </View>
               </View>

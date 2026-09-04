@@ -267,6 +267,250 @@ if (RID && food && cust) {
   fail('modifyOrder tests', 'no restaurant/menu/customer');
 }
 
+// ---------------------------------------------------------- BATCH B: FINANCE OPS
+console.log('\n# Batch B — store approval');
+{
+  const anyStore = (await gql(`{ restaurants { _id name approvalStatus } }`, {}, admin)).data?.restaurants?.[0];
+  if (anyStore) {
+    anyStore.approvalStatus
+      ? pass('Restaurant.approvalStatus exposed', `${anyStore.name} = ${anyStore.approvalStatus}`)
+      : fail('approvalStatus missing');
+    const orig = anyStore.approvalStatus;
+    const suspended = (await gql(`mutation($id:String!){ setStoreApproval(id:$id, status:"SUSPENDED", note:"verify"){ approvalStatus isActive } }`, { id: anyStore._id }, admin)).data?.setStoreApproval;
+    suspended?.approvalStatus === 'SUSPENDED' && suspended.isActive === false
+      ? pass('setStoreApproval SUSPENDED also deactivates the store')
+      : fail('setStoreApproval suspend wrong', JSON.stringify(suspended));
+    const filtered = (await gql(`{ restaurantsPaginated(approvalStatus:"SUSPENDED", limit:200){ totalCount } }`, {}, admin)).data?.restaurantsPaginated;
+    filtered?.totalCount >= 1 ? pass('restaurantsPaginated filters by approvalStatus') : fail('approval filter', JSON.stringify(filtered));
+    await gql(`mutation($id:String!){ setStoreApproval(id:$id, status:"${orig}"){ approvalStatus } }`, { id: anyStore._id }, admin);
+    await gql(`mutation($id:String!){ updateUserStatus(id:$id, status:"true"){ _id } }`, { id: anyStore._id }, admin).catch(() => {});
+    await gql(`mutation { editRestaurant(restaurant:{ _id:"${anyStore._id}", isAvailable:true }){ _id } }`, {}, admin).catch(() => {});
+  } else fail('store approval', 'no stores');
+}
+
+console.log('\n# Batch B — wallet adjustments');
+{
+  const st = (await gql(`{ restaurants { _id name currentWalletAmount } }`, {}, admin)).data?.restaurants?.[0];
+  if (st) {
+    const before = st.currentWalletAmount;
+    const adj = (await gql(`mutation($id:ID!){ adjustWallet(subjectType:"STORE", subjectId:$id, amount:50, reason:"goodwill", note:"verify"){ _id amount subjectName } }`, { id: st._id }, admin)).data?.adjustWallet;
+    const after = (await gql(`{ restaurant(id:"${st._id}"){ currentWalletAmount } }`, {}, admin)).data?.restaurant?.currentWalletAmount;
+    adj?.amount === 50 && Math.abs(after - before - 50) < 0.01
+      ? pass('adjustWallet credits the store wallet', `₹${before} → ₹${after}`)
+      : fail('adjustWallet wrong', JSON.stringify({ adj, before, after }));
+    await gql(`mutation($id:ID!){ adjustWallet(subjectType:"STORE", subjectId:$id, amount:-50, reason:"correction", note:"undo verify"){ _id } }`, { id: st._id }, admin);
+    const list = (await gql(`{ walletAdjustments(subjectType:"STORE", subjectId:"${st._id}", limit:5){ total adjustments { amount reason } } }`, {}, admin)).data?.walletAdjustments;
+    list?.total >= 2 ? pass('walletAdjustments lists the ledger', `${list.total} rows`) : fail('walletAdjustments list', JSON.stringify(list));
+  } else fail('wallet adjustments', 'no stores');
+}
+
+console.log('\n# Batch B — payout run + CSV');
+{
+  const run = (await gql(`mutation { createPayoutRun(label:"verify run", minAmount:0.01){ _id itemCount grossTotal status items { _id subjectType payeeName amount status } } }`, {}, admin)).data?.createPayoutRun;
+  if (run?._id) {
+    pass('createPayoutRun snapshots payees', `${run.itemCount} items · ₹${run.grossTotal}`);
+    const item = run.items.find((i) => i.status === 'PENDING');
+    if (item) {
+      const paid = (await gql(`mutation($id:ID!){ markPayoutItemPaid(id:$id, method:"upi", reference:"VERIFY123"){ status reference paidAt } }`, { id: item._id }, admin)).data?.markPayoutItemPaid;
+      paid?.status === 'PAID' && paid.reference === 'VERIFY123'
+        ? pass('markPayoutItemPaid settles a line')
+        : fail('markPayoutItemPaid wrong', JSON.stringify(paid));
+    }
+    for (const i of run.items.filter((x) => x.status === 'PENDING' && x._id !== item?._id)) {
+      await gql(`mutation($id:ID!){ skipPayoutItem(id:$id, note:"verify"){ _id } }`, { id: i._id }, admin);
+    }
+    const csv = (await gql(`{ payoutRunCsv(id:"${run._id}") }`, {}, admin)).data?.payoutRunCsv;
+    typeof csv === 'string' && csv.split('\n')[0].startsWith('Payee type,')
+      ? pass('payoutRunCsv returns a CSV', `${csv.split('\n').length} lines`)
+      : fail('payoutRunCsv wrong', String(csv).slice(0, 80));
+    const done = (await gql(`mutation { completePayoutRun(id:"${run._id}"){ status paidTotal } }`, {}, admin)).data?.completePayoutRun;
+    done?.status === 'COMPLETED' ? pass('completePayoutRun closes the run', `₹${done.paidTotal} paid`) : fail('completePayoutRun', JSON.stringify(done));
+  } else pass('createPayoutRun', 'skipped — no payee has a positive wallet');
+}
+
+console.log('\n# Batch B — rider self-deposit');
+{
+  const cashRows2 = (await gql(`{ riderCashOutstanding { rider { _id } outstanding pendingDepositTotal } }`, {}, admin)).data?.riderCashOutstanding || [];
+  const holder = cashRows2.find((r) => r.outstanding > 0);
+  if (holder) {
+    const amt = Math.min(holder.outstanding, 25);
+    const dep = (await gql(`mutation($rid:ID!,$a:Float!){ riderReportDeposit(riderId:$rid, amount:$a, method:"upi", reference:"SELFDEP1"){ _id status amount } }`, { rid: holder.rider._id, a: amt }, admin)).data?.riderReportDeposit;
+    dep?.status === 'PENDING' ? pass('riderReportDeposit creates a PENDING deposit', `₹${dep.amount}`) : fail('riderReportDeposit', JSON.stringify(dep));
+    const seen = (await gql(`{ riderCashOutstanding { rider { _id } pendingDepositTotal } }`, {}, admin)).data?.riderCashOutstanding?.find((r) => r.rider._id === holder.rider._id);
+    seen?.pendingDepositTotal >= amt - 0.01 ? pass('pending deposit shows on riderCashOutstanding') : fail('pending deposit not surfaced', JSON.stringify(seen));
+    if (dep?._id) {
+      const conf = (await gql(`mutation($id:ID!){ confirmRiderCashDeposit(id:$id, approve:true){ status entryCount confirmedAt } }`, { id: dep._id }, admin)).data?.confirmRiderCashDeposit;
+      conf?.status === 'CONFIRMED' ? pass('confirmRiderCashDeposit clears entries') : fail('confirmRiderCashDeposit', JSON.stringify(conf));
+    }
+  } else pass('rider self-deposit', 'skipped — no rider is holding cash');
+}
+
+console.log('\n# Batch B — reconciliation + invoice');
+{
+  const rec = (await gql(`{ reconciliationReport { lines { label ok delta } storeWalletOutstanding pendingRiderDeposits negativeWalletStores } }`, {}, admin)).data?.reconciliationReport;
+  rec?.lines?.length >= 3 && rec.lines.every((l) => l.ok)
+    ? pass('reconciliationReport balances', `${rec.lines.length} checks, all ok`)
+    : (rec?.lines?.length
+        ? fail('reconciliation out of balance', rec.lines.filter((l) => !l.ok).map((l) => `${l.label}: Δ${l.delta}`).join(' | '))
+        : fail('reconciliationReport missing', JSON.stringify(rec)));
+
+  const someBill = (await gql(`{ commissionBills(limit:1){ bills { _id invoiceNumber } } }`, {}, admin)).data?.commissionBills?.bills?.[0];
+  if (someBill?._id) {
+    const inv = (await gql(`query($id:ID!){ commissionBill(id:$id){ bill { invoiceNumber } invoice { invoiceNumber platformName vendorName commissionTotal storeNames } } }`, { id: someBill._id }, admin)).data?.commissionBill;
+    inv?.invoice?.invoiceNumber && inv.invoice.platformName
+      ? pass('commissionBill exposes a printable invoice', inv.invoice.invoiceNumber)
+      : fail('commission invoice missing', JSON.stringify(inv));
+  } else pass('commission invoice', 'skipped — no bills yet');
+}
+
+// ---------------------------------------------------- BATCH C: STORE / PRODUCT / LOCATION
+console.log('\n# Batch C — store documents');
+{
+  const st = (await gql(`{ restaurants { _id name } }`, {}, admin)).data?.restaurants?.[0];
+  if (st) {
+    const up = (await gql(
+      `mutation($id:ID!){ upsertStoreDocument(restaurantId:$id, kind:"GST", number:"29ABCDE1234F1Z5"){ _id kind status } }`,
+      { id: st._id },
+      admin,
+    )).data?.upsertStoreDocument;
+    up?.status === 'PENDING' ? pass('upsertStoreDocument creates a PENDING doc') : fail('upsertStoreDocument', JSON.stringify(up));
+    const queue = (await gql(`{ pendingStoreDocuments(limit:50){ total documents { _id kind } } }`, {}, admin)).data?.pendingStoreDocuments;
+    const mine = queue?.documents?.find((d) => d._id === up?._id);
+    mine ? pass('doc appears in the review queue', `${queue.total} pending`) : fail('doc not in queue');
+    if (up?._id) {
+      const rev = (await gql(`mutation($id:ID!){ reviewStoreDocument(id:$id, status:"VERIFIED", note:"ok"){ status reviewedAt } }`, { id: up._id }, admin)).data?.reviewStoreDocument;
+      rev?.status === 'VERIFIED' && rev.reviewedAt ? pass('reviewStoreDocument verifies it') : fail('reviewStoreDocument', JSON.stringify(rev));
+      await gql(`mutation($id:ID!){ deleteStoreDocument(id:$id) }`, { id: up._id }, admin);
+    }
+    const sum = (await gql(`{ restaurant(id:"${st._id}"){ documentSummary { required submitted verified } } }`, {}, admin)).data?.restaurant?.documentSummary;
+    sum?.required === 4 ? pass('Restaurant.documentSummary', `${sum.submitted}/${sum.required} submitted, ${sum.verified} verified`) : fail('documentSummary', JSON.stringify(sum));
+  } else fail('store documents', 'no stores');
+}
+
+console.log('\n# Batch C — clone menu + out-of-stock');
+{
+  const withMenu = (await gql(`{ restaurants { _id name } }`, {}, admin)).data?.restaurants ?? [];
+  let source = null;
+  for (const r of withMenu) {
+    const rr = (await gql(`{ restaurant(id:"${r._id}"){ categories { _id foods { _id variations { _id } } } } }`, {}, admin)).data?.restaurant;
+    if (rr?.categories?.some((c) => c.foods.length)) { source = { ...r, cats: rr.categories }; break; }
+  }
+  // Target: a throwaway demo store with no menu and no order history (never the
+  // fixtures the order tests above rely on). Clone WITHOUT replace.
+  const target = withMenu.find(
+    (r) => source && r._id !== source._id && /demo|copy/i.test(r.name),
+  ) || withMenu.find((r) => source && r._id !== source._id);
+  if (source && target) {
+    const srcItemCount = source.cats.reduce((s, c) => s + c.foods.length, 0);
+    const before = (await gql(`{ restaurant(id:"${target._id}"){ categories { foods { _id } } } }`, {}, admin)).data?.restaurant;
+    const beforeCount = (before?.categories ?? []).flatMap((c) => c.foods).length;
+    const res = await gql(
+      `mutation($f:ID!,$t:ID!){ cloneMenu(fromRestaurantId:$f, toRestaurantId:$t){ _id } }`,
+      { f: source._id, t: target._id },
+      admin,
+    );
+    if (res.data?.cloneMenu?._id) {
+      const tt = (await gql(`{ restaurant(id:"${target._id}"){ categories { foods { _id title isOutOfStock variations { _id } } } } }`, {}, admin)).data?.restaurant;
+      const all = tt.categories.flatMap((c) => c.foods);
+      all.length - beforeCount >= srcItemCount
+        ? pass('cloneMenu copies every item', `+${all.length - beforeCount} items into ${target.name}`)
+        : fail('cloneMenu item count', `src ${srcItemCount}, target grew by ${all.length - beforeCount}`);
+      const anyFood = all[all.length - 1];
+      if (anyFood) {
+        await gql(`mutation{ updateFoodOutOfStock(id:"${anyFood._id}", restaurant:"${target._id}", categoryId:"x") }`, {}, admin);
+        const after = (await gql(`{ restaurant(id:"${target._id}"){ categories { foods { _id isOutOfStock } } } }`, {}, admin)).data?.restaurant;
+        const flipped = after.categories.flatMap((c) => c.foods).find((f) => f._id === anyFood._id);
+        flipped?.isOutOfStock === true ? pass('updateFoodOutOfStock toggles the flag') : fail('out of stock toggle', JSON.stringify(flipped));
+        await gql(`mutation{ updateFoodOutOfStock(id:"${anyFood._id}", restaurant:"${target._id}", categoryId:"x") }`, {}, admin);
+        if (anyFood.variations?.[0]) {
+          const v = (await gql(`mutation{ updateVariationOutOfStock(id:"${anyFood.variations[0]._id}", restaurant:"${target._id}") }`, {}, admin)).data;
+          v?.updateVariationOutOfStock === true ? pass('updateVariationOutOfStock toggles a variation') : fail('variation toggle', JSON.stringify(v));
+          await gql(`mutation{ updateVariationOutOfStock(id:"${anyFood.variations[0]._id}", restaurant:"${target._id}") }`, {}, admin);
+        }
+      }
+    } else fail('cloneMenu', JSON.stringify(res).slice(0, 160));
+  } else pass('clone menu', 'skipped — need two stores, one with a menu');
+}
+
+console.log('\n# Batch C — store performance + serviceability');
+{
+  const perf = (await gql(`{ storePerformance(limit:5){ total periodStart rows { name orders gmv commissionEarned cancelRate walletBalance } } }`, {}, admin)).data?.storePerformance;
+  perf?.rows?.length ? pass('storePerformance returns rows', `${perf.total} stores`) : fail('storePerformance', JSON.stringify(perf));
+
+  // Somewhere far from every real store (mid-Bay of Bengal) → not serviceable, no bogus nearestArea.
+  const far = (await gql(`{ serviceability(latitude: 15.0, longitude: 88.0){ serviceable nearestArea nearestDistanceKm } }`)).data?.serviceability;
+  far && far.serviceable === false && far.nearestArea === null
+    ? pass('serviceability caps nearest-area noise', 'far point → no nearestArea')
+    : fail('serviceability far point', JSON.stringify(far));
+}
+
+// ------------------------------------------------ BATCH D: PRODUCT / COMBOS / UPSELL
+console.log('\n# Batch D — combos, upsell, required customization');
+{
+  const store = (await gql(`{ restaurants { _id name } }`, {}, admin)).data?.restaurants?.[0];
+  const menu = store && (await gql(`{ restaurant(id:"${store._id}"){ categories { _id foods { _id title } } } }`, {}, admin)).data?.restaurant;
+  const cat = menu?.categories?.find((c) => c.foods.length);
+  if (cat && cat.foods.length >= 2) {
+    const [a, b] = cat.foods;
+    // Combo food referencing two real items + a paired-food upsell.
+    const mk = `mutation($i:FoodInput!){ createFood(foodInput:$i){ _id } }`;
+    const comboInput = {
+      restaurant: store._id,
+      category: cat._id,
+      title: 'Verify Combo ' + Date.now(),
+      description: 'test',
+      isCombo: true,
+      compareAtPrice: 500,
+      comboItems: [
+        { foodId: a._id, quantity: 2 },
+        { foodId: b._id, quantity: 1 },
+      ],
+      pairedFoodIds: [b._id],
+      variations: [{ title: 'Combo', price: 399 }],
+    };
+    const made = await gql(mk, { i: comboInput }, admin);
+    if (made.data?.createFood?._id) {
+      const combos = (await gql(`{ restaurantCombos(restaurantId:"${store._id}"){ _id title isCombo compareAtPrice comboItems { title quantity image } variations { price } } }`, {}, admin)).data?.restaurantCombos;
+      const c = combos?.find((x) => x.title === comboInput.title);
+      c && c.isCombo && c.comboItems.length === 2 && c.comboItems[0].quantity === 2 && c.variations[0].price === 399
+        ? pass('createFood(isCombo) + restaurantCombos', `${c.comboItems.length} items, ₹${c.variations[0].price} (was ₹${c.compareAtPrice})`)
+        : fail('combo create/read', JSON.stringify(c));
+
+      // paired-foods hydrate on the combo
+      const paired = (await gql(`{ restaurant(id:"${store._id}"){ categories { foods { _id title pairedFoods { _id title price } } } } }`, {}, admin))
+        .data?.restaurant?.categories?.flatMap((x) => x.foods)?.find((f) => f.title === comboInput.title);
+      paired?.pairedFoods?.length === 1 ? pass('pairedFoods hydrate with live price') : fail('pairedFoods', JSON.stringify(paired?.pairedFoods));
+
+      // cleanup
+      await gql(`mutation{ deleteFood(id:"${made.data.createFood._id}", restaurant:"${store._id}", categoryId:"${cat._id}") { _id } }`, {}, admin);
+    } else fail('createFood combo', JSON.stringify(made).slice(0, 200));
+
+    // required customization group
+    const addon = await gql(
+      `mutation($i:AddonInput!){ createAddon(addonInput:$i){ _id isRequired quantityMinimum quantityMaximum } }`,
+      { i: { restaurant: store._id, title: 'Verify required group', isRequired: true, quantityMaximum: 1, options: [{ title: 'A', price: 0 }, { title: 'B', price: 10 }] } },
+      admin,
+    );
+    const ad = addon.data?.createAddon;
+    ad?.isRequired === true && ad.quantityMinimum >= 1
+      ? pass('createAddon(isRequired) forces quantityMinimum ≥ 1')
+      : fail('required addon', JSON.stringify(ad));
+    if (ad?._id) await gql(`mutation{ deleteAddon(id:"${ad._id}", restaurant:"${store._id}") }`, {}, admin);
+  } else {
+    pass('combos / upsell', 'skipped — need a category with 2+ items');
+  }
+
+  // C5: a vendor sees only their own stores in storePerformance
+  const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@padharo.local", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
+  if (vTok) {
+    const vp = (await gql(`{ storePerformance(limit:100){ total rows { name } } }`, {}, vTok)).data?.storePerformance;
+    const ap = (await gql(`{ storePerformance(limit:1){ total } }`, {}, admin)).data?.storePerformance;
+    vp && ap && vp.total < ap.total
+      ? pass('storePerformance is vendor-scoped', `vendor sees ${vp.total} of ${ap.total} stores`)
+      : fail('storePerformance vendor scope', JSON.stringify({ vendor: vp?.total, admin: ap?.total }));
+  }
+}
+
 finish();
 
 function finish() {

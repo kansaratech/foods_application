@@ -3,7 +3,8 @@
 // Core
 import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApolloError, useMutation } from '@apollo/client';
+import { ApolloError, useMutation, useQuery } from '@apollo/client';
+import { Dialog } from 'primereact/dialog';
 
 // PrimeReact
 import { FilterMatchMode } from 'primereact/api';
@@ -34,7 +35,10 @@ import {
 import {
   GET_RESTAURANTS_PAGINATED,
   GET_CLONED_RESTAURANTS_PAGINATED,
+  GET_RESTAURANTS,
   HARD_DELETE_RESTAURANT,
+  SET_STORE_APPROVAL,
+  CLONE_MENU,
 } from '@/lib/api/graphql';
 
 // Method
@@ -132,6 +136,48 @@ export default function RestaurantsMain() {
     }
   );
 
+  const [cloneSourceId, setCloneSourceId] = useState('');
+  const [cloneTargetId, setCloneTargetId] = useState('');
+  const [cloneReplace, setCloneReplace] = useState(false);
+  const { data: allStoresData } = useQuery(GET_RESTAURANTS);
+  const allStores = (allStoresData?.restaurants ?? []) as { _id: string; name: string }[];
+
+  const [cloneMenu, { loading: cloning }] = useMutation(CLONE_MENU, {
+    onCompleted: () => {
+      showToast({ type: 'success', title: t('Clone menu'), message: t('Menu cloned'), duration: 2000 });
+      setCloneSourceId('');
+      setCloneTargetId('');
+      setCloneReplace(false);
+    },
+    onError: ({ graphQLErrors, networkError }: ApolloError) =>
+      showToast({
+        type: 'error',
+        title: t('Clone menu'),
+        message: graphQLErrors[0]?.message ?? networkError?.message ?? t('Could not clone the menu'),
+        duration: 3000,
+      }),
+  });
+
+  const [setStoreApproval] = useMutation(SET_STORE_APPROVAL, {
+    onCompleted: (d) => {
+      showToast({
+        type: 'success',
+        title: t('Store approval'),
+        message: `${t('Store is now')} ${t(d?.setStoreApproval?.approvalStatus ?? '')}`,
+        duration: 2000,
+      });
+      refetch();
+    },
+    onError: ({ graphQLErrors, networkError }: ApolloError) => {
+      showToast({
+        type: 'error',
+        title: t('Store approval'),
+        message: graphQLErrors[0]?.message ?? networkError?.message ?? t('Could not update approval'),
+        duration: 2500,
+      });
+    },
+  });
+
   const handleDelete = async (id: string) => {
     try {
       await hardDeleteRestaurant({ variables: { id: id } });
@@ -170,6 +216,33 @@ export default function RestaurantsMain() {
       command: (data?: IRestaurantResponse) => {
         if (data) {
           setDuplicateId(data._id);
+        }
+      },
+    },
+    {
+      label: t('Approve store'),
+      command: (data?: IRestaurantResponse) => {
+        if (data) setStoreApproval({ variables: { id: data._id, status: 'APPROVED' } });
+      },
+    },
+    {
+      label: t('Suspend store'),
+      command: (data?: IRestaurantResponse) => {
+        if (data) setStoreApproval({ variables: { id: data._id, status: 'SUSPENDED' } });
+      },
+    },
+    {
+      label: t('Reject store'),
+      command: (data?: IRestaurantResponse) => {
+        if (data) setStoreApproval({ variables: { id: data._id, status: 'REJECTED' } });
+      },
+    },
+    {
+      label: t('Clone menu from here'),
+      command: (data?: IRestaurantResponse) => {
+        if (data) {
+          setCloneSourceId(data._id);
+          setCloneTargetId('');
         }
       },
     },
@@ -248,6 +321,53 @@ export default function RestaurantsMain() {
           setDuplicateId('');
         }}
       />
+
+      <Dialog
+        header={t('Clone menu')}
+        visible={!!cloneSourceId}
+        onHide={() => setCloneSourceId('')}
+        style={{ width: '26rem', maxWidth: '95vw' }}
+      >
+        <div className="flex flex-col gap-3 text-sm">
+          <p className="text-gray-500">
+            {t('Copy every category, item and add-on from')}{' '}
+            <b>{allStores.find((s) => s._id === cloneSourceId)?.name}</b> {t('into another store.')}
+          </p>
+          <label className="flex flex-col">
+            <span className="mb-1 text-gray-500">{t('Target store')}</span>
+            <select
+              value={cloneTargetId}
+              onChange={(e) => setCloneTargetId(e.target.value)}
+              className="h-10 rounded border border-gray-300 px-2 dark:bg-dark-950"
+            >
+              <option value="">{t('Select')}…</option>
+              {allStores
+                .filter((s) => s._id !== cloneSourceId)
+                .map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.name}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={cloneReplace} onChange={(e) => setCloneReplace(e.target.checked)} />
+            {t('Replace the target menu (deactivates items with order history)')}
+          </label>
+          <button
+            onClick={() =>
+              cloneTargetId &&
+              cloneMenu({
+                variables: { fromRestaurantId: cloneSourceId, toRestaurantId: cloneTargetId, replace: cloneReplace },
+              })
+            }
+            disabled={!cloneTargetId || cloning}
+            className="mt-1 h-10 rounded bg-black text-white disabled:opacity-50"
+          >
+            {cloning ? t('Cloning') : t('Clone menu')}
+          </button>
+        </div>
+      </Dialog>
     </div>
   );
 }

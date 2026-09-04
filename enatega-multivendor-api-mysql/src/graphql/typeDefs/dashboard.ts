@@ -99,7 +99,49 @@ export const dashboardTypeDefs = /* GraphQL */ `
     totalSales: [Float!]!
   }
 
+  type AdminOpsSnapshot {
+    ordersToday: Int!
+    gmvToday: Float!
+    ordersWeek: Int!
+    gmvWeek: Float!
+    activeOrders: Int!
+    activeStores: Int!
+    totalStores: Int!
+    ridersOnline: Int!
+    totalRiders: Int!
+    pendingPayouts: Int!
+    pendingPayoutAmount: Float!
+    unbilledCommission: Float!
+    codCashOutstanding: Float!
+    waitlistUnnotified: Int!
+  }
+
+  type StorePerformanceRow {
+    _id: ID!
+    name: String!
+    approvalStatus: String!
+    orders: Int!
+    delivered: Int!
+    cancelled: Int!
+    cancelRate: Float!
+    gmv: Float!
+    avgOrderValue: Float!
+    commissionEarned: Float!
+    avgRating: Float
+    reviewCount: Int!
+    walletBalance: Float!
+  }
+
+  type StorePerformanceResult {
+    rows: [StorePerformanceRow!]!
+    total: Int!
+    periodStart: String!
+    periodEnd: String!
+  }
+
   extend type Query {
+    adminOpsSnapshot: AdminOpsSnapshot!
+    storePerformance(startDate: String, endDate: String, page: Int, limit: Int, search: String): StorePerformanceResult!
     getDashboardUsersByYear(year: Int!): DashboardUsersByYear!
     getDashboardOrdersByType: [DashboardTypeStat!]!
     getDashboardSalesByType: [DashboardTypeStat!]!

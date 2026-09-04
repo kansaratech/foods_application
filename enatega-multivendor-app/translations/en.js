@@ -696,5 +696,8 @@ export const en = {
   area_na_notify: 'Notify me',
   area_na_email_invalid: 'Enter a valid email address',
   area_na_error: 'Something went wrong. Please try again',
-  area_na_change: 'Select different location'
+  area_na_change: 'Select different location',
+  whatsInThisCombo: 'What is in this combo',
+  youSave: 'You save',
+  outOfStock: 'Out of stock',
 }

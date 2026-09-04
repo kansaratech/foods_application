@@ -28,6 +28,14 @@ export const ROUTES = [
     route: '/management/finance',
   },
   {
+    text: 'Store Performance',
+    route: '/management/store-performance',
+  },
+  {
+    text: 'Store Documents',
+    route: '/management/store-documents',
+  },
+  {
     text: 'Commission Bills',
     route: '/management/commission-bills',
   },
@@ -40,12 +48,40 @@ export const ROUTES = [
     route: '/management/finance-report',
   },
   {
-    text: 'Withdraw Request',
-    route: '/management/withdraw-requests',
+    text: 'Shop Type',
+    route: '/management/shop-types',
+  },
+  {
+    text: 'Waitlist',
+    route: '/management/waitlist',
   },
   {
     text: 'Notification',
     route: '/management/notifications',
+  },
+  {
+    text: 'Audit Logs',
+    route: '/audit-logs',
+  },
+  {
+    text: 'Zone',
+    route: '/zone',
+  },
+  {
+    text: 'Dispatch',
+    route: '/dispatch',
+  },
+  {
+    text: 'Withdraw Request',
+    route: '/wallet/withdraw-requests',
+  },
+  {
+    text: 'Transaction History',
+    route: '/wallet/transaction-history',
+  },
+  {
+    text: 'Earnings',
+    route: '/wallet/earnings',
   },
   {
     text: 'Vendors',

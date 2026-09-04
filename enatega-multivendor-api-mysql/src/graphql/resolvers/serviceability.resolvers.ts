@@ -11,6 +11,12 @@ import { distanceKm } from '../../utils/geo';
 // restaurant.resolvers.ts and the web restaurant out-of-range banner.
 const DEFAULT_DELIVERY_RADIUS_KM = 60;
 
+// Beyond this, "your nearest store is in X" is noise, not a signal — a visitor
+// hundreds of km away just gets "not available, join the waitlist". Keeps stale
+// out-of-region seed stores (e.g. the old `ahm-*` set) from claiming to be the
+// nearest area for someone in a completely different city.
+const MAX_NEAREST_KM = 150;
+
 interface JoinWaitlistArgs {
   input: {
     email?: string | null;
@@ -27,7 +33,7 @@ export const serviceabilityResolvers: IResolvers<unknown, GraphQLContext> = {
     serviceability: async (_parent, args: { latitude: number; longitude: number }) => {
       const { latitude, longitude } = args;
       const stores = await prisma.restaurant.findMany({
-        where: { isActive: true },
+        where: { isActive: true, approvalStatus: 'APPROVED' },
         select: { name: true, city: true, latitude: true, longitude: true, deliveryDistance: true },
       });
 
@@ -39,7 +45,7 @@ export const serviceabilityResolvers: IResolvers<unknown, GraphQLContext> = {
         const dist = distanceKm(latitude, longitude, s.latitude, s.longitude);
         const reach = s.deliveryDistance && s.deliveryDistance > 0 ? s.deliveryDistance : DEFAULT_DELIVERY_RADIUS_KM;
         if (dist <= reach) coveringCount += 1;
-        if (!nearest || dist < nearest.dist) {
+        if (dist <= MAX_NEAREST_KM && (!nearest || dist < nearest.dist)) {
           nearest = { area: s.city || s.name, dist };
         }
       }

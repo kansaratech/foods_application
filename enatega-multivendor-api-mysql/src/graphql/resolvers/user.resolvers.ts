@@ -10,6 +10,7 @@ import {
   signAccessToken,
 } from '../../services/auth.service';
 import { userInputError } from '../../utils/errors';
+import { recordAudit } from '../../utils/audit';
 
 function favouriteList(user: User): string[] {
   return Array.isArray(user.favouriteRestaurantIds) ? (user.favouriteRestaurantIds as string[]) : [];
@@ -253,10 +254,17 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!currentUser.password || !(await comparePassword(args.oldPassword, currentUser.password))) {
         throw userInputError('Old password is incorrect');
       }
+      if (!args.newPassword || args.newPassword.length < 8) {
+        throw userInputError('New password must be at least 8 characters');
+      }
       await prisma.user.update({
         where: { id: currentUser.id },
-        data: { password: await hashPassword(args.newPassword) },
+        // Bump tokenVersion so any other logged-in session is invalidated.
+        data: { password: await hashPassword(args.newPassword), tokenVersion: { increment: 1 } },
       });
+      if (currentUser.userType === 'ADMIN' || currentUser.userType === 'STAFF') {
+        await recordAudit(context, { action: 'account.password.change', summary: `${currentUser.email} changed their password` });
+      }
       return true;
     },
 

@@ -114,6 +114,11 @@ export default function MakeSidebar() {
           isParent: false,
         },
         {
+          text: t('Combos'),
+          route: '/admin/store/product-management/combos',
+          isParent: false,
+        },
+        {
           text: t('Categories'),
           route: '/admin/store/product-management/category',
           isParent: false,

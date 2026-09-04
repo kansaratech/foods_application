@@ -822,12 +822,17 @@ export default function RestaurantDetailsScreen() {
                       }`}
                       onClick={() => handleRestaurantClick(meal)}
                     >
-                      {(meal.badge || (storeOfferPct && !meal.isOutOfStock)) && (
+                      {(meal.badge ||
+                        meal.isCombo ||
+                        (storeOfferPct && !meal.isOutOfStock)) && (
                         <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+                          {meal.isCombo && (
+                            <Badge variant="offer">{t("combo_label")}</Badge>
+                          )}
                           {meal.badge && (
                             <Badge variant="festive">{meal.badge}</Badge>
                           )}
-                          {storeOfferPct && !meal.isOutOfStock && (
+                          {storeOfferPct && !meal.isOutOfStock && !meal.isCombo && (
                             <Badge variant="offer">
                               {t("offer_percent_off", { pct: storeOfferPct })}
                             </Badge>
@@ -851,12 +856,26 @@ export default function RestaurantDetailsScreen() {
                           {meal.title}
                         </h3>
                         <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-gray-400">
-                          {meal.description}
+                          {meal.isCombo && meal.comboItems?.length
+                            ? meal.comboItems
+                                .map((ci) => `${ci.quantity}× ${ci.title}`)
+                                .join(" + ")
+                            : meal.description}
                         </p>
                         <div className="mt-auto flex items-center justify-between pt-2">
-                          <span className="text-[15px] font-black text-[#8c1d40] dark:text-primary-color">
-                            {CURRENCY_SYMBOL}
-                            {meal.variations[0].price}
+                          <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#8c1d40] dark:text-primary-color">
+                            <span>
+                              {CURRENCY_SYMBOL}
+                              {meal.variations[0].price}
+                            </span>
+                            {meal.isCombo &&
+                              meal.compareAtPrice &&
+                              meal.compareAtPrice > meal.variations[0].price && (
+                                <span className="text-[11px] font-semibold text-slate-400 line-through">
+                                  {CURRENCY_SYMBOL}
+                                  {meal.compareAtPrice}
+                                </span>
+                              )}
                           </span>
                           {meal.isOutOfStock && (
                             <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">

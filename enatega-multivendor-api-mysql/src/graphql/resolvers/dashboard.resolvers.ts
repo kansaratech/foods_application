@@ -105,6 +105,139 @@ async function storeDetailsForVendor(vendorId: string, range: { gte: Date; lte: 
 
 export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
+    adminOpsSnapshot: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
+
+      const [
+        ordersDay,
+        ordersWeek,
+        activeOrders,
+        activeStores,
+        totalStores,
+        ridersOnline,
+        totalRiders,
+        pendingPayouts,
+        unbilled,
+        openCash,
+        waitlist,
+      ] = await Promise.all([
+        prisma.order.findMany({ where: { createdAt: { gte: startOfDay } }, select: { orderAmount: true } }),
+        prisma.order.findMany({ where: { createdAt: { gte: startOfWeek } }, select: { orderAmount: true } }),
+        prisma.order.count({ where: { orderStatus: { in: ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'] } } }),
+        prisma.restaurant.count({ where: { isActive: true, isAvailable: true } }),
+        prisma.restaurant.count(),
+        prisma.riderProfile.count({ where: { available: true } }),
+        prisma.user.count({ where: { userType: 'RIDER' } }),
+        prisma.withdrawRequest.findMany({ where: { status: 'PENDING' }, select: { requestAmount: true } }),
+        prisma.commissionRecord.findMany({ where: { billId: null, selfCollected: false }, select: { commissionAmount: true } }),
+        prisma.riderCashEntry.findMany({ where: { remittanceId: null }, select: { owedToPlatform: true } }),
+        prisma.waitlistEntry.count({ where: { notified: false } }),
+      ]);
+
+      const sum = (arr: { [k: string]: number }[], k: string) =>
+        Math.round(arr.reduce((s, r) => s + (r[k] ?? 0), 0) * 100) / 100;
+
+      return {
+        ordersToday: ordersDay.length,
+        gmvToday: sum(ordersDay, 'orderAmount'),
+        ordersWeek: ordersWeek.length,
+        gmvWeek: sum(ordersWeek, 'orderAmount'),
+        activeOrders,
+        activeStores,
+        totalStores,
+        ridersOnline,
+        totalRiders,
+        pendingPayouts: pendingPayouts.length,
+        pendingPayoutAmount: sum(pendingPayouts, 'requestAmount'),
+        unbilledCommission: sum(unbilled, 'commissionAmount'),
+        codCashOutstanding: sum(openCash, 'owedToPlatform'),
+        waitlistUnnotified: waitlist,
+      };
+    },
+
+    storePerformance: async (
+      _parent,
+      args: { startDate?: string; endDate?: string; page?: number; limit?: number; search?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const now = new Date();
+      const start = args.startDate
+        ? new Date(args.startDate)
+        : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+      const end = args.endDate ? new Date(args.endDate) : now;
+      end.setUTCHours(23, 59, 59, 999);
+
+      const limit = args.limit ?? 20;
+      const page = args.page ?? 1;
+      const search = args.search?.trim();
+      // A vendor (incl. a store-app login, which is the owner USER) only sees
+      // their own stores.
+      const scope = currentUser.userType === 'VENDOR' ? { ownerId: currentUser.id } : {};
+      const where = { ...scope, ...(search ? { name: { contains: search } } : {}) };
+
+      const [stores, total] = await Promise.all([
+        prisma.restaurant.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.restaurant.count({ where }),
+      ]);
+      const ids = stores.map((s) => s.id);
+
+      const [orders, commissionAgg, reviewAgg] = await Promise.all([
+        prisma.order.findMany({
+          where: { restaurantId: { in: ids }, createdAt: { gte: start, lte: end } },
+          select: { restaurantId: true, orderAmount: true, orderStatus: true },
+        }),
+        prisma.commissionRecord.groupBy({
+          by: ['restaurantId'],
+          where: { restaurantId: { in: ids }, orderDeliveredAt: { gte: start, lte: end } },
+          _sum: { commissionAmount: true },
+        }),
+        prisma.review.groupBy({
+          by: ['restaurantId'],
+          where: { restaurantId: { in: ids } },
+          _avg: { rating: true },
+          _count: { _all: true },
+        }),
+      ]);
+
+      const commissionByStore = new Map(commissionAgg.map((c) => [c.restaurantId, c._sum.commissionAmount ?? 0]));
+      const reviewByStore = new Map(reviewAgg.map((r) => [r.restaurantId, r]));
+      const round2 = (n: number) => Math.round(n * 100) / 100;
+
+      const rows = stores.map((s) => {
+        const so = orders.filter((o) => o.restaurantId === s.id);
+        const delivered = so.filter((o) => o.orderStatus === 'DELIVERED').length;
+        const cancelled = so.filter((o) => o.orderStatus === 'CANCELLED').length;
+        const gmv = so.reduce((sum, o) => sum + o.orderAmount, 0);
+        const rev = reviewByStore.get(s.id);
+        return {
+          _id: s.id,
+          name: s.name,
+          approvalStatus: s.approvalStatus ?? 'APPROVED',
+          orders: so.length,
+          delivered,
+          cancelled,
+          cancelRate: so.length ? round2((cancelled / so.length) * 100) : 0,
+          gmv: round2(gmv),
+          avgOrderValue: so.length ? round2(gmv / so.length) : 0,
+          commissionEarned: round2(commissionByStore.get(s.id) ?? 0),
+          avgRating: rev?._avg.rating != null ? round2(rev._avg.rating) : null,
+          reviewCount: rev?._count._all ?? 0,
+          walletBalance: round2(s.currentWalletAmount),
+        };
+      });
+
+      return { rows, total, periodStart: start.toISOString(), periodEnd: end.toISOString() };
+    },
+
     getDashboardUsersByYear: async (_parent, args: { year: number }, context) => {
       requireRole(context, ['ADMIN']);
       const { year } = args;

@@ -122,6 +122,24 @@ export const restaurantFragment = gql`
         title
         description
         subCategory
+        isOutOfStock
+        isCombo
+        compareAtPrice
+        comboItems {
+          foodId
+          variationId
+          title
+          quantity
+          image
+          isOutOfStock
+        }
+        pairedFoods {
+          _id
+          title
+          image
+          price
+          isOutOfStock
+        }
         variations {
           _id
           title
@@ -150,6 +168,7 @@ export const restaurantFragment = gql`
       description
       quantityMinimum
       quantityMaximum
+      isRequired
     }
     reviewData {
       reviews {

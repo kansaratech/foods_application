@@ -1,10 +1,19 @@
 // Core
-import { useEffect } from "react";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  RefreshControl,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import ReactNativeModal from "react-native-modal";
 
 // GraphQL
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { RIDER_CASH_SUMMARY } from "@/lib/apollo/queries";
+import { RIDER_REPORT_DEPOSIT } from "@/lib/apollo/mutations/withdraw-request.mutation";
 
 // Hooks
 import { useApptheme } from "@/lib/context/global/theme.context";
@@ -12,7 +21,7 @@ import { useUserContext } from "@/lib/context/global/user.context";
 import { useTranslation } from "react-i18next";
 
 // Components
-import { NoRecordFound } from "@/lib/ui/useable-components";
+import { FlashMessageComponent, NoRecordFound } from "@/lib/ui/useable-components";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
 
 const money = (n: number) => `₹${(n ?? 0).toFixed(2)}`;
@@ -30,12 +39,41 @@ export default function CashMain() {
     fetchPolicy: "cache-and-network",
   });
 
+  const [showReport, setShowReport] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("upi");
+  const [reference, setReference] = useState("");
+
+  const [reportDeposit, { loading: reporting }] = useMutation(RIDER_REPORT_DEPOSIT, {
+    onCompleted: () => {
+      FlashMessageComponent({ message: t("Deposit reported — waiting for admin to confirm") });
+      setShowReport(false);
+      setAmount("");
+      setReference("");
+      refetch();
+    },
+    onError: (e) =>
+      FlashMessageComponent({
+        message: e.message || e.graphQLErrors?.[0]?.message || t("Something went wrong"),
+      }),
+  });
+
   useEffect(() => {
     if (userId) refetch();
   }, [userId]);
 
   const s = data?.riderCashSummary;
   const openEntries = (s?.entries ?? []).filter((e: { remitted: boolean }) => !e.remitted);
+  const pendingDeposit = s?.pendingDepositTotal ?? 0;
+
+  const submitReport = () => {
+    const value = parseFloat(amount);
+    if (Number.isNaN(value) || value <= 0) {
+      FlashMessageComponent({ message: t("Enter the amount you deposited") });
+      return;
+    }
+    reportDeposit({ variables: { amount: value, method, reference: reference || null } });
+  };
 
   if (loading && !s) return <SpinnerComponent />;
 
@@ -87,6 +125,30 @@ export default function CashMain() {
             </Text>
           </View>
         )}
+      </View>
+
+      {/* Report a deposit */}
+      <View className="mx-4 mb-2">
+        {pendingDeposit > 0 && (
+          <Text
+            className="text-center text-[12px] mb-2"
+            style={{ color: appTheme.secondaryTextColor }}
+          >
+            {money(pendingDeposit)} {t("reported, waiting for admin to confirm")}
+          </Text>
+        )}
+        <TouchableOpacity
+          onPress={() => setShowReport(true)}
+          disabled={(s?.outstanding ?? 0) <= 0}
+          className="p-3 rounded-lg items-center"
+          style={{
+            backgroundColor: (s?.outstanding ?? 0) > 0 ? appTheme.primary : appTheme.borderLineColor,
+          }}
+        >
+          <Text className="font-semibold text-[14px]" style={{ color: appTheme.white }}>
+            {t("I deposited cash")}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Wallet vs held */}
@@ -196,14 +258,22 @@ export default function CashMain() {
           </Text>
           <View style={{ backgroundColor: appTheme.themeBackground }}>
             {s.remittances.map(
-              (r: { _id: string; createdAt: string; method: string | null; entryCount: number; amount: number }) => (
+              (r: {
+                _id: string;
+                createdAt: string;
+                method: string | null;
+                entryCount: number;
+                amount: number;
+                status?: string;
+              }) => (
                 <View
                   key={r._id}
                   className="flex-row justify-between items-center px-5 py-3 border-b-[0.5px]"
                   style={{ borderColor: appTheme.borderLineColor }}
                 >
                   <Text className="text-[13px]" style={{ color: appTheme.secondaryTextColor }}>
-                    {day(r.createdAt)} · {r.method || t("cash")} · {r.entryCount} {t("deliveries")}
+                    {day(r.createdAt)} · {r.method || t("cash")}
+                    {r.status && r.status !== "CONFIRMED" ? ` · ${t(r.status)}` : ""}
                   </Text>
                   <Text className="font-semibold text-[14px]" style={{ color: appTheme.fontMainColor }}>
                     {money(r.amount)}
@@ -216,6 +286,68 @@ export default function CashMain() {
       )}
 
       <View className="h-10" />
+
+      <ReactNativeModal
+        isVisible={showReport}
+        onBackdropPress={() => setShowReport(false)}
+        avoidKeyboard
+      >
+        <View className="p-5 rounded-lg" style={{ backgroundColor: appTheme.themeBackground }}>
+          <Text className="font-semibold text-[16px] mb-3" style={{ color: appTheme.fontMainColor }}>
+            {t("I deposited cash")}
+          </Text>
+          <Text className="text-[12px] mb-1" style={{ color: appTheme.secondaryTextColor }}>
+            {t("Amount")} (₹) — {t("you owe")} {money(s?.outstanding ?? 0)}
+          </Text>
+          <TextInput
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="numeric"
+            placeholder={money(s?.outstanding ?? 0)}
+            placeholderTextColor={appTheme.secondaryTextColor}
+            className="border rounded px-3 py-2 mb-3"
+            style={{ borderColor: appTheme.borderLineColor, color: appTheme.fontMainColor }}
+          />
+          <View className="flex-row gap-2 mb-3">
+            {["upi", "bank", "cash"].map((m) => (
+              <TouchableOpacity
+                key={m}
+                onPress={() => setMethod(m)}
+                className="px-3 py-1 rounded-full border"
+                style={{
+                  borderColor: appTheme.borderLineColor,
+                  backgroundColor: method === m ? appTheme.primary : "transparent",
+                }}
+              >
+                <Text
+                  className="text-[12px] capitalize"
+                  style={{ color: method === m ? "#fff" : appTheme.fontMainColor }}
+                >
+                  {m}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TextInput
+            value={reference}
+            onChangeText={setReference}
+            placeholder={t("Reference / UPI txn no. (optional)")}
+            placeholderTextColor={appTheme.secondaryTextColor}
+            className="border rounded px-3 py-2 mb-4"
+            style={{ borderColor: appTheme.borderLineColor, color: appTheme.fontMainColor }}
+          />
+          <TouchableOpacity
+            onPress={submitReport}
+            disabled={reporting}
+            className="p-3 rounded-lg items-center"
+            style={{ backgroundColor: appTheme.primary, opacity: reporting ? 0.6 : 1 }}
+          >
+            <Text className="font-semibold text-[14px]" style={{ color: "#fff" }}>
+              {t("Submit")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ReactNativeModal>
     </ScrollView>
   );
 }

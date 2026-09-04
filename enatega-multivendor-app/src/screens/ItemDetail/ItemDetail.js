@@ -391,6 +391,26 @@ function ItemDetail(props) {
               {food?.description}
             </Text>
             <HeadingComponent title={food?.title} price={calculatePrice()} discountedPrice={calculateDiscountedPrice()} />
+            {food?.isCombo && food?.comboItems?.length > 0 && (
+              <View style={{ width: '90%', alignSelf: 'center', marginTop: scale(8), backgroundColor: currentTheme.themeBackground, borderRadius: scale(10), padding: scale(12), borderWidth: 1, borderColor: currentTheme.lightHorizontalLine }}>
+                <Text style={{ marginBottom: scale(6), color: currentTheme.fontSecondColor, fontWeight: '700', fontSize: scale(11), textTransform: 'uppercase' }}>
+                  {t('whatsInThisCombo')}
+                </Text>
+                {food.comboItems.map((ci, i) => (
+                  <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: scale(2) }}>
+                    <Text style={{ color: currentTheme.fontMainColor, fontSize: scale(12) }}>{ci.quantity}× {ci.title}</Text>
+                    {ci.isOutOfStock && (
+                      <Text style={{ color: currentTheme.textErrorColor, fontSize: scale(10), fontWeight: '700' }}>{t('outOfStock')}</Text>
+                    )}
+                  </View>
+                ))}
+                {food?.compareAtPrice > 0 && food.compareAtPrice > (selectedVariation?.price ?? 0) && (
+                  <Text style={{ marginTop: scale(6), color: '#16a34a', fontWeight: '700', fontSize: scale(12) }}>
+                    {t('youSave')} ₹{(food.compareAtPrice - (selectedVariation?.price ?? 0)).toFixed(0)}
+                  </Text>
+                )}
+              </View>
+            )}
           </View>
           <View style={[styles(currentTheme).subContainer]}>
             <View>

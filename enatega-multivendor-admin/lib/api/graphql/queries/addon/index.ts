@@ -9,6 +9,7 @@ export const GET_ADDONS_BY_RESTAURANT_ID = gql`
         title
         description
         quantityMinimum
+        isRequired
         quantityMaximum
         options {
           _id
@@ -39,6 +40,7 @@ export const GET_RESTAURANT_ADDONS_PAGINATED = gql`
         title
         description
         quantityMinimum
+        isRequired
         quantityMaximum
         options {
           _id

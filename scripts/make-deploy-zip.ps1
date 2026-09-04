@@ -121,7 +121,7 @@ docker compose $E exec -T api node -e '
     .then(d=>{const m=(d.errors&&d.errors[0]&&d.errors[0].message)||"";
       // field exists if the error is anything OTHER than a "Cannot query field" schema error
       console.log((/Cannot query field/.test(m) ? "  MISSING " : "  OK   ") + n);});
-  Promise.all(["commissionPeriodPreview","riderCashOutstanding","platformFinanceReport"].map(q));
+  Promise.all(["commissionPeriodPreview","riderCashOutstanding","platformFinanceReport","payoutRuns","reconciliationReport","walletAdjustments","pendingStoreDocuments","storePerformance"].map(q));
 '
 
 echo "== done. First deploy? add the Maps key + demo data - see PADHARO_DEPLOYMENT.md section 8 =="

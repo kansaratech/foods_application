@@ -6,6 +6,7 @@ import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 import { riderOutstandingCash } from '../../utils/commission';
+import { recordAudit } from '../../utils/audit';
 
 const nanoid = customAlphabet('0123456789', 8);
 type CurrentUser = { id: string; userType: string };
@@ -460,6 +461,15 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       const updated = await prisma.withdrawRequest.update({ where: { id: args.id }, data: { status: args.status } });
+      await recordAudit(context, {
+        action: `payout.${args.status.toLowerCase()}`,
+        targetType: 'WithdrawRequest',
+        targetId: args.id,
+        summary: `Payout ${existing.status} → ${args.status} · ₹${existing.requestAmount.toFixed(2)} to ${
+          existing.riderId ? 'rider' : 'store'
+        }`,
+        changes: { status: [existing.status, args.status] },
+      });
       return { success: true, message: 'Withdraw request updated', data: updated };
     },
   },

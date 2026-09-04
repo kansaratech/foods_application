@@ -15,8 +15,10 @@ export interface AuditLog {
         email: string;
     };
     action: string;
+    actorType?: string | null;
     targetType: string;
     targetId: string;
+    summary?: string | null;
     changes: JSON;
 }
 
@@ -67,9 +69,11 @@ const AuditLogCard: React.FC<AuditLogCardProps> = ({ log, isLast }) => {
             <div className="ml-4">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="font-bold text-lg text-gray-800 dark:text-white">API: {log.action}</p>
+                        <p className="font-bold text-base text-gray-800 dark:text-white">{log.summary || log.action}</p>
+                        <p className="text-xs text-gray-400 dark:text-white font-mono">{log.action}</p>
                         <p className="text-sm text-gray-500 dark:text-white">
-                            {t("Performed_by")} <span className="font-semibold dark:text-white text-gray-700">{log.admin.email}</span>
+                            {t("Performed_by")} <span className="font-semibold dark:text-white text-gray-700">{log.admin?.email || '—'}</span>
+                            {log.actorType ? ` (${log.actorType})` : ''}
                         </p>
                     </div>
                     <div className="text-right">

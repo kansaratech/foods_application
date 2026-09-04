@@ -130,6 +130,13 @@ model Restaurant {
   commissionRate         Float    @default(0)
   isActive               Boolean  @default(true)
   isAvailable            Boolean  @default(true)
+  // Onboarding gate. A store created by a VENDOR starts PENDING and is invisible
+  // to customers until an admin approves it. Stores created by an ADMIN, and
+  // every store that predates this column, are APPROVED.
+  approvalStatus         String   @default("APPROVED") // PENDING | APPROVED | REJECTED | SUSPENDED
+  approvalNote           String?  @db.Text
+  approvedAt             DateTime?
+  approvedById           String?
   latitude               Float?
   longitude              Float?
   shopTypeId             String?
@@ -163,12 +170,38 @@ model Restaurant {
   reviews          Review[]
   withdrawRequests WithdrawRequest[]
   transactions     Transaction[]
+  documents        StoreDocument[]
   clonedFrom       Restaurant?         @relation("RestaurantClone", fields: [clonedFromId], references: [id])
   clones           Restaurant[]        @relation("RestaurantClone")
 
   @@index([ownerId])
   @@index([shopTypeId])
   @@index([clonedFromId])
+}
+
+// A compliance document a store submits and an admin verifies. Not a launch
+// blocker (a store can trade with docs still PENDING) — it's a records + review
+// workflow. One row per (store, kind).
+model StoreDocument {
+  id           String   @id @default(cuid())
+  restaurantId String
+  kind         String   // FSSAI | GST | PAN | BANK
+  number       String?  // licence / registration / account number
+  fileUrl      String?  // uploaded scan (Cloudinary URL)
+  holderName   String?  // BANK: account holder name
+  extra        Json?    // BANK: { ifsc, bankName }; FSSAI: { expiryDate }
+  status       String   @default("PENDING") // PENDING | VERIFIED | REJECTED
+  reviewNote   String?  @db.Text
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, kind])
+  @@index([restaurantId])
+  @@index([status])
 }
 
 model RestaurantCuisine {
@@ -208,6 +241,15 @@ model Food {
   badge         String?  // e.g. "Diwali Special" — shown as a pill on menu cards
   isActive      Boolean  @default(true)
   isOutOfStock  Boolean  @default(false)
+  // Combo / meal-deal: a Food with `isCombo` is a bundle sold at one price
+  // (its single Variation). `comboItems` lists what's inside, for the customer
+  // card and the kitchen ticket: [{ foodId, variationId?, title, quantity }].
+  isCombo       Boolean  @default(false)
+  comboItems    Json?
+  compareAtPrice Float?  // "worth ₹X" strike-through on combo cards
+  // Merchant-curated "frequently bought together" — array of Food ids shown as
+  // an upsell in the cart.
+  pairedFoodIds Json?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -243,6 +285,9 @@ model Addon {
   description     String?
   quantityMinimum Int     @default(0)
   quantityMaximum Int     @default(1)
+  // Explicit "customer must choose from this group" flag (Swiggy-style required
+  // customization). Kept in sync with quantityMinimum on save.
+  isRequired      Boolean @default(false)
 
   restaurant      Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   options         Option[]
@@ -363,6 +408,11 @@ model Configuration {
   defaultCommissionRate  Float   @default(20)
   commissionBillingCycle String  @default("MONTHLY") // MONTHLY | YEARLY
 
+  // Billing entity shown on vendor commission invoices.
+  platformLegalName      String?
+  platformAddress        String? @db.Text
+  platformGstin          String?
+
   // Max undeposited COD cash a rider may hold before the app stops giving them
   // cash orders (Swiggy/Zomato-style cash limit).
   riderCashLimit         Float   @default(3000)
@@ -416,6 +466,7 @@ model CommissionBill {
   grossFoodSubtotal Float    @default(0)
   commissionTotal   Float    @default(0)
   status            String   @default("PENDING") // PENDING | PAID | WAIVED
+  invoiceNumber     String?  @unique
   paidAt            DateTime?
   paidAmount        Float?
   note              String?  @db.Text
@@ -424,6 +475,27 @@ model CommissionBill {
 
   @@index([vendorId])
   @@index([status])
+}
+
+// Records money- and access-level admin actions: who changed a commission
+// rate, marked a bill paid, settled a payout, approved a store, edited config,
+// touched staff / permissions. Written explicitly by `recordAudit()` at those
+// mutations — not a blanket middleware.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorEmail String?
+  actorType  String?
+  action     String
+  targetType String?
+  targetId   String?
+  summary    String?  @db.Text
+  changes    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
 
 // COD cash a rider physically collected on delivery. The rider keeps their
@@ -454,11 +526,88 @@ model RiderCashRemittance {
   amount       Float
   entryCount   Int      @default(0)
   method       String?  // cash | bank | upi
+  reference    String?  // UPI ref / deposit slip no.
   note         String?  @db.Text
   recordedById String?
+  // A rider self-reports a deposit as PENDING; an admin CONFIRMs it, and only
+  // then are the RiderCashEntry rows cleared. Admin-entered remittances are
+  // CONFIRMED immediately.
+  status       String   @default("CONFIRMED") // PENDING | CONFIRMED | REJECTED
+  confirmedAt  DateTime?
   createdAt    DateTime @default(now())
 
   @@index([riderId])
+  @@index([status])
+}
+
+// A manual credit (+) or debit (-) an admin applies to a store or rider wallet:
+// a goodwill credit, a chargeback, correcting a bad payout, a penalty. Moves the
+// wallet immediately; the row is the paper trail. `runItemId` is set when a
+// payout run consumes it into a statement line.
+model WalletAdjustment {
+  id           String   @id @default(cuid())
+  subjectType  String   // STORE | RIDER
+  restaurantId String?
+  riderId      String?
+  amount       Float    // signed: positive = credit, negative = debit
+  reason       String   // slug: goodwill | chargeback | correction | penalty | other
+  note         String?  @db.Text
+  createdById  String?
+  createdByEmail String?
+  runItemId    String?
+  createdAt    DateTime @default(now())
+
+  @@index([restaurantId])
+  @@index([riderId])
+  @@index([runItemId])
+}
+
+// A batch of payouts an admin settles together (a weekly run). Snapshots each
+// payee's wallet at run time into PayoutRunItem rows; the admin then marks each
+// line paid with a bank/UPI reference.
+model PayoutRun {
+  id          String   @id @default(cuid())
+  label       String   // e.g. "Week of 1 Sep 2026"
+  periodStart DateTime
+  periodEnd   DateTime
+  status      String   @default("OPEN") // OPEN | COMPLETED
+  itemCount   Int      @default(0)
+  grossTotal  Float    @default(0)
+  paidTotal   Float    @default(0)
+  note        String?  @db.Text
+  createdById String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime @updatedAt
+
+  items PayoutRunItem[]
+
+  @@index([status])
+}
+
+model PayoutRunItem {
+  id            String   @id @default(cuid())
+  runId         String
+  subjectType   String   // STORE | RIDER
+  restaurantId  String?
+  riderId       String?
+  payeeName     String
+  walletBalance Float    // currentWalletAmount at snapshot time
+  heldCash      Float    @default(0) // rider undeposited COD held against the wallet
+  amount        Float    // what we actually pay out this run (wallet - heldCash, clamped >=0)
+  status        String   @default("PENDING") // PENDING | PAID | SKIPPED
+  method        String?  // bank | upi | cash
+  reference     String?
+  note          String?  @db.Text
+  paidAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  run PayoutRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([restaurantId])
+  @@index([riderId])
+  @@index([status])
 }
 
 model Order {

@@ -62,8 +62,45 @@ export const SAVE_COMMISSION_CONFIGURATION = gql`
       defaultCommissionRate
       commissionBillingCycle
       riderCashLimit
+      platformLegalName
+      platformAddress
+      platformGstin
       defaultLatitude
       defaultLongitude
+    }
+  }
+`;
+
+export const RIDER_REPORT_DEPOSIT = gql`
+  mutation RiderReportDeposit($riderId: ID, $amount: Float!, $method: String, $reference: String, $note: String) {
+    riderReportDeposit(riderId: $riderId, amount: $amount, method: $method, reference: $reference, note: $note) {
+      _id
+      amount
+      status
+    }
+  }
+`;
+
+export const CONFIRM_RIDER_CASH_DEPOSIT = gql`
+  mutation ConfirmRiderCashDeposit($id: ID!, $approve: Boolean!, $note: String) {
+    confirmRiderCashDeposit(id: $id, approve: $approve, note: $note) {
+      _id
+      status
+      amount
+      entryCount
+      confirmedAt
+    }
+  }
+`;
+
+export const SET_STORE_APPROVAL = gql`
+  mutation SetStoreApproval($id: String!, $status: String!, $note: String) {
+    setStoreApproval(id: $id, status: $status, note: $note) {
+      _id
+      approvalStatus
+      approvalNote
+      approvedAt
+      isActive
     }
   }
 `;

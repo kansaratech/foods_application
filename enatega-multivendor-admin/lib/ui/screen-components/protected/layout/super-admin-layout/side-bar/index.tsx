@@ -180,6 +180,18 @@ export default function MakeSidebar() {
           route: '/management/finance',
           isParent: false,
         },
+        {
+          text: 'Store Performance',
+          label: t('Store Performance'),
+          route: '/management/store-performance',
+          isParent: false,
+        },
+        {
+          text: 'Store Documents',
+          label: t('Store Documents'),
+          route: '/management/store-documents',
+          isParent: false,
+        },
 
         {
           text: 'Notification',

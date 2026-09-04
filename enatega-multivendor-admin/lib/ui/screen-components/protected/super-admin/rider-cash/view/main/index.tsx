@@ -9,6 +9,7 @@ import {
   GET_RIDER_CASH_OUTSTANDING,
   GET_RIDER_CASH_SUMMARY,
   RECORD_RIDER_CASH_REMITTANCE,
+  CONFIRM_RIDER_CASH_DEPOSIT,
 } from '@/lib/api/graphql';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import Table from '@/lib/ui/useable-components/table';
@@ -43,6 +44,23 @@ export default function RiderCashMain() {
   const summary = sumData?.riderCashSummary;
 
   const [recordRemittance, { loading: recording }] = useMutation(RECORD_RIDER_CASH_REMITTANCE);
+  const [confirmDeposit, { loading: confirming }] = useMutation(CONFIRM_RIDER_CASH_DEPOSIT);
+
+  const reviewDeposit = async (id: string, approve: boolean) => {
+    try {
+      await confirmDeposit({ variables: { id, approve } });
+      showToast({
+        type: 'success',
+        title: t('Rider cash'),
+        message: approve ? t('Deposit confirmed') : t('Deposit rejected'),
+        duration: 1800,
+      });
+      refetch();
+      refetchSummary();
+    } catch (e) {
+      showToast({ type: 'error', title: t('Error'), message: (e as Error).message, duration: 2800 });
+    }
+  };
 
   const submitRemittance = async () => {
     if (!openRiderId) return;
@@ -101,6 +119,18 @@ export default function RiderCashMain() {
             body: (r: IRiderCashOutstandingRow) => <span className="font-semibold">{money(r.outstanding)}</span>,
           },
           {
+            headerName: t('To confirm'),
+            propertyName: 'pendingDepositTotal',
+            body: (r: IRiderCashOutstandingRow) =>
+              r.pendingDepositCount ? (
+                <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
+                  {r.pendingDepositCount} · {money(r.pendingDepositTotal)}
+                </span>
+              ) : (
+                '—'
+              ),
+          },
+          {
             headerName: t('Actions'),
             propertyName: 'actions',
             body: (r: IRiderCashOutstandingRow) => (
@@ -133,6 +163,44 @@ export default function RiderCashMain() {
               <span><b>{t('Available to withdraw')}:</b> {money(summary.availableToWithdraw)}</span>
               <span><b>{t('Lifetime remitted')}:</b> {money(summary.lifetimeRemitted)}</span>
             </div>
+
+            {summary.remittances.some((r) => r.status === 'PENDING') && (
+              <div className="rounded border border-amber-300 bg-amber-50 p-3 dark:bg-dark-900">
+                <p className="mb-2 font-semibold">{t('Deposits awaiting confirmation')}</p>
+                <table className="w-full border-collapse text-xs">
+                  <tbody>
+                    {summary.remittances
+                      .filter((r) => r.status === 'PENDING')
+                      .map((r) => (
+                        <tr key={r._id} className="border-b border-dashed">
+                          <td className="py-1">{day(r.createdAt)}</td>
+                          <td className="py-1 capitalize">{r.method || '—'}</td>
+                          <td className="py-1">{r.reference || '—'}</td>
+                          <td className="py-1 text-right font-semibold">{money(r.amount)}</td>
+                          <td className="py-1 text-right">
+                            <span className="flex justify-end gap-1">
+                              <button
+                                onClick={() => reviewDeposit(r._id, true)}
+                                disabled={confirming}
+                                className="rounded bg-green-600 px-2 py-0.5 text-white disabled:opacity-50"
+                              >
+                                {t('Confirm')}
+                              </button>
+                              <button
+                                onClick={() => reviewDeposit(r._id, false)}
+                                disabled={confirming}
+                                className="rounded border px-2 py-0.5 dark:border-dark-600"
+                              >
+                                {t('Reject')}
+                              </button>
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {summary.outstanding > 0 && (
               <div className="flex flex-wrap items-end gap-3 rounded bg-gray-50 p-3 dark:bg-dark-900">
@@ -210,7 +278,12 @@ export default function RiderCashMain() {
                     {summary.remittances.map((r) => (
                       <tr key={r._id} className="border-b border-dashed">
                         <td className="py-1">{day(r.createdAt)}</td>
-                        <td className="py-1 capitalize">{r.method || '—'}</td>
+                        <td className="py-1 capitalize">
+                          {r.method || '—'}
+                          {r.status !== 'CONFIRMED' && (
+                            <span className="ml-1 rounded bg-gray-200 px-1 text-[10px] uppercase text-gray-600">{r.status}</span>
+                          )}
+                        </td>
                         <td className="py-1 text-right">{r.entryCount}</td>
                         <td className="py-1 text-right font-semibold">{money(r.amount)}</td>
                       </tr>

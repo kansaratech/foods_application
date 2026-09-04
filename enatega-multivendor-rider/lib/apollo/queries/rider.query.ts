@@ -49,6 +49,7 @@ export const RIDER_CASH_SUMMARY = gql`
       cashLimit
       walletBalance
       availableToWithdraw
+      pendingDepositTotal
       entries {
         _id
         orderNumber
@@ -63,6 +64,9 @@ export const RIDER_CASH_SUMMARY = gql`
         amount
         entryCount
         method
+        reference
+        status
+        confirmedAt
         createdAt
       }
     }

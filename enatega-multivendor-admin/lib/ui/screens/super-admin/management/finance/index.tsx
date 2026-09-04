@@ -9,8 +9,19 @@ import RiderCashMain from '@/lib/ui/screen-components/protected/super-admin/ride
 import CommissionRateMain from '@/lib/ui/screen-components/protected/super-admin/commission-rate/view/main';
 import CommissionRateHeader from '@/lib/ui/screen-components/protected/super-admin/commission-rate/view/header/screen-header';
 import WithDrawRequestSuperAdminScreen from '@/lib/ui/screens/super-admin/wallet/withdrawalRequest';
+import PayoutRunsMain from '@/lib/ui/screen-components/protected/super-admin/payout-runs/view/main';
+import ReconciliationMain from '@/lib/ui/screen-components/protected/super-admin/reconciliation/view/main';
+import WalletAdjustmentsMain from '@/lib/ui/screen-components/protected/super-admin/wallet-adjustments/view/main';
 
-type TabKey = 'overview' | 'bills' | 'rates' | 'ridercash' | 'payouts';
+type TabKey =
+  | 'overview'
+  | 'recon'
+  | 'bills'
+  | 'rates'
+  | 'ridercash'
+  | 'payoutruns'
+  | 'withdrawals'
+  | 'adjustments';
 
 export default function FinanceScreen() {
   const t = useTranslations();
@@ -18,10 +29,13 @@ export default function FinanceScreen() {
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'overview', label: t('Overview') },
+    { key: 'recon', label: t('Reconciliation') },
     { key: 'bills', label: t('Vendor settlements') },
     { key: 'rates', label: t('Commission rates') },
     { key: 'ridercash', label: t('Rider cash') },
-    { key: 'payouts', label: t('Payouts') },
+    { key: 'payoutruns', label: t('Payout runs') },
+    { key: 'withdrawals', label: t('Withdraw requests') },
+    { key: 'adjustments', label: t('Adjustments') },
   ];
 
   return (
@@ -47,6 +61,7 @@ export default function FinanceScreen() {
 
       <div className="pt-2">
         {tab === 'overview' && <FinanceReportMain />}
+        {tab === 'recon' && <ReconciliationMain />}
         {tab === 'bills' && <CommissionBillsMain />}
         {tab === 'rates' && (
           <>
@@ -55,7 +70,9 @@ export default function FinanceScreen() {
           </>
         )}
         {tab === 'ridercash' && <RiderCashMain />}
-        {tab === 'payouts' && <WithDrawRequestSuperAdminScreen />}
+        {tab === 'payoutruns' && <PayoutRunsMain />}
+        {tab === 'withdrawals' && <WithDrawRequestSuperAdminScreen />}
+        {tab === 'adjustments' && <WalletAdjustmentsMain />}
       </div>
     </div>
   );

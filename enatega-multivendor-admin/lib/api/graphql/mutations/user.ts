@@ -26,6 +26,12 @@ export const DELETE_USER = gql`
   }
 `;
 
+export const CHANGE_MY_PASSWORD = gql`
+  mutation ChangePassword($oldPassword: String!, $newPassword: String!) {
+    changePassword(oldPassword: $oldPassword, newPassword: $newPassword)
+  }
+`;
+
 export const RESET_USER_SESSION = gql`
   mutation resetUserSession($userId: ID!) {
     resetUserSession(userId: $userId) {

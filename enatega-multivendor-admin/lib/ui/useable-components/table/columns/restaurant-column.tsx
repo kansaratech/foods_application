@@ -126,6 +126,39 @@ export const RESTAURANT_TABLE_COLUMNS = ({
     },
     { headerName: t('Address'), propertyName: 'address' },
     {
+      headerName: t('Approval'),
+      propertyName: 'approvalStatus',
+      body: (rowData: IRestaurantResponse & { approvalStatus?: string }) => {
+        const s = rowData.approvalStatus || 'APPROVED';
+        const cls: Record<string, string> = {
+          APPROVED: 'bg-green-100 text-green-700',
+          PENDING: 'bg-amber-100 text-amber-700',
+          REJECTED: 'bg-red-100 text-red-700',
+          SUSPENDED: 'bg-gray-200 text-gray-600',
+        };
+        return <span className={`rounded px-2 py-0.5 text-xs ${cls[s] ?? ''}`}>{t(s)}</span>;
+      },
+    },
+    {
+      headerName: t('Docs'),
+      propertyName: 'documentSummary',
+      body: (
+        rowData: IRestaurantResponse & {
+          documentSummary?: { required: number; verified: number; pending: number; rejected: number };
+        },
+      ) => {
+        const s = rowData.documentSummary;
+        if (!s) return <span className="text-xs text-gray-400">—</span>;
+        const cls =
+          s.rejected > 0
+            ? 'bg-red-100 text-red-700'
+            : s.verified >= s.required
+              ? 'bg-green-100 text-green-700'
+              : 'bg-amber-100 text-amber-700';
+        return <span className={`rounded px-2 py-0.5 text-xs ${cls}`}>{s.verified}/{s.required}</span>;
+      },
+    },
+    {
       headerName: t('Status'),
       propertyName: 'actions',
       body: (rowData: IRestaurantResponse) => {

@@ -108,10 +108,15 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
 
       const selected = selectedAddonOptions[addon._id ?? ""];
 
-      // Required addon check
-      if (addon.quantityMinimum && addon.quantityMinimum > 0) {
+      // Required addon check — isRequired forces at least one pick even if the
+      // legacy quantityMinimum wasn't set.
+      const minRequired =
+        addon.isRequired && (!addon.quantityMinimum || addon.quantityMinimum < 1)
+          ? 1
+          : (addon.quantityMinimum ?? 0);
+      if (minRequired > 0) {
         // For single select addons
-        if (addon.quantityMinimum === 1 && addon.quantityMaximum === 1) {
+        if (minRequired === 1 && addon.quantityMaximum === 1) {
           if (!selected) return false;
         }
         // For multi-select addons
@@ -122,7 +127,7 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
               : 1
             : 0;
           if (
-            selectedCount < (addon.quantityMinimum ?? 0) ||
+            selectedCount < minRequired ||
             selectedCount > (addon.quantityMaximum ?? Infinity)
           ) {
             return false;
@@ -354,6 +359,39 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
           {foodItem?.description}
         </p>
 
+        {foodItem?.isCombo && (foodItem.comboItems?.length ?? 0) > 0 && (
+          <div className="mt-3 rounded-xl bg-slate-50 p-3 dark:bg-gray-900">
+            <p className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+              {t("whats_in_this_combo")}
+            </p>
+            <ul className="space-y-1">
+              {foodItem.comboItems!.map((ci, i) => (
+                <li
+                  key={i}
+                  className="flex items-center justify-between text-[13px] text-slate-700 dark:text-gray-200"
+                >
+                  <span>
+                    {ci.quantity}× {ci.title}
+                  </span>
+                  {ci.isOutOfStock && (
+                    <span className="text-[10px] font-bold uppercase text-red-500">
+                      {t("out_of_stock_label")}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {foodItem.compareAtPrice &&
+              selectedVariation &&
+              foodItem.compareAtPrice > selectedVariation.price && (
+                <p className="mt-2 text-[12px] font-semibold text-green-600 dark:text-green-400">
+                  {t("you_save")} {CURRENCY_SYMBOL}
+                  {(foodItem.compareAtPrice - selectedVariation.price).toFixed(2)}
+                </p>
+              )}
+          </div>
+        )}
+
         <Divider />
 
         <div id="addon-sections">
@@ -379,9 +417,13 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
             const addonOptions = getAddonOptions(addon);
 
             // Determine required/optional tag text
+            const effectiveMin =
+              addon.isRequired && (addon.quantityMinimum ?? 0) < 1
+                ? 1
+                : (addon.quantityMinimum ?? 0);
             const requiredTagText =
-              (addon.quantityMinimum ?? 0) > 0
-                ? `${addon.quantityMinimum} ${t("required")}`
+              effectiveMin > 0
+                ? `${effectiveMin} ${t("required")}`
                 : `${t("optional")}`;
 
             return (

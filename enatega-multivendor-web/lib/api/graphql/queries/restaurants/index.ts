@@ -228,7 +228,24 @@ export const GET_RESTAURANT_BY_ID_SLUG = gql`
           description
           badge
           isOutOfStock
+          isCombo
+          compareAtPrice
           subCategory
+          comboItems {
+            foodId
+            variationId
+            title
+            quantity
+            image
+            isOutOfStock
+          }
+          pairedFoods {
+            _id
+            title
+            image
+            price
+            isOutOfStock
+          }
           variations {
             _id
             title
@@ -251,6 +268,7 @@ export const GET_RESTAURANT_BY_ID_SLUG = gql`
         description
         quantityMinimum
         quantityMaximum
+        isRequired
         options {
           _id
           title

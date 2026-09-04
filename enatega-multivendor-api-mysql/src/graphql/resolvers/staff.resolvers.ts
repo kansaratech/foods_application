@@ -5,6 +5,7 @@ import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { hashPassword } from '../../services/auth.service';
 import { notFoundError, userInputError } from '../../utils/errors';
+import { recordAudit } from '../../utils/audit';
 
 interface StaffInputArgs {
   _id?: string;
@@ -49,7 +50,7 @@ export const staffResolvers: IResolvers<unknown, GraphQLContext> = {
       const input = args.staffInput;
       const existing = await prisma.user.findUnique({ where: { email: input.email } });
       if (existing) throw userInputError('Email is already registered');
-      return prisma.user.create({
+      const created = await prisma.user.create({
         data: {
           name: input.name,
           email: input.email,
@@ -60,12 +61,20 @@ export const staffResolvers: IResolvers<unknown, GraphQLContext> = {
           userType: 'STAFF',
         },
       });
+      await recordAudit(context, {
+        action: 'staff.create',
+        targetType: 'User',
+        targetId: created.id,
+        summary: `Staff created: ${input.email} · permissions: ${(input.permissions ?? []).join(', ') || 'none'}`,
+      });
+      return created;
     },
     editStaff: async (_parent, args: { staffInput: StaffInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       const input = args.staffInput;
       if (!input._id) throw notFoundError('Staff _id is required to edit');
-      return prisma.user.update({
+      const before = await prisma.user.findUnique({ where: { id: input._id } });
+      const updated = await prisma.user.update({
         where: { id: input._id },
         data: {
           name: input.name,
@@ -76,10 +85,28 @@ export const staffResolvers: IResolvers<unknown, GraphQLContext> = {
           password: input.password ? await hashPassword(input.password) : undefined,
         },
       });
+      await recordAudit(context, {
+        action: 'staff.update',
+        targetType: 'User',
+        targetId: input._id,
+        summary: `Staff updated: ${updated.email}${input.password ? ' (password changed)' : ''}`,
+        changes: {
+          isActive: [before?.isActive, input.isActive],
+          permissions: [before?.permissions ?? null, input.permissions ?? null],
+        },
+      });
+      return updated;
     },
-    deleteStaff: (_parent, args: { id: string }, context) => {
+    deleteStaff: async (_parent, args: { id: string }, context) => {
       requireRole(context, ['ADMIN']);
-      return prisma.user.delete({ where: { id: args.id } });
+      const deleted = await prisma.user.delete({ where: { id: args.id } });
+      await recordAudit(context, {
+        action: 'staff.delete',
+        targetType: 'User',
+        targetId: args.id,
+        summary: `Staff deleted: ${deleted.email}`,
+      });
+      return deleted;
     },
   },
 

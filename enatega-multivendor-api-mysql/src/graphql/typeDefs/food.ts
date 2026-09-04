@@ -27,10 +27,37 @@ export const foodTypeDefs = /* GraphQL */ `
     badge: String
     isActive: Boolean
     isOutOfStock: Boolean
+    isCombo: Boolean
+    comboItems: [ComboItemRef!]!
+    compareAtPrice: Float
+    pairedFoods: [FoodLite!]!
     subCategory: ID
     variations: [Variation!]!
     createdAt: String
     updatedAt: String
+  }
+
+  type FoodLite {
+    _id: ID!
+    title: String!
+    image: String
+    price: Float
+    isOutOfStock: Boolean
+  }
+
+  type ComboItemRef {
+    foodId: ID!
+    variationId: ID
+    title: String!
+    quantity: Int!
+    image: String
+    isOutOfStock: Boolean
+  }
+
+  input ComboItemInput {
+    foodId: ID!
+    variationId: ID
+    quantity: Int
   }
 
   type SubCategory {
@@ -57,6 +84,7 @@ export const foodTypeDefs = /* GraphQL */ `
     description: String
     quantityMinimum: Int
     quantityMaximum: Int
+    isRequired: Boolean
     options: [Option!]!
   }
 
@@ -81,6 +109,10 @@ export const foodTypeDefs = /* GraphQL */ `
     category: ID!
     subCategory: ID
     variations: [VariationInput!]!
+    isCombo: Boolean
+    comboItems: [ComboItemInput!]
+    compareAtPrice: Float
+    pairedFoodIds: [ID!]
   }
 
   input CategoryInput {
@@ -104,10 +136,13 @@ export const foodTypeDefs = /* GraphQL */ `
     description: String
     quantityMinimum: Int
     quantityMaximum: Int
+    isRequired: Boolean
     options: [OptionInput!]
   }
 
   extend type Query {
+    "Combo / meal-deal Foods for a store (isCombo = true)."
+    restaurantCombos(restaurantId: String!): [Food!]!
     popularFoodItems(restaurantId: String!): [Food!]!
     subCategories: [SubCategory!]!
     subCategory(id: String): SubCategory
@@ -143,6 +178,9 @@ export const foodTypeDefs = /* GraphQL */ `
     editFood(foodInput: FoodInput!): Restaurant!
     deleteFood(id: String!, restaurant: String!, categoryId: String!): Food!
     updateFoodOutOfStock(id: String!, restaurant: String!, categoryId: String!): Boolean!
+    updateVariationOutOfStock(id: String!, restaurant: String!): Boolean!
+    "Copy every category, item, variation and add-on from one store's menu into another."
+    cloneMenu(fromRestaurantId: ID!, toRestaurantId: ID!, replace: Boolean): Restaurant!
 
     createCategory(category: CategoryInput!): Restaurant!
     editCategory(category: CategoryInput!): Restaurant!

@@ -71,8 +71,8 @@ export const GET_RESTAURANTS = gql`
 `;
 
 export const GET_RESTAURANTS_PAGINATED = gql`
-  query restaurantsPaginated($page: Int, $limit: Int, $search: String) {
-    restaurantsPaginated(page: $page, limit: $limit, search: $search) {
+  query restaurantsPaginated($page: Int, $limit: Int, $search: String, $approvalStatus: String) {
+    restaurantsPaginated(page: $page, limit: $limit, search: $search, approvalStatus: $approvalStatus) {
       data {
         unique_restaurant_id
         _id
@@ -84,9 +84,16 @@ export const GET_RESTAURANTS_PAGINATED = gql`
         deliveryTime
         minimumOrder
         isActive
+        approvalStatus
         commissionRate
         username
         tax
+        documentSummary {
+          required
+          verified
+          pending
+          rejected
+        }
         owner {
           _id
           email

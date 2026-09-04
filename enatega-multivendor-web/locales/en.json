@@ -963,5 +963,9 @@
   "Pay online": "Pay online",
   "Order updated": "Order updated",
   "Your order has been updated": "Your order has been updated",
-  "Could not update the order": "Could not update the order"
+  "Could not update the order": "Could not update the order",
+  "combo_label": "Combo",
+  "whats_in_this_combo": "What's in this combo",
+  "you_save": "You save",
+  "frequently_bought_together": "Frequently bought together"
 }

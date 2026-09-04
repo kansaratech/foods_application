@@ -21,6 +21,7 @@ export const commissionTypeDefs = /* GraphQL */ `
   type CommissionBill {
     _id: ID!
     vendor: CommissionVendorLite
+    invoiceNumber: String
     periodStart: String!
     periodEnd: String!
     cycle: String!
@@ -37,6 +38,27 @@ export const commissionTypeDefs = /* GraphQL */ `
   type CommissionBillDetail {
     bill: CommissionBill!
     records: [CommissionRecordRow!]!
+    invoice: CommissionInvoice!
+  }
+
+  "Everything a printable vendor invoice needs, pre-composed by the server."
+  type CommissionInvoice {
+    invoiceNumber: String!
+    issuedOn: String!
+    periodLabel: String!
+    platformName: String!
+    platformAddress: String
+    platformGstin: String
+    vendorName: String!
+    vendorEmail: String
+    vendorPhone: String
+    storeNames: [String!]!
+    orderCount: Int!
+    grossFoodSubtotal: Float!
+    commissionRate: Float!
+    commissionTotal: Float!
+    status: String!
+    note: String
   }
 
   type CommissionBillsResult {
@@ -94,7 +116,10 @@ export const commissionTypeDefs = /* GraphQL */ `
     amount: Float!
     entryCount: Int!
     method: String
+    reference: String
     note: String
+    status: String!
+    confirmedAt: String
     createdAt: String!
   }
 
@@ -103,6 +128,8 @@ export const commissionTypeDefs = /* GraphQL */ `
     entryCount: Int!
     outstanding: Float!
     oldestUnremittedAt: String
+    pendingDepositCount: Int!
+    pendingDepositTotal: Float!
   }
 
   type RiderCashSummary {
@@ -113,6 +140,7 @@ export const commissionTypeDefs = /* GraphQL */ `
     cashLimit: Float!
     walletBalance: Float!
     availableToWithdraw: Float!
+    pendingDepositTotal: Float!
     entries: [RiderCashEntryRow!]!
     remittances: [RiderCashRemittanceRow!]!
   }
@@ -169,5 +197,9 @@ export const commissionTypeDefs = /* GraphQL */ `
     closeCompletedCommissionPeriods: [CommissionBill!]!
     updateCommissionBillStatus(id: ID!, status: String!, paidAmount: Float, note: String): CommissionBill!
     recordRiderCashRemittance(riderId: ID!, amount: Float, method: String, note: String): RiderCashRemittanceRow!
+    "A rider self-reports a cash deposit; it stays PENDING until an admin confirms it."
+    riderReportDeposit(riderId: ID, amount: Float!, method: String, reference: String, note: String): RiderCashRemittanceRow!
+    "Admin confirms (approve=true) or rejects a rider-reported deposit."
+    confirmRiderCashDeposit(id: ID!, approve: Boolean!, note: String): RiderCashRemittanceRow!
   }
 `;

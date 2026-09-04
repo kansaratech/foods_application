@@ -159,7 +159,77 @@ The delivery **radius in km** a vendor sets on the store‑location map
   operation against the live API and the language files, and prints a
   pass/fail table.
 
+## Batch B — finance operations (2026‑09‑04)
+
+Everything below is additive; the money model above is unchanged.
+
+### Store approval gate
+
+`Restaurant.approvalStatus` = `PENDING | APPROVED | REJECTED | SUSPENDED`
+(default **APPROVED** — every pre‑existing store and every admin‑created store).
+A store a **vendor** self‑onboards starts **PENDING** and is invisible to
+customers (all `nearBy*` / `mostOrdered*` / `topRated*` / recent‑order lists now
+filter `approvalStatus: 'APPROVED'`) and cannot take orders (`placeOrder`
+rejects). `setStoreApproval(id, status, note)` (ADMIN) flips it and audits;
+REJECTED/SUSPENDED also set `isActive = false`. Admin: **Stores** list shows an
+Approval column + row actions Approve / Suspend / Reject; `restaurantsPaginated`
+takes an `approvalStatus` filter.
+
+### Manual wallet adjustments
+
+`WalletAdjustment` (signed `amount`, `reason` ∈ goodwill|chargeback|correction|
+penalty|other). `adjustWallet(subjectType, subjectId, amount, reason, note)`
+(ADMIN) moves `currentWalletAmount` immediately (credits also bump
+`totalWalletAmount`), writes the row + an audit line. Admin: **Finance →
+Adjustments** (form + ledger table).
+
+### Weekly payout runs
+
+`PayoutRun` + `PayoutRunItem`. `createPayoutRun(label, periodStart, periodEnd,
+minAmount, includeStores, includeRiders)` snapshots every store with
+`currentWalletAmount ≥ minAmount` and every rider with
+`walletBalance − heldCOD ≥ minAmount` into PENDING line items.
+`markPayoutItemPaid(id, method, reference, note)` decrements the wallet, bumps
+`withdrawnWalletAmount`, writes a `Transaction`, stamps the line PAID.
+`skipPayoutItem`, `completePayoutRun` (blocked while any line is PENDING).
+`payoutRunCsv(id)` returns CSV text (one row per payee). Admin: **Finance →
+Payout runs** (list → detail dialog with per‑line Pay/Skip, CSV download,
+Complete run).
+
+### Rider self‑deposit
+
+`RiderCashRemittance.status` = `PENDING | CONFIRMED | REJECTED` (+ `reference`,
+`confirmedAt`). `riderReportDeposit(amount, method, reference, note)` (RIDER or
+ADMIN) files a **PENDING** claim — it does **not** touch cash entries and is
+capped at what the rider still owes minus already‑pending claims.
+`confirmRiderCashDeposit(id, approve, note)` (ADMIN): approve → clears oldest
+entries up to the amount, snapshots `amount` to what actually cleared, status
+CONFIRMED; reject → status REJECTED. Admin‑entered `recordRiderCashRemittance`
+is still immediate (CONFIRMED). `riderCashOutstanding` / `riderCashSummary` now
+also surface `pendingDeposit*`. Rider app **My Cash**: "I deposited cash" →
+amount/method/reference modal.
+
+### Reconciliation
+
+`reconciliationReport(startDate, endDate)` (ADMIN) — five balance checks
+(commission accrued = self‑collected + store‑owed; store‑owed = invoiced +
+awaiting; invoices raised = paid + waived + pending; COD collected = remitted +
+held; all‑time confirmed remittances = cleared entries) each with
+expected/actual/delta/ok, plus store & rider wallet outstanding, negative‑wallet
+counts, and pending rider deposits. Admin: **Finance → Reconciliation**.
+
+### Vendor commission invoice
+
+`CommissionBill.invoiceNumber` = `PDR-INV-<YYYYMM>-<seq>` (stamped at close;
+backfilled onto old bills). `Configuration.platformLegalName / platformAddress /
+platformGstin` are the billing entity (set in **Finance → Vendor settlements →
+Invoice billing entity**). `commissionBill(id)` now also returns a pre‑composed
+`invoice { … }` and is readable by the bill's own VENDOR. Admin: **Print
+invoice** button on the bill‑detail dialog opens a print view.
+
 ## Known follow‑ups
 
 - The rider **My Cash** screen ships in the Expo JS bundle but needs a Metro
   reload / fresh EAS dev build to reach an already-installed rider app.
+- Payout runs settle wallets but do not yet create per‑payee PDF statements
+  (CSV only); a vendor‑facing "my payouts" screen is not built.

@@ -21,6 +21,9 @@ import { chatResolvers } from './chat.resolvers';
 import { compatResolvers } from './compat.resolvers';
 import { serviceabilityResolvers } from './serviceability.resolvers';
 import { commissionResolvers } from './commission.resolvers';
+import { financeOpsResolvers } from './finance-ops.resolvers';
+import { storeDocsResolvers } from './store-docs.resolvers';
+import { auditResolvers } from './audit.resolvers';
 
 type ResolverMap = Record<string, Record<string, unknown>>;
 
@@ -56,4 +59,7 @@ export const resolvers = mergeResolvers([
   compatResolvers,
   serviceabilityResolvers,
   commissionResolvers,
+  financeOpsResolvers,
+  storeDocsResolvers,
+  auditResolvers,
 ]);

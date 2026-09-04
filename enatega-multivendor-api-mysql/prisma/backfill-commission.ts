@@ -131,6 +131,28 @@ async function main() {
     }
   }
   console.log(`Re-tagged: ${recsRetagged} commission record(s), ${cashRetagged} rider cash entr(ies).`);
+
+  // 6 — stamp an invoice number on any commission bill that predates the field
+  let invoiced = 0;
+  const bills = await prisma.commissionBill.findMany({
+    where: { invoiceNumber: null },
+    orderBy: { createdAt: 'asc' },
+  });
+  const seqByYm = new Map<string, number>();
+  for (const b of bills) {
+    const ym = `${b.periodEnd.getUTCFullYear()}${String(b.periodEnd.getUTCMonth() + 1).padStart(2, '0')}`;
+    const existing = await prisma.commissionBill.count({
+      where: { invoiceNumber: { startsWith: `PDR-INV-${ym}-` } },
+    });
+    const next = (seqByYm.get(ym) ?? existing) + 1;
+    seqByYm.set(ym, next);
+    await prisma.commissionBill.update({
+      where: { id: b.id },
+      data: { invoiceNumber: `PDR-INV-${ym}-${String(next).padStart(4, '0')}` },
+    });
+    invoiced += 1;
+  }
+  console.log(`Invoice numbers: ${invoiced} bill(s) stamped.`);
 }
 
 main()

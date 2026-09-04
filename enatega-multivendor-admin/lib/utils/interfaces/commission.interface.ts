@@ -23,6 +23,7 @@ export interface ICommissionPeriodPreview {
 
 export interface ICommissionBill {
   _id: string;
+  invoiceNumber?: string | null;
   vendor: ICommissionVendorLite | null;
   periodStart: string;
   periodEnd: string;
@@ -55,8 +56,102 @@ export interface ICommissionBillsResponse {
   commissionBills: { total: number; bills: ICommissionBill[] };
 }
 
+export interface ICommissionInvoice {
+  invoiceNumber: string;
+  issuedOn: string;
+  periodLabel: string;
+  platformName: string;
+  platformAddress: string | null;
+  platformGstin: string | null;
+  vendorName: string;
+  vendorEmail: string | null;
+  vendorPhone: string | null;
+  storeNames: string[];
+  orderCount: number;
+  grossFoodSubtotal: number;
+  commissionRate: number;
+  commissionTotal: number;
+  status: string;
+  note: string | null;
+}
 export interface ICommissionBillDetailResponse {
-  commissionBill: { bill: ICommissionBill; records: ICommissionRecordRow[] };
+  commissionBill: {
+    bill: ICommissionBill;
+    records: ICommissionRecordRow[];
+    invoice: ICommissionInvoice;
+  };
+}
+
+// ---- Batch B: finance ops ----
+export interface IWalletAdjustmentRow {
+  _id: string;
+  subjectType: string;
+  subjectId: string;
+  subjectName: string | null;
+  amount: number;
+  reason: string;
+  note: string | null;
+  createdByEmail: string | null;
+  createdAt: string;
+}
+export interface IWalletAdjustmentsResponse {
+  walletAdjustments: { total: number; adjustments: IWalletAdjustmentRow[] };
+}
+export interface IPayoutRunItemRow {
+  _id: string;
+  subjectType: 'STORE' | 'RIDER';
+  subjectId: string;
+  payeeName: string;
+  walletBalance: number;
+  heldCash: number;
+  amount: number;
+  status: 'PENDING' | 'PAID' | 'SKIPPED';
+  method: string | null;
+  reference: string | null;
+  note: string | null;
+  paidAt: string | null;
+}
+export interface IPayoutRun {
+  _id: string;
+  label: string;
+  periodStart: string;
+  periodEnd: string;
+  status: 'OPEN' | 'COMPLETED';
+  itemCount: number;
+  grossTotal: number;
+  paidTotal: number;
+  note?: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  items?: IPayoutRunItemRow[];
+}
+export interface IPayoutRunsResponse {
+  payoutRuns: { total: number; runs: IPayoutRun[] };
+}
+export interface IPayoutRunResponse {
+  payoutRun: IPayoutRun;
+}
+export interface IReconLine {
+  label: string;
+  expected: number;
+  actual: number;
+  delta: number;
+  ok: boolean;
+}
+export interface IReconciliationReport {
+  periodStart: string;
+  periodEnd: string;
+  generatedAt: string;
+  storeWalletOutstanding: number;
+  riderWalletOutstanding: number;
+  negativeWalletStores: number;
+  negativeWalletRiders: number;
+  pendingRiderDeposits: number;
+  pendingRiderDepositTotal: number;
+  lines: IReconLine[];
+}
+export interface IReconciliationReportResponse {
+  reconciliationReport: IReconciliationReport;
 }
 
 export interface IMyCommissionSummary {
@@ -83,6 +178,8 @@ export interface IRiderCashOutstandingRow {
   entryCount: number;
   outstanding: number;
   oldestUnremittedAt: string | null;
+  pendingDepositCount: number;
+  pendingDepositTotal: number;
 }
 export interface IRiderCashOutstandingResponse {
   riderCashOutstanding: IRiderCashOutstandingRow[];
@@ -101,7 +198,10 @@ export interface IRiderCashRemittanceRow {
   amount: number;
   entryCount: number;
   method: string | null;
+  reference?: string | null;
   note: string | null;
+  status: string;
+  confirmedAt?: string | null;
   createdAt: string;
 }
 export interface IRiderCashSummary {
@@ -112,6 +212,7 @@ export interface IRiderCashSummary {
   cashLimit: number;
   walletBalance: number;
   availableToWithdraw: number;
+  pendingDepositTotal: number;
   entries: IRiderCashEntryRow[];
   remittances: IRiderCashRemittanceRow[];
 }

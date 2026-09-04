@@ -8,6 +8,7 @@ export const CREATE_ADDONS = gql`
       description
       quantityMinimum
       quantityMaximum
+      isRequired
       options {
         _id
         title
@@ -25,6 +26,7 @@ export const EDIT_ADDON = gql`
       description
       quantityMinimum
       quantityMaximum
+      isRequired
       options {
         _id
         title

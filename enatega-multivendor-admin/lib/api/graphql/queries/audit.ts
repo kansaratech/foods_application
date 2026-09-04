@@ -10,9 +10,11 @@ export const GET_AUDIT_LOGS = gql`
           _id
           email
         }
+        actorType
         action
         targetType
         targetId
+        summary
         changes
       }
       totalCount

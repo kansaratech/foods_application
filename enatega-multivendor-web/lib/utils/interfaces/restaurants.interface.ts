@@ -78,6 +78,23 @@ export interface ISubCategory {
   parentCategoryId: string;
 }
 
+export interface IComboItemRef {
+  foodId: string;
+  variationId?: string | null;
+  title: string;
+  quantity: number;
+  image?: string | null;
+  isOutOfStock?: boolean;
+}
+
+export interface IFoodLite {
+  _id: string;
+  title: string;
+  image?: string | null;
+  price?: number | null;
+  isOutOfStock?: boolean;
+}
+
 export interface IFood {
   _id: string;
   title: string;
@@ -88,6 +105,10 @@ export interface IFood {
   variations: IVariation[];
   isOutOfStock?: boolean;
   badge?: string | null;
+  isCombo?: boolean;
+  compareAtPrice?: number | null;
+  comboItems?: IComboItemRef[];
+  pairedFoods?: IFoodLite[];
 }
 
 export interface ISelectedVariation {

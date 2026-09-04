@@ -5,6 +5,7 @@ import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { billingCycle, closeCommissionBills, currentPeriod } from '../../services/commission.service';
+import { recordAudit } from '../../utils/audit';
 
 const BILL_STATUSES = ['PENDING', 'PAID', 'WAIVED'];
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -33,6 +34,94 @@ function groupByVendor(records: CommissionRecord[]) {
     byVendor.set(r.vendorId, entry);
   }
   return byVendor;
+}
+
+// Clear a rider's outstanding COD cash entries oldest-first (up to `amount`, or
+// all of them), recording one CONFIRMED remittance. Shared by the admin
+// "record deposit" mutation and the rider-deposit confirmation path.
+async function settleRiderCash(input: {
+  riderId: string;
+  amount?: number | null;
+  method?: string | null;
+  reference?: string | null;
+  note?: string | null;
+  recordedById?: string | null;
+}): Promise<RiderCashRemittance> {
+  const open = await prisma.riderCashEntry.findMany({
+    where: { riderId: input.riderId, remittanceId: null },
+    orderBy: { deliveredAt: 'asc' },
+  });
+  if (open.length === 0) throw userInputError('This rider has no outstanding cash to remit');
+
+  const cap = input.amount && input.amount > 0 ? input.amount : Infinity;
+  const toClear: string[] = [];
+  let cleared = 0;
+  for (const e of open) {
+    if (cleared + e.owedToPlatform > cap + 0.001) break;
+    toClear.push(e.id);
+    cleared += e.owedToPlatform;
+  }
+  if (toClear.length === 0) {
+    throw userInputError(
+      `The smallest outstanding entry is ₹${round2(open[0].owedToPlatform)} — remit at least that much`,
+    );
+  }
+
+  const remittance = await prisma.riderCashRemittance.create({
+    data: {
+      riderId: input.riderId,
+      amount: round2(cleared),
+      entryCount: toClear.length,
+      method: input.method ?? 'cash',
+      reference: input.reference ?? null,
+      note: input.note ?? null,
+      recordedById: input.recordedById ?? null,
+      status: 'CONFIRMED',
+      confirmedAt: new Date(),
+    },
+  });
+  await prisma.riderCashEntry.updateMany({
+    where: { id: { in: toClear } },
+    data: { remittanceId: remittance.id },
+  });
+  return remittance;
+}
+
+function periodLabel(start: Date, end: Date): string {
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+
+async function buildCommissionInvoice(bill: CommissionBill, records: CommissionRecord[]) {
+  const [vendor, config] = await Promise.all([
+    prisma.user.findUnique({ where: { id: bill.vendorId } }),
+    prisma.configuration.findFirst(),
+  ]);
+  const storeIds = [...new Set(records.map((r) => r.restaurantId))];
+  const stores = storeIds.length
+    ? await prisma.restaurant.findMany({ where: { id: { in: storeIds } }, select: { name: true } })
+    : [];
+  const effectiveRate = bill.grossFoodSubtotal > 0 ? (bill.commissionTotal / bill.grossFoodSubtotal) * 100 : 0;
+
+  return {
+    invoiceNumber: bill.invoiceNumber ?? `PDR-INV-${bill.id.slice(-8).toUpperCase()}`,
+    issuedOn: bill.createdAt.toISOString(),
+    periodLabel: periodLabel(bill.periodStart, bill.periodEnd),
+    platformName: config?.platformLegalName || 'Padharo',
+    platformAddress: config?.platformAddress ?? null,
+    platformGstin: config?.platformGstin ?? null,
+    vendorName: vendor?.name || vendor?.email || 'Vendor',
+    vendorEmail: vendor?.email ?? null,
+    vendorPhone: vendor?.phone ?? null,
+    storeNames: stores.map((s) => s.name),
+    orderCount: bill.orderCount,
+    grossFoodSubtotal: round2(bill.grossFoodSubtotal),
+    commissionRate: Math.round(effectiveRate * 100) / 100,
+    commissionTotal: round2(bill.commissionTotal),
+    status: bill.status,
+    note: bill.note ?? null,
+  };
 }
 
 export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
@@ -97,14 +186,18 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     commissionBill: async (_parent, args: { id: string }, context) => {
-      requireRole(context, ['ADMIN']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
       const bill = await prisma.commissionBill.findUnique({ where: { id: args.id } });
       if (!bill) throw notFoundError('Commission bill not found');
+      if (currentUser.userType === 'VENDOR' && bill.vendorId !== currentUser.id) {
+        throw notFoundError('Commission bill not found');
+      }
       const records = await prisma.commissionRecord.findMany({
         where: { billId: bill.id },
         orderBy: { orderDeliveredAt: 'asc' },
       });
-      return { bill, records };
+      const invoice = await buildCommissionInvoice(bill, records);
+      return { bill, records, invoice };
     },
 
     myCommissionSummary: async (_parent, _args, context) => {
@@ -153,19 +246,32 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
         if (e.deliveredAt < cur.oldest) cur.oldest = e.deliveredAt;
         byRider.set(e.riderId, cur);
       }
-      const riders = await prisma.user.findMany({ where: { id: { in: [...byRider.keys()] } } });
+      const pending = await prisma.riderCashRemittance.groupBy({
+        by: ['riderId'],
+        where: { status: 'PENDING' },
+        _count: { _all: true },
+        _sum: { amount: true },
+      });
+      const pendingByRider = new Map(pending.map((p) => [p.riderId, { count: p._count._all, total: p._sum.amount ?? 0 }]));
+
+      const riderIds = new Set<string>([...byRider.keys(), ...pendingByRider.keys()]);
+      const riders = await prisma.user.findMany({ where: { id: { in: [...riderIds] } } });
       const rmap = new Map(riders.map((r) => [r.id, r]));
-      return [...byRider.entries()]
-        .map(([riderId, agg]) => {
+      return [...riderIds]
+        .map((riderId) => {
+          const agg = byRider.get(riderId);
+          const pend = pendingByRider.get(riderId);
           const r = rmap.get(riderId);
           return {
             rider: { _id: riderId, name: r?.name ?? null, username: r?.username ?? null, phone: r?.phone ?? null },
-            entryCount: agg.count,
-            outstanding: round2(agg.total),
-            oldestUnremittedAt: agg.oldest.toISOString(),
+            entryCount: agg?.count ?? 0,
+            outstanding: round2(agg?.total ?? 0),
+            oldestUnremittedAt: agg?.oldest.toISOString() ?? null,
+            pendingDepositCount: pend?.count ?? 0,
+            pendingDepositTotal: round2(pend?.total ?? 0),
           };
         })
-        .sort((a, b) => b.outstanding - a.outstanding);
+        .sort((a, b) => b.outstanding - a.outstanding || b.pendingDepositTotal - a.pendingDepositTotal);
     },
 
     riderCashSummary: async (_parent, args: { riderId: string }, context) => {
@@ -182,7 +288,12 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       ]);
       const outstanding = entries.filter((e) => !e.remittanceId).reduce((s, e) => s + e.owedToPlatform, 0);
       const lifetimeCollected = entries.reduce((s, e) => s + e.owedToPlatform, 0);
-      const lifetimeRemitted = remittances.reduce((s, r) => s + r.amount, 0);
+      const lifetimeRemitted = remittances
+        .filter((r) => r.status === 'CONFIRMED')
+        .reduce((s, r) => s + r.amount, 0);
+      const pendingDepositTotal = remittances
+        .filter((r) => r.status === 'PENDING')
+        .reduce((s, r) => s + r.amount, 0);
       const walletBalance = profile?.currentWalletAmount ?? 0;
 
       return {
@@ -193,6 +304,7 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
         cashLimit: config?.riderCashLimit ?? 3000,
         walletBalance: round2(walletBalance),
         availableToWithdraw: round2(Math.max(0, walletBalance - outstanding)),
+        pendingDepositTotal: round2(pendingDepositTotal),
         entries,
         remittances,
       };
@@ -329,13 +441,25 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       requireRole(context, ['ADMIN']);
       // Manual "close now" — bills every unbilled record. The scheduler
       // (`src/scheduler.ts`) closes only completed periods automatically.
-      return closeCommissionBills({ periodStart: args.periodStart, periodEnd: args.periodEnd });
+      const bills = await closeCommissionBills({ periodStart: args.periodStart, periodEnd: args.periodEnd });
+      if (bills.length)
+        await recordAudit(context, {
+          action: 'commission.period.close',
+          summary: `Closed the commission period — ${bills.length} bill(s), ₹${bills.reduce((s, b) => s + b.commissionTotal, 0).toFixed(2)}`,
+        });
+      return bills;
     },
 
     closeCompletedCommissionPeriods: async (_parent, _args, context) => {
       requireRole(context, ['ADMIN']);
       const { start } = currentPeriod(await billingCycle());
-      return closeCommissionBills({ before: start });
+      const bills = await closeCommissionBills({ before: start });
+      if (bills.length)
+        await recordAudit(context, {
+          action: 'commission.period.close',
+          summary: `Closed completed period(s) — ${bills.length} bill(s)`,
+        });
+      return bills;
     },
 
     updateCommissionBillStatus: async (
@@ -352,7 +476,7 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!existing) throw notFoundError('Commission bill not found');
 
       const settling = status !== 'PENDING' && existing.status === 'PENDING';
-      return prisma.commissionBill.update({
+      const updated = await prisma.commissionBill.update({
         where: { id: args.id },
         data: {
           status,
@@ -363,6 +487,14 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
           ...(status === 'WAIVED' && settling ? { paidAt: new Date(), paidAmount: 0 } : {}),
         },
       });
+      await recordAudit(context, {
+        action: `commission.bill.${status.toLowerCase()}`,
+        targetType: 'CommissionBill',
+        targetId: args.id,
+        summary: `Commission bill ${existing.status} → ${status} (₹${updated.commissionTotal.toFixed(2)})`,
+        changes: { status: [existing.status, status], paidAmount: updated.paidAmount },
+      });
+      return updated;
     },
 
     recordRiderCashRemittance: async (
@@ -371,42 +503,134 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN']);
-      const open = await prisma.riderCashEntry.findMany({
-        where: { riderId: args.riderId, remittanceId: null },
-        orderBy: { deliveredAt: 'asc' },
+      const remittance = await settleRiderCash({
+        riderId: args.riderId,
+        amount: args.amount,
+        method: args.method ?? 'cash',
+        note: args.note ?? null,
+        recordedById: currentUser.id,
       });
-      if (open.length === 0) throw userInputError('This rider has no outstanding cash to remit');
+      await recordAudit(context, {
+        action: 'ridercash.remittance',
+        targetType: 'User',
+        targetId: args.riderId,
+        summary: `Recorded rider cash deposit ₹${remittance.amount} (${remittance.entryCount} deliveries, ${remittance.method ?? 'cash'})`,
+      });
+      return remittance;
+    },
 
-      // Clear oldest entries first, up to `amount` if given (else clear all).
-      const cap = args.amount && args.amount > 0 ? args.amount : Infinity;
-      const toClear: string[] = [];
-      let cleared = 0;
-      for (const e of open) {
-        if (cleared + e.owedToPlatform > cap + 0.001) break;
-        toClear.push(e.id);
-        cleared += e.owedToPlatform;
+    riderReportDeposit: async (
+      _parent,
+      args: { riderId?: string; amount: number; method?: string; reference?: string; note?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN', 'RIDER']);
+      const riderId = currentUser.userType === 'RIDER' ? currentUser.id : args.riderId;
+      if (!riderId) throw userInputError('riderId is required');
+      if (currentUser.userType === 'RIDER' && args.riderId && args.riderId !== currentUser.id) {
+        throw notFoundError('Rider not found');
       }
-      if (toClear.length === 0) {
+      if (!(args.amount > 0)) throw userInputError('Deposit amount must be greater than zero');
+
+      const outstanding = await prisma.riderCashEntry.aggregate({
+        where: { riderId, remittanceId: null },
+        _sum: { owedToPlatform: true },
+      });
+      const pending = await prisma.riderCashRemittance.aggregate({
+        where: { riderId, status: 'PENDING' },
+        _sum: { amount: true },
+      });
+      const owed = round2(outstanding._sum.owedToPlatform ?? 0);
+      const claimed = round2(pending._sum.amount ?? 0);
+      if (args.amount > owed - claimed + 0.5) {
         throw userInputError(
-          `The smallest outstanding entry is ₹${round2(open[0].owedToPlatform)} — remit at least that much`,
+          `You're reporting more than you owe. Outstanding ₹${owed}${claimed ? `, already reported ₹${claimed}` : ''}.`,
         );
       }
 
       const remittance = await prisma.riderCashRemittance.create({
         data: {
-          riderId: args.riderId,
-          amount: round2(cleared),
-          entryCount: toClear.length,
-          method: args.method ?? 'cash',
+          riderId,
+          amount: round2(args.amount),
+          entryCount: 0,
+          method: args.method ?? 'upi',
+          reference: args.reference ?? null,
           note: args.note ?? null,
           recordedById: currentUser.id,
+          status: 'PENDING',
         },
       });
-      await prisma.riderCashEntry.updateMany({
-        where: { id: { in: toClear } },
-        data: { remittanceId: remittance.id },
+      await recordAudit(context, {
+        action: 'ridercash.deposit.reported',
+        targetType: 'User',
+        targetId: riderId,
+        summary: `Rider reported a ₹${round2(args.amount)} cash deposit (${args.method ?? 'upi'}) — awaiting confirmation`,
       });
       return remittance;
+    },
+
+    confirmRiderCashDeposit: async (
+      _parent,
+      args: { id: string; approve: boolean; note?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN']);
+      const remittance = await prisma.riderCashRemittance.findUnique({ where: { id: args.id } });
+      if (!remittance) throw notFoundError('Deposit not found');
+      if (remittance.status !== 'PENDING') throw userInputError('This deposit has already been reviewed');
+
+      if (!args.approve) {
+        const rejected = await prisma.riderCashRemittance.update({
+          where: { id: args.id },
+          data: { status: 'REJECTED', note: args.note ?? remittance.note },
+        });
+        await recordAudit(context, {
+          action: 'ridercash.deposit.rejected',
+          targetType: 'User',
+          targetId: remittance.riderId,
+          summary: `Rejected a rider-reported deposit of ₹${round2(remittance.amount)}`,
+        });
+        return rejected;
+      }
+
+      // Approve: clear oldest entries up to the reported amount, then mark it
+      // CONFIRMED. Reuse the shared settlement, but attach to the existing row.
+      const open = await prisma.riderCashEntry.findMany({
+        where: { riderId: remittance.riderId, remittanceId: null },
+        orderBy: { deliveredAt: 'asc' },
+      });
+      const toClear: string[] = [];
+      let cleared = 0;
+      for (const e of open) {
+        if (cleared + e.owedToPlatform > remittance.amount + 0.5) break;
+        toClear.push(e.id);
+        cleared += e.owedToPlatform;
+      }
+      if (toClear.length === 0) {
+        throw userInputError(
+          `The smallest outstanding entry is larger than the reported ₹${round2(remittance.amount)} — reject this and ask the rider to re-report.`,
+        );
+      }
+      await prisma.riderCashEntry.updateMany({ where: { id: { in: toClear } }, data: { remittanceId: remittance.id } });
+      const confirmed = await prisma.riderCashRemittance.update({
+        where: { id: args.id },
+        data: {
+          status: 'CONFIRMED',
+          confirmedAt: new Date(),
+          // Snapshot what was actually applied (COD entries clear whole).
+          amount: round2(cleared),
+          entryCount: toClear.length,
+          recordedById: currentUser.id,
+          note: args.note ?? remittance.note,
+        },
+      });
+      await recordAudit(context, {
+        action: 'ridercash.deposit.confirmed',
+        targetType: 'User',
+        targetId: remittance.riderId,
+        summary: `Confirmed a rider cash deposit of ₹${round2(cleared)} (cleared ${toClear.length} deliveries)`,
+      });
+      return confirmed;
     },
   },
 
@@ -439,6 +663,8 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
 
   RiderCashRemittanceRow: {
     _id: (parent: RiderCashRemittance) => parent.id,
+    status: (parent: RiderCashRemittance) => parent.status ?? 'CONFIRMED',
+    confirmedAt: (parent: RiderCashRemittance) => parent.confirmedAt?.toISOString() ?? null,
     createdAt: (parent: RiderCashRemittance) => parent.createdAt.toISOString(),
   },
 };
