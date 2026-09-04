@@ -154,12 +154,12 @@ export default function VendorAddForm({
 
   const onHandleSetFormValue = () => {
     if (!data) return;
-      setFormValues((prevState) => ({
-        ...initialValues,
-        ...prevState,
-        ...data?.getVendor,
-        image: data?.getVendor?.image ?? '',
-      }));
+    setFormValues((prevState) => ({
+      ...initialValues,
+      ...prevState,
+      ...data?.getVendor,
+      image: data?.getVendor?.image ?? '',
+    }));
   };
   // Use Effects
   useEffect(() => {
@@ -206,6 +206,7 @@ export default function VendorAddForm({
                   isSubmitting,
                   setFieldValue,
                 }) => {
+                  console.log("Form Errors:", errors);
                   return (
                     <Form onSubmit={handleSubmit}>
                       <div className="space-y-3">
