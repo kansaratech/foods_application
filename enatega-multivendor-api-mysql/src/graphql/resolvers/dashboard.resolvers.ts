@@ -111,6 +111,8 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7));
 
+      const round2 = (n: number | null | undefined) => Math.round((n ?? 0) * 100) / 100;
+
       const [
         ordersDay,
         ordersWeek,
@@ -124,36 +126,33 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
         openCash,
         waitlist,
       ] = await Promise.all([
-        prisma.order.findMany({ where: { createdAt: { gte: startOfDay } }, select: { orderAmount: true } }),
-        prisma.order.findMany({ where: { createdAt: { gte: startOfWeek } }, select: { orderAmount: true } }),
+        prisma.order.aggregate({ where: { createdAt: { gte: startOfDay } }, _count: { _all: true }, _sum: { orderAmount: true } }),
+        prisma.order.aggregate({ where: { createdAt: { gte: startOfWeek } }, _count: { _all: true }, _sum: { orderAmount: true } }),
         prisma.order.count({ where: { orderStatus: { in: ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'] } } }),
         prisma.restaurant.count({ where: { isActive: true, isAvailable: true } }),
         prisma.restaurant.count(),
         prisma.riderProfile.count({ where: { available: true } }),
         prisma.user.count({ where: { userType: 'RIDER' } }),
-        prisma.withdrawRequest.findMany({ where: { status: 'PENDING' }, select: { requestAmount: true } }),
-        prisma.commissionRecord.findMany({ where: { billId: null, selfCollected: false }, select: { commissionAmount: true } }),
-        prisma.riderCashEntry.findMany({ where: { remittanceId: null }, select: { owedToPlatform: true } }),
+        prisma.withdrawRequest.aggregate({ where: { status: 'PENDING' }, _count: { _all: true }, _sum: { requestAmount: true } }),
+        prisma.commissionRecord.aggregate({ where: { billId: null, selfCollected: false }, _sum: { commissionAmount: true } }),
+        prisma.riderCashEntry.aggregate({ where: { remittanceId: null }, _sum: { owedToPlatform: true } }),
         prisma.waitlistEntry.count({ where: { notified: false } }),
       ]);
 
-      const sum = (arr: { [k: string]: number }[], k: string) =>
-        Math.round(arr.reduce((s, r) => s + (r[k] ?? 0), 0) * 100) / 100;
-
       return {
-        ordersToday: ordersDay.length,
-        gmvToday: sum(ordersDay, 'orderAmount'),
-        ordersWeek: ordersWeek.length,
-        gmvWeek: sum(ordersWeek, 'orderAmount'),
+        ordersToday: ordersDay._count._all,
+        gmvToday: round2(ordersDay._sum.orderAmount),
+        ordersWeek: ordersWeek._count._all,
+        gmvWeek: round2(ordersWeek._sum.orderAmount),
         activeOrders,
         activeStores,
         totalStores,
         ridersOnline,
         totalRiders,
-        pendingPayouts: pendingPayouts.length,
-        pendingPayoutAmount: sum(pendingPayouts, 'requestAmount'),
-        unbilledCommission: sum(unbilled, 'commissionAmount'),
-        codCashOutstanding: sum(openCash, 'owedToPlatform'),
+        pendingPayouts: pendingPayouts._count._all,
+        pendingPayoutAmount: round2(pendingPayouts._sum.requestAmount),
+        unbilledCommission: round2(unbilled._sum.commissionAmount),
+        codCashOutstanding: round2(openCash._sum.owedToPlatform),
         waitlistUnnotified: waitlist,
       };
     },
@@ -241,33 +240,41 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
     getDashboardUsersByYear: async (_parent, args: { year: number }, context) => {
       requireRole(context, ['ADMIN']);
       const { year } = args;
-      const usersCount: number[] = [];
-      const vendorsCount: number[] = [];
-      const ridersCount: number[] = [];
-      const restaurantsCount: number[] = [];
+      const yearStart = new Date(year, 0, 1);
+      const yearEnd = new Date(year, 11, 31, 23, 59, 59, 999);
+      const prevYearRange = { gte: new Date(year - 1, 0, 1), lte: new Date(year - 1, 11, 31, 23, 59, 59, 999) };
 
-      for (let month = 0; month < 12; month++) {
-        const range = monthRange(year, month);
-        const [users, vendors, riders, restaurants] = await Promise.all([
-          prisma.user.count({ where: { userType: 'CUSTOMER', createdAt: range } }),
-          prisma.user.count({ where: { userType: 'VENDOR', createdAt: range } }),
-          prisma.user.count({ where: { userType: 'RIDER', createdAt: range } }),
-          prisma.restaurant.count({ where: { createdAt: range } }),
+      // 4 queries + 4 counts instead of 52 sequential counts (the old month-by-
+      // month loop was the main "dashboard is slow after login" cause).
+      const [yearUsers, yearRestaurants, prevUsers, prevVendors, prevRiders, prevRestaurants] =
+        await Promise.all([
+          prisma.user.findMany({
+            where: { createdAt: { gte: yearStart, lte: yearEnd }, userType: { in: ['CUSTOMER', 'VENDOR', 'RIDER'] } },
+            select: { userType: true, createdAt: true },
+          }),
+          prisma.restaurant.findMany({
+            where: { createdAt: { gte: yearStart, lte: yearEnd } },
+            select: { createdAt: true },
+          }),
+          prisma.user.count({ where: { userType: 'CUSTOMER', createdAt: prevYearRange } }),
+          prisma.user.count({ where: { userType: 'VENDOR', createdAt: prevYearRange } }),
+          prisma.user.count({ where: { userType: 'RIDER', createdAt: prevYearRange } }),
+          prisma.restaurant.count({ where: { createdAt: prevYearRange } }),
         ]);
-        usersCount.push(users);
-        vendorsCount.push(vendors);
-        ridersCount.push(riders);
-        restaurantsCount.push(restaurants);
+
+      const usersCount = new Array(12).fill(0);
+      const vendorsCount = new Array(12).fill(0);
+      const ridersCount = new Array(12).fill(0);
+      const restaurantsCount = new Array(12).fill(0);
+      for (const u of yearUsers) {
+        const m = u.createdAt.getMonth();
+        if (u.userType === 'CUSTOMER') usersCount[m] += 1;
+        else if (u.userType === 'VENDOR') vendorsCount[m] += 1;
+        else if (u.userType === 'RIDER') ridersCount[m] += 1;
       }
+      for (const r of yearRestaurants) restaurantsCount[r.createdAt.getMonth()] += 1;
 
       const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
-      const prevYearRange = { gte: new Date(year - 1, 0, 1), lte: new Date(year - 1, 11, 31, 23, 59, 59, 999) };
-      const [prevUsers, prevVendors, prevRiders, prevRestaurants] = await Promise.all([
-        prisma.user.count({ where: { userType: 'CUSTOMER', createdAt: prevYearRange } }),
-        prisma.user.count({ where: { userType: 'VENDOR', createdAt: prevYearRange } }),
-        prisma.user.count({ where: { userType: 'RIDER', createdAt: prevYearRange } }),
-        prisma.restaurant.count({ where: { createdAt: prevYearRange } }),
-      ]);
       const pct = (curr: number, prev: number) => (prev > 0 ? ((curr - prev) / prev) * 100 : null);
 
       return {
@@ -287,8 +294,9 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
     getDashboardOrdersByType: async (_parent, _args, context) => {
       requireRole(context, ['ADMIN']);
       const statuses: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED', 'DELIVERED', 'COMPLETED', 'CANCELLED'];
-      const counts = await Promise.all(statuses.map((status) => prisma.order.count({ where: { orderStatus: status } })));
-      return statuses.map((status, i) => ({ label: status, value: counts[i] }));
+      const grouped = await prisma.order.groupBy({ by: ['orderStatus'], _count: { _all: true } });
+      const byStatus = new Map(grouped.map((g) => [g.orderStatus, g._count._all]));
+      return statuses.map((status) => ({ label: status, value: byStatus.get(status) ?? 0 }));
     },
 
     getDashboardSalesByType: async (_parent, _args, context) => {

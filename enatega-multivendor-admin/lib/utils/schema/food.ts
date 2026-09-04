@@ -14,5 +14,14 @@ export const FoodSchema = Yup.object().shape({
     .nullable(),
   category: Yup.mixed<IDropdownSelectItem>().required('Required'),
   subCategory: Yup.mixed<IDropdownSelectItem>().nullable().optional(),
-  image: Yup.string().url('Invalid image URL').required('Required'),
+  // The multi-image uploader writes to `images`; older records only have the
+  // single `image` URL. Require an image in whichever field the record uses.
+  image: Yup.string().nullable(),
+  images: Yup.array()
+    .of(Yup.string())
+    .when('image', {
+      is: (image: string | null | undefined) => !image,
+      then: (schema) => schema.min(1, 'Add at least one image').required('Add at least one image'),
+      otherwise: (schema) => schema.nullable().notRequired(),
+    }),
 });

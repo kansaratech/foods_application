@@ -1,8 +1,14 @@
+'use client';
 // Core
 import { useEffect, useMemo, useState } from 'react';
 
 // Prime React
-import { Chart } from 'primereact/chart';
+import dynamic from 'next/dynamic';
+
+// Lazy + client-only so Chart.js is a separate chunk, off the initial bundle.
+const LineChart = dynamic(() => import('@/lib/ui/useable-components/line-chart'), {
+  ssr: false,
+});
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 import { GET_DASHBOARD_USERS_BY_YEAR } from '@/lib/api/graphql';
 import {
@@ -159,7 +165,7 @@ export default function GrowthOverView() {
         {loading ? (
           <DashboardUsersByYearStatsSkeleton />
         ) : (
-          <Chart type="line" data={chartData} options={chartOptions} />
+          <LineChart data={chartData} options={chartOptions} />
         )}
       </div>
     </div>

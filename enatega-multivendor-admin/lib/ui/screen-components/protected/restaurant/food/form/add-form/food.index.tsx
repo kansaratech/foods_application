@@ -385,15 +385,22 @@ export default function FoodDetails({
                           onChange={(images) => setFieldValue('images', images)}
                           maxImages={5}
                           style={{
-                            borderColor: onErrorMessageMatcher(
-                              'image',
-                              errors?.image as string,
-                              FoodErrors
-                            )
-                              ? 'red'
-                              : '',
+                            borderColor:
+                              (errors?.images as string) ||
+                              onErrorMessageMatcher(
+                                'image',
+                                errors?.image as string,
+                                FoodErrors
+                              )
+                                ? 'red'
+                                : '',
                           }}
                         />
+                        {(errors?.images as string) && (
+                          <span className="text-xs text-red-500">
+                            {errors.images as string}
+                          </span>
+                        )}
                       </div>
                     </div>
 

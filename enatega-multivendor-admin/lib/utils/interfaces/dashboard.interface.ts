@@ -52,6 +52,20 @@ export interface IDashboardRestaurantStatsTableComponentsProps
   data: IDashboardRestaurantOrderSalesDetailsByPaymentMethodData;
 }
 
+export type TPaymentMethodKey = 'all' | 'cod' | 'card';
+
+export interface IPaymentMethodStatsBucket {
+  key: TPaymentMethodKey;
+  items: IDashboardOrderSalesDetailsByPaymentMethodData[];
+}
+
+export interface IPaymentMethodStatsComponentsProps
+  extends IGlobalComponentProps {
+  loading: boolean;
+  buckets: IPaymentMethodStatsBucket[];
+  currency: string;
+}
+
 // API
 
 // Super Admin
@@ -118,14 +132,14 @@ export interface IDashboardRestaurantSalesOrderCountDetailsByYearResponseGraphQL
   };
 }
 
-interface IDashboardRestaurantOrderSalesDetailsByPaymentMethodData {
+export interface IDashboardRestaurantOrderSalesDetailsByPaymentMethodData {
   total_orders: number;
   total_sales: number;
   total_sales_without_delivery: number;
   total_delivery_fee: number;
 }
 
-interface IDashboardOrderSalesDetailsByPaymentMethodData {
+export interface IDashboardOrderSalesDetailsByPaymentMethodData {
   _type: string;
   data: IDashboardRestaurantOrderSalesDetailsByPaymentMethodData;
 }
