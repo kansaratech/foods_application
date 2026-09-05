@@ -3,23 +3,23 @@
 
     powershell -ExecutionPolicy Bypass -File scripts\make-deploy-zip.ps1
 
-  Produces  <Desktop>\padharo-deploy.zip  (override with -Out).
+  Produces  <Desktop>\localsell-deploy.zip  (override with -Out).
 
   What goes in: the 4 service source folders + every package-lock.json,
   Dockerfile, .dockerignore, docker-compose.yml, deploy/ (example env only),
-  each app's prisma/ and its own lib/, and api-mysql/scripts/ (so
+  each app's prisma/ and its own lib/, and api/scripts/ (so
   `npm run verify` works on the server).
 
   What stays out: node_modules / build output / .git, the customer + rider
   Expo apps (not docker services), root assets|brand|lib|scripts|.github,
-  logs, and every real .env file (recreate deploy/padharo.env on the server).
+  logs, and every real .env file (recreate deploy/localsell.env on the server).
 
-  On the server:  unzip -o ~/padharo-deploy.zip  then follow SERVER-DEPLOY.sh
-  (dropped into the zip root) or PADHARO_DEPLOYMENT.md section 12.1.
+  On the server:  unzip -o ~/localsell-deploy.zip  then follow SERVER-DEPLOY.sh
+  (dropped into the zip root) or LOCALSELL_DEPLOYMENT.md section 12.1.
 #>
 [CmdletBinding()]
 param(
-  [string]$Out = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'padharo-deploy.zip'),
+  [string]$Out = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'localsell-deploy.zip'),
   # Also drop web/public/assets/images/png (~44 MB of unoptimised marketing
   # images that aren't referenced by any rendered component). Shrinks the zip
   # from ~58 MB to ~13 MB. Eyeball the web marketing pages after deploying.
@@ -28,7 +28,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $src   = Split-Path -Parent $PSScriptRoot          # repo root (parent of scripts\)
-$stage = Join-Path $env:TEMP 'padharo-deploy-stage'
+$stage = Join-Path $env:TEMP 'localsell-deploy-stage'
 
 Write-Host "Repo   : $src"
 Write-Host "Stage  : $stage"
@@ -45,17 +45,17 @@ $xd = @(
   'node_modules', '.next', '.expo', '.expo-shared', '.cache', '.turbo',
   '.git', 'dist', 'build', 'coverage', 'cypress', '.nyc_output',
   '.claude', '.vscode', '.idea',
-  (Join-Path $src 'enatega-multivendor-app'),
-  (Join-Path $src 'enatega-multivendor-rider'),
-  (Join-Path $src 'enatega-multivendor-store\android'),
-  (Join-Path $src 'enatega-multivendor-store\ios'),
+  (Join-Path $src 'localsell-app'),
+  (Join-Path $src 'localsell-rider'),
+  (Join-Path $src 'localsell-store\android'),
+  (Join-Path $src 'localsell-store\ios'),
   (Join-Path $src 'assets'),
   (Join-Path $src 'brand'),
   (Join-Path $src 'lib'),
   (Join-Path $src 'scripts'),
   (Join-Path $src '.github')
 )
-if ($Lean) { $xd += (Join-Path $src 'enatega-multivendor-web\public\assets\images\png') }
+if ($Lean) { $xd += (Join-Path $src 'localsell-web\public\assets\images\png') }
 $xf = @(
   '*.log', '*.tsbuildinfo', '*.pdf', '*.stackdump', 'index.html',
   '.env', '*.env', '.env.local', '.env.development', '.env.production',
@@ -68,30 +68,30 @@ $rc = @($src, $stage, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/R:1', '/W
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed (exit $LASTEXITCODE)" }
 
 # keep the example env; make sure no real secret slipped through
-Copy-Item (Join-Path $src 'deploy\padharo.env.example') (Join-Path $stage 'deploy\padharo.env.example') -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $src 'deploy\localsell.env.example') (Join-Path $stage 'deploy\localsell.env.example') -Force -ErrorAction SilentlyContinue
 Get-ChildItem $stage -Recurse -Filter '*.env' -File |
-  Where-Object { $_.Name -ne 'padharo.env.example' } |
+  Where-Object { $_.Name -ne 'localsell.env.example' } |
   ForEach-Object { Write-Warning "removing stray env: $($_.FullName.Substring($stage.Length))"; Remove-Item $_.FullName -Force }
 
 # ---- sanity check: every file the server build needs ----------------------
 $must = @(
   'docker-compose.yml',
-  'deploy\padharo.env.example',
-  'PADHARO_DEPLOYMENT.md',
-  'enatega-multivendor-api-mysql\package-lock.json',
-  'enatega-multivendor-api-mysql\Dockerfile',
-  'enatega-multivendor-api-mysql\prisma\schema.prisma',
-  'enatega-multivendor-api-mysql\prisma\deploy\run.ts',
-  'enatega-multivendor-api-mysql\scripts\verify-launch.mjs',
-  'enatega-multivendor-api-mysql\src\scheduler.ts',
-  'enatega-multivendor-web\package-lock.json',
-  'enatega-multivendor-web\Dockerfile',
-  'enatega-multivendor-admin\package-lock.json',
-  'enatega-multivendor-admin\Dockerfile',
-  'enatega-multivendor-store\package-lock.json',
-  'enatega-multivendor-store\Dockerfile',
-  'enatega-multivendor-store\nginx.conf',
-  'enatega-multivendor-store\languages\hi.js'
+  'deploy\localsell.env.example',
+  'LOCALSELL_DEPLOYMENT.md',
+  'localsell-api\package-lock.json',
+  'localsell-api\Dockerfile',
+  'localsell-api\prisma\schema.prisma',
+  'localsell-api\prisma\deploy\run.ts',
+  'localsell-api\scripts\verify-launch.mjs',
+  'localsell-api\src\scheduler.ts',
+  'localsell-web\package-lock.json',
+  'localsell-web\Dockerfile',
+  'localsell-admin\package-lock.json',
+  'localsell-admin\Dockerfile',
+  'localsell-store\package-lock.json',
+  'localsell-store\Dockerfile',
+  'localsell-store\nginx.conf',
+  'localsell-store\languages\hi.js'
 )
 $missing = $must | Where-Object { -not (Test-Path (Join-Path $stage $_)) }
 if ($missing) { throw "staging is missing required files:`n  " + ($missing -join "`n  ") }
@@ -99,10 +99,10 @@ if ($missing) { throw "staging is missing required files:`n  " + ($missing -join
 # ---- server helper script into the zip root ------------------------------
 $serverScript = @'
 #!/usr/bin/env bash
-# One-shot server deploy. Run from the project dir after: unzip -o ~/padharo-deploy.zip
+# One-shot server deploy. Run from the project dir after: unzip -o ~/localsell-deploy.zip
 set -e
-E="--env-file deploy/padharo.env"
-[ -f deploy/padharo.env ] || { echo "!! create deploy/padharo.env first (cp deploy/padharo.env.example, then fill it)"; exit 1; }
+E="--env-file deploy/localsell.env"
+[ -f deploy/localsell.env ] || { echo "!! create deploy/localsell.env first (cp deploy/localsell.env.example, then fill it)"; exit 1; }
 
 echo "== build + (re)start all services =="
 docker compose $E up -d --build
@@ -121,10 +121,10 @@ docker compose $E exec -T api node -e '
     .then(d=>{const m=(d.errors&&d.errors[0]&&d.errors[0].message)||"";
       // field exists if the error is anything OTHER than a "Cannot query field" schema error
       console.log((/Cannot query field/.test(m) ? "  MISSING " : "  OK   ") + n);});
-  Promise.all(["commissionPeriodPreview","riderCashOutstanding","platformFinanceReport","payoutRuns","reconciliationReport","walletAdjustments","pendingStoreDocuments","storePerformance"].map(q));
+  Promise.all(["commissionPeriodPreview","riderCashOutstanding","platformFinanceReport","payoutRuns","reconciliationReport","walletAdjustments","pendingStoreDocuments","storePerformance","myPayoutHistory"].map(q));
 '
 
-echo "== done. First deploy? add the Maps key + demo data - see PADHARO_DEPLOYMENT.md section 8 =="
+echo "== done. First deploy? add the Maps key + demo data - see LOCALSELL_DEPLOYMENT.md section 8 =="
 '@ -replace "`r`n","`n"
 # write LF-only, no BOM — a BOM breaks the shebang
 [System.IO.File]::WriteAllText((Join-Path $stage 'SERVER-DEPLOY.sh'), $serverScript, (New-Object System.Text.UTF8Encoding($false)))
@@ -136,4 +136,4 @@ Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $Out -Compression
 $mb = [math]::Round((Get-Item $Out).Length / 1MB, 1)
 $files = (Get-ChildItem $stage -Recurse -File).Count
 Write-Host "`nOK  $Out  ($mb MB, $files files)"
-Write-Host "Push it to the server, then:  unzip -o ~/padharo-deploy.zip && bash SERVER-DEPLOY.sh"
+Write-Host "Push it to the server, then:  unzip -o ~/localsell-deploy.zip && bash SERVER-DEPLOY.sh"

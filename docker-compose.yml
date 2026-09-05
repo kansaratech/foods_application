@@ -1,20 +1,20 @@
-# Padharo — production stack for padharo.kansaratech.com
+# LocalSell — production stack for localsell.in
 #
-#   Build + run:   docker compose --env-file deploy/padharo.env up -d --build
-#   Logs:          docker compose --env-file deploy/padharo.env logs -f
-#   Stop:          docker compose --env-file deploy/padharo.env down
+#   Build + run:   docker compose --env-file deploy/localsell.env up -d --build
+#   Logs:          docker compose --env-file deploy/localsell.env logs -f
+#   Stop:          docker compose --env-file deploy/localsell.env down
 #
 # Host ports (bound to 127.0.0.1 only — Apache/Sentora reverse-proxies to them):
-#   6000 -> web    (container :3000)   padharo.kansaratech.com
-#   6001 -> admin  (container :3000)   padharo-admin.kansaratech.com
-#   6002 -> api    (container :4000)   padharo-api.kansaratech.com
-#   6004 -> store  (container :80)     padharo-store.kansaratech.com  (Expo web static export)
+#   6000 -> web    (container :3000)   localsell.in
+#   6001 -> admin  (container :3000)   admin.localsell.in
+#   6002 -> api    (container :4000)   api.localsell.in
+#   6004 -> store  (container :80)     store.localsell.in  (Expo web static export)
 #        (6003 is taken by the money_visior container on this host)
 #
 # The api joins the EXTERNAL `mysql_config_dev_default` network so it can reach
 # the shared MySQL container by name (same pattern as ams_container).
 
-name: padharo
+name: localsell
 
 x-logging: &default-logging
   driver: json-file
@@ -25,18 +25,18 @@ x-logging: &default-logging
 services:
   api:
     build:
-      context: ./enatega-multivendor-api-mysql
-    image: padharo-api:latest
-    container_name: padharo_api
+      context: ./localsell-api
+    image: localsell-api:latest
+    container_name: localsell_api
     restart: unless-stopped
     env_file:
-      - ./deploy/padharo.env
+      - ./deploy/localsell.env
     ports:
       - "127.0.0.1:6002:4000"
     volumes:
-      - padharo_uploads:/app/uploads
+      - localsell_uploads:/app/uploads
     networks:
-      - padharo_internal
+      - localsell_internal
       - mysql_config_dev_default
     logging: *default-logging
     healthcheck:
@@ -52,56 +52,56 @@ services:
 
   web:
     build:
-      context: ./enatega-multivendor-web
+      context: ./localsell-web
       args:
-        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/padharo.env}
-        NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/padharo.env}
-        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/padharo.env}
-    image: padharo-web:latest
-    container_name: padharo_web
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/localsell.env}
+        NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/localsell.env}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/localsell.env}
+    image: localsell-web:latest
+    container_name: localsell_web
     restart: unless-stopped
     ports:
       - "127.0.0.1:6000:3000"
     networks:
-      - padharo_internal
+      - localsell_internal
     logging: *default-logging
 
   admin:
     build:
-      context: ./enatega-multivendor-admin
+      context: ./localsell-admin
       args:
-        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/padharo.env}
-        NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/padharo.env}
-        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/padharo.env}
-    image: padharo-admin:latest
-    container_name: padharo_admin
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/localsell.env}
+        NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/localsell.env}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/localsell.env}
+    image: localsell-admin:latest
+    container_name: localsell_admin
     restart: unless-stopped
     ports:
       - "127.0.0.1:6001:3000"
     networks:
-      - padharo_internal
+      - localsell_internal
     logging: *default-logging
 
   store:
     build:
-      context: ./enatega-multivendor-store
+      context: ./localsell-store
       args:
-        EXPO_PUBLIC_GRAPHQL_URL: ${EXPO_PUBLIC_GRAPHQL_URL:?set it in deploy/padharo.env}
-        EXPO_PUBLIC_WS_GRAPHQL_URL: ${EXPO_PUBLIC_WS_GRAPHQL_URL:?set it in deploy/padharo.env}
-    image: padharo-store:latest
-    container_name: padharo_store
+        EXPO_PUBLIC_GRAPHQL_URL: ${EXPO_PUBLIC_GRAPHQL_URL:?set it in deploy/localsell.env}
+        EXPO_PUBLIC_WS_GRAPHQL_URL: ${EXPO_PUBLIC_WS_GRAPHQL_URL:?set it in deploy/localsell.env}
+    image: localsell-store:latest
+    container_name: localsell_store
     restart: unless-stopped
     ports:
       - "127.0.0.1:6004:80"
     networks:
-      - padharo_internal
+      - localsell_internal
     logging: *default-logging
 
 volumes:
-  padharo_uploads:
+  localsell_uploads:
 
 networks:
-  padharo_internal:
-    name: padharo_internal
+  localsell_internal:
+    name: localsell_internal
   mysql_config_dev_default:
     external: true
