@@ -19,7 +19,6 @@ import {
   faMoneyBillWave,
   faReceipt,
   faStore,
-  faTriangleExclamation,
   faUsers,
   faWallet,
 } from '@fortawesome/free-solid-svg-icons';

@@ -13,15 +13,11 @@ import UpdateRestaurantDetails from './update-profile-detail';
 import UpdateRestaurantLocation from './update-restaurant-location';
 import UpdateTiming from './update-timing';
 
-// Interfaces & Types
-import { IRestaurantsAddFormComponentProps } from '@/lib/utils/interfaces';
 import { useTranslations } from 'next-intl';
 import UpdateBusinessDetails from './update-bussiness-details';
 import StepperHeader from '@/lib/ui/useable-components/stepper-header';
 
-const UpdateRestaurantsProfileForm = ({
-  position: _position = 'right',
-}: IRestaurantsAddFormComponentProps) => {
+const UpdateRestaurantsProfileForm = () => {
   // Hooks
   const t = useTranslations();
 

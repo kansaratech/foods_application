@@ -261,7 +261,7 @@ docker compose --env-file deploy/localsell.env restart api
 ```
 
 `db:deploy -- --demo` runs `npm run seed` (prints base logins — admin
-`admin@enatega.local` / `Admin@123`, etc.) and `seed:deogarh` (8 stores, flips
+`admin@localsell.in` / `Admin@123`, etc.) and `seed:deogarh` (8 stores, flips
 `Configuration` to INR / ₹, commission 20% / MONTHLY, map centre Deogarh).
 Store‑app logins: `dgh-<slug>@store.localsell.in` / `Store@123`
 (e.g. `dgh-shrinath-mishthan-bhandar@store.localsell.in`).
@@ -489,7 +489,7 @@ apachectl configtest && systemctl reload httpd
    - two keys: browser key (referrer‑restricted to `https://localsell.in/* (and admin./store./api. subdomains)`)
      for `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, and an IP‑restricted key in
      `Configuration.googleMapsApiKey`.
-2. **Rotate the super‑admin.** `admin@enatega.local` / `Admin@123` is a public
+2. **Rotate the super‑admin.** `admin@localsell.in` / `Admin@123` is a public
    default — log into the admin panel and change email + password immediately.
 3. **Check `Configuration`** (Admin → Management → Configuration): currency
    `INR` / `₹`, `skipEmailVerification` + `skipMobileVerification` both **on**
@@ -509,7 +509,7 @@ Browser:
 - [ ] `https://localsell.in` loads; Deogarh stores show
 - [ ] Set a Deogarh delivery location → stores listed; a far location → "area unavailable" screen
 - [ ] `/maps/place-autocomplete?input=deogarh` returns predictions (else → §10.1)
-- [ ] Customer login (`customer@enatega.local` / `Customer@123`)
+- [ ] Customer login (`customer@localsell.in` / `Customer@123`)
 - [ ] Admin login; upload a store image → serves from `…/uploads/…`
 
 **Order flow (customer ↔ store, proves the WebSocket path):**
@@ -647,7 +647,7 @@ restore a DB dump if the backfill itself is suspected.
 - [ ] `chmod 600 deploy/localsell.env`; it is git‑ignored — never commit it
 - [ ] `JWT_SECRET` + `REFRESH_TOKEN_SECRET` freshly generated, **unique to this deployment**
 - [ ] MySQL `localsell` user password is deployment‑specific (`openssl rand -hex 24`)
-- [ ] `admin@enatega.local` / `Admin@123` rotated right after first login (§10.2)
+- [ ] `admin@localsell.in` / `Admin@123` rotated right after first login (§10.2)
 - [ ] `CORS_ORIGIN` is an explicit list, never `*`
 - [ ] all container host ports bound to `127.0.0.1` (compose already does this)
 - [ ] HSTS + `X-Content-Type-Options` headers present on the `:443` vhosts (§9c)
