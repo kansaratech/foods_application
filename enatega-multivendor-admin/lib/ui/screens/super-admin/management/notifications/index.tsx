@@ -1,3 +1,4 @@
+import '@/lib/ui/useable-components/management-page/management.css';
 //Components
 import NotificationForm from '@/lib/ui/screen-components/protected/super-admin/notifications/form';
 import NotificationHeader from '@/lib/ui/screen-components/protected/super-admin/notifications/view/header/screen-header';
@@ -14,7 +15,7 @@ export default function NotificationsScreen() {
     setVisible(true);
   };
   return (
-    <div className="screen-container">
+    <div className="management-page management-notifications">
       <NotificationHeader handleButtonClick={handleButtonClick} />
       <NotificationMain />
       <NotificationForm setVisible={setVisible} visible={visible} />

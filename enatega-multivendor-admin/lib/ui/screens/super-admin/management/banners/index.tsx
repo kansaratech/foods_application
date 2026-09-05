@@ -1,4 +1,6 @@
 'use client';
+import '@/lib/ui/useable-components/management-page/management.css';
+
 //Components
 import BannersAddForm from '@/lib/ui/screen-components/protected/super-admin/banner/add-form';
 import BannersHeader from '@/lib/ui/screen-components/protected/super-admin/banner/view/header/screen-header';
@@ -9,7 +11,7 @@ import BannerStateProvider from '@/lib/states/Banner';
 
 export default function BannerScreen() {
   return (
-    <div className="screen-container">
+    <div className="management-page management-banners">
       <BannerStateProvider
         render={({
           banner,

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Core
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // Prime React
 import { FilterMatchMode } from 'primereact/api';
@@ -57,12 +57,14 @@ export default function WithdrawRequestsSuperAdminMain({
     ['REQUESTED', 'TRANSFERRED', 'CANCELLED'].includes(action)
   );
 
-  // Query with proper typing
+  // Query with proper typing — status and user-type filters are applied
+  // server-side so the pagination total always matches what's shown.
   const { data, loading, refetch } = useQuery(GET_ALL_WITHDRAW_REQUESTS, {
     variables: {
       pageSize: pageSize,
       pageNo: currentPage,
       userType: selectedUserType,
+      status: selectedStatus,
       search: debouncedSearch,
     },
     fetchPolicy: 'cache-and-network',
@@ -95,24 +97,11 @@ export default function WithdrawRequestsSuperAdminMain({
     },
   ];
 
-  // Filter data based on status on the frontend
-  const filteredData = useMemo(() => {
-    if (!data?.withdrawRequests?.data) return [];
-
-    let filtered = data.withdrawRequests.data;
-
-    // Apply status filter if selected
-    if (selectedStatus) {
-      filtered = filtered.filter((item) => item.status === selectedStatus);
-    }
-
-    return filtered;
-  }, [data?.withdrawRequests?.data, selectedStatus]);
-
   // Use Effect
   useEffect(() => {
+    setCurrentPage(1);
     refetch({ search: debouncedSearch });
-  }, [selectedUserType, debouncedSearch]);
+  }, [selectedUserType, selectedStatus, debouncedSearch]);
 
   return (
     <div className="p-3">
@@ -125,7 +114,7 @@ export default function WithdrawRequestsSuperAdminMain({
             setSelectedActions={setSelectedActions}
           />
         }
-        data={filteredData}
+        data={data?.withdrawRequests?.data ?? []}
         filters={filters}
         setSelectedData={setSelectedData}
         selectedData={selectedData}

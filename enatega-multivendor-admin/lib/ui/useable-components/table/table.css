@@ -205,11 +205,10 @@
   font-size: 0.75rem;
 }
 
-/* Let the scroll body use the height passed via scrollHeight (viewport-based),
-   but never collapse smaller than this. */
-.responsive-admin-table .p-datatable-scrollable .p-datatable-wrapper,
+/* Short tables and empty states must fit their content, including opt-in scroll areas. */
+.responsive-admin-table .p-datatable-wrapper,
 .responsive-admin-table .p-datatable-scrollable-body {
-  min-height: 320px;
+  min-height: 0;
 }
 
 @media (max-width: 768px) {

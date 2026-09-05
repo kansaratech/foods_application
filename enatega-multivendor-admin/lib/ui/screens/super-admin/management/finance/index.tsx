@@ -1,5 +1,7 @@
 'use client';
+import '@/lib/ui/useable-components/management-page/management.css';
 
+import ManagementHeading from '@/lib/ui/useable-components/management-page/heading';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 
@@ -7,11 +9,13 @@ import FinanceReportMain from '@/lib/ui/screen-components/protected/super-admin/
 import CommissionBillsMain from '@/lib/ui/screen-components/protected/super-admin/commission-bills/view/main';
 import RiderCashMain from '@/lib/ui/screen-components/protected/super-admin/rider-cash/view/main';
 import CommissionRateMain from '@/lib/ui/screen-components/protected/super-admin/commission-rate/view/main';
-import CommissionRateHeader from '@/lib/ui/screen-components/protected/super-admin/commission-rate/view/header/screen-header';
-import WithDrawRequestSuperAdminScreen from '@/lib/ui/screens/super-admin/wallet/withdrawalRequest';
+import CommissionSettingsPanel from '@/lib/ui/screen-components/protected/super-admin/commission-rate/settings-panel';
+import WithdrawRequestsSuperAdminMain from '@/lib/ui/screen-components/protected/super-admin/withdraw-requests/view/main';
+import WithdrawRequestForm from '@/lib/ui/screen-components/protected/super-admin/withdraw-requests/form';
 import PayoutRunsMain from '@/lib/ui/screen-components/protected/super-admin/payout-runs/view/main';
 import ReconciliationMain from '@/lib/ui/screen-components/protected/super-admin/reconciliation/view/main';
 import WalletAdjustmentsMain from '@/lib/ui/screen-components/protected/super-admin/wallet-adjustments/view/main';
+import { IWithDrawRequest } from '@/lib/utils/interfaces/withdraw-request.interface';
 
 type TabKey =
   | 'overview'
@@ -26,6 +30,8 @@ type TabKey =
 export default function FinanceScreen() {
   const t = useTranslations();
   const [tab, setTab] = useState<TabKey>('overview');
+  const [withdrawFormVisible, setWithdrawFormVisible] = useState(false);
+  const [selectedWithdrawRequest, setSelectedWithdrawRequest] = useState<IWithDrawRequest | undefined>();
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'overview', label: t('Overview') },
@@ -39,13 +45,18 @@ export default function FinanceScreen() {
   ];
 
   return (
-    <div className="screen-container">
-      <div className="border-b px-3 pt-4 dark:border-dark-600">
-        <h1 className="mb-3 text-xl font-bold">{t('Finance')}</h1>
-        <div className="flex flex-wrap gap-1">
+    <div className="management-page management-finance">
+      <div>
+        <ManagementHeading
+          title={t('Finance')}
+          description="Monitor revenue, settlements, commissions and payouts."
+        />
+
+        <div className="management-tabs" aria-label="Finance views">
           {tabs.map((tb) => (
             <button
               key={tb.key}
+              aria-current={tab === tb.key ? 'page' : undefined}
               onClick={() => setTab(tb.key)}
               className={`rounded-t-md border-b-2 px-4 py-2 text-sm font-medium transition ${
                 tab === tb.key
@@ -65,13 +76,25 @@ export default function FinanceScreen() {
         {tab === 'bills' && <CommissionBillsMain />}
         {tab === 'rates' && (
           <>
-            <CommissionRateHeader />
+            <CommissionSettingsPanel />
             <CommissionRateMain />
           </>
         )}
         {tab === 'ridercash' && <RiderCashMain />}
         {tab === 'payoutruns' && <PayoutRunsMain />}
-        {tab === 'withdrawals' && <WithDrawRequestSuperAdminScreen />}
+        {tab === 'withdrawals' && (
+          <>
+            <WithdrawRequestsSuperAdminMain
+              setVisible={setWithdrawFormVisible}
+              setSelectedRequest={setSelectedWithdrawRequest}
+            />
+            <WithdrawRequestForm
+              setVisible={setWithdrawFormVisible}
+              visible={withdrawFormVisible}
+              selectedRequest={selectedWithdrawRequest}
+            />
+          </>
+        )}
         {tab === 'adjustments' && <WalletAdjustmentsMain />}
       </div>
     </div>

@@ -21,6 +21,7 @@ import { commissionTypeDefs } from './commission';
 import { financeOpsTypeDefs } from './finance-ops';
 import { storeDocsTypeDefs } from './store-docs';
 import { vendorDocsTypeDefs } from './vendor-docs';
+import { riderDocsTypeDefs } from './rider-docs';
 import { auditTypeDefs } from './audit';
 
 export const typeDefs = [
@@ -47,5 +48,6 @@ export const typeDefs = [
   financeOpsTypeDefs,
   storeDocsTypeDefs,
   vendorDocsTypeDefs,
+  riderDocsTypeDefs,
   auditTypeDefs,
 ];

@@ -183,12 +183,20 @@ export const financeOpsResolvers: IResolvers<unknown, GraphQLContext> = {
       });
 
       const lines = [
-        line('Commission accrued splits into self-collected + store-owed', accrued, selfCollected + storeOwedTotal),
-        line('Store-owed commission = invoiced + awaiting invoice', storeOwedTotal, storeOwedInvoiced + storeOwedPending),
-        line('Invoices raised = paid + waived + pending', billTotal, billPaid + billWaived + billPending),
-        line('COD cash collected = remitted + still held', codCollected, codRemitted + codOpen),
         line(
-          'All-time: confirmed rider remittances = cleared COD entries',
+          'Every rupee of commission earned is accounted for (either kept by the store to remit later, or already collected)',
+          accrued,
+          selfCollected + storeOwedTotal,
+        ),
+        line(
+          "What stores owe us matches what we've billed them plus what's still waiting to be billed",
+          storeOwedTotal,
+          storeOwedInvoiced + storeOwedPending,
+        ),
+        line('Every invoice sent to a store is either paid, waived, or still pending', billTotal, billPaid + billWaived + billPending),
+        line('Cash-on-delivery collected by riders matches what they’ve handed in plus what they’re still holding', codCollected, codRemitted + codOpen),
+        line(
+          'All time: every rupee riders have handed in matches a cash-collection record we expected',
           allConfirmedRemit._sum.amount ?? 0,
           allClearedEntries._sum.owedToPlatform ?? 0,
         ),

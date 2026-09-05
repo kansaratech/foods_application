@@ -6,11 +6,9 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 
 // Custom hooks
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+import useDebounce from '@/lib/hooks/useDebounce';
 // UI components
 import Table from '@/lib/ui/useable-components/table';
-
-// Utility functions
-// import { generateDummyCommissionRates } from '@/lib/utils/dummy';
 
 // Type definitions
 import { IQueryResult, ICommissionRateRestaurantResponse, IPaginationCommissionRateVars } from '@/lib/utils/interfaces';
@@ -21,9 +19,6 @@ import { useMutation } from '@apollo/client';
 // React hooks
 import { useContext, useEffect, useState } from 'react';
 
-// Table column definitions
-import { COMMISSION_RATE_ACTIONS } from '@/lib/utils/constants';
-
 import CommissionRateHeader from '../header/table-header';
 import { useTranslations } from 'next-intl';
 import { COMMISSION_RATE_COLUMNS } from '@/lib/ui/useable-components/table/columns/comission-rate-columns';
@@ -33,9 +28,20 @@ interface CommissionRateData {
     restaurant: ICommissionRateRestaurantResponse[];
     currentPage: number;
     totalPages: number;
+    totalCount: number;
     nextPage: boolean;
     prevPage: boolean;
   };
+}
+
+// The threshold checkboxes are nested (>20% implies >10% implies >5%), so
+// selecting several and OR-ing them together is the same as filtering by
+// the smallest selected threshold — that's what the server is asked for.
+function minSelectedRate(selectedActions: string[]): number | undefined {
+  const thresholds = selectedActions
+    .map((a) => parseFloat(a.replace(/[^\d.]/g, '')))
+    .filter((n) => !Number.isNaN(n));
+  return thresholds.length ? Math.min(...thresholds) : undefined;
 }
 
 export default function CommissionRateMain() {
@@ -44,9 +50,6 @@ export default function CommissionRateMain() {
 
   // States
   const [restaurants, setRestaurants] = useState<ICommissionRateRestaurantResponse[] | null>(null);
-  const [editingRestaurantIds, setEditingRestaurantIds] = useState<Set<string>>(
-    new Set()
-  );
   const [selectedRestaurants, setSelectedRestaurants] = useState<
     ICommissionRateRestaurantResponse[]
   >([]);
@@ -55,20 +58,31 @@ export default function CommissionRateMain() {
   );
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const debouncedSearch = useDebounce(searchTerm, 500);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   // Context
   const { showToast } = useContext(ToastContext);
 
-  // Query
+  // Query — search and the rate threshold are applied server-side so they
+  // cover the full vendor list, not just whatever page happens to be loaded.
   const { data, error, refetch, loading } = useQueryGQL(
     GET_COMMISSION_RATES_PAGINATED,
-    { page: currentPage, limit: rowsPerPage },
+    {
+      page: currentPage,
+      limit: rowsPerPage,
+      search: debouncedSearch || undefined,
+      minRate: minSelectedRate(selectedActions),
+    },
     {
       fetchPolicy: 'cache-and-network',
     }
   ) as IQueryResult<CommissionRateData | undefined, IPaginationCommissionRateVars>;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedActions]);
 
   // Mutation
   const [updateCommissionMutation] = useMutation(updateCommission);
@@ -108,11 +122,6 @@ export default function CommissionRateMain() {
           message: `${t('Commission rate updated for')} ${restaurant.name}`,
           duration: 2000,
         });
-        setEditingRestaurantIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(restaurantId);
-          return newSet;
-        });
         refetch();
       } catch (error) {
         showToast({
@@ -137,49 +146,6 @@ export default function CommissionRateMain() {
         )
         : null
     );
-    setEditingRestaurantIds((prev) => {
-      const newSet = new Set(prev);
-      newSet.add(restaurantId);
-      return newSet;
-    });
-  };
-
-  const getFilteredRestaurants = () => {
-    if (!restaurants) return [];
-    return restaurants.filter((restaurant) => {
-      const nameMatches = restaurant.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-      // Always show restaurants that are currently being edited
-      if (editingRestaurantIds.has(restaurant._id)) {
-        return true;
-      }
-
-      // Apply name filter
-      if (!nameMatches) {
-        return false;
-      }
-
-      // If no commission rate filters are applied, show all name matches
-      if (selectedActions.length === 0) {
-        return true;
-      }
-
-      // Apply commission rate filters
-      return selectedActions.some((action) => {
-        switch (action) {
-          case COMMISSION_RATE_ACTIONS.MORE_THAN_5:
-            return restaurant.commissionRate > 5;
-          case COMMISSION_RATE_ACTIONS.MORE_THAN_10:
-            return restaurant.commissionRate > 10;
-          case COMMISSION_RATE_ACTIONS.MORE_THAN_20:
-            return restaurant.commissionRate > 20;
-          default:
-            return false;
-        }
-      });
-    });
   };
 
   // Use Effects
@@ -201,9 +167,7 @@ export default function CommissionRateMain() {
   return (
     <div className="p-3">
       <Table
-        data={
-          (loading || restaurants === null) ? [] : getFilteredRestaurants()
-        }
+        data={(loading || restaurants === null) ? [] : restaurants}
         setSelectedData={setSelectedRestaurants}
         selectedData={selectedRestaurants}
         columns={COMMISSION_RATE_COLUMNS({
@@ -214,7 +178,7 @@ export default function CommissionRateMain() {
         loading={loading || restaurants === null}
         currentPage={currentPage}
         rowsPerPage={rowsPerPage}
-        totalRecords={(data?.commissionRate?.totalPages || 0) * rowsPerPage} // Approximation if totalCount missing
+        totalRecords={data?.commissionRate?.totalCount ?? 0}
         onPageChange={(page, rows) => {
           setCurrentPage(page);
           setRowsPerPage(rows);

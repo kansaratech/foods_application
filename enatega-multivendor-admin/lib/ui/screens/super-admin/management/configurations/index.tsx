@@ -1,3 +1,4 @@
+import './configurations.css';
 // Components
 import ConfigHeader from '@/lib/ui/screen-components/protected/super-admin/configuration/view/header';
 import ConfigMain from '@/lib/ui/screen-components/protected/super-admin/configuration/view/main';
@@ -12,7 +13,7 @@ export default function ConfigurationsScreen() {
   const t = useTranslations();
   const { ISPAID_VERSION } = useConfiguration();
   return (
-    <div className="screen-container">
+    <div className="configuration-page">
       <ConfigHeader />
       {ISPAID_VERSION ? (
         <ConfigMain />

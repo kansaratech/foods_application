@@ -1,5 +1,38 @@
 import { gql } from '@apollo/client';
 
+const RIDER_LIST_FIELDS = /* GraphQL */ `
+  _id
+  name
+  username
+  phone
+  email
+  image
+  available
+  isActive
+  status
+  employmentType
+  vehicleType
+  assigned
+  zone {
+    _id
+    title
+  }
+  currentTask {
+    orderId
+    status
+  }
+  vehicleDetails {
+    number
+  }
+  documentSummary {
+    required
+    submitted
+    verified
+    rejected
+    pending
+  }
+`;
+
 export const GET_RIDERS = gql`
   query riders {
     riders {
@@ -26,6 +59,8 @@ export const GET_RIDERS_PAGINATED = gql`
     $zone: String
     $available: Boolean
     $isActive: Boolean
+    $vehicleType: String
+    $onDelivery: Boolean
   ) {
     ridersPaginated(
       page: $page
@@ -34,23 +69,26 @@ export const GET_RIDERS_PAGINATED = gql`
       zone: $zone
       available: $available
       isActive: $isActive
+      vehicleType: $vehicleType
+      onDelivery: $onDelivery
     ) {
       data {
-        _id
-        name
-        username
-        phone
-        available
-        vehicleType
-        assigned
-        zone {
-          _id
-          title
-        }
+        ${RIDER_LIST_FIELDS}
       }
       totalCount
       currentPage
       totalPages
+    }
+  }
+`;
+
+export const GET_RIDER_STATS = gql`
+  query RiderStats {
+    riderStats {
+      total
+      online
+      onDelivery
+      documentsPending
     }
   }
 `;
@@ -62,7 +100,13 @@ export const GET_RIDER = gql`
       name
       username
       phone
+      email
+      image
       available
+      isActive
+      status
+      employmentType
+      vehicleType
       assigned
       zone {
         _id

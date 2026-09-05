@@ -9,6 +9,9 @@ export const UPSERT_STORE_DOCUMENT = gql`
     $holderName: String
     $ifsc: String
     $bankName: String
+    $issueDate: String
+    $fileName: String
+    $fileSize: String
     $expiryDate: String
   ) {
     upsertStoreDocument(
@@ -19,6 +22,9 @@ export const UPSERT_STORE_DOCUMENT = gql`
       holderName: $holderName
       ifsc: $ifsc
       bankName: $bankName
+      issueDate: $issueDate
+      fileName: $fileName
+      fileSize: $fileSize
       expiryDate: $expiryDate
     ) {
       _id

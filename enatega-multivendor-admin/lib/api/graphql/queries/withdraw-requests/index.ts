@@ -4,6 +4,7 @@ export const GET_ALL_WITHDRAW_REQUESTS = gql`
   query WithdrawRequests(
     $userType: UserTypeEnum
     $userId: String
+    $status: String
     $pageSize: Int!
     $pageNo: Int!
     $search: String
@@ -11,6 +12,7 @@ export const GET_ALL_WITHDRAW_REQUESTS = gql`
     withdrawRequests(
       userType: $userType
       userId: $userId
+      status: $status
       pagination: { pageSize: $pageSize, pageNo: $pageNo }
       search: $search
     ) {

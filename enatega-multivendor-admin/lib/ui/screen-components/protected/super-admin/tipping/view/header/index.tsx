@@ -1,7 +1,7 @@
 // Interface and Types
 
 // Components
-import HeaderText from '@/lib/ui/useable-components/header-text';
+import ManagementHeading from '@/lib/ui/useable-components/management-page/heading';
 import { useTranslations } from 'next-intl';
 
 const TippingHeader = () => {
@@ -9,11 +9,10 @@ const TippingHeader = () => {
   const t = useTranslations();
 
   return (
-    <div className="sticky top-0 z-10 w-full flex-shrink-0 bg-white dark:bg-dark-950 p-3 shadow-sm">
-      <div className="flex w-full justify-between">
-        <HeaderText text={t('Tipping')} />
-      </div>
-    </div>
+    <ManagementHeading
+      title={t('Tipping')}
+      description="Set the suggested tip amounts customers see at checkout."
+    ></ManagementHeading>
   );
 };
 

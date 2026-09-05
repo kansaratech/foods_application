@@ -1,94 +1,111 @@
 import { IExtendedOrder } from '@/lib/utils/interfaces';
-import { useTranslations } from 'next-intl';
-
+import { useConfiguration } from '@/lib/hooks/useConfiguration';
 export const ORDER_SUPER_ADMIN_COLUMNS = () => {
-  const t = useTranslations();
-
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: true,
-  };
-
+  const { CURRENCY_SYMBOL } = useConfiguration();
   return [
     {
-      headerName: t('Order ID'),
+      headerName: 'Order',
       propertyName: 'orderId',
-    },
-    {
-      headerName: t('Items'),
-      propertyName: 'items',
-      body: (rowData: IExtendedOrder) => {
-        if (rowData.items && rowData.items.length > 0) {
-          return <span>{rowData.items.length} items</span>;
-        }
-        return <span>No items</span>;
-      },
-    },
-    {
-      headerName: t('Payment'),
-      propertyName: 'paymentMethod',
-    },
-    {
-      headerName: t('Order Status'),
-      propertyName: 'orderStatus',
-    },
-    {
-      headerName: t('Created At'),
-      propertyName: 'createdAt',
-      body: (rowData: IExtendedOrder) => {
-        let date: Date | null = null;
-        if (rowData?.createdAt) {
-          const createdAt = rowData.createdAt;
-          if (typeof createdAt === 'number') {
-
-            date = new Date(createdAt);
-          } else if (typeof createdAt === 'string') {
-
-            const numericTimestamp = Number(createdAt);
-            if (!isNaN(numericTimestamp) && createdAt.trim().length >= 10) {
-
-              date = new Date(numericTimestamp);
-            } else if (!isNaN(Date.parse(createdAt))) {
-
-              date = new Date(createdAt);
-            }
-          }
-        }
-
-        if (date) {
-          const newDate = date.toLocaleDateString(
-            'en-US',
-            dateOptions
-          );
-          return <span className="text-center">{newDate}</span>;
-        }
-        return <span>-</span>;
-      },
-    },
-    {
-      headerName: t('Restaurant'),
-      propertyName: 'restaurant.name',
-      body: (rowData: IExtendedOrder) => rowData.restaurant?.name || 'N/A',
-    },
-    {
-
-      headerName: t('Delivery Address'),
-      propertyName: 'deliveryAddress.deliveryAddress',
-      body: (rowData: IExtendedOrder) => (
-        <div
-          className="max-w-[250px] truncate"
-          title={rowData.deliveryAddress?.deliveryAddress || 'N/A'}
-        >
-          {rowData.deliveryAddress?.deliveryAddress || 'N/A'}
+      body: (row: IExtendedOrder) => (
+        <div className="orders-cell">
+          <strong>{row.orderId}</strong>
+          <small title={row._id}>#{row._id.slice(-6)}</small>
         </div>
       ),
-
     },
-
+    {
+      headerName: 'Customer',
+      propertyName: 'user.name',
+      body: (row: IExtendedOrder) => (
+        <div className="orders-cell">
+          <strong>{row.user?.name || '?'}</strong>
+          <small>{row.user?.phone || '?'}</small>
+        </div>
+      ),
+    },
+    {
+      headerName: 'Items',
+      propertyName: 'items',
+      body: (row: IExtendedOrder) => (
+        <span>
+          {row.items?.length ?? 0}{' '}
+          {(row.items?.length ?? 0) === 1 ? 'item' : 'items'}
+        </span>
+      ),
+    },
+    { headerName: 'Payment', propertyName: 'paymentMethod' },
+    {
+      headerName: 'Status',
+      propertyName: 'orderStatus',
+      body: (row: IExtendedOrder) => {
+        const labels: Record<string, string> = {
+          PENDING: 'Pending',
+          ACCEPTED: 'Accepted',
+          ASSIGNED: 'Assigned',
+          PICKED: 'Picked up',
+          DELIVERED: 'Delivered',
+          COMPLETED: 'Completed',
+          CANCELLED: 'Cancelled',
+        };
+        return (
+          <span className={`orders-status ${row.orderStatus?.toLowerCase()}`}>
+            {labels[row.orderStatus] || row.orderStatus}
+          </span>
+        );
+      },
+    },
+    {
+      headerName: 'Placed at',
+      propertyName: 'createdAt',
+      body: (row: IExtendedOrder) => {
+        const value = String(row.createdAt ?? '');
+        const date = new Date(/^\d+$/.test(value) ? Number(value) : value);
+        return Number.isNaN(date.getTime())
+          ? '?'
+          : date.toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+            });
+      },
+    },
+    {
+      headerName: 'Restaurant',
+      propertyName: 'restaurant.name',
+      body: (row: IExtendedOrder) => row.restaurant?.name || '?',
+    },
+    {
+      headerName: 'Rider',
+      propertyName: 'rider.name',
+      body: (row: IExtendedOrder) => row.rider?.name || 'Unassigned',
+    },
+    {
+      headerName: 'Total',
+      propertyName: 'orderAmount',
+      body: (row: IExtendedOrder) => (
+        <strong>
+          {CURRENCY_SYMBOL}
+          {Number(row.orderAmount ?? 0).toLocaleString(undefined, {
+            maximumFractionDigits: 2,
+          })}
+        </strong>
+      ),
+    },
+    {
+      headerName: 'Actions',
+      propertyName: 'actions',
+      body: (row: IExtendedOrder) => (
+        <button
+          type="button"
+          className="orders-row-action"
+          aria-label={`View order ${row.orderId}`}
+          title="View order details"
+        >
+          <i className="pi pi-ellipsis-v" aria-hidden="true" />
+        </button>
+      ),
+    },
   ];
 };

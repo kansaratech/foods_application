@@ -9,6 +9,9 @@ export const storeDocsTypeDefs = /* GraphQL */ `
     holderName: String
     ifsc: String
     bankName: String
+    issueDate: String
+    fileName: String
+    fileSize: String
     expiryDate: String
     status: String!
     reviewNote: String
@@ -49,7 +52,10 @@ export const storeDocsTypeDefs = /* GraphQL */ `
       holderName: String
       ifsc: String
       bankName: String
-      expiryDate: String
+      issueDate: String
+    fileName: String
+    fileSize: String
+    expiryDate: String
     ): StoreDocument!
     reviewStoreDocument(id: ID!, status: String!, note: String): StoreDocument!
     deleteStoreDocument(id: ID!): Boolean!

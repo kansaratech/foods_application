@@ -12,10 +12,10 @@ const ConfigCard = ({
   toggleOnChange = () => {},
 }: IConfigCardComponentProps) => {
   return (
-    <div className="flex w-full sm:w-2/3 mx-auto flex-col overflow-hidden rounded-lg border">
+    <div className="configuration-card">
       {/* header */}
-      <div className="flex items-center justify-between bg-[#F4F4F5] dark:bg-dark-900 p-4">
-        <span className="select-none text-lg font-bold">{cardTitle}</span>
+      <div className="configuration-card-heading">
+        <h2>{cardTitle}</h2>
         {toggleLabel && (
           <>
             <CustomInputSwitch
@@ -29,12 +29,12 @@ const ConfigCard = ({
       </div>
 
       {/* center */}
-      <div className="p-5">{children}</div>
+      <div className="configuration-card-body">{children}</div>
 
       {/* footer */}
-      <div className="flex justify-end p-4">
+      <div className="configuration-card-footer">
         <CustomButton
-          className="h-10 w-fit border-gray-300 bg-black px-8 text-white"
+          className="configuration-save"
           label={'Save'}
           type="submit"
           loading={buttonLoading}

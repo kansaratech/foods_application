@@ -1,13 +1,21 @@
 import { IDropdownSelectItem } from '../global.interface';
+import { TRiderEmploymentType } from '../rider.interface';
 
 export interface IRiderForm {
+  _id?: string;
   name: string;
+  email: string;
+  image: string;
   username: string;
   password: string;
   confirmPassword: string;
+  sendSetupLink: boolean;
+  isActive: boolean;
   zone: IDropdownSelectItem | null;
-  phone: number | null;
+  phone: string;
   vehicleType: IDropdownSelectItem | null;
+  vehicleNumber: string;
+  employmentType: TRiderEmploymentType;
 }
 
 export interface IRiderErrors {

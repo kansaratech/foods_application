@@ -382,6 +382,21 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       };
     },
 
+    orderManagementSummary: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 1);
+      const [total, pending, inProgress, deliveredToday] = await Promise.all([
+        prisma.order.count(),
+        prisma.order.count({ where: { orderStatus: 'PENDING' } }),
+        prisma.order.count({ where: { orderStatus: { in: ['ACCEPTED', 'ASSIGNED', 'PICKED'] } } }),
+        prisma.order.count({ where: { orderStatus: { in: ['DELIVERED', 'COMPLETED'] }, deliveredAt: { gte: start, lt: end } } }),
+      ]);
+      return { total, pending, inProgress, deliveredToday };
+    },
+
     allOrdersPaginated: async (
       _parent,
       args: {
@@ -410,8 +425,29 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         ...(args.restaurantId ? { restaurantId: args.restaurantId } : {}),
         ...(args.riderId ? { riderId: args.riderId } : {}),
         ...(dateRange ? { createdAt: dateRange } : {}),
-        ...(args.search ? { orderId: { contains: args.search } } : {}),
+        ...(args.search ? { OR: [{ orderId: { contains: args.search } }, { user: { name: { contains: args.search } } }, { user: { phone: { contains: args.search } } }] } : {}),
       };
+
+      const [orders, totalCount] = await Promise.all([
+        prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+        prisma.order.count({ where }),
+      ]);
+      const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+      return {
+        orders,
+        totalCount,
+        currentPage: page,
+        totalPages,
+        prevPage: page > 1 ? page - 1 : null,
+        nextPage: page < totalPages ? page + 1 : null,
+      };
+    },
+
+    ordersByUser: async (_parent, args: { userId: string; page?: number; limit?: number }, context) => {
+      requireRole(context, ['ADMIN']);
+      const limit = args.limit ?? 10;
+      const page = args.page ?? 1;
+      const where = { userId: args.userId };
 
       const [orders, totalCount] = await Promise.all([
         prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),

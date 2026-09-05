@@ -1,7 +1,7 @@
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import TextIconClickable from '@/lib/ui/useable-components/text-icon-clickable';
 import { ICommissionRateHeaderProps } from '@/lib/utils/interfaces';
-import { faAdd } from '@fortawesome/free-solid-svg-icons';
+import { faFilter } from '@fortawesome/free-solid-svg-icons';
 import { Checkbox } from 'primereact/checkbox';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import React, { useRef, useState } from 'react';
@@ -55,7 +55,7 @@ const CommissionRateHeader: React.FC<ICommissionRateHeaderProps> = ({
           <div className="sm:hidden">
             <TextIconClickable
               className="flex h-10 w-10 items-center justify-center rounded-full border border-dotted border-[#E4E4E7]"
-              icon={faAdd}
+              icon={faFilter}
               iconStyles={{ color: 'black' }}
               onClick={(e) => overlayPanelRef.current?.toggle(e)}
             />
@@ -67,7 +67,7 @@ const CommissionRateHeader: React.FC<ICommissionRateHeaderProps> = ({
             maxLength={35}
             className="w-64"
             showLabel={false}
-            placeholder={t('Filter tasks')}
+            placeholder={t('Search vendor by name')}
             value={searchValue}
             onChange={handleSearch}
           />
@@ -76,9 +76,9 @@ const CommissionRateHeader: React.FC<ICommissionRateHeaderProps> = ({
         <div className="hidden sm:block">
           <TextIconClickable
             className="w-44 rounded border border-dotted dark:border-dark-600 border-[#E4E4E7] text-black dark:text-white"
-            icon={faAdd}
+            icon={faFilter}
             iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }}
-            title={t('Commission Rate')}
+            title={t('Filter by rate')}
             onClick={(e) => overlayPanelRef.current?.toggle(e)}
           />
         </div>

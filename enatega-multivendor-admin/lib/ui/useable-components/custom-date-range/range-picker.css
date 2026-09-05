@@ -1,0 +1,64 @@
+.shared-date-range {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 260px;
+}
+.shared-date-range > label {
+  color: #7183a3;
+  font-size: 11px;
+}
+.shared-date-range .p-calendar {
+  width: 100%;
+}
+.shared-date-range .p-inputtext {
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  border: 1px solid #dce5f3;
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+  padding: 8px 10px;
+  color: #354b70;
+  font-size: 12px;
+}
+.shared-date-range .p-datepicker-trigger {
+  width: 36px;
+  background: #f4f8ff;
+  color: #2563eb;
+  border: 1px solid #dce5f3;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+}
+.shared-date-range-panel.p-datepicker {
+  border: 1px solid #dce5f3;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 10px 30px #20375920;
+}
+.shared-date-range-panel.p-datepicker table td > span {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.shared-date-range-panel.p-datepicker table td > span.p-highlight {
+  background: #e6efff;
+  color: #145bf5;
+}
+.shared-date-range-panel.p-datepicker .p-datepicker-header {
+  border-color: #e5edf8;
+  padding: 4px 0 10px;
+}
+.dark .shared-date-range .p-inputtext,
+.dark .shared-date-range .p-datepicker-trigger {
+  background: #182235;
+  border-color: #475569;
+  color: #cbd5e1;
+}
+@media (max-width: 600px) {
+  .shared-date-range {
+    min-width: 0;
+    width: 100%;
+  }
+}

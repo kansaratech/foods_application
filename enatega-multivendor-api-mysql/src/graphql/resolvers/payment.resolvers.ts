@@ -151,13 +151,20 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     withdrawRequests: async (
       _parent,
-      args: { userType?: 'RIDER' | 'STORE'; userId?: string; pagination?: { pageSize?: number; pageNo?: number }; search?: string },
+      args: {
+        userType?: 'RIDER' | 'STORE';
+        userId?: string;
+        status?: string;
+        pagination?: { pageSize?: number; pageNo?: number };
+        search?: string;
+      },
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR', 'RIDER']);
       const scopedWhere = await scopeMoneyWhere(currentUser, args.userType, args.userId);
       const where: Prisma.WithdrawRequestWhereInput = {
         ...scopedWhere,
+        ...(args.status ? { status: args.status } : {}),
         ...(args.search ? { requestId: { contains: args.search } } : {}),
       };
       const { pageSize, pageNo } = withPaginationDefaults(args.pagination);

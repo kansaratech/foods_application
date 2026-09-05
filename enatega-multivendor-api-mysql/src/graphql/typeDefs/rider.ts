@@ -45,6 +45,8 @@ export const riderTypeDefs = /* GraphQL */ `
     image: String
     available: Boolean
     isActive: Boolean
+    status: String
+    employmentType: String
     vehicleType: String
     assigned: [String!]
     zone: ZoneLite
@@ -58,8 +60,21 @@ export const riderTypeDefs = /* GraphQL */ `
     currentWalletAmount: Float
     totalWalletAmount: Float
     withdrawnWalletAmount: Float
+    currentTask: RiderCurrentTask
     createdAt: String
     updatedAt: String
+  }
+
+  type RiderCurrentTask {
+    orderId: String
+    status: String
+  }
+
+  type RiderStats {
+    total: Int!
+    online: Int!
+    onDelivery: Int!
+    documentsPending: Int!
   }
 
   type RiderPaginated {
@@ -74,10 +89,17 @@ export const riderTypeDefs = /* GraphQL */ `
     name: String!
     username: String
     phone: String
+    email: String
+    image: String
     zone: String
     vehicleType: String
+    vehicleNumber: String
+    employmentType: String
     available: Boolean
+    isActive: Boolean
     password: String
+    "When true and no password is supplied, a random invite password is generated and an account-setup message is sent."
+    sendSetupLink: Boolean
   }
 
   input TimeSlotInput {
@@ -104,14 +126,17 @@ export const riderTypeDefs = /* GraphQL */ `
 
   extend type Query {
     riders: [Rider!]!
-    ridersPaginated(page: Int, limit: Int, search: String, zone: String, available: Boolean, isActive: Boolean): RiderPaginated!
+    ridersPaginated(page: Int, limit: Int, search: String, zone: String, available: Boolean, isActive: Boolean, vehicleType: String, onDelivery: Boolean): RiderPaginated!
     rider(id: String!): Rider
     availableRiders: [Rider!]!
     ridersByZone(id: String!): [Rider!]!
+    riderStats: RiderStats!
   }
 
   extend type Mutation {
     createRider(riderInput: RiderInput!): Rider!
+    "Lenient upsert used by the multi-step rider registration form's 'Save as draft' action."
+    saveRiderDraft(riderInput: RiderInput!): Rider!
     editRider(riderInput: RiderInput!): Rider!
     deleteRider(id: String!): Rider!
     toggleAvailablity(id: String!): Rider!

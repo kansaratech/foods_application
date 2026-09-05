@@ -101,7 +101,11 @@ const TippingAddForm = () => {
         enableReinitialize
       >
         {({ values, errors, touched, setFieldValue }) => (
-          <Form className="grid grid-cols-2 items-center gap-3 sm:grid-cols-4">
+          <Form className="management-tipping-form">
+            <div className="management-tipping-intro">
+              <h2>Suggested tips</h2>
+              <p>Configure three amounts between 1 and 100.</p>
+            </div>
             <div className="relative">
               <CustomNumberTextField
                 name="tip1"
@@ -116,7 +120,7 @@ const TippingAddForm = () => {
                   borderColor: errors?.tip1 && touched.tip1 ? 'red' : '',
                 }}
               />
-              <div className="absolute bottom-[-18px] text-xs text-red-500">
+              <div className="mt-1 text-xs text-red-500">
                 <ErrorMessage name="tip1" />
               </div>
             </div>
@@ -134,7 +138,7 @@ const TippingAddForm = () => {
                   borderColor: errors.tip2 && touched.tip2 ? 'red' : '',
                 }}
               />
-              <div className="absolute bottom-[-18px] text-xs text-red-500">
+              <div className="mt-1 text-xs text-red-500">
                 <ErrorMessage name="tip2" />
               </div>
             </div>
@@ -152,7 +156,7 @@ const TippingAddForm = () => {
                   borderColor: errors.tip3 && touched.tip3 ? 'red' : '',
                 }}
               />
-              <div className="absolute bottom-[-18px] text-xs text-red-500">
+              <div className="mt-1 text-xs text-red-500">
                 <ErrorMessage name="tip3" />
               </div>
             </div>

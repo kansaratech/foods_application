@@ -28,25 +28,37 @@ const ConfigMain = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
-    <div className="flex flex-col gap-6 p-3">
+    <div className="configuration-grid">
       <CurrencyAddForm />
       <DeliveryRateAddForm />
       <GoogleApiAddForm />
       <VerificationAddForm />
-      <AppConfigAddForm />
-      <AppVersionAddForm />
+      <div className="configuration-wide">
+        <AppConfigAddForm />
+      </div>
+      <div className="configuration-wide configuration-versions">
+        <AppVersionAddForm />
+      </div>
 
       <button
         type="button"
         onClick={() => setShowAdvanced((v) => !v)}
-        className="mt-2 w-fit rounded border px-3 py-1.5 text-sm text-gray-500 dark:border-dark-600"
+        aria-expanded={showAdvanced}
+        aria-controls="configuration-advanced"
+        className="configuration-advanced-button"
       >
-        {showAdvanced ? '▾ ' : '▸ '}
+        <i
+          className={`pi pi-chevron-${showAdvanced ? 'up' : 'down'}`}
+          aria-hidden="true"
+        />
         {t('Advanced integrations (not used for this launch)')}
       </button>
 
       {showAdvanced && (
-        <div className="flex flex-col gap-6 border-l-2 border-gray-200 pl-4 dark:border-dark-600">
+        <div
+          id="configuration-advanced"
+          className="configuration-wide configuration-grid"
+        >
           <NodeMailerAddForm />
           <StripeAddForm />
           <PayPalAddForm />

@@ -198,7 +198,7 @@ export const paymentTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    withdrawRequests(userType: UserTypeEnum, userId: String, pagination: MoneyPaginationInput, search: String): WithdrawRequestsResult!
+    withdrawRequests(userType: UserTypeEnum, userId: String, status: String, pagination: MoneyPaginationInput, search: String): WithdrawRequestsResult!
     storeCurrentWithdrawRequest(storeId: String): WithdrawRequest
     riderCurrentWithdrawRequest(riderId: String): WithdrawRequest
     storeEarningsGraph(storeId: ID!, page: Int, limit: Int, startDate: String, endDate: String): StoreEarningsGraphResult!

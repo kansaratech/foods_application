@@ -131,6 +131,8 @@ export const orderTypeDefs = /* GraphQL */ `
     specialInstructions: String
   }
 
+  type OrderManagementSummary { total: Int! pending: Int! inProgress: Int! deliveredToday: Int! }
+
   extend type Query {
     order(id: String!): Order
     orderDetails(id: String!): Order
@@ -142,7 +144,10 @@ export const orderTypeDefs = /* GraphQL */ `
     riderOrders: [Order!]!
     getActiveOrders(restaurantId: String, page: Int, rowsPerPage: Int, actions: [String], search: String): OrdersActiveOrdersResult!
     ordersByRestId(restaurant: String!, page: Int, rows: Int, search: String, orderStatus: [String]): OrdersActiveOrdersResult!
+    "Order history for a single customer — the super-admin's user-detail page."
+    ordersByUser(userId: ID!, page: Int, limit: Int): OrdersActiveOrdersResult!
     restaurantOrders: [Order!]!
+    orderManagementSummary: OrderManagementSummary!
     allOrdersPaginated(
       page: Int
       rows: Int

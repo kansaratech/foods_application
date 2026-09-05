@@ -8,11 +8,12 @@ import { useEffect, useState } from 'react';
 import {
   IRiderResponse,
   IRidersPaginatedDataResponse,
-  IRidersMainComponentsProps,
+  TRiderStatusFilter,
 } from '@/lib/utils/interfaces/rider.interface';
 
 // UI Components
 import RidersTableHeader from '../header/table-header';
+import RiderStatCards from '../header/stat-cards';
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
 import Table from '@/lib/ui/useable-components/table';
 import { RIDER_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/rider-columns';
@@ -33,10 +34,7 @@ import { IQueryResult } from '@/lib/utils/interfaces';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
-export default function RidersMain({
-  setIsAddRiderVisible,
-  setRider,
-}: IRidersMainComponentsProps) {
+export default function RidersMain() {
   // Hooks
   const t = useTranslations();
   const { showToast } = useToast();
@@ -48,15 +46,31 @@ export default function RidersMain({
     []
   );
   const [globalFilterValue, setGlobalFilterValue] = useState('');
+  const [zoneFilter, setZoneFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<TRiderStatusFilter>('all');
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const debouncedSearch = useDebounce(globalFilterValue, 500);
+
+  // Translate the single "status" filter into the backend's available/onDelivery args.
+  const statusArgs =
+    statusFilter === 'online'
+      ? { available: true, onDelivery: false }
+      : statusFilter === 'on_delivery'
+        ? { onDelivery: true }
+        : statusFilter === 'offline'
+          ? { available: false }
+          : {};
 
   // Query
   const { data, loading } = useQueryGQL(GET_RIDERS_PAGINATED, {
     page: currentPage,
     limit: rowsPerPage,
     search: debouncedSearch || undefined,
+    zone: zoneFilter || undefined,
+    vehicleType: vehicleTypeFilter || undefined,
+    ...statusArgs,
   }, {
     fetchPolicy: 'network-only',
   }) as IQueryResult<
@@ -78,26 +92,22 @@ export default function RidersMain({
     setGlobalFilterValue(e.target.value);
   };
 
+  const onClearFilters = () => {
+    setGlobalFilterValue('');
+    setZoneFilter(null);
+    setStatusFilter('all');
+    setVehicleTypeFilter(null);
+  };
+
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, zoneFilter, statusFilter, vehicleTypeFilter]);
 
   const menuItems: IActionMenuItem<IRiderResponse>[] = [
     {
-      label: t('View'),
-      command: (data?: IRiderResponse) => {
-        if (data) {
-          router.push(`/general/riders/${data._id}`);
-        }
-      },
-    },
-    {
       label: t('Edit'),
       command: (data?: IRiderResponse) => {
-        if (data) {
-          setIsAddRiderVisible(true);
-          setRider(data);
-        }
+        if (data) router.push(`/general/riders/create?id=${data._id}`);
       },
     },
     {
@@ -111,12 +121,21 @@ export default function RidersMain({
   ];
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto p-3">
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <RiderStatCards />
+      <div className="p-3">
       <Table
         header={
           <RidersTableHeader
             globalFilterValue={globalFilterValue}
             onGlobalFilterChange={onGlobalFilterChange}
+            zoneFilter={zoneFilter}
+            onZoneFilterChange={setZoneFilter}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            vehicleTypeFilter={vehicleTypeFilter}
+            onVehicleTypeFilterChange={setVehicleTypeFilter}
+            onClearFilters={onClearFilters}
           />
         }
         data={data?.ridersPaginated?.data || []}
@@ -134,6 +153,7 @@ export default function RidersMain({
         scrollable={false}
         className="directory-admin-table"
       />
+      </div>
       <CustomDialog
         loading={mutationLoading}
         visible={!!deleteId}

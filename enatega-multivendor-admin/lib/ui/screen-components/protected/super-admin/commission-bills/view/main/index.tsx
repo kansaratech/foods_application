@@ -9,8 +9,6 @@ import {
   GET_COMMISSION_BILL,
   GET_COMMISSION_BILLS,
   GET_COMMISSION_PERIOD_PREVIEW,
-  GET_CONFIGURATION,
-  SAVE_COMMISSION_CONFIGURATION,
   UPDATE_COMMISSION_BILL_STATUS,
 } from '@/lib/api/graphql';
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -43,32 +41,6 @@ export default function CommissionBillsMain() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [confirmClose, setConfirmClose] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [savingConfig, setSavingConfig] = useState(false);
-
-  // ---- Config (default rate + billing cycle) ----
-  const { data: configData, refetch: refetchConfig } = useQuery(GET_CONFIGURATION);
-  const config = configData?.configuration;
-  const [saveConfig] = useMutation(SAVE_COMMISSION_CONFIGURATION);
-
-  const persistConfig = async (input: {
-    defaultCommissionRate?: number;
-    commissionBillingCycle?: string;
-    riderCashLimit?: number;
-    platformLegalName?: string;
-    platformAddress?: string;
-    platformGstin?: string;
-  }) => {
-    setSavingConfig(true);
-    try {
-      await saveConfig({ variables: { configurationInput: input } });
-      await refetchConfig();
-      showToast({ type: 'success', title: t('Commission'), message: t('Commission settings updated'), duration: 2000 });
-    } catch {
-      showToast({ type: 'error', title: t('Error'), message: t('Could not save - please try again'), duration: 2500 });
-    } finally {
-      setSavingConfig(false);
-    }
-  };
 
   // ---- Current period preview ----
   const {
@@ -190,103 +162,6 @@ export default function CommissionBillsMain() {
 
   return (
     <div className="flex flex-col gap-6 p-3">
-      {/* ---- Settings ---- */}
-      <section className="rounded border p-4 dark:border-dark-600">
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
-          {t('Commission settings')}
-        </h3>
-        <div className="flex flex-wrap items-end gap-6">
-          <label className="flex flex-col text-sm">
-            <span className="mb-1 text-gray-500">{t('Default commission rate')} (%)</span>
-            <input
-              type="number"
-              min={0}
-              max={100}
-              defaultValue={config?.defaultCommissionRate ?? 20}
-              disabled={savingConfig}
-              onBlur={(e) => {
-                const v = parseFloat(e.target.value);
-                if (!Number.isNaN(v) && v !== config?.defaultCommissionRate) {
-                  persistConfig({ defaultCommissionRate: v });
-                }
-              }}
-              className="h-10 w-32 rounded border border-gray-300 px-2 dark:bg-dark-950"
-            />
-          </label>
-          <label className="flex flex-col text-sm">
-            <span className="mb-1 text-gray-500">{t('Billing cycle')}</span>
-            <select
-              value={config?.commissionBillingCycle ?? 'MONTHLY'}
-              disabled={savingConfig}
-              onChange={(e) => persistConfig({ commissionBillingCycle: e.target.value })}
-              className="h-10 w-40 rounded border border-gray-300 px-2 dark:bg-dark-950"
-            >
-              <option value="MONTHLY">{t('Monthly')}</option>
-              <option value="YEARLY">{t('Yearly')}</option>
-            </select>
-          </label>
-          <label className="flex flex-col text-sm">
-            <span className="mb-1 text-gray-500">{t('Rider cash limit')} (₹)</span>
-            <input
-              type="number"
-              min={0}
-              step={100}
-              defaultValue={config?.riderCashLimit ?? 3000}
-              disabled={savingConfig}
-              onBlur={(e) => {
-                const v = parseFloat(e.target.value);
-                if (!Number.isNaN(v) && v !== config?.riderCashLimit) persistConfig({ riderCashLimit: v });
-              }}
-              className="h-10 w-32 rounded border border-gray-300 px-2 dark:bg-dark-950"
-            />
-          </label>
-          <p className="max-w-md text-xs text-gray-400">{t('commission_settings_help')}</p>
-        </div>
-
-        <div className="mt-4 border-t pt-4 dark:border-dark-600">
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            {t('Invoice billing entity')}
-          </h4>
-          <div className="flex flex-wrap items-end gap-4">
-            <label className="flex flex-col text-sm">
-              <span className="mb-1 text-gray-500">{t('Legal name')}</span>
-              <input
-                defaultValue={config?.platformLegalName ?? ''}
-                disabled={savingConfig}
-                onBlur={(e) =>
-                  e.target.value !== (config?.platformLegalName ?? '') &&
-                  persistConfig({ platformLegalName: e.target.value })
-                }
-                className="h-10 w-56 rounded border border-gray-300 px-2 dark:bg-dark-950"
-              />
-            </label>
-            <label className="flex flex-col text-sm">
-              <span className="mb-1 text-gray-500">{t('GSTIN')}</span>
-              <input
-                defaultValue={config?.platformGstin ?? ''}
-                disabled={savingConfig}
-                onBlur={(e) =>
-                  e.target.value !== (config?.platformGstin ?? '') && persistConfig({ platformGstin: e.target.value })
-                }
-                className="h-10 w-44 rounded border border-gray-300 px-2 dark:bg-dark-950"
-              />
-            </label>
-            <label className="flex flex-1 flex-col text-sm">
-              <span className="mb-1 text-gray-500">{t('Address')}</span>
-              <input
-                defaultValue={config?.platformAddress ?? ''}
-                disabled={savingConfig}
-                onBlur={(e) =>
-                  e.target.value !== (config?.platformAddress ?? '') &&
-                  persistConfig({ platformAddress: e.target.value })
-                }
-                className="h-10 min-w-[16rem] rounded border border-gray-300 px-2 dark:bg-dark-950"
-              />
-            </label>
-          </div>
-        </div>
-      </section>
-
       {/* ---- Current period ---- */}
       <section className="rounded border p-4 dark:border-dark-600">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

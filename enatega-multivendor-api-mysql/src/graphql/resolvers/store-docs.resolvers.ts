@@ -6,9 +6,10 @@ import { requireRole } from '../../middleware/auth';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { recordAudit } from '../../utils/audit';
 
-const DOC_KINDS = ['FSSAI', 'GST', 'PAN', 'BANK'];
+const REQUIRED_KINDS = ['FSSAI', 'GST', 'PAN', 'BANK'];
+const DOC_KINDS = [...REQUIRED_KINDS, 'TRADE_LICENCE'];
 const DOC_STATUSES = ['PENDING', 'VERIFIED', 'REJECTED'];
-const REQUIRED_DOC_COUNT = DOC_KINDS.length;
+const REQUIRED_DOC_COUNT = REQUIRED_KINDS.length;
 
 async function assertCanEditStore(context: GraphQLContext, restaurantId: string) {
   const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -31,6 +32,9 @@ function shape(doc: StoreDocument & { restaurant?: { name: string } }) {
     ifsc: (extra.ifsc as string) ?? null,
     bankName: (extra.bankName as string) ?? null,
     expiryDate: (extra.expiryDate as string) ?? null,
+    issueDate: (extra.issueDate as string) ?? null,
+    fileName: (extra.fileName as string) ?? null,
+    fileSize: (extra.fileSize as string) ?? null,
     status: doc.status,
     reviewNote: doc.reviewNote,
     reviewedAt: doc.reviewedAt?.toISOString() ?? null,
@@ -81,6 +85,9 @@ export const storeDocsResolvers: IResolvers<unknown, GraphQLContext> = {
         ifsc?: string;
         bankName?: string;
         expiryDate?: string;
+        issueDate?: string;
+        fileName?: string;
+        fileSize?: string;
       },
       context,
     ) => {
@@ -88,7 +95,13 @@ export const storeDocsResolvers: IResolvers<unknown, GraphQLContext> = {
       const kind = args.kind.toUpperCase();
       if (!DOC_KINDS.includes(kind)) throw userInputError(`kind must be one of ${DOC_KINDS.join(', ')}`);
 
+      if (args.issueDate && !/^\d{4}-\d{2}-\d{2}$/.test(args.issueDate)) throw userInputError('Invalid issue date');
+      if (args.expiryDate && !/^\d{4}-\d{2}-\d{2}$/.test(args.expiryDate)) throw userInputError('Invalid expiry date');
+      if (args.issueDate && args.expiryDate && args.issueDate > args.expiryDate) throw userInputError('Expiry must follow issue date');
       const extra: Record<string, string> = {};
+      if (args.issueDate) extra.issueDate = args.issueDate;
+      if (args.fileName) extra.fileName = args.fileName;
+      if (args.fileSize) extra.fileSize = args.fileSize;
       if (args.ifsc) extra.ifsc = args.ifsc.trim();
       if (args.bankName) extra.bankName = args.bankName.trim();
       if (args.expiryDate) extra.expiryDate = args.expiryDate.trim();
@@ -166,7 +179,7 @@ export const storeDocsResolvers: IResolvers<unknown, GraphQLContext> = {
 
   Restaurant: {
     documentSummary: async (parent: Restaurant) => {
-      const docs = await prisma.storeDocument.findMany({ where: { restaurantId: parent.id } });
+      const docs = await prisma.storeDocument.findMany({ where: { restaurantId: parent.id, kind: { in: REQUIRED_KINDS } } });
       return {
         required: REQUIRED_DOC_COUNT,
         submitted: docs.length,

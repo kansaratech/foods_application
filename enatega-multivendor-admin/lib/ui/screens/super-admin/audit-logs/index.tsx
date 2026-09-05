@@ -1,11 +1,13 @@
 'use client';
+import '@/lib/ui/useable-components/management-page/management.css';
+
 import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { GET_AUDIT_LOGS } from '@/lib/api/graphql/queries/audit';
 import AuditLogCard, {
   AuditLog,
 } from '@/lib/ui/screen-components/protected/super-admin/audit-logs/AuditLogCard';
-import HeaderText from '@/lib/ui/useable-components/header-text';
+import ManagementHeading from '@/lib/ui/useable-components/management-page/heading';
 import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
 import { Skeleton } from 'primereact/skeleton';
 import { Card } from 'primereact/card';
@@ -28,8 +30,11 @@ const AuditLogScreen = () => {
 
   if (loading && !data) {
     return (
-      <div className="p-4 md:p-6">
-        <HeaderText text={t('Audit Logs')} />
+      <div className="management-page management-audit-logs">
+        <ManagementHeading
+          title={t('Audit Logs')}
+          description="Review administrative activity and changes across the platform."
+        />
         <div className="mt-6">
           {[...Array(5)].map((_, i) => (
             <Skeleton key={i} height="8rem" className="mb-4" />
@@ -41,7 +46,7 @@ const AuditLogScreen = () => {
 
   if (error) {
     return (
-      <div className="p-4 md:p-6">
+      <div className="management-page management-audit-logs">
         <Card
           title="Error Loading Audit Logs"
           className="shadow-md border border-red-300 bg-red-50 text-red-800"
@@ -59,16 +64,19 @@ const AuditLogScreen = () => {
   const totalRecords = data?.auditLogs?.totalCount || 0;
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="management-page management-audit-logs">
       <div className="mb-6">
-        <HeaderText text={t('Audit Logs')} />
+        <ManagementHeading
+          title={t('Audit Logs')}
+          description="Review administrative activity and changes across the platform."
+        />
         <p className="text-gray-500 dark:text-white mt-1">
           {t('audit_log_header_desc')}
         </p>
       </div>
 
       <div className="bg-white dark:bg-dark-950 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-dark-600">
-        <div className="h-[calc(100vh-280px)] overflow-y-auto pr-2">
+        <div className="min-h-64">
           {auditLogs.length > 0 ? (
             <div className="relative">
               {auditLogs.map((log: AuditLog, index: number) => (

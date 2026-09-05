@@ -1,11 +1,36 @@
-// Interfaces
-import { TSideBarFormPosition } from '../types/sidebar';
-import { IGlobalComponentProps } from './global.interface';
-
 export interface IRiderResponseZone {
   __typename: 'Zone';
   _id: string;
   title: string;
+}
+
+export interface IRiderCurrentTask {
+  __typename?: 'RiderCurrentTask';
+  orderId: string;
+  status: string;
+}
+
+export interface IRiderDocumentSummary {
+  __typename?: 'RiderDocumentSummary';
+  required: number;
+  submitted: number;
+  verified: number;
+  rejected: number;
+  pending: number;
+}
+
+export type TRiderEmploymentType = 'INDEPENDENT' | 'STORE_ASSIGNED';
+
+export interface IRiderStats {
+  __typename?: 'RiderStats';
+  total: number;
+  online: number;
+  onDelivery: number;
+  documentsPending: number;
+}
+
+export interface IRiderStatsResponse {
+  riderStats: IRiderStats;
 }
 
 export interface IRiderResponse {
@@ -14,10 +39,18 @@ export interface IRiderResponse {
   name: string;
   username: string;
   phone: string;
+  email?: string | null;
+  image?: string | null;
   available: boolean;
+  isActive?: boolean;
+  status?: string;
+  employmentType?: TRiderEmploymentType;
   vehicleType: string;
   assigned: string[];
   zone: IRiderResponseZone | null;
+  currentTask?: IRiderCurrentTask | null;
+  vehicleDetails?: { number?: string | null } | null;
+  documentSummary?: IRiderDocumentSummary;
 }
 
 export interface ISingleRiderResponse {
@@ -25,6 +58,11 @@ export interface ISingleRiderResponse {
   _id: string;
   name: string;
   email: string;
+  image?: string | null;
+  isActive?: boolean;
+  status?: string;
+  employmentType?: TRiderEmploymentType;
+  vehicleType?: string;
   username: string;
   phone: string;
   available: boolean;
@@ -74,28 +112,18 @@ export interface IRiderDetailDataResponse {
   rider: ISingleRiderResponse;
 }
 
-export interface IRidersHeaderComponentsProps extends IGlobalComponentProps {
-  setIsAddRiderVisible: React.Dispatch<React.SetStateAction<boolean>>;
-}
+export type TRiderStatusFilter = 'all' | 'online' | 'on_delivery' | 'offline';
 
-export interface IRidersMainComponentsProps extends IGlobalComponentProps {
-  setIsAddRiderVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  setRider: React.Dispatch<React.SetStateAction<IRiderResponse | null>>;
-}
-
-export interface IRidersAddFormComponentProps extends IGlobalComponentProps {
-  position?: TSideBarFormPosition;
-  isAddRiderVisible: boolean;
-  onHide: () => void;
-  rider: IRiderResponse | null;
-}
-
-export interface IRiderHeaderProps extends IGlobalComponentProps {
-  setIsAddRiderVisible: (visible: boolean) => void;
-}
 export interface IRidersTableHeaderProps {
   globalFilterValue: string;
   onGlobalFilterChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  zoneFilter: string | null;
+  onZoneFilterChange: (zoneId: string | null) => void;
+  statusFilter: TRiderStatusFilter;
+  onStatusFilterChange: (status: TRiderStatusFilter) => void;
+  vehicleTypeFilter: string | null;
+  onVehicleTypeFilterChange: (vehicleType: string | null) => void;
+  onClearFilters: () => void;
 }
 export interface IRiderReponse {
   _id: string;

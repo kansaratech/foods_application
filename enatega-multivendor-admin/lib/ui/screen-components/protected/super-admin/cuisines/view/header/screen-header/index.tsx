@@ -1,5 +1,5 @@
 // Components
-import HeaderText from '@/lib/ui/useable-components/header-text';
+import ManagementHeading from '@/lib/ui/useable-components/management-page/heading';
 import TextIconClickable from '@/lib/ui/useable-components/text-icon-clickable';
 
 // Interfaces
@@ -16,17 +16,17 @@ export default function CuisineScreenHeader({
   const t = useTranslations();
 
   return (
-    <div className="sticky top-0 z-10 w-full flex-shrink-0 bg-white dark:bg-dark-950 p-3 shadow-sm">
-      <div className="flex w-full justify-between">
-        <HeaderText text={t('Cuisines')} />
-        <TextIconClickable
-          icon={faAdd}
-          iconStyles={{ color: 'white' }}
-          onClick={handleButtonClick}
-          title={t('Add Cuisines')}
-          className="rounded border-gray-300 border dark:border-dark-600 bg-black text-white sm:w-auto"
-        />
-      </div>
-    </div>
+    <ManagementHeading
+      title={t('Cuisines')}
+      description="Organize cuisines and help customers discover their next meal."
+    >
+      <TextIconClickable
+        icon={faAdd}
+        iconStyles={{ color: 'white' }}
+        onClick={handleButtonClick}
+        title={t('Add Cuisines')}
+        className="rounded border-gray-300 border dark:border-dark-600 bg-black text-white sm:w-auto"
+      />
+    </ManagementHeading>
   );
 }

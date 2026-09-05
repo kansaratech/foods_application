@@ -1,4 +1,6 @@
 'use client';
+import '@/lib/ui/useable-components/management-page/management.css';
+
 import CuisineForm from '@/lib/ui/screen-components/protected/super-admin/cuisines/form';
 //screen components
 import CuisineScreenHeader from '@/lib/ui/screen-components/protected/super-admin/cuisines/view/header/screen-header';
@@ -29,7 +31,7 @@ export default function CuisinesScreen() {
   });
 
   return (
-    <div className="screen-container">
+    <div className="management-page management-cuisines">
       <CuisineScreenHeader handleButtonClick={handleButtonClick} />
       <CuisinesMain
         setVisible={setVisible}

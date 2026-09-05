@@ -327,19 +327,24 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       return prisma.user.findUnique({ where: { id: args.id } });
     },
 
-    commissionRate: async (_parent, args: { page?: number; limit?: number }, context) => {
+    commissionRate: async (_parent, args: { page?: number; limit?: number; search?: string; minRate?: number }, context) => {
       requireRole(context, ['ADMIN']);
       const limit = args.limit ?? 10;
       const page = args.page ?? 1;
+      const where: Prisma.RestaurantWhereInput = {
+        ...(args.search ? { name: { contains: args.search } } : {}),
+        ...(args.minRate != null ? { commissionRate: { gt: args.minRate } } : {}),
+      };
       const [restaurant, totalCount] = await Promise.all([
-        prisma.restaurant.findMany({ skip: (page - 1) * limit, take: limit }),
-        prisma.restaurant.count(),
+        prisma.restaurant.findMany({ where, skip: (page - 1) * limit, take: limit }),
+        prisma.restaurant.count({ where }),
       ]);
       const totalPages = Math.max(1, Math.ceil(totalCount / limit));
       return {
         restaurant,
         currentPage: page,
         totalPages,
+        totalCount,
         nextPage: page < totalPages ? page + 1 : null,
         prevPage: page > 1 ? page - 1 : null,
       };

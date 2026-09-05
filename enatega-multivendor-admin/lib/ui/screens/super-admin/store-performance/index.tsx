@@ -1,4 +1,5 @@
 'use client';
+import '@/lib/ui/useable-components/management-page/management.css';
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
@@ -6,13 +7,17 @@ import { useTranslations } from 'next-intl';
 import { Calendar } from 'primereact/calendar';
 import { InputText } from 'primereact/inputtext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarDays, faFileArrowDown } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCalendarDays,
+  faFileArrowDown,
+} from '@fortawesome/free-solid-svg-icons';
 
 import { GET_STORE_PERFORMANCE } from '@/lib/api/graphql';
-import HeaderText from '@/lib/ui/useable-components/header-text';
+
 import Table from '@/lib/ui/useable-components/table';
 
-const money = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+const money = (n: number) =>
+  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 const iso = (d?: Date | null) => (d ? d.toISOString().slice(0, 10) : undefined);
 
 interface Row {
@@ -86,7 +91,7 @@ export default function StorePerformanceScreen() {
         r.walletBalance,
       ]
         .map(esc)
-        .join(','),
+        .join(',')
     );
     const blob = new Blob([[head.map(esc).join(','), ...body].join('\n')], {
       type: 'text/csv;charset=utf-8',
@@ -100,14 +105,17 @@ export default function StorePerformanceScreen() {
   };
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="management-page management-store-performance">
+      <div className="management-heading">
         <div>
-          <HeaderText text={t('Store Performance')} />
+          <div className="management-breadcrumb">
+            Management / Store Performance
+          </div>
+          <h1>{t('Store Performance')}</h1>
           <p className="mt-1 text-xs text-slate-400">
             {result
               ? `${new Date(result.periodStart).toLocaleDateString()} – ${new Date(
-                  result.periodEnd,
+                  result.periodEnd
                 ).toLocaleDateString()} · ${result.total} ${t('stores')}`
               : t('Loading') + '…'}
           </p>
@@ -125,7 +133,10 @@ export default function StorePerformanceScreen() {
 
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-dark-600 dark:bg-dark-900">
         <span className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 dark:border-dark-600">
-          <FontAwesomeIcon icon={faCalendarDays} className="text-sm text-slate-400" />
+          <FontAwesomeIcon
+            icon={faCalendarDays}
+            className="text-sm text-slate-400"
+          />
           <Calendar
             value={dates as Date[] | null}
             onChange={(e) => {
@@ -152,11 +163,12 @@ export default function StorePerformanceScreen() {
         />
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-dark-600 dark:bg-dark-900">
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white dark:border-dark-600 dark:bg-dark-900">
         <Table
           data={loading ? [] : rows}
           loading={loading}
           moduleName="StorePerformance"
+          scrollable={false}
           totalRecords={result?.total ?? 0}
           currentPage={page}
           rowsPerPage={limit}
@@ -190,12 +202,20 @@ export default function StorePerformanceScreen() {
               headerName: t('Cancel rate'),
               propertyName: 'cancelRate',
               body: (r: Row) => (
-                <span className={r.cancelRate > 15 ? 'font-semibold text-red-600' : ''}>
+                <span
+                  className={
+                    r.cancelRate > 15 ? 'font-semibold text-red-600' : ''
+                  }
+                >
                   {r.cancelRate}%
                 </span>
               ),
             },
-            { headerName: t('GMV'), propertyName: 'gmv', body: (r: Row) => money(r.gmv) },
+            {
+              headerName: t('GMV'),
+              propertyName: 'gmv',
+              body: (r: Row) => money(r.gmv),
+            },
             {
               headerName: t('Avg order'),
               propertyName: 'avgOrderValue',

@@ -31,10 +31,9 @@ const Table = <T extends ITableExtends>({
   handleRowClick,
   rowsPerPage = 10,
   className,
-  scrollable = true,
-  // Fill the viewport instead of a fixed ~420px box. Subtracts the top bar +
-  // a screen's header/filter row + the paginator. Screens can still override.
-  scrollHeight = 'calc(100dvh - 14rem)',
+  scrollable = false,
+  // Tables fit their rows by default. Screens can explicitly opt into a capped scroll area.
+  scrollHeight,
   // Server-side pagination props
   totalRecords,
   onPageChange,
@@ -120,7 +119,7 @@ const Table = <T extends ITableExtends>({
         filters={filters}
         globalFilterFields={globalFilterFields}
         scrollable={scrollable}
-        scrollHeight={scrollHeight}
+        scrollHeight={scrollable ? scrollHeight : undefined}
         removableSort
         rowClassName={rowClassName}
         onRowClick={handleRowClick}

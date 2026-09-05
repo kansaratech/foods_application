@@ -180,6 +180,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     restaurant: [CommissionRateLite!]!
     currentPage: Int!
     totalPages: Int!
+    totalCount: Int!
     nextPage: Int
     prevPage: Int
   }
@@ -263,7 +264,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     restaurants: [Restaurant!]!
     restaurantsPaginated(page: Int, limit: Int, search: String, approvalStatus: String): RestaurantPaginated!
     restaurantByOwner(id: String!): Vendor
-    commissionRate(page: Int, limit: Int): CommissionRatePaginated!
+    commissionRate(page: Int, limit: Int, search: String, minRate: Float): CommissionRatePaginated!
     getRestaurantDeliveryZoneInfo(id: ID!): RestaurantDeliveryZoneInfo
     getClonedRestaurants: [Restaurant!]!
     getClonedRestaurantsPaginated(page: Int, limit: Int, search: String): RestaurantPaginated!

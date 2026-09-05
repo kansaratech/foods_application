@@ -59,6 +59,10 @@ export const adminTypeDefs = /* GraphQL */ `
     phoneIsVerified: Boolean
     emailIsVerified: Boolean
     isActive: Boolean
+    isOrderNotification: Boolean
+    isOfferNotification: Boolean
+    notificationToken: String
+    favourite: [String!]!
     addresses: [Address!]!
   }
 

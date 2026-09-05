@@ -1,0 +1,222 @@
+.orders-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.orders-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  border: 1px solid #e1eaf7;
+  border-radius: 8px;
+  background: white;
+}
+.orders-summary-card p {
+  font-size: 12px;
+  color: #7489ac;
+  margin-bottom: 3px;
+}
+.orders-summary-card strong {
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.orders-summary-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  font-size: 23px;
+}
+.orders-summary-icon.blue {
+  color: #0863ff;
+  background: #e8f3ff;
+}
+.orders-summary-icon.amber {
+  color: #ef9200;
+  background: #fff5df;
+}
+.orders-summary-icon.green {
+  color: #00aa74;
+  background: #e0faef;
+}
+.orders-toolbar {
+  display: grid;
+  grid-template-columns: minmax(200px, 2.2fr) minmax(260px, 2.4fr) repeat(
+      3,
+      minmax(110px, 1fr)
+    ) auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.orders-toolbar > * {
+  min-width: 0;
+}
+.orders-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  border: 1px solid #dce5f3;
+  border-radius: 5px;
+  padding: 0 10px;
+  color: #647eaa;
+}
+.orders-search input {
+  border: 0;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  font-size: 12px;
+}
+.orders-date-tabs {
+  display: flex;
+  background: #f3f7fc;
+  padding: 3px;
+  border-radius: 5px;
+}
+.orders-date-tabs button {
+  flex: 1;
+  padding: 6px 5px;
+  color: #6c80a5;
+  font-size: 12px;
+  border-radius: 4px;
+}
+.orders-date-tabs button[aria-current='page'] {
+  color: #0755f5;
+  background: #e7f2ff;
+}
+.orders-toolbar .p-dropdown,
+.orders-toolbar .p-multiselect {
+  height: 36px;
+}
+.orders-export {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 36px;
+  padding: 0 15px;
+  border-radius: 5px;
+  background: #0960ff;
+  color: white;
+  font-size: 12px;
+}
+.orders-export:disabled {
+  opacity: 0.6;
+}
+.orders-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.45;
+  min-width: 105px;
+}
+.orders-cell strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.orders-cell small {
+  font-size: 11px;
+  color: #7d91b1;
+}
+.orders-status {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 5px;
+  background: #edf2f8;
+  color: #607492;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.orders-status.pending {
+  background: #fff0cb;
+  color: #dd8500;
+}
+.orders-status.accepted {
+  background: #dfedff;
+  color: #0961ff;
+}
+.orders-status.assigned {
+  background: #ede2ff;
+  color: #7334d9;
+}
+.orders-status.picked {
+  background: #d1f6ff;
+  color: #008cad;
+}
+.orders-status.delivered,
+.orders-status.completed {
+  background: #d5fae9;
+  color: #009c65;
+}
+.orders-status.cancelled {
+  background: #ffe0e3;
+  color: #d72d3d;
+}
+.orders-row-action {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dfe9f8;
+  border-radius: 5px;
+  background: #f7faff;
+  color: #2f4c7e;
+}
+.management-orders .p-datatable .p-datatable-tbody > tr > td {
+  padding: 7px 14px;
+  white-space: nowrap;
+}
+.dark .orders-summary-card {
+  background: #182235;
+  border-color: #334155;
+}
+.dark .orders-date-tabs,
+.dark .orders-row-action {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #334155;
+}
+.dark .orders-date-tabs button[aria-current='page'] {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+@media (max-width: 1200px) {
+  .orders-toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .orders-search {
+    grid-column: span 1;
+  }
+  .orders-date-tabs {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 640px) {
+  .orders-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .orders-summary-card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .orders-summary-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  .orders-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .orders-search,
+  .orders-date-tabs {
+    grid-column: 1 / -1;
+  }
+}

@@ -37,6 +37,10 @@ export const GET_STORE_DOCUMENTS = gql`
       holderName
       ifsc
       bankName
+      issueDate
+      fileName
+      fileSize
+      createdAt
       expiryDate
       status
       reviewNote
@@ -113,7 +117,11 @@ export const GET_PENDING_STORE_DOCUMENTS = gql`
         holderName
         ifsc
         bankName
-        expiryDate
+        issueDate
+      fileName
+      fileSize
+      createdAt
+      expiryDate
         status
         createdAt
       }

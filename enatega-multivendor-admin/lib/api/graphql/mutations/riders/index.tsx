@@ -1,17 +1,35 @@
 import { gql } from '@apollo/client';
 
+const RIDER_MUTATION_FIELDS = /* GraphQL */ `
+  _id
+  name
+  username
+  phone
+  email
+  image
+  available
+  isActive
+  status
+  employmentType
+  vehicleType
+  zone {
+    _id
+    title
+  }
+`;
+
 export const CREATE_RIDER = gql`
   mutation CreateRider($riderInput: RiderInput!) {
     createRider(riderInput: $riderInput) {
-      _id
-      name
-      username
-      phone
-      available
-      vehicleType
-      zone {
-        _id
-      }
+      ${RIDER_MUTATION_FIELDS}
+    }
+  }
+`;
+
+export const SAVE_RIDER_DRAFT = gql`
+  mutation SaveRiderDraft($riderInput: RiderInput!) {
+    saveRiderDraft(riderInput: $riderInput) {
+      ${RIDER_MUTATION_FIELDS}
     }
   }
 `;
@@ -19,14 +37,7 @@ export const CREATE_RIDER = gql`
 export const EDIT_RIDER = gql`
   mutation EditRider($riderInput: RiderInput!) {
     editRider(riderInput: $riderInput) {
-      _id
-      name
-      username
-      phone
-      vehicleType
-      zone {
-        _id
-      }
+      ${RIDER_MUTATION_FIELDS}
     }
   }
 `;

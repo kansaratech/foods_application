@@ -53,7 +53,7 @@ const VerificationAddForm = () => {
         configurationInput: {
           skipEmailVerification: values.skipEmailVerification,
           skipMobileVerification: values.skipMobileVerification,
-          skipWhatsAppOTP: values?.skipWhatsAppOTP
+          skipWhatsAppOTP: values?.skipWhatsAppOTP,
         },
       },
       onCompleted: () => {
@@ -95,7 +95,7 @@ const VerificationAddForm = () => {
                 cardTitle={'Verification Configuration'}
                 buttonLoading={mutationLoading}
               >
-                <div className="grid grid-cols-1 gap-4">
+                <div className="configuration-verification">
                   <CustomInputSwitch
                     label={`Skip Mobile Verification`}
                     onChange={() =>
@@ -121,10 +121,7 @@ const VerificationAddForm = () => {
                   <CustomInputSwitch
                     label={`Skip Whatsapp OTP`}
                     onChange={() =>
-                      setFieldValue(
-                        'skipWhatsAppOTP',
-                        !values.skipWhatsAppOTP
-                      )
+                      setFieldValue('skipWhatsAppOTP', !values.skipWhatsAppOTP)
                     }
                     isActive={values.skipWhatsAppOTP}
                     reverse

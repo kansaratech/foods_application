@@ -33,7 +33,10 @@ const CurrencyAddForm = () => {
 
   let initialValues = {
     currency: CURRENCY_CODE
-      ? { code: CURRENCY_CODE, label: CURRENCY_CODE }
+      ? currencies.find((item) => item.code === CURRENCY_CODE) || {
+          code: CURRENCY_CODE,
+          label: CURRENCY_CODE,
+        }
       : null,
     currencySymbol: CURRENCY_CODE
       ? currenciesSymbol.find((v) => v.currency === CURRENCY_CODE) || null

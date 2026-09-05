@@ -1,41 +1,33 @@
 'use client';
 
 // Core
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ApolloError, useMutation, useQuery } from '@apollo/client';
+import { ApolloError, gql, useMutation, useQuery } from '@apollo/client';
 import { Dialog } from 'primereact/dialog';
 
 // PrimeReact
-import { FilterMatchMode } from 'primereact/api';
 
 // Context
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { RestaurantsContext } from '@/lib/context/super-admin/restaurants.context';
 
 // Custom Hooks
-import { useQueryGQL } from '@/lib/hooks/useQueryQL';
+
 import useDebounce from '@/lib/hooks/useDebounce';
 
 // Custom Components
 import RestaurantDuplicateDialog from '../duplicate-dialog';
-import RestaurantsTableHeader from '../header/table-header';
+import StoresOverview from './stores-overview';
+import { StoreListRow } from './stores-overview';
 import Table from '@/lib/ui/useable-components/table';
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
 
 // Constants and Interfaces
-import {
-  IActionMenuItem,
-  IQueryResult,
-  IRestaurantResponse,
-  IRestaurantsResponseGraphQL,
-} from '@/lib/utils/interfaces';
+import { IActionMenuItem, IRestaurantResponse } from '@/lib/utils/interfaces';
 
 // GraphQL Queries and Mutations
 import {
-  GET_RESTAURANTS_PAGINATED,
-  GET_CLONED_RESTAURANTS_PAGINATED,
-  GET_RESTAURANTS,
   HARD_DELETE_RESTAURANT,
   SET_STORE_APPROVAL,
   CLONE_MENU,
@@ -55,56 +47,61 @@ export default function RestaurantsMain() {
 
   // Context
   const { showToast } = useContext(ToastContext);
-  const { currentTab } = useContext(RestaurantsContext);
+  const { currentTab, onSetCurrentTab } = useContext(RestaurantsContext);
 
   // Hooks
   const router = useRouter();
 
   // State for pagination and search
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [deleteId, setDeleteId] = useState('');
   const [duplicateId, setDuplicateId] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<
     IRestaurantResponse[]
   >([]);
   const [globalFilterValue, setGlobalFilterValue] = useState('');
-  const [selectedActions, setSelectedActions] = useState<string[]>([]);
-
-  // Debounce search to avoid too many API calls
-  const debouncedSearchTerm = useDebounce(globalFilterValue, 500);
-
-  const filters = {
-    global: { value: globalFilterValue, matchMode: FilterMatchMode.CONTAINS },
-    action: {
-      value: selectedActions.length > 0 ? selectedActions : null,
-      matchMode: FilterMatchMode.IN,
-    },
-  };
-
-  // Reset page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm, currentTab]);
-
-  // Query variables
-  const queryVariables = {
-    page: currentPage,
-    limit: rowsPerPage,
-    search: debouncedSearchTerm || undefined,
-  };
-
-  //Query
-  const { data, loading, refetch } = useQueryGQL(
-    currentTab === 'Actual'
-      ? GET_RESTAURANTS_PAGINATED
-      : GET_CLONED_RESTAURANTS_PAGINATED,
-    queryVariables,
-    {
-      fetchPolicy: 'cache-and-network',
-      debounceMs: 300,
-    }
-  ) as IQueryResult<IRestaurantsResponseGraphQL | undefined, undefined>;
+  const [view, setView] = useState('all');
+  const [zone, setZone] = useState('');
+  const [approval, setApproval] = useState('');
+  const [availability, setAvailability] = useState('');
+  const [category, setCategory] = useState('');
+  const debouncedSearchTerm = useDebounce(globalFilterValue, 300);
+  const { data, loading, error, refetch } = useQuery(
+    gql`
+      query StoresDirectory {
+        restaurants {
+          _id
+          unique_restaurant_id
+          name
+          image
+          address
+          city
+          state
+          isActive
+          approvalStatus
+          shopType
+          username
+          owner {
+            _id
+            email
+          }
+          zone {
+            _id
+            title
+          }
+          documentSummary {
+            required
+            verified
+            pending
+            rejected
+          }
+        }
+        getClonedRestaurants {
+          _id
+        }
+      }
+    `,
+    { fetchPolicy: 'cache-and-network' }
+  );
 
   // API
   const [hardDeleteRestaurant, { loading: isHardDeleting }] = useMutation(
@@ -139,12 +136,16 @@ export default function RestaurantsMain() {
   const [cloneSourceId, setCloneSourceId] = useState('');
   const [cloneTargetId, setCloneTargetId] = useState('');
   const [cloneReplace, setCloneReplace] = useState(false);
-  const { data: allStoresData } = useQuery(GET_RESTAURANTS);
-  const allStores = (allStoresData?.restaurants ?? []) as { _id: string; name: string }[];
+  const allStores = (data?.restaurants ?? []) as StoreListRow[];
 
   const [cloneMenu, { loading: cloning }] = useMutation(CLONE_MENU, {
     onCompleted: () => {
-      showToast({ type: 'success', title: t('Clone menu'), message: t('Menu cloned'), duration: 2000 });
+      showToast({
+        type: 'success',
+        title: t('Clone menu'),
+        message: t('Menu cloned'),
+        duration: 2000,
+      });
       setCloneSourceId('');
       setCloneTargetId('');
       setCloneReplace(false);
@@ -153,7 +154,10 @@ export default function RestaurantsMain() {
       showToast({
         type: 'error',
         title: t('Clone menu'),
-        message: graphQLErrors[0]?.message ?? networkError?.message ?? t('Could not clone the menu'),
+        message:
+          graphQLErrors[0]?.message ??
+          networkError?.message ??
+          t('Could not clone the menu'),
         duration: 3000,
       }),
   });
@@ -172,7 +176,10 @@ export default function RestaurantsMain() {
       showToast({
         type: 'error',
         title: t('Store approval'),
-        message: graphQLErrors[0]?.message ?? networkError?.message ?? t('Could not update approval'),
+        message:
+          graphQLErrors[0]?.message ??
+          networkError?.message ??
+          t('Could not update approval'),
         duration: 2500,
       });
     },
@@ -189,12 +196,6 @@ export default function RestaurantsMain() {
       });
       setDeleteId('');
     }
-  };
-
-  // Pagination handlers
-  const handlePageChange = (page: number, rows: number) => {
-    setCurrentPage(page);
-    setRowsPerPage(rows);
   };
 
   // Constants
@@ -228,19 +229,24 @@ export default function RestaurantsMain() {
     {
       label: t('Approve store'),
       command: (data?: IRestaurantResponse) => {
-        if (data) setStoreApproval({ variables: { id: data._id, status: 'APPROVED' } });
+        if (data)
+          setStoreApproval({ variables: { id: data._id, status: 'APPROVED' } });
       },
     },
     {
       label: t('Suspend store'),
       command: (data?: IRestaurantResponse) => {
-        if (data) setStoreApproval({ variables: { id: data._id, status: 'SUSPENDED' } });
+        if (data)
+          setStoreApproval({
+            variables: { id: data._id, status: 'SUSPENDED' },
+          });
       },
     },
     {
       label: t('Reject store'),
       command: (data?: IRestaurantResponse) => {
-        if (data) setStoreApproval({ variables: { id: data._id, status: 'REJECTED' } });
+        if (data)
+          setStoreApproval({ variables: { id: data._id, status: 'REJECTED' } });
       },
     },
     {
@@ -262,41 +268,96 @@ export default function RestaurantsMain() {
     },
   ];
 
-  // Get pagination data
-  const restaurantData =
-    currentTab === 'Actual'
-      ? data?.restaurantsPaginated
-      : data?.getClonedRestaurantsPaginated;
-
-  const restaurants = restaurantData?.data || [];
-  const totalRecords = restaurantData?.totalCount || 0;
+  const clonedIds = new Set<string>(
+    (data?.getClonedRestaurants ?? []).map(
+      (store: { _id: string }) => store._id
+    )
+  );
+  const incomplete = (store: StoreListRow) =>
+    !!store.documentSummary &&
+    store.documentSummary.verified < store.documentSummary.required;
+  const filteredStores = allStores.filter((store) => {
+    const search = debouncedSearchTerm.trim().toLowerCase();
+    return (
+      (!search ||
+        [
+          store.name,
+          store.owner?.email,
+          store.username,
+          store.address,
+          store.city,
+        ].some((value) => value?.toLowerCase().includes(search))) &&
+      (currentTab !== 'Cloned' || clonedIds.has(store._id)) &&
+      (view !== 'pending' || store.approvalStatus === 'PENDING') &&
+      (view !== 'incomplete' || incomplete(store)) &&
+      (!zone || store.zone?._id === zone) &&
+      (!approval || store.approvalStatus === approval) &&
+      (!availability || store.isActive === (availability === 'live')) &&
+      (!category || store.shopType === category)
+    );
+  });
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 dark:bg-dark-950">
+    <div className="stores-directory">
+      <StoresOverview
+        stores={allStores}
+        clonedCount={clonedIds.size}
+        loading={loading && !data}
+        view={currentTab === 'Cloned' ? 'cloned' : view}
+        onViewChange={(value) => {
+          onSetCurrentTab(value === 'cloned' ? 'Cloned' : 'Actual');
+          setView(value);
+        }}
+        search={globalFilterValue}
+        onSearch={setGlobalFilterValue}
+        zone={zone}
+        approval={approval}
+        availability={availability}
+        category={category}
+        onZone={setZone}
+        onApproval={setApproval}
+        onAvailability={setAvailability}
+        onCategory={setCategory}
+        onClear={() => {
+          setGlobalFilterValue('');
+          setZone('');
+          setApproval('');
+          setAvailability('');
+          setCategory('');
+        }}
+        exportStores={filteredStores}
+      />
+      {error && (
+        <div
+          role="alert"
+          className="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          Unable to load stores.{' '}
+          <button onClick={() => refetch()} className="underline">
+            Try again
+          </button>
+        </div>
+      )}
       <Table
-        header={
-          <RestaurantsTableHeader
-            globalFilterValue={globalFilterValue}
-            onGlobalFilterChange={(e) => setGlobalFilterValue(e.target.value)}
-            selectedActions={selectedActions}
-            setSelectedActions={setSelectedActions}
-          />
-        }
-        data={loading ? [] : restaurants}
-        filters={filters}
+        key={[
+          debouncedSearchTerm,
+          currentTab,
+          view,
+          zone,
+          approval,
+          availability,
+          category,
+        ].join('|')}
+        data={loading && !data ? [] : filteredStores}
         setSelectedData={setSelectedProducts}
         selectedData={selectedProducts}
         columns={RESTAURANT_TABLE_COLUMNS({ menuItems })}
-        loading={loading}
+        loading={loading && !data}
         className="stores-admin-table"
         scrollable={false}
-        minWidth="78rem"
+        minWidth="64rem"
         scrollHeight="calc(100dvh - 19rem)"
-        rowsPerPage={rowsPerPage}
-        // Server-side pagination props
-        totalRecords={totalRecords}
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
+        rowsPerPage={10}
         handleRowClick={(event: DataTableRowClickEvent) => {
           const target = event.originalEvent.target as HTMLElement | null;
 
@@ -329,6 +390,7 @@ export default function RestaurantsMain() {
         visible={!!duplicateId}
         onHide={() => {
           setDuplicateId('');
+          refetch();
         }}
       />
 
@@ -341,7 +403,8 @@ export default function RestaurantsMain() {
         <div className="flex flex-col gap-3 text-sm">
           <p className="text-gray-500">
             {t('Copy every category, item and add-on from')}{' '}
-            <b>{allStores.find((s) => s._id === cloneSourceId)?.name}</b> {t('into another store')}
+            <b>{allStores.find((s) => s._id === cloneSourceId)?.name}</b>{' '}
+            {t('into another store')}
           </p>
           <label className="flex flex-col">
             <span className="mb-1 text-gray-500">{t('Target store')}</span>
@@ -361,14 +424,24 @@ export default function RestaurantsMain() {
             </select>
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={cloneReplace} onChange={(e) => setCloneReplace(e.target.checked)} />
-            {t('Replace the target menu (deactivates items with order history)')}
+            <input
+              type="checkbox"
+              checked={cloneReplace}
+              onChange={(e) => setCloneReplace(e.target.checked)}
+            />
+            {t(
+              'Replace the target menu (deactivates items with order history)'
+            )}
           </label>
           <button
             onClick={() =>
               cloneTargetId &&
               cloneMenu({
-                variables: { fromRestaurantId: cloneSourceId, toRestaurantId: cloneTargetId, replace: cloneReplace },
+                variables: {
+                  fromRestaurantId: cloneSourceId,
+                  toRestaurantId: cloneTargetId,
+                  replace: cloneReplace,
+                },
               })
             }
             disabled={!cloneTargetId || cloning}

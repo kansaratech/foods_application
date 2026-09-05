@@ -10,6 +10,7 @@ import {
   faDashboard,
 } from '@fortawesome/free-solid-svg-icons';
 import { ToastContext } from '@/lib/context/global/toast.context';
+import ActionMenu from '@/lib/ui/useable-components/action-menu';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
 import { useMutation } from '@apollo/client';
 import {
@@ -232,7 +233,7 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
         propertyName: 'requestId',
       },
       {
-        headerName: t('User Type'),
+        headerName: t('Payee'),
         propertyName: 'rider.name',
         body: (rowData: IWithDrawRequest) => (
           <div className="flex flex-col">
@@ -240,7 +241,7 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
               {rowData.rider?.name || rowData.store?.slug || '-'}
             </span>
             <span className="text-sm text-gray-500">
-              {rowData.rider ? 'Rider' : 'Restaurant'}
+              {rowData.rider ? t('Rider') : t('Restaurant')}
             </span>
           </div>
         ),
@@ -250,7 +251,7 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
         propertyName: 'requestAmount',
         body: (rowData: IWithDrawRequest) => (
           <span className="font-medium">
-            {CURRENT_SYMBOL || '$'}
+            {CURRENT_SYMBOL || '₹'}
             {rowData?.requestAmount.toFixed(2)}
           </span>
         ),
@@ -283,12 +284,13 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
           />
         ),
       },
-      // {
-      //   propertyName: 'actions',
-      //   body: (rowData: IWithDrawRequest) => (
-      //     <ActionMenu items={menuItems} data={rowData} menuRef={menuRef} />
-      //   ),
-      // },
+      {
+        headerName: t('Actions'),
+        propertyName: 'actions',
+        body: (rowData: IWithDrawRequest) => (
+          <ActionMenu items={menuItems} data={rowData} />
+        ),
+      },
     ],
     [
       handleDropDownChange,

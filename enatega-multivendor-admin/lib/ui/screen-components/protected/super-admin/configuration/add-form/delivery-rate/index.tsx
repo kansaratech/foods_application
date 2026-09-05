@@ -93,7 +93,7 @@ const DeliveryRateAddForm = () => {
                 <div>
                   <CustomNumberField
                     min={0}
-                    placeholder="Delivery Rate"
+                    placeholder="Base delivery fee"
                     name="deliveryRate"
                     showLabel={true}
                     value={values.deliveryRate}
@@ -106,6 +106,9 @@ const DeliveryRateAddForm = () => {
                           : '',
                     }}
                   />
+                  <p className="configuration-helper">
+                    Default delivery charge
+                  </p>
                 </div>
               </ConfigCard>
             </Form>

@@ -79,6 +79,7 @@ model User {
   webNotifications  WebNotification[]
   orderChatMessages OrderChatMessage[]
   vendorDocuments   VendorDocument[]
+  riderDocuments    RiderDocument[]
   businessType      ShopType?          @relation(fields: [businessTypeId], references: [id])
 
   @@index([businessTypeId])
@@ -770,11 +771,35 @@ model RiderProfile {
   currentWalletAmount   Float   @default(0)
   totalWalletAmount     Float   @default(0)
   withdrawnWalletAmount Float   @default(0)
+  // INDEPENDENT | STORE_ASSIGNED
+  employmentType        String  @default("INDEPENDENT")
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   zone Zone? @relation(fields: [zoneId], references: [id])
 
   @@index([zoneId])
+}
+
+model RiderDocument {
+  id           String    @id @default(cuid())
+  riderId      String
+  kind         String // LICENSE | IDENTITY | BANK
+  number       String?
+  fileUrl      String?
+  holderName   String?
+  extra        Json?
+  status       String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  reviewNote   String?   @db.Text
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  rider User @relation(fields: [riderId], references: [id], onDelete: Cascade)
+
+  @@unique([riderId, kind])
+  @@index([riderId])
+  @@index([status])
 }
 
 model SubCategory {

@@ -56,6 +56,8 @@ export interface IPaginationVars {
 export interface IPaginationCommissionRateVars {
   page?: number;
   limit?: number;
+  search?: string;
+  minRate?: number;
 }
 
 export interface ITableColumn<T> {

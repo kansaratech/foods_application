@@ -1,105 +1,143 @@
-// Interfaces and Types
+import Link from 'next/link';
 import { ActionMenu } from '@/lib/ui/screen-components/protected/super-admin/users/view/main/ActionMenu';
 import { IUserResponse } from '@/lib/utils/interfaces/users.interface';
+import {
+  customerDate,
+  customerMethod,
+  customerStatus,
+} from '@/lib/ui/screens/super-admin/general/users/utils';
 
-// Icons
-import { faUser } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useTranslations } from 'next-intl';
-
-export const USERS_TABLE_COLUMNS = (openMenuId?: string | null, setOpenMenuId?: (id: string | null) => void) => {
-  // Hooks
-  const t = useTranslations();
-  return [
-    { headerName: t('user_id'), propertyName: '_id' },
-    {
-
-      headerName: t('Name'),
-      propertyName: 'name',
-      body: (user: IUserResponse) => {
-        return (
-          <div className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-300">
-              <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
-            </div>
-            <span>{user.name}</span>
+export const USERS_TABLE_COLUMNS = (
+  openMenuId?: string | null,
+  setOpenMenuId?: (id: string | null) => void
+) => [
+  {
+    headerName: 'Customer',
+    propertyName: 'name',
+    body: (user: IUserResponse) => {
+      const initials = (user.name || '?')
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0])
+        .join('')
+        .toUpperCase();
+      const tone =
+        user._id.split('').reduce((sum, c) => sum + c.charCodeAt(0), 0) % 5;
+      return (
+        <div className="customer-identity">
+          <span className={`customer-avatar tone-${tone}`}>{initials}</span>
+          <div>
+            <strong>{user.name || 'Unnamed customer'}</strong>
+            <small title={user._id}>{user._id}</small>
           </div>
-        );
-      },
+        </div>
+      );
     },
-    { headerName: t('Email'), propertyName: 'email' },
-    { headerName: t('Phone'), propertyName: 'phone' },
-
-    {
-      headerName: t('registration_method'),
-      propertyName: 'userType',
-      body: (user: IUserResponse) => {
-        const userType = user.userType || 'default';
-        const formattedUserType = {
-          google: 'Google',
-          apple: 'Apple',
-          default: 'Manual'
-        }[userType];
-        return <div className="flex items-center gap-2">{formattedUserType}</div>;
-      },
+  },
+  {
+    headerName: 'Contact',
+    propertyName: 'email',
+    body: (user: IUserResponse) => (
+      <div className="customer-contact">
+        <span title={user.email}>{user.email || '?'}</span>
+        <small>{user.phone || '?'}</small>
+      </div>
+    ),
+  },
+  {
+    headerName: 'Joined via',
+    propertyName: 'userType',
+    body: (user: IUserResponse) => {
+      const method = customerMethod(user);
+      const icon = (
+        {
+          Email: 'envelope',
+          Google: 'google',
+          Apple: 'apple',
+          Phone: 'phone',
+        } as Record<string, string>
+      )[method];
+      return (
+        <span className="customer-method">
+          {icon && <i className={`pi pi-${icon}`} aria-hidden="true" />}
+          {method}
+        </span>
+      );
     },
-    {
-      headerName: t('account_status'),
-      propertyName: 'status',
-      body: (user: IUserResponse) => {
-        const status = user.status || 'active';
-        const formattedStatus = {
-          active: 'Active',
-          blocked: 'Blocked',
-          deactivate: 'Deactivated'
-        }[status];
-        return <div className="flex items-center gap-2">{formattedStatus}</div>;
-      },
+  },
+  {
+    headerName: 'Orders',
+    propertyName: 'orders',
+    body: () => (
+      <span title="Order totals are not available in the customer directory">
+        ?
+      </span>
+    ),
+  },
+  {
+    headerName: 'Total spent',
+    propertyName: 'totalSpent',
+    body: () => (
+      <span title="Spending totals are not available in the customer directory">
+        ?
+      </span>
+    ),
+  },
+  {
+    headerName: 'Last active',
+    propertyName: 'lastLogin',
+    body: (user: IUserResponse) => {
+      const date = customerDate(user.lastLogin);
+      if (!date) return <span className="customer-muted">?</span>;
+      const hours = Math.max(
+        0,
+        Math.floor((Date.now() - date.getTime()) / 3600000)
+      );
+      const relative =
+        hours < 1
+          ? 'Just now'
+          : hours < 24
+            ? `${hours} hour${hours === 1 ? '' : 's'} ago`
+            : `${Math.floor(hours / 24)} day${Math.floor(hours / 24) === 1 ? '' : 's'} ago`;
+      return (
+        <div className="customer-activity">
+          <span>{relative}</span>
+          <small>
+            {date.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </small>
+        </div>
+      );
     },
-    {
-      headerName: t('last_login'), propertyName: 'lastLogin',
-      body: (user: IUserResponse) => {
-        if (!user.lastLogin) return <div className="text-gray-400">—</div>;
-
-        const date = new Date(user.lastLogin);
-
-        // Format date and time
-        const formattedDate = date.toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        });
-
-        const formattedTime = date.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-
-        return (
-          <div className="flex items-center flex-shrink-0 gap-1 text-sm">
-            {formattedDate} : {formattedTime}
-          </div>
-        );
-      },
-
-    },
-    {
-      headerName: t('Created At'),
-      propertyName: 'createdAt',
-      body: (user: IUserResponse) => {
-        const formattedDate = new Date(
-          Number(user.createdAt)
-        ).toLocaleDateString('en-GB');
-        return <div className="flex items-center gap-2">{formattedDate}</div>;
-      },
-    },
-    {
-      headerName: t('Actions'),
-      propertyName: '_id',
-      body: (rowData: IUserResponse) => <ActionMenu rowData={rowData} openMenuId={openMenuId} setOpenMenuId={setOpenMenuId} />,
-      style: { width: '60px', textAlign: 'right', paddingRight: '12px' },
-      headerStyle: { textAlign: 'right', paddingRight: '12px' },
-    }
-
-  ];
-};
+  },
+  {
+    headerName: 'Status',
+    propertyName: 'status',
+    body: (user: IUserResponse) => (
+      <span className={`customer-status ${customerStatus(user).toLowerCase()}`}>
+        <span />
+        {customerStatus(user)}
+      </span>
+    ),
+  },
+  {
+    headerName: 'Actions',
+    propertyName: 'actions',
+    body: (user: IUserResponse) => (
+      <div className="customer-actions">
+        <Link href={`/general/users/user-detail/${user._id}`}>
+          View profile
+        </Link>
+        <ActionMenu
+          rowData={user}
+          openMenuId={openMenuId}
+          setOpenMenuId={setOpenMenuId}
+        />
+      </div>
+    ),
+  },
+];

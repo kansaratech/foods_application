@@ -628,7 +628,7 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div className="md:col-span-12">
+                      <div className="min-w-0 md:col-span-6">
                         <CustomMultiSelectComponent
                           name="cuisines"
                           placeholder={t('Cuisines')}

@@ -1,4 +1,7 @@
-import { DataTablePageEvent, DataTableRowClickEvent } from 'primereact/datatable';
+import {
+  DataTablePageEvent,
+  DataTableRowClickEvent,
+} from 'primereact/datatable';
 import React, { useMemo, useState, useEffect } from 'react';
 import Table from '@/lib/ui/useable-components/table';
 import { ORDER_SUPER_ADMIN_COLUMNS } from '@/lib/ui/useable-components/table/columns/order-superadmin-columns';
@@ -8,14 +11,16 @@ import { TOrderRowData } from '@/lib/utils/types';
 import { DataTableFilterMeta } from 'primereact/datatable';
 
 interface OrderTableProps {
-  data: {
-    orders: IOrder[];
-    totalCount: number;
-    currentPage: number;
-    totalPages: number;
-    prevPage: number | null;
-    nextPage: number | null;
-  } | undefined;
+  data:
+    | {
+        orders: IOrder[];
+        totalCount: number;
+        currentPage: number;
+        totalPages: number;
+        prevPage: number | null;
+        nextPage: number | null;
+      }
+    | undefined;
   loading: boolean;
   isInitialLoad: boolean; // New prop
   handleRowClick: (event: DataTableRowClickEvent) => void; // Changed type
@@ -41,7 +46,6 @@ export default function OrderTable({
 }: OrderTableProps) {
   // Removed const t = useTranslations();
 
-
   const [lastValidOrders, setLastValidOrders] = useState<IOrder[]>([]);
 
   useEffect(() => {
@@ -51,7 +55,8 @@ export default function OrderTable({
   }, [loading, data?.orders]);
 
   const displayData: TOrderRowData[] = useMemo(() => {
-    if (loading && isInitialLoad) { // Only show skeleton on initial load
+    if (loading && isInitialLoad) {
+      // Only show skeleton on initial load
       return OrderTableSkeleton({ rowCount: 10 }); // Display 10 skeleton rows while loading
     }
     // If loading but not initial load, return last valid orders
@@ -65,7 +70,8 @@ export default function OrderTable({
               .join(', ')
               .slice(0, 15) + '...',
           OrderdeliveryAddress:
-            order?.deliveryAddress?.deliveryAddress?.toString()?.slice(0, 15) + '...',
+            order?.deliveryAddress?.deliveryAddress?.toString()?.slice(0, 15) +
+            '...',
           DateCreated: order?.createdAt?.toString()?.slice(0, 10),
         })
       );
@@ -82,7 +88,8 @@ export default function OrderTable({
             .join(', ')
             .slice(0, 15) + '...',
         OrderdeliveryAddress:
-          order?.deliveryAddress?.deliveryAddress?.toString()?.slice(0, 15) + '...',
+          order?.deliveryAddress?.deliveryAddress?.toString()?.slice(0, 15) +
+          '...',
         DateCreated: order?.createdAt?.toString()?.slice(0, 10),
       })
     );
@@ -90,7 +97,9 @@ export default function OrderTable({
 
   return (
     <Table
-      className="order-responsive-table"
+      className="orders-management-table"
+      minWidth="72rem"
+      scrollable={false}
       data={displayData as IExtendedOrder[]}
       setSelectedData={setSelectedData}
       selectedData={selectedData}
@@ -110,7 +119,12 @@ export default function OrderTable({
       currentPage={data?.currentPage || 1}
       rowsPerPage={rows}
       filters={filters}
-      globalFilterFields={['orderId', 'orderStatus', 'restaurant.name', 'deliveryAddress.deliveryAddress']}
+      globalFilterFields={[
+        'orderId',
+        'orderStatus',
+        'restaurant.name',
+        'deliveryAddress.deliveryAddress',
+      ]}
     />
   );
 }

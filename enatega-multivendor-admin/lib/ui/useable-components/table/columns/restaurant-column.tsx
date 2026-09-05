@@ -21,6 +21,8 @@ import { DELETE_RESTAURANT } from '@/lib/api/graphql';
 
 // Components
 import ActionMenu from '../../action-menu';
+import Link from 'next/link';
+import { StoreListRow } from '@/lib/ui/screen-components/protected/super-admin/restaurants/view/main/stores-overview';
 import { useTranslations } from 'next-intl';
 
 export const RESTAURANT_TABLE_COLUMNS = ({
@@ -122,62 +124,99 @@ export const RESTAURANT_TABLE_COLUMNS = ({
       body: (restaurant: IRestaurantResponse) => (
         <div className="flex min-w-[13rem] items-center gap-3">
           <Image
-            width={40}
-            height={40}
+            width={32}
+            height={32}
             alt={restaurant.name || t('Store')}
             src={restaurant.image || '/assets/images/png/logo.png'}
-            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+            className="h-8 w-8 shrink-0 rounded-lg object-cover"
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{restaurant.name}</p>
-            <p className="max-w-[13rem] truncate text-[11px] text-slate-400">{restaurant.unique_restaurant_id}</p>
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+              {restaurant.name}
+            </p>
+            <p className="max-w-[13rem] truncate text-[11px] text-slate-400">
+              ID: {restaurant.unique_restaurant_id || restaurant._id}
+            </p>
           </div>
         </div>
       ),
     },
-    { headerName: t('Vendor'), propertyName: 'owner.email' },
-    { headerName: t('Email'), propertyName: 'username' },
-    { headerName: t('Address'), propertyName: 'address' },
+    {
+      headerName: t('Vendor'),
+      propertyName: 'owner.email',
+      body: (store: StoreListRow) => (
+        <div className="stores-cell">
+          <span>{store.owner?.email || '?'}</span>
+          <small>{store.username}</small>
+        </div>
+      ),
+    },
+    {
+      headerName: 'Location',
+      propertyName: 'address',
+      body: (store: StoreListRow) => (
+        <div className="stores-cell">
+          <span>
+            {[store.city, store.state].filter(Boolean).join(', ') ||
+              store.address ||
+              '?'}
+          </span>
+          {store.city && <small>{store.address}</small>}
+        </div>
+      ),
+    },
+    {
+      headerName: 'Setup',
+      propertyName: 'documentSummary.verified',
+      body: (store: StoreListRow) => {
+        const summary = store.documentSummary;
+        if (!summary) return <span className="text-slate-400">?</span>;
+        const complete = summary.verified >= summary.required;
+        return (
+          <span
+            title="Verified required documents"
+            className={`stores-badge ${complete ? 'green' : 'amber'}`}
+          >
+            <i
+              className={`pi pi-${complete ? 'check-circle' : 'info-circle'}`}
+            />
+            {summary.verified}/{summary.required}{' '}
+            {complete
+              ? 'Complete'
+              : `Missing ${summary.required - summary.verified}`}
+          </span>
+        );
+      },
+    },
     {
       headerName: t('Approval'),
       propertyName: 'approvalStatus',
       body: (rowData: IRestaurantResponse & { approvalStatus?: string }) => {
-        const s = rowData.approvalStatus || 'APPROVED';
+        const s = rowData.approvalStatus || 'UNKNOWN';
         const cls: Record<string, string> = {
           APPROVED: 'bg-green-100 text-green-700',
           PENDING: 'bg-amber-100 text-amber-700',
           REJECTED: 'bg-red-100 text-red-700',
           SUSPENDED: 'bg-gray-200 text-gray-600',
         };
-        return <span className={`rounded px-2 py-0.5 text-xs ${cls[s] ?? ''}`}>{t(s)}</span>;
+        return (
+          <span className={`stores-badge ${cls[s] ?? ''}`}>
+            <i
+              className={`pi pi-${s === 'APPROVED' ? 'check-circle' : s === 'PENDING' ? 'clock' : 'times-circle'}`}
+            />
+            {s.charAt(0) + s.slice(1).toLowerCase()}
+          </span>
+        );
       },
     },
     {
-      headerName: t('Docs'),
-      propertyName: 'documentSummary',
-      body: (
-        rowData: IRestaurantResponse & {
-          documentSummary?: { required: number; verified: number; pending: number; rejected: number };
-        },
-      ) => {
-        const s = rowData.documentSummary;
-        if (!s) return <span className="text-xs text-gray-400">—</span>;
-        const cls =
-          s.rejected > 0
-            ? 'bg-red-100 text-red-700'
-            : s.verified >= s.required
-              ? 'bg-green-100 text-green-700'
-              : 'bg-amber-100 text-amber-700';
-        return <span className={`rounded px-2 py-0.5 text-xs ${cls}`}>{s.verified}/{s.required}</span>;
-      },
-    },
-    {
-      headerName: t('Status'),
+      headerName: 'Availability',
       propertyName: 'actions',
       body: (rowData: IRestaurantResponse) => {
         return (
           <CustomInputSwitch
-            className="prevent-row-click"
+            className="prevent-row-click stores-availability"
+            label={rowData.isActive ? 'Live' : 'Offline'}
             loading={rowData?._id === deletingRestaurant?.id}
             isActive={rowData.isActive}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,7 +231,15 @@ export const RESTAURANT_TABLE_COLUMNS = ({
       headerName: t('Actions'),
       propertyName: 'actions',
       body: (rowData: IRestaurantResponse) => (
-        <ActionMenu items={menuItems} data={rowData} />
+        <div className="prevent-row-click flex items-center justify-between gap-3">
+          <Link
+            className="stores-details"
+            href={`/general/stores/create?id=${rowData._id}`}
+          >
+            View details
+          </Link>
+          <ActionMenu items={menuItems} data={rowData} />
+        </div>
       ),
     },
   ];

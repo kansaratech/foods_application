@@ -18,18 +18,23 @@ import { IVersionConfigForm } from '@/lib/utils/interfaces';
 
 const VersionConfigAddForm = () => {
   const { showToast } = useToast();
-  
+
   // Query to fetch current versions
   const { data: versionsData } = useQuery(GET_VERSIONS);
 
   // Set initial values from query data
   const initialValues: IVersionConfigForm = {
-    customerAppVersionAndroid: versionsData?.getVersions?.customerAppVersion?.android ?? '',
-    customerAppVersionIos: versionsData?.getVersions?.customerAppVersion?.ios ?? '',
-    riderAppVersionAndroid: versionsData?.getVersions?.riderAppVersion?.android ?? '',
+    customerAppVersionAndroid:
+      versionsData?.getVersions?.customerAppVersion?.android ?? '',
+    customerAppVersionIos:
+      versionsData?.getVersions?.customerAppVersion?.ios ?? '',
+    riderAppVersionAndroid:
+      versionsData?.getVersions?.riderAppVersion?.android ?? '',
     riderAppVersionIos: versionsData?.getVersions?.riderAppVersion?.ios ?? '',
-    restaurantAppVersionAndroid: versionsData?.getVersions?.restaurantAppVersion?.android ?? '',
-    restaurantAppVersionIos: versionsData?.getVersions?.restaurantAppVersion?.ios ?? '',
+    restaurantAppVersionAndroid:
+      versionsData?.getVersions?.restaurantAppVersion?.android ?? '',
+    restaurantAppVersionIos:
+      versionsData?.getVersions?.restaurantAppVersion?.ios ?? '',
   };
 
   // Mutation for saving versions
@@ -87,20 +92,14 @@ const VersionConfigAddForm = () => {
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {({
-          values,
-          errors,
-          touched,
-          handleSubmit,
-          handleChange,
-        }) => {
+        {({ values, errors, touched, handleSubmit, handleChange }) => {
           return (
             <Form onSubmit={handleSubmit}>
               <ConfigCard
                 cardTitle={'App Versions Configuration'}
                 buttonLoading={mutationLoading}
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="configuration-version-fields">
                   {/* Customer App Version Fields */}
                   <CustomTextField
                     type="text"
@@ -112,7 +111,8 @@ const VersionConfigAddForm = () => {
                     onChange={handleChange}
                     style={{
                       borderColor:
-                        errors.customerAppVersionAndroid && touched.customerAppVersionAndroid
+                        errors.customerAppVersionAndroid &&
+                        touched.customerAppVersionAndroid
                           ? 'red'
                           : '',
                     }}
@@ -127,7 +127,8 @@ const VersionConfigAddForm = () => {
                     onChange={handleChange}
                     style={{
                       borderColor:
-                        errors.customerAppVersionIos && touched.customerAppVersionIos
+                        errors.customerAppVersionIos &&
+                        touched.customerAppVersionIos
                           ? 'red'
                           : '',
                     }}
@@ -144,7 +145,8 @@ const VersionConfigAddForm = () => {
                     onChange={handleChange}
                     style={{
                       borderColor:
-                        errors.riderAppVersionAndroid && touched.riderAppVersionAndroid
+                        errors.riderAppVersionAndroid &&
+                        touched.riderAppVersionAndroid
                           ? 'red'
                           : '',
                     }}
@@ -176,7 +178,8 @@ const VersionConfigAddForm = () => {
                     onChange={handleChange}
                     style={{
                       borderColor:
-                        errors.restaurantAppVersionAndroid && touched.restaurantAppVersionAndroid
+                        errors.restaurantAppVersionAndroid &&
+                        touched.restaurantAppVersionAndroid
                           ? 'red'
                           : '',
                     }}
@@ -191,7 +194,8 @@ const VersionConfigAddForm = () => {
                     onChange={handleChange}
                     style={{
                       borderColor:
-                        errors.restaurantAppVersionIos && touched.restaurantAppVersionIos
+                        errors.restaurantAppVersionIos &&
+                        touched.restaurantAppVersionIos
                           ? 'red'
                           : '',
                     }}

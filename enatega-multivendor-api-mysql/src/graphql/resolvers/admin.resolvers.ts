@@ -410,6 +410,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
 
   AdminUser: {
     _id: (parent: User) => parent.id,
+    favourite: (parent: User) => (Array.isArray(parent.favouriteRestaurantIds) ? (parent.favouriteRestaurantIds as string[]) : []),
     addresses: (parent: User) => prisma.address.findMany({ where: { userId: parent.id } }),
   },
 };

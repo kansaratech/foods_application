@@ -6,7 +6,6 @@ import { useMutation, useQuery } from '@apollo/client';
 
 // Components
 import ConfigCard from '../../view/card';
-import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown';
 
@@ -53,7 +52,7 @@ const AppConfigAddForm = () => {
   );
 
   const defaultDemoZone = useMemo(() => {
-    if (!zoneOptions.length) return null
+    if (!zoneOptions.length) return null;
 
     return (
       zoneOptions.find(
@@ -63,7 +62,7 @@ const AppConfigAddForm = () => {
         (zone: IDropdownSelectItem) => zone.label === 'Global zone'
       ) ||
       null
-    )
+    );
   }, [zoneOptions, CUSTOMER_DEMO_ZONE_ID]);
 
   // Set initial values using the useConfiguration hook
@@ -144,52 +143,70 @@ const AppConfigAddForm = () => {
                 toggleLabel={'Enable customer demo mode'}
                 toggleValue={values.enableCustomerDemoMode}
                 toggleOnChange={() => {
-                  const nextValue = !values.enableCustomerDemoMode
-                  setFieldValue('enableCustomerDemoMode', nextValue)
+                  const nextValue = !values.enableCustomerDemoMode;
+                  setFieldValue('enableCustomerDemoMode', nextValue);
                   if (!nextValue) {
-                    setFieldValue('customerDemoZone', null)
-                    return
+                    setFieldValue('customerDemoZone', null);
+                    return;
                   }
 
                   if (!values.customerDemoZone && defaultDemoZone) {
-                    setFieldValue('customerDemoZone', defaultDemoZone)
+                    setFieldValue('customerDemoZone', defaultDemoZone);
                   }
                 }}
               >
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   {/* Terms and Conditions Field */}
-                  <CustomTextField
-                    type="text"
-                    placeholder="Terms and Conditions"
-                    name="termsAndConditions"
-                    maxLength={255}
-                    value={values.termsAndConditions}
-                    showLabel={true}
-                    onChange={handleChange}
-                    style={{
-                      borderColor:
-                        errors.termsAndConditions && touched.termsAndConditions
-                          ? 'red'
-                          : '',
-                    }}
-                  />
+                  <label
+                    className="configuration-textarea-label"
+                    htmlFor="config-termsAndConditions"
+                  >
+                    <span>Terms and Conditions</span>
+                    <textarea
+                      id="config-termsAndConditions"
+                      name="termsAndConditions"
+                      value={values.termsAndConditions}
+                      onChange={handleChange}
+                      maxLength={5000}
+                      rows={4}
+                      aria-invalid={
+                        !!(
+                          errors.termsAndConditions &&
+                          touched.termsAndConditions
+                        )
+                      }
+                    />
+                    {errors.termsAndConditions &&
+                      touched.termsAndConditions && (
+                        <small className="text-red-600">
+                          {errors.termsAndConditions}
+                        </small>
+                      )}
+                  </label>
 
                   {/* Privacy Policy Field */}
-                  <CustomTextField
-                    type="text"
-                    placeholder="Privacy Policy"
-                    name="privacyPolicy"
-                    maxLength={255}
-                    value={values.privacyPolicy}
-                    showLabel={true}
-                    onChange={handleChange}
-                    style={{
-                      borderColor:
-                        errors.privacyPolicy && touched.privacyPolicy
-                          ? 'red'
-                          : '',
-                    }}
-                  />
+                  <label
+                    className="configuration-textarea-label"
+                    htmlFor="config-privacyPolicy"
+                  >
+                    <span>Privacy Policy</span>
+                    <textarea
+                      id="config-privacyPolicy"
+                      name="privacyPolicy"
+                      value={values.privacyPolicy}
+                      onChange={handleChange}
+                      maxLength={5000}
+                      rows={4}
+                      aria-invalid={
+                        !!(errors.privacyPolicy && touched.privacyPolicy)
+                      }
+                    />
+                    {errors.privacyPolicy && touched.privacyPolicy && (
+                      <small className="text-red-600">
+                        {errors.privacyPolicy}
+                      </small>
+                    )}
+                  </label>
 
                   {/* Test OTP Field */}
                   <CustomNumberField

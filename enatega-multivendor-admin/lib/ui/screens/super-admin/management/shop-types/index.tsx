@@ -1,3 +1,4 @@
+import '@/lib/ui/useable-components/management-page/management.css';
 //screen components
 import ShopTypesScreenHeader from '@/lib/ui/screen-components/protected/super-admin/shop-types/view/header/screen-header';
 import ShopTypesForm from '@/lib/ui/screen-components/protected/super-admin/shop-types/form';
@@ -39,7 +40,7 @@ export default function CouponsScreen() {
   };
 
   return (
-    <div className="screen-container">
+    <div className="management-page management-shop-types">
       <ShopTypesScreenHeader handleButtonClick={handleButtonClick} />
       <ShopTypesMain
         setVisible={setVisible}

@@ -1,3 +1,4 @@
+import '@/lib/ui/useable-components/management-page/management.css';
 //screen components
 import CouponForm from '@/lib/ui/screen-components/protected/super-admin/coupons/form';
 import CouponScreenHeader from '@/lib/ui/screen-components/protected/super-admin/coupons/view/header/screen-header';
@@ -30,7 +31,7 @@ export default function CouponsScreen() {
   };
 
   return (
-    <div className="screen-container">
+    <div className="management-page management-coupons">
       <CouponScreenHeader handleButtonClick={handleButtonClick} />
       <CouponsMain
         setVisible={setVisible}
