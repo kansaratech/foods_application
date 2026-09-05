@@ -13,6 +13,7 @@ import { TRiderProfileBottomBarBit } from "@/lib/utils/types/rider";
 import ReactNativeModal from "react-native-modal";
 import DrivingLicenseForm from "../../screen-components/profile/forms/liecense";
 import VehiclePlateForm from "../../screen-components/profile/forms/vehicle";
+import RiderDocumentForm from "../../screen-components/profile/forms/rider-document";
 
 export default function ComponentName() {
   // States
@@ -75,6 +76,15 @@ export default function ComponentName() {
             )}
             {isFormOpened === "VEHICLE_FORM" && (
               <VehiclePlateForm setIsFormOpened={setIsFormOpened} />
+            )}
+            {isFormOpened === "RIDER_DOC_LICENSE" && (
+              <RiderDocumentForm kind="LICENSE" setIsFormOpened={setIsFormOpened} />
+            )}
+            {isFormOpened === "RIDER_DOC_IDENTITY" && (
+              <RiderDocumentForm kind="IDENTITY" setIsFormOpened={setIsFormOpened} />
+            )}
+            {isFormOpened === "RIDER_DOC_BANK" && (
+              <RiderDocumentForm kind="BANK" setIsFormOpened={setIsFormOpened} />
             )}
             {isFormOpened === null && <></>}
           </KeyboardAvoidingView>

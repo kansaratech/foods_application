@@ -90,6 +90,7 @@ export interface IFood {
   isActive: boolean;
   __typename: string;
   isOutOfStock: boolean;
+  pairedFoods?: { _id: string; title: string }[];
 }
 
 export interface IFoodNew {
@@ -104,6 +105,8 @@ export interface IFoodNew {
   isActive: boolean;
   __typename: string;
   isOutOfStock: boolean;
+  pairedFoods?: { _id: string; title: string }[];
+  pairedFoodIds?: string[];
 }
 
 export interface IFoodCategory {

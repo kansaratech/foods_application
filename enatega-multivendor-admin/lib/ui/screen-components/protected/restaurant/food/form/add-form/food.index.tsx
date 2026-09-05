@@ -34,11 +34,12 @@ import CategoryAddForm from '../../../category/add-form';
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown';
+import CustomMultiSelectComponent from '@/lib/ui/useable-components/custom-multi-select';
 import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-field';
 import MultiImageUploadComponent from '@/lib/ui/useable-components/upload/upload-images-gallery';
 
 // API
-import { GET_CATEGORY_BY_RESTAURANT_ID } from '@/lib/api/graphql';
+import { GET_CATEGORY_BY_RESTAURANT_ID, GET_MENU_FOR_PICKER } from '@/lib/api/graphql';
 import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
 
 // Schema
@@ -63,6 +64,7 @@ const initialValues: IFoodDetailsForm = {
   images: [],
   category: null,
   subCategory: null,
+  pairedFoods: [],
 };
 export default function FoodDetails({
   stepperProps,
@@ -96,7 +98,13 @@ export default function FoodDetails({
     useState<IDropdownSelectItem>();
   const [foodInitialValues, setFoodInitialValues] = useState(
     foodContextData?.isEditing || foodContextData?.food?.data?.title
-      ? { ...initialValues, ...foodContextData?.food?.data }
+      ? {
+          ...initialValues,
+          ...foodContextData?.food?.data,
+          pairedFoods: (foodContextData?.food?.data?.pairedFoods ?? []).map(
+            (p) => ({ label: p.title, code: p._id })
+          ),
+        }
       : { ...initialValues }
   );
 
@@ -132,6 +140,19 @@ export default function FoodDetails({
     { parentCategoryId: string }
   >;
 
+  const { data: menuForPickerData } = useQueryGQL(
+    GET_MENU_FOR_PICKER,
+    { id: restaurantId },
+    { fetchPolicy: 'cache-and-network', enabled: !!restaurantId }
+  ) as IQueryResult<
+    {
+      restaurant?: {
+        categories: { foods: { _id: string; title: string; isCombo?: boolean }[] }[];
+      };
+    } | undefined,
+    undefined
+  >;
+
   // Memoized Data
   const categoriesDropdown = useMemo(
     () =>
@@ -139,6 +160,17 @@ export default function FoodDetails({
         return { label: category.title, code: category._id };
       }),
     [data?.restaurant?.categories]
+  );
+
+  const pairedFoodsOptions = useMemo(
+    () =>
+      (menuForPickerData?.restaurant?.categories ?? [])
+        .flatMap((c) => c.foods)
+        .filter(
+          (f) => !f.isCombo && f._id !== foodContextData?.food?.data?._id
+        )
+        .map((f) => ({ label: f.title, code: f._id })),
+    [menuForPickerData, foodContextData?.food?.data?._id]
   );
 
   const subCategoriesDropdown = useMemo(
@@ -163,6 +195,9 @@ export default function FoodDetails({
       images: values.images,
       isOutOfStock: false,
       isActive: true,
+      pairedFoodIds: values.pairedFoods
+        .map((p) => p.code)
+        .filter((code): code is string => !!code),
       __typename: foodContextData?.food?.data?.__typename ?? 'Food',
       variations:
         (foodContextData?.food?.variations ?? []).length > 0
@@ -401,6 +436,20 @@ export default function FoodDetails({
                             {errors.images as string}
                           </span>
                         )}
+                      </div>
+
+                      <div>
+                        <CustomMultiSelectComponent
+                          name="pairedFoods"
+                          placeholder={t('Frequently bought together')}
+                          options={pairedFoodsOptions}
+                          selectedItems={values.pairedFoods ?? []}
+                          setSelectedItems={setFieldValue}
+                          showLabel={true}
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {t('Shown as an upsell alongside this item on the storefront')}
+                        </p>
                       </div>
                     </div>
 

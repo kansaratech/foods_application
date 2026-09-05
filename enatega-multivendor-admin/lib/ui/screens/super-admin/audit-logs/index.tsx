@@ -33,7 +33,7 @@ const AuditLogScreen = () => {
       <div className="management-page management-audit-logs">
         <ManagementHeading
           title={t('Audit Logs')}
-          description="Review administrative activity and changes across the platform."
+          description={t('Review administrative activity and changes across the platform.')}
         />
         <div className="mt-6">
           {[...Array(5)].map((_, i) => (
@@ -68,7 +68,7 @@ const AuditLogScreen = () => {
       <div className="mb-6">
         <ManagementHeading
           title={t('Audit Logs')}
-          description="Review administrative activity and changes across the platform."
+          description={t('Review administrative activity and changes across the platform.')}
         />
         <p className="text-gray-500 dark:text-white mt-1">
           {t('audit_log_header_desc')}

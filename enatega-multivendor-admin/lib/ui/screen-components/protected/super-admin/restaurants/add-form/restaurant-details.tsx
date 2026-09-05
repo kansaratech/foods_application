@@ -464,6 +464,11 @@ export default function RestaurantDetailsForm({
                               : '',
                           }}
                         />
+                        {errors.password && touched.password && (
+                          <small className="ml-1 p-error">
+                            {errors.password}
+                          </small>
+                        )}
                       </div>
 
                       <div className="md:col-span-6">
@@ -486,6 +491,11 @@ export default function RestaurantDetailsForm({
                               : '',
                           }}
                         />
+                        {errors.confirmPassword && touched.confirmPassword && (
+                          <small className="ml-1 p-error">
+                            {errors.confirmPassword}
+                          </small>
+                        )}
                       </div>
 
                       <div className="md:col-span-4">
@@ -682,16 +692,30 @@ export default function RestaurantDetailsForm({
                           label={t('Save & Next')}
                           type="submit"
                           loading={isSubmitting}
-                          onClick={() => {
+                          onClick={(e) => {
                             if (
                               values.password &&
                               !strongPasswordRegex.test(values.password)
                             ) {
+                              e.preventDefault();
                               showToast({
                                 title: t('Error'),
                                 message: t(
                                   'Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'
                                 ),
+                                type: 'error',
+                                duration: 3000,
+                              });
+                              return;
+                            }
+                            if (
+                              values.password &&
+                              values.password !== values.confirmPassword
+                            ) {
+                              e.preventDefault();
+                              showToast({
+                                title: t('Error'),
+                                message: t('Passwords must match'),
                                 type: 'error',
                                 duration: 3000,
                               });

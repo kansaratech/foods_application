@@ -6,6 +6,8 @@ import { Form, Formik } from 'formik';
 import ConfigCard from '../../view/card';
 import CustomPasswordTextField from '@/lib/ui/useable-components/password-input-field';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
+import CustomInputSwitch from '@/lib/ui/useable-components/custom-input-switch';
+import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 
 // Toast
 import useToast from '@/lib/hooks/useToast';
@@ -25,7 +27,15 @@ import { GET_CONFIGURATION, SAVE_EMAIL_CONFIGURATION } from '@/lib/api/graphql';
 
 const NodeMailerAddForm = () => {
   // Hooks
-  const { EMAIL_NAME, EMAIL, ENABLE_EMAIL } = useConfiguration();
+  const {
+    EMAIL_NAME,
+    EMAIL,
+    ENABLE_EMAIL,
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_SECURE,
+    SMTP_USER,
+  } = useConfiguration();
   const { showToast } = useToast();
 
   const initialValues = {
@@ -33,6 +43,10 @@ const NodeMailerAddForm = () => {
     password: '',
     emailName: EMAIL_NAME,
     enableEmail: ENABLE_EMAIL,
+    smtpHost: SMTP_HOST,
+    smtpPort: SMTP_PORT ?? null,
+    smtpSecure: SMTP_SECURE,
+    smtpUser: SMTP_USER,
   };
 
   const [mutate, { loading: mutationLoading }] = useMutation(
@@ -50,6 +64,10 @@ const NodeMailerAddForm = () => {
           email: values.email,
           emailName: values.emailName,
           enableEmail: values.enableEmail,
+          smtpHost: values.smtpHost,
+          smtpPort: values.smtpPort,
+          smtpSecure: values.smtpSecure,
+          smtpUser: values.smtpUser,
           ...(password ? { password } : {}),
         },
       },
@@ -146,9 +164,63 @@ const NodeMailerAddForm = () => {
                         errors.password && touched.password ? 'red' : '',
                     }}
                   />
+
+                  <CustomTextField
+                    type="text"
+                    name="smtpHost"
+                    placeholder="SMTP Host"
+                    maxLength={100}
+                    value={values.smtpHost ?? ''}
+                    onChange={handleChange}
+                    showLabel={true}
+                    style={{
+                      borderColor:
+                        errors.smtpHost && touched.smtpHost ? 'red' : '',
+                    }}
+                  />
+
+                  <CustomNumberField
+                    min={0}
+                    placeholder="SMTP Port"
+                    name="smtpPort"
+                    showLabel={true}
+                    value={values.smtpPort}
+                    useGrouping={false}
+                    onChange={setFieldValue}
+                    style={{
+                      borderColor:
+                        errors.smtpPort && touched.smtpPort ? 'red' : '',
+                    }}
+                  />
+
+                  <CustomTextField
+                    type="text"
+                    name="smtpUser"
+                    placeholder="SMTP Username (optional, defaults to Email)"
+                    maxLength={100}
+                    value={values.smtpUser ?? ''}
+                    onChange={handleChange}
+                    showLabel={true}
+                    style={{
+                      borderColor:
+                        errors.smtpUser && touched.smtpUser ? 'red' : '',
+                    }}
+                  />
+
+                  <div className="flex items-center gap-3">
+                    <CustomInputSwitch
+                      label="SMTP Secure (TLS)"
+                      isActive={!!values.smtpSecure}
+                      onChange={() =>
+                        setFieldValue('smtpSecure', !values.smtpSecure)
+                      }
+                    />
+                  </div>
                 </div>
                 <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                  Leave the password blank to keep the current value.
+                  Leave the password blank to keep the current value. Leave
+                  SMTP Host empty to send via Gmail using the Email + Password
+                  above instead of a custom SMTP server.
                 </p>
               </ConfigCard>
             </Form>

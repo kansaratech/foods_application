@@ -31,6 +31,8 @@ const RIDER_LIST_FIELDS = /* GraphQL */ `
     rejected
     pending
   }
+  approvalStatus
+  approvalNote
 `;
 
 export const GET_RIDERS = gql`

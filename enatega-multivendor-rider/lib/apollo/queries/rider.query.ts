@@ -130,6 +130,22 @@ export const RIDER_PROFILE = gql`
   }
 `;
 
+export const RIDER_DOCUMENTS = gql`
+  query RiderDocuments($riderId: ID!) {
+    riderDocuments(riderId: $riderId) {
+      _id
+      kind
+      number
+      fileUrl
+      holderName
+      ifsc
+      bankName
+      status
+      reviewNote
+    }
+  }
+`;
+
 export const rider = gql`
   query Rider($id: String!) {
     rider(id: $id) {

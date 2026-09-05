@@ -63,6 +63,9 @@ export const riderTypeDefs = /* GraphQL */ `
     currentTask: RiderCurrentTask
     createdAt: String
     updatedAt: String
+    "PENDING | APPROVED | REJECTED — admin-created riders start APPROVED; a self-registered rider starts PENDING."
+    approvalStatus: String
+    approvalNote: String
   }
 
   type RiderCurrentTask {
@@ -141,6 +144,9 @@ export const riderTypeDefs = /* GraphQL */ `
     deleteRider(id: String!): Rider!
     toggleAvailablity(id: String!): Rider!
     riderLogin(username: String, password: String, notificationToken: String, timeZone: String!): AuthPayload!
+    "Public — a rider signs up from the app. Starts approvalStatus PENDING; cannot go online or take orders until an admin approves them."
+    riderSelfRegister(name: String!, phone: String!, email: String, password: String!, vehicleType: String, vehicleNumber: String): AuthPayload!
+    setRiderApproval(id: String!, status: String!, note: String): Rider!
     updateRiderLocation(latitude: String!, longitude: String!): Rider!
     updateRiderLicenseDetails(id: String!, licenseDetails: LicenseDetailsInput): Rider!
     updateRiderVehicleDetails(id: String!, vehicleDetails: VehicleDetailsInput): Rider!

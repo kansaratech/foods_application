@@ -8,6 +8,8 @@ import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
 import { recordOrderCommission, recordRiderCash, resolveCommissionRate, riderOutstandingCash } from '../../utils/commission';
+import { assertRiderNotRejected } from './rider-docs.resolvers';
+import { assertRiderApproved } from './rider.resolvers';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
 const PAST_STATUSES: OrderStatus[] = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
@@ -656,6 +658,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       requireRole(context, ['ADMIN', 'VENDOR']);
       const rider = await prisma.user.findUnique({ where: { id: args.riderId } });
       if (!rider || rider.userType !== 'RIDER') throw userInputError('Rider not found');
+      await assertRiderApproved(args.riderId);
+      await assertRiderNotRejected(args.riderId);
       await assertRiderUnderCashLimit(args.riderId, args.id);
 
       const updated = await prisma.order.update({
@@ -676,6 +680,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       if (order.riderId && order.riderId !== currentUser.id) {
         throw userInputError('Order already assigned to another rider');
       }
+      await assertRiderApproved(currentUser.id);
+      await assertRiderNotRejected(currentUser.id);
       await assertRiderUnderCashLimit(currentUser.id, args.id);
 
       const updated = await prisma.order.update({

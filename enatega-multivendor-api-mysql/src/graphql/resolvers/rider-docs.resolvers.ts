@@ -176,3 +176,19 @@ export const riderDocsResolvers: IResolvers<unknown, GraphQLContext> = {
 };
 
 export const RIDER_REQUIRED_DOC_KINDS = DOC_KINDS;
+
+// A rejected document is a real signal (fake license, mismatched bank
+// holder, etc) — block the rider from going online or taking orders until
+// it's resolved. Unsubmitted/PENDING documents do NOT block (mirrors the
+// store-document rule: verification is a records workflow, not a launch
+// gate) — only an explicit REJECTED does.
+export async function assertRiderNotRejected(riderId: string): Promise<void> {
+  const rejected = await prisma.riderDocument.findFirst({
+    where: { riderId, status: 'REJECTED' },
+  });
+  if (rejected) {
+    throw userInputError(
+      `Your ${rejected.kind.toLowerCase()} document was rejected${rejected.reviewNote ? `: ${rejected.reviewNote}` : ''}. Contact support to resubmit before going online.`,
+    );
+  }
+}

@@ -51,6 +51,8 @@ export interface IRiderResponse {
   currentTask?: IRiderCurrentTask | null;
   vehicleDetails?: { number?: string | null } | null;
   documentSummary?: IRiderDocumentSummary;
+  approvalStatus?: string;
+  approvalNote?: string | null;
 }
 
 export interface ISingleRiderResponse {

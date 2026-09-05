@@ -66,6 +66,24 @@ export const GET_PAYOUT_RUN = gql`
         reference
         note
         paidAt
+        statement {
+          statementNumber
+          issuedOn
+          periodLabel
+          runLabel
+          platformName
+          platformAddress
+          platformGstin
+          payeeType
+          payeeName
+          walletBalance
+          heldCash
+          amount
+          status
+          method
+          reference
+          paidAt
+        }
       }
     }
   }
@@ -74,6 +92,46 @@ export const GET_PAYOUT_RUN = gql`
 export const GET_PAYOUT_RUN_CSV = gql`
   query PayoutRunCsv($id: ID!) {
     payoutRunCsv(id: $id)
+  }
+`;
+
+export const GET_MY_PAYOUT_HISTORY = gql`
+  query MyPayoutHistory($page: Int, $limit: Int) {
+    myPayoutHistory(page: $page, limit: $limit) {
+      total
+      items {
+        _id
+        payeeName
+        walletBalance
+        heldCash
+        amount
+        status
+        method
+        reference
+        paidAt
+        runLabel
+        periodStart
+        periodEnd
+        statement {
+          statementNumber
+          issuedOn
+          periodLabel
+          runLabel
+          platformName
+          platformAddress
+          platformGstin
+          payeeType
+          payeeName
+          walletBalance
+          heldCash
+          amount
+          status
+          method
+          reference
+          paidAt
+        }
+      }
+    }
   }
 `;
 

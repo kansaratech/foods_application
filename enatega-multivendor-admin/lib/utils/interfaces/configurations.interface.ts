@@ -13,6 +13,10 @@ export interface INodeMailerForm {
   password: string | undefined;
   emailName: string | undefined;
   enableEmail: boolean | undefined;
+  smtpHost: string | undefined;
+  smtpPort: number | null;
+  smtpSecure: boolean | undefined;
+  smtpUser: string | undefined;
 }
 
 export interface IStripeForm {

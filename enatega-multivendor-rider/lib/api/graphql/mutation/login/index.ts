@@ -18,3 +18,26 @@ export const RIDER_LOGIN = gql`
     }
   }
 `;
+
+export const RIDER_SELF_REGISTER = gql`
+  mutation RiderSelfRegister(
+    $name: String!
+    $phone: String!
+    $email: String
+    $password: String!
+    $vehicleType: String
+    $vehicleNumber: String
+  ) {
+    riderSelfRegister(
+      name: $name
+      phone: $phone
+      email: $email
+      password: $password
+      vehicleType: $vehicleType
+      vehicleNumber: $vehicleNumber
+    ) {
+      userId
+      token
+    }
+  }
+`;

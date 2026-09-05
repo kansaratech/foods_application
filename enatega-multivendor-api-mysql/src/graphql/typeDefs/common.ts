@@ -28,6 +28,10 @@ export const commonTypeDefs = /* GraphQL */ `
     email: String
     emailName: String
     enableEmail: Boolean
+    smtpHost: String
+    smtpPort: Int
+    smtpSecure: Boolean
+    smtpUser: String
 
     formEmail: String
 
@@ -94,6 +98,10 @@ export const commonTypeDefs = /* GraphQL */ `
     emailName: String
     enableEmail: Boolean
     password: String
+    smtpHost: String
+    smtpPort: Int
+    smtpSecure: Boolean
+    smtpUser: String
   }
 
   input FormEmailConfigurationInput {

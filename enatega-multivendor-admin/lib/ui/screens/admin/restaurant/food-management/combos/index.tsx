@@ -118,8 +118,17 @@ export default function CombosScreen() {
 
   const save = async () => {
     const price = parseFloat(form.price);
-    if (!form.title || Number.isNaN(price) || price <= 0 || form.items.length < 2 || !form.categoryId) {
-      showToast({ type: 'error', title: t('Combos'), message: t('Name, price, category and at least 2 items are required'), duration: 2800 });
+    if (!form.title || !form.categoryId || form.items.length < 2) {
+      showToast({ type: 'error', title: t('Combos'), message: t('Name, category and at least 2 items are required'), duration: 2800 });
+      return;
+    }
+    if (Number.isNaN(price) || price <= 0) {
+      showToast({ type: 'error', title: t('Combos'), message: t('Price must be greater than 0'), duration: 2800 });
+      return;
+    }
+    const compareAtPrice = form.compareAtPrice ? parseFloat(form.compareAtPrice) : null;
+    if (compareAtPrice != null && !Number.isNaN(compareAtPrice) && compareAtPrice <= price) {
+      showToast({ type: 'error', title: t('Combos'), message: t('Compare-at price must be greater than the combo price, or leave it blank'), duration: 2800 });
       return;
     }
     const foodInput = {

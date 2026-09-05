@@ -123,6 +123,34 @@ export default function PayoutRunsMain() {
     }
   };
 
+  const printStatement = (item: IPayoutRunItemRow) => {
+    const s = item.statement;
+    if (!s) return;
+    const w = window.open('', '_blank', 'width=800,height=900');
+    if (!w) return;
+    w.document.write(`<!doctype html><html><head><title>${s.statementNumber}</title>
+      <style>body{font:13px/1.5 system-ui,sans-serif;padding:40px;color:#111}h1{font-size:20px;margin:0 0 4px}
+      .muted{color:#666}.tot{font-weight:700;font-size:15px}.row{display:flex;justify-content:space-between;gap:40px;margin-top:20px}
+      table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}</style>
+      </head><body>
+      <h1>${s.platformName}</h1>
+      <div class="muted">${s.platformAddress ?? ''}${s.platformGstin ? ` · GSTIN ${s.platformGstin}` : ''}</div>
+      <div class="row">
+        <div><b>Statement</b> ${s.statementNumber}<br/><span class="muted">Issued ${day(s.issuedOn)}</span><br/><span class="muted">Run ${s.runLabel} · ${s.periodLabel}</span></div>
+        <div style="text-align:right"><b>Paid to</b><br/>${s.payeeName}<br/><span class="muted">${s.payeeType}</span></div>
+      </div>
+      <table><tbody>
+        <tr><td>Wallet balance</td><td style="text-align:right">${money(s.walletBalance)}</td></tr>
+        <tr><td>Held cash (deducted)</td><td style="text-align:right">${money(s.heldCash)}</td></tr>
+        <tr><td>Method</td><td style="text-align:right">${s.method ?? '—'}</td></tr>
+        <tr><td>Reference</td><td style="text-align:right">${s.reference ?? '—'}</td></tr>
+      </tbody></table>
+      <div class="row"><div></div><div class="tot">Amount paid: ${money(s.amount)} <span class="muted">(${s.status})</span></div></div>
+      <script>window.print()</script>
+      </body></html>`);
+    w.document.close();
+  };
+
   const downloadCsv = async () => {
     if (!run) return;
     const res = await client.query({ query: GET_PAYOUT_RUN_CSV, variables: { id: run._id }, fetchPolicy: 'network-only' });
@@ -247,16 +275,21 @@ export default function PayoutRunsMain() {
                     </td>
                     <td className="py-1">{i.reference || '—'}</td>
                     <td className="py-1 text-right">
-                      {i.status === 'PENDING' && (
-                        <span className="flex justify-end gap-1">
-                          <button onClick={() => setPayItem(i)} className="rounded bg-black px-2 py-0.5 text-white">
-                            {t('Pay')}
-                          </button>
-                          <button onClick={() => doSkip(i)} className="rounded border px-2 py-0.5 dark:border-dark-600">
-                            {t('Skip')}
-                          </button>
-                        </span>
-                      )}
+                      <span className="flex justify-end gap-1">
+                        {i.status === 'PENDING' && (
+                          <>
+                            <button onClick={() => setPayItem(i)} className="rounded bg-black px-2 py-0.5 text-white">
+                              {t('Pay')}
+                            </button>
+                            <button onClick={() => doSkip(i)} className="rounded border px-2 py-0.5 dark:border-dark-600">
+                              {t('Skip')}
+                            </button>
+                          </>
+                        )}
+                        <button onClick={() => printStatement(i)} className="rounded border px-2 py-0.5 dark:border-dark-600">
+                          {t('Print statement')}
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 ))}

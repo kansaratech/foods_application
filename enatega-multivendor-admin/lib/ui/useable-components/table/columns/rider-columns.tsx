@@ -223,6 +223,23 @@ export const RIDER_TABLE_COLUMNS = ({
       },
     },
     {
+      headerName: t('Approval'),
+      propertyName: 'approvalStatus',
+      body: (rider: IRiderResponse) => {
+        const s = rider.approvalStatus || 'APPROVED';
+        const cls: Record<string, string> = {
+          APPROVED: 'bg-green-100 text-green-700',
+          PENDING: 'bg-amber-100 text-amber-700',
+          REJECTED: 'bg-red-100 text-red-700',
+        };
+        return (
+          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${cls[s] ?? ''}`}>
+            {s.charAt(0) + s.slice(1).toLowerCase()}
+          </span>
+        );
+      },
+    },
+    {
       propertyName: 'actions',
       body: (rider: IRiderResponse) => (
         <div className="prevent-row-click flex items-center justify-end gap-3">

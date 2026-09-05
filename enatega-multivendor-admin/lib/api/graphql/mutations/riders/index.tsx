@@ -65,3 +65,13 @@ export const TOGGLE_RIDER = gql`
     }
   }
 `;
+
+export const SET_RIDER_APPROVAL = gql`
+  mutation SetRiderApproval($id: String!, $status: String!, $note: String) {
+    setRiderApproval(id: $id, status: $status, note: $note) {
+      _id
+      approvalStatus
+      approvalNote
+    }
+  }
+`;

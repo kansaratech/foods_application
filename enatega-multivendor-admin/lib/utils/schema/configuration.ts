@@ -11,6 +11,10 @@ export const NodeMailerValidationSchema = Yup.object().shape({
     (value) => !value || value.length >= 8
   ),
   enableEmail: Yup.boolean(),
+  smtpHost: Yup.string().nullable(),
+  smtpPort: Yup.number().nullable(),
+  smtpSecure: Yup.boolean().nullable(),
+  smtpUser: Yup.string().nullable(),
 });
 
 export const StripeValidationSchema = Yup.object().shape({

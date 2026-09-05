@@ -20,6 +20,25 @@ export const financeOpsTypeDefs = /* GraphQL */ `
 
   # ---- Payout runs (B3) ----
 
+  type PayoutStatement {
+    statementNumber: String!
+    issuedOn: String!
+    periodLabel: String!
+    runLabel: String!
+    platformName: String!
+    platformAddress: String
+    platformGstin: String
+    payeeType: String!
+    payeeName: String!
+    walletBalance: Float!
+    heldCash: Float!
+    amount: Float!
+    status: String!
+    method: String
+    reference: String
+    paidAt: String
+  }
+
   type PayoutRunItemRow {
     _id: ID!
     subjectType: String!
@@ -33,6 +52,16 @@ export const financeOpsTypeDefs = /* GraphQL */ `
     reference: String
     note: String
     paidAt: String
+    runLabel: String!
+    periodStart: String!
+    periodEnd: String!
+    "Pre-composed printable statement for this payout line."
+    statement: PayoutStatement!
+  }
+
+  type MyPayoutHistoryResult {
+    items: [PayoutRunItemRow!]!
+    total: Int!
   }
 
   type PayoutRunRow {
@@ -85,6 +114,8 @@ export const financeOpsTypeDefs = /* GraphQL */ `
     "CSV text for a payout run — one row per payee."
     payoutRunCsv(id: ID!): String!
     reconciliationReport(startDate: String, endDate: String): ReconciliationReport!
+    "Vendor-facing payout history — auto-scoped to the caller's own store(s)."
+    myPayoutHistory(page: Int, limit: Int): MyPayoutHistoryResult!
   }
 
   extend type Mutation {

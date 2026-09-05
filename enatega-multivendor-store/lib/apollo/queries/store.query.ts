@@ -93,6 +93,23 @@ export const STORE_PROFILE = gql`
   }
 `;
 
+export const STORE_DOCUMENTS = gql`
+  query StoreDocuments($restaurantId: ID!) {
+    storeDocuments(restaurantId: $restaurantId) {
+      _id
+      kind
+      number
+      fileUrl
+      holderName
+      ifsc
+      bankName
+      expiryDate
+      status
+      reviewNote
+    }
+  }
+`;
+
 export const GET_RESTAURANT_BY_ID = gql`
   query Restaurant($id: String) {
     restaurant(id: $id) {

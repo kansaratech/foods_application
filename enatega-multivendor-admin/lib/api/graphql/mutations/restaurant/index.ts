@@ -162,6 +162,12 @@ export const UPDATE_FOOD_OUT_OF_STOCK = gql`
   }
 `;
 
+export const UPDATE_VARIATION_OUT_OF_STOCK = gql`
+  mutation UpdateVariationOutOfStock($id: String!, $restaurant: String!) {
+    updateVariationOutOfStock(id: $id, restaurant: $restaurant)
+  }
+`;
+
 export const UPDATE_RESTAURANT_DELIVERY = gql`
   mutation updateRestaurantDelivery(
     $id: ID!

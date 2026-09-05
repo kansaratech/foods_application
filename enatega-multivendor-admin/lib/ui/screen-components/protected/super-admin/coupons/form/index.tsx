@@ -252,7 +252,7 @@ export default function CouponForm({
         }}
         validateOnChange={true}
       >
-        {({ errors, handleSubmit, values, isSubmitting, setFieldValue }) => {
+        {({ errors, touched, handleSubmit, values, isSubmitting, setFieldValue }) => {
           return (
             <Form onSubmit={handleSubmit}>
               <div className="space-y-4">
@@ -357,6 +357,9 @@ export default function CouponForm({
                         : '',
                     }}
                   />
+                )}
+                {errors.endDate && touched.endDate && (
+                  <small className="ml-1 p-error">{errors.endDate}</small>
                 )}
 
                 <button

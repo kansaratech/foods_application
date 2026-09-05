@@ -7,6 +7,10 @@ export const GET_CONFIGURATION = gql`
       email
       emailName
       enableEmail
+      smtpHost
+      smtpPort
+      smtpSecure
+      smtpUser
       clientId
       sandbox
       publishableKey

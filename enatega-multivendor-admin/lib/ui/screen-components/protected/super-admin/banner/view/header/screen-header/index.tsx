@@ -17,7 +17,7 @@ const BannersHeader = ({
   return (
     <ManagementHeading
       title={t('Banners')}
-      description="Manage promotional banners and their destinations."
+      description={t('Manage promotional banners and their destinations.')}
     >
       <TextIconClickable
         className="rounded border dark:border-dark-600 border-gray-300 bg-black  text-white  sm:w-auto"

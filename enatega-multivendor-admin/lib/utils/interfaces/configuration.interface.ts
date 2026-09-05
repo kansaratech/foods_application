@@ -46,6 +46,10 @@ export interface IConfiguration {
   emailName?: string;
   password?: string;
   enableEmail?: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
   clientSecret?: string;
   sandbox?: boolean;
   secretKey?: string;

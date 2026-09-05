@@ -3,6 +3,7 @@ import { IRiderProfileMainProps } from "@/lib/utils/interfaces/rider-profile.int
 import { View } from "react-native";
 import DocumentsSection from "../docs/documents";
 import OtherDetailsSection from "../docs/other";
+import RiderDocsSection from "../docs/rider-documents";
 
 export default function ProfileMain({
   setIsFormOpened,
@@ -15,6 +16,7 @@ export default function ProfileMain({
       style={{ backgroundColor: appTheme.screenBackground }}
     >
       <DocumentsSection setIsFormOpened={setIsFormOpened} />
+      <RiderDocsSection setIsFormOpened={setIsFormOpened} />
       <OtherDetailsSection />
     </View>
   );

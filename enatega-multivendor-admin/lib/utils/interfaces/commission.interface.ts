@@ -97,6 +97,24 @@ export interface IWalletAdjustmentRow {
 export interface IWalletAdjustmentsResponse {
   walletAdjustments: { total: number; adjustments: IWalletAdjustmentRow[] };
 }
+export interface IPayoutStatement {
+  statementNumber: string;
+  issuedOn: string;
+  periodLabel: string;
+  runLabel: string;
+  platformName: string;
+  platformAddress: string | null;
+  platformGstin: string | null;
+  payeeType: string;
+  payeeName: string;
+  walletBalance: number;
+  heldCash: number;
+  amount: number;
+  status: string;
+  method: string | null;
+  reference: string | null;
+  paidAt: string | null;
+}
 export interface IPayoutRunItemRow {
   _id: string;
   subjectType: 'STORE' | 'RIDER';
@@ -110,6 +128,10 @@ export interface IPayoutRunItemRow {
   reference: string | null;
   note: string | null;
   paidAt: string | null;
+  runLabel?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  statement?: IPayoutStatement;
 }
 export interface IPayoutRun {
   _id: string;
@@ -130,6 +152,9 @@ export interface IPayoutRunsResponse {
 }
 export interface IPayoutRunResponse {
   payoutRun: IPayoutRun;
+}
+export interface IMyPayoutHistoryResponse {
+  myPayoutHistory: { total: number; items: IPayoutRunItemRow[] };
 }
 export interface IReconLine {
   label: string;

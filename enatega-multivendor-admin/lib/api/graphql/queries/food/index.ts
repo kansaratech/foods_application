@@ -25,6 +25,10 @@ export const GET_FOODS_BY_RESTAURANT_ID = gql`
           images
           isActive
           subCategory
+          pairedFoods {
+            _id
+            title
+          }
         }
       }
     }

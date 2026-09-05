@@ -9,6 +9,10 @@ export const SAVE_EMAIL_CONFIGURATION = gql`
       email
       emailName
       enableEmail
+      smtpHost
+      smtpPort
+      smtpSecure
+      smtpUser
     }
   }
 `;

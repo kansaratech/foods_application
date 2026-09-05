@@ -159,11 +159,30 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
       return true;
     },
 
-    saveEmailConfiguration: (_parent, args: { configurationInput: { email?: string; emailName?: string; enableEmail?: boolean; password?: string } }, context) =>
+    saveEmailConfiguration: (
+      _parent,
+      args: {
+        configurationInput: {
+          email?: string;
+          emailName?: string;
+          enableEmail?: boolean;
+          password?: string;
+          smtpHost?: string;
+          smtpPort?: number;
+          smtpSecure?: boolean;
+          smtpUser?: string;
+        };
+      },
+      context,
+    ) =>
       saveConfiguration(context, {
         email: args.configurationInput.email,
         emailName: args.configurationInput.emailName,
         enableEmail: args.configurationInput.enableEmail,
+        smtpHost: args.configurationInput.smtpHost,
+        smtpPort: args.configurationInput.smtpPort,
+        smtpSecure: args.configurationInput.smtpSecure,
+        smtpUser: args.configurationInput.smtpUser,
         ...(args.configurationInput.password ? { emailPassword: args.configurationInput.password } : {}),
       }),
 

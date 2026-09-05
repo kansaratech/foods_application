@@ -77,6 +77,10 @@ export default function VariationAddForm({
   // State
   const [isAddAddonVisible, setIsAddAddonVisible] = useState(false);
   const [addon, setAddon] = useState<IAddon | null>(null);
+  const [attrGroups, setAttrGroups] = useState([
+    { name: '', values: '' },
+    { name: '', values: '' },
+  ]);
 
   // Context
   const { showToast } = useContext(ToastContext);
@@ -214,6 +218,30 @@ export default function VariationAddForm({
       });
     }
   };
+  // Cross-product of every attribute group's comma-separated values, e.g.
+  // Size: Small,Medium,Large + Crust: Thin,Thick → 6 titles ("Small - Thin", …).
+  // Skips titles that already exist so re-running the generator is safe.
+  const buildVariantMatrix = (
+    groups: { name: string; values: string }[],
+    existingTitles: Set<string>
+  ): string[] => {
+    const cleanGroups = groups
+      .map((g) => g.values.split(',').map((v) => v.trim()).filter(Boolean))
+      .filter((values) => values.length > 0);
+    if (cleanGroups.length === 0) return [];
+    let combos: string[][] = [[]];
+    cleanGroups.forEach((groupValues) => {
+      const next: string[][] = [];
+      combos.forEach((combo) => {
+        groupValues.forEach((v) => next.push([...combo, v]));
+      });
+      combos = next;
+    });
+    return combos
+      .map((combo) => combo.join(' - '))
+      .filter((title) => !existingTitles.has(title));
+  };
+
   const onBackClickHandler = ({
     variations,
   }: {
@@ -259,6 +287,96 @@ export default function VariationAddForm({
                       <FieldArray name="variations">
                         {({ remove, push }) => (
                           <div>
+                            <Fieldset
+                              legend={t('Generate variations (Size × Crust, etc.)')}
+                              toggleable
+                              collapsed
+                              className="mb-3 dark:text-white dark:bg-dark-950"
+                            >
+                              <div className="flex flex-col gap-2">
+                                {attrGroups.map((group, gi) => (
+                                  <div key={gi} className="grid grid-cols-12 gap-2">
+                                    <div className="col-span-4">
+                                      <CustomTextField
+                                        type="text"
+                                        name={`attr-name-${gi}`}
+                                        placeholder={t('Attribute (e.g. Size)')}
+                                        showLabel={false}
+                                        value={group.name}
+                                        onChange={(e) =>
+                                          setAttrGroups((prev) =>
+                                            prev.map((g, i) =>
+                                              i === gi ? { ...g, name: e.target.value } : g
+                                            )
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                    <div className="col-span-8">
+                                      <CustomTextField
+                                        type="text"
+                                        name={`attr-values-${gi}`}
+                                        placeholder={t('Comma-separated values (e.g. Small,Medium,Large)')}
+                                        showLabel={false}
+                                        value={group.values}
+                                        onChange={(e) =>
+                                          setAttrGroups((prev) =>
+                                            prev.map((g, i) =>
+                                              i === gi ? { ...g, values: e.target.value } : g
+                                            )
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between gap-2">
+                                  <TextIconClickable
+                                    className="w-fit rounded border dark:border-dark-600 border-black bg-transparent text-black dark:text-white"
+                                    icon={faAdd}
+                                    iconStyles={{ color: theme === 'dark' ? 'white' : 'black' }}
+                                    title={t('Add attribute')}
+                                    onClick={() =>
+                                      setAttrGroups((prev) => [...prev, { name: '', values: '' }])
+                                    }
+                                  />
+                                  <CustomButton
+                                    className="h-10 w-fit border dark:border-dark-600 border-gray-300 bg-black px-6 text-sm text-white"
+                                    label={t('Generate variations')}
+                                    type="button"
+                                    onClick={() => {
+                                      const existingTitles = new Set(
+                                        values.variations.map((v) => v.title)
+                                      );
+                                      const newTitles = buildVariantMatrix(
+                                        attrGroups,
+                                        existingTitles
+                                      );
+                                      if (newTitles.length === 0) {
+                                        showToast({
+                                          type: 'error',
+                                          title: t('Variations'),
+                                          message: t(
+                                            'No new combinations to add — check the attribute values, or they already exist'
+                                          ),
+                                          duration: 2800,
+                                        });
+                                        return;
+                                      }
+                                      newTitles.forEach((title) =>
+                                        push({ ...initialFormValuesTemplate, title })
+                                      );
+                                      showToast({
+                                        type: 'success',
+                                        title: t('Variations'),
+                                        message: `${newTitles.length} ${t('variations added')}`,
+                                        duration: 2000,
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </Fieldset>
                             {values.variations.length > 0 &&
                               values.variations.map(
                                 (value: IVariationForm, index: number) => {

@@ -103,3 +103,35 @@ export const UPLOAD_IMAGE_TO_S3 = gql`
     }
   }
 `;
+
+export const UPSERT_RIDER_DOCUMENT = gql`
+  mutation UpsertRiderDocument(
+    $riderId: ID!
+    $kind: String!
+    $number: String
+    $fileUrl: String
+    $holderName: String
+    $ifsc: String
+    $bankName: String
+  ) {
+    upsertRiderDocument(
+      riderId: $riderId
+      kind: $kind
+      number: $number
+      fileUrl: $fileUrl
+      holderName: $holderName
+      ifsc: $ifsc
+      bankName: $bankName
+    ) {
+      _id
+      kind
+      number
+      fileUrl
+      holderName
+      ifsc
+      bankName
+      status
+      reviewNote
+    }
+  }
+`;

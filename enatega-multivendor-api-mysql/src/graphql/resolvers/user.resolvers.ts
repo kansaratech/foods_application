@@ -11,6 +11,7 @@ import {
 } from '../../services/auth.service';
 import { userInputError } from '../../utils/errors';
 import { recordAudit } from '../../utils/audit';
+import { sendEmail, sendPhoneMessage } from '../../utils/notifications';
 
 function favouriteList(user: User): string[] {
   return Array.isArray(user.favouriteRestaurantIds) ? (user.favouriteRestaurantIds as string[]) : [];
@@ -191,8 +192,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         where: { email: args.email },
         data: { otpCode: otp, otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) },
       });
-      // TODO: wire up a real email provider. Logged for local/dev testing only.
-      console.log(`[dev] OTP for ${args.email}: ${otp}`);
+      await sendEmail(args.email, 'Your verification code', `Your OTP is ${otp}. It expires in 10 minutes.`);
       return { result: 'OTP sent' };
     },
     sendOtpToPhoneNumber: async (_parent, args: { phone: string }) => {
@@ -201,8 +201,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         where: { phone: args.phone },
         data: { otpCode: otp, otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) },
       });
-      // TODO: wire up a real SMS provider (e.g. Twilio). Logged for local/dev testing only.
-      console.log(`[dev] OTP for ${args.phone}: ${otp}`);
+      await sendPhoneMessage(args.phone, `Your verification code is ${otp}. It expires in 10 minutes.`);
       return { result: 'OTP sent' };
     },
     verifyOtp: async (_parent, args: { otp: string; email?: string; phone?: string }) => {
@@ -236,7 +235,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         data: { otpCode: otp, otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) },
       });
       if (updated.count === 0) throw userInputError('No account found with that email');
-      console.log(`[dev] Password reset OTP for ${args.email}: ${otp}`);
+      await sendEmail(args.email, 'Password reset code', `Your password reset OTP is ${otp}. It expires in 10 minutes.`);
       return { result: 'OTP sent' };
     },
     resetPassword: async (_parent, args: { password: string; email: string; otp: string }) => {

@@ -375,11 +375,16 @@ model Configuration {
   skipWhatsAppOTP        Boolean @default(true)
   costType               String  @default("fixed")
 
-  // Email (nodemailer)
+  // Email (nodemailer) — generic SMTP when smtpHost is set, else falls back
+  // to the Gmail service using email/emailPassword.
   email         String?
   emailName     String?
   enableEmail   Boolean @default(false)
   emailPassword String? // secret, never returned over GraphQL
+  smtpHost      String?
+  smtpPort      Int?
+  smtpSecure    Boolean @default(false)
+  smtpUser      String?
 
   // Contact form notification address (separate from the sender identity above)
   formEmail String?
@@ -773,6 +778,14 @@ model RiderProfile {
   withdrawnWalletAmount Float   @default(0)
   // INDEPENDENT | STORE_ASSIGNED
   employmentType        String  @default("INDEPENDENT")
+
+  // PENDING | APPROVED | REJECTED — admin-created riders start APPROVED;
+  // a rider who self-registers from the app starts PENDING and cannot go
+  // online / take orders until an admin approves (mirrors Restaurant's gate).
+  approvalStatus String    @default("APPROVED")
+  approvalNote   String?   @db.Text
+  approvedAt     DateTime?
+  approvedById   String?
 
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   zone Zone? @relation(fields: [zoneId], references: [id])

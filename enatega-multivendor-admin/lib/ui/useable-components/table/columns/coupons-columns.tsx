@@ -121,7 +121,7 @@ export const COUPONS_TABLE_COLUMNS = ({
           return (
             <span>
               {rowData.startDate
-                ? new Date(Number(rowData.startDate)).toLocaleDateString()
+                ? new Date(rowData.startDate).toLocaleDateString()
                 : '-'}{' '}
             </span>
           );
@@ -135,7 +135,7 @@ export const COUPONS_TABLE_COLUMNS = ({
           return (
             <span>
               {rowData.endDate
-                ? new Date(Number(rowData.endDate)).toLocaleDateString()
+                ? new Date(rowData.endDate).toLocaleDateString()
                 : '-'}
             </span>
           );
@@ -145,19 +145,39 @@ export const COUPONS_TABLE_COLUMNS = ({
         headerName: t('Status'),
         propertyName: 'enabled',
         body: (rowData: ICoupon) => {
+          const now = Date.now();
+          let label = t('Live');
+          let cls = 'bg-green-100 text-green-700';
+          if (!rowData.enabled) {
+            label = t('Disabled');
+            cls = 'bg-gray-100 text-gray-600';
+          } else if (!rowData.lifeTimeActive) {
+            if (rowData.startDate && now < new Date(rowData.startDate).getTime()) {
+              label = t('Scheduled');
+              cls = 'bg-amber-100 text-amber-700';
+            } else if (rowData.endDate && now > new Date(rowData.endDate).getTime()) {
+              label = t('Expired');
+              cls = 'bg-red-100 text-red-700';
+            }
+          }
           return (
             <div className="flex w-full cursor-pointer items-center justify-between gap-2">
-              <div className="flex w-20 items-start">
-                <CustomInputSwitch
-                  isActive={rowData.enabled}
-                  className={
-                    rowData?.enabled
-                      ? 'p-inputswitch-checked absolute'
-                      : 'absolute'
-                  }
-                  onChange={() => handleEnableField(rowData)}
-                  loading={rowData._id === editCouponLoading._id && loading}
-                />
+              <div className="flex items-center gap-2">
+                <div className="flex w-20 items-start">
+                  <CustomInputSwitch
+                    isActive={rowData.enabled}
+                    className={
+                      rowData?.enabled
+                        ? 'p-inputswitch-checked absolute'
+                        : 'absolute'
+                    }
+                    onChange={() => handleEnableField(rowData)}
+                    loading={rowData._id === editCouponLoading._id && loading}
+                  />
+                </div>
+                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${cls}`}>
+                  {label}
+                </span>
               </div>
               <ActionMenu data={rowData} items={menuItems} />
             </div>

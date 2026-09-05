@@ -17,4 +17,5 @@ export interface IFoodDetailsForm {
   images: string[];
   category: IDropdownSelectItem | null;
   subCategory: IDropdownSelectItem | null;
+  pairedFoods: IDropdownSelectItem[];
 }

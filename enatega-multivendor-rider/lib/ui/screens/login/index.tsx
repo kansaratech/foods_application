@@ -32,6 +32,8 @@ import { useApolloClient } from "@apollo/client";
 import { useApptheme } from "@/lib/context/global/theme.context";
 import { ILoginInitialValues } from "@/lib/utils/interfaces";
 import { CustomContinueButton } from "../../useable-components";
+import { Href, router } from "expo-router";
+import { ROUTES } from "@/lib/utils/constants";
 
 const initial: ILoginInitialValues = {
   username: "rider1",
@@ -203,6 +205,18 @@ const LoginScreen = () => {
                     onPress={() => handleSubmit()}
                     className="self-center"
                   />
+
+                  <TouchableOpacity
+                    onPress={() => router.push(ROUTES.register as Href)}
+                    className="mt-4"
+                  >
+                    <Text
+                      className="text-center text-sm"
+                      style={{ color: appTheme.primary }}
+                    >
+                      {t("New rider? Register here")}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               );
             }}

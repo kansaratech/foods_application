@@ -7,13 +7,15 @@ import { requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 import { pubsub, TOPICS } from '../../utils/pubsub';
-import { RIDER_REQUIRED_DOC_KINDS } from './rider-docs.resolvers';
+import { recordAudit } from '../../utils/audit';
+import { RIDER_REQUIRED_DOC_KINDS, assertRiderNotRejected } from './rider-docs.resolvers';
 
 type RiderParent = User & { riderProfile: (RiderProfile & { zone: Zone | null }) | null };
 
 const RIDER_INCLUDE = { riderProfile: { include: { zone: true } } } satisfies Prisma.UserInclude;
 
 const ACTIVE_DELIVERY_STATUSES = ['ASSIGNED', 'PICKED'] as const;
+const RIDER_APPROVAL_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
 
 interface RiderInputArgs {
   _id?: string;
@@ -53,6 +55,15 @@ function riderProfileWriteData(input: RiderInputArgs) {
 
 async function loadRiderProfile(userId: string) {
   return prisma.riderProfile.findUnique({ where: { userId }, include: { zone: true } });
+}
+
+// A self-registered rider stays PENDING until an admin approves them —
+// block order assignment the same way toggleAvailablity blocks going online.
+export async function assertRiderApproved(riderId: string): Promise<void> {
+  const profile = await prisma.riderProfile.findUnique({ where: { userId: riderId } });
+  if (profile && profile.approvalStatus !== 'APPROVED') {
+    throw userInputError('This rider is awaiting admin approval and cannot be assigned orders yet.');
+  }
 }
 
 export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
@@ -208,6 +219,108 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
         phone: user.phone,
         isNewUser: false,
       };
+    },
+
+    // Public — no auth. A rider registering from the app starts
+    // riderProfile.approvalStatus = PENDING (mirrors a vendor self-onboarding
+    // a store): toggleAvailablity / assignRider / assignOrder all refuse a
+    // non-APPROVED rider, so they can fill in documents and wait, but can't
+    // go online or take orders until an admin approves them.
+    riderSelfRegister: async (
+      _parent,
+      args: {
+        name: string;
+        phone: string;
+        email?: string;
+        password: string;
+        vehicleType?: string;
+        vehicleNumber?: string;
+      },
+    ) => {
+      const phone = args.phone?.trim();
+      if (!phone) throw userInputError('Phone number is required');
+      if (!args.name?.trim()) throw userInputError('Name is required');
+      if (!args.password || args.password.length < 8) {
+        throw userInputError('Password must be at least 8 characters');
+      }
+
+      const existingPhone = await prisma.user.findUnique({ where: { phone } });
+      if (existingPhone) throw userInputError('A rider with this phone number already exists');
+
+      const email = args.email ? args.email.trim().toLowerCase() : undefined;
+      if (email) {
+        const existingEmail = await prisma.user.findUnique({ where: { email } });
+        if (existingEmail) throw userInputError('A rider with this email already exists');
+      }
+
+      const rider = await prisma.user.create({
+        data: {
+          name: args.name.trim(),
+          phone,
+          email,
+          userType: 'RIDER',
+          status: 'ACTIVE',
+          password: await hashPassword(args.password),
+          riderProfile: {
+            create: {
+              vehicleType: args.vehicleType,
+              available: false,
+              employmentType: 'INDEPENDENT',
+              approvalStatus: 'PENDING',
+              ...(args.vehicleNumber
+                ? { vehicleDetails: { number: args.vehicleNumber } as Prisma.InputJsonValue }
+                : {}),
+            },
+          },
+        },
+      });
+
+      const { token, expiresAt } = signAccessToken({ userId: rider.id, userType: rider.userType, tokenVersion: rider.tokenVersion });
+      await pubsub.publish('RIDER_UPDATED', { riderUpdated: { _id: rider.id } });
+      return {
+        userId: rider.id,
+        token,
+        tokenExpiration: expiresAt,
+        isActive: rider.isActive,
+        name: rider.name,
+        email: rider.email,
+        phone: rider.phone,
+        isNewUser: true,
+      };
+    },
+
+    setRiderApproval: async (
+      _parent,
+      args: { id: string; status: string; note?: string },
+      context,
+    ) => {
+      const currentUser = requireRole(context, ['ADMIN']);
+      if (!RIDER_APPROVAL_STATUSES.includes(args.status)) {
+        throw userInputError(`status must be one of ${RIDER_APPROVAL_STATUSES.join(', ')}`);
+      }
+      const existing = await prisma.riderProfile.findUnique({ where: { userId: args.id }, include: { user: true } });
+      if (!existing) throw notFoundError('Rider not found');
+
+      const approved = args.status === 'APPROVED';
+      await prisma.riderProfile.update({
+        where: { userId: args.id },
+        data: {
+          approvalStatus: args.status,
+          approvalNote: args.note ?? null,
+          approvedAt: approved ? new Date() : existing.approvedAt,
+          approvedById: approved ? currentUser.id : existing.approvedById,
+        },
+      });
+
+      await recordAudit(context, {
+        action: 'rider.approval',
+        targetType: 'User',
+        targetId: args.id,
+        summary: `Rider ${existing.user.name ?? existing.user.phone ?? existing.user.email}: ${existing.approvalStatus} → ${args.status}`,
+        changes: { note: args.note ?? null },
+      });
+      await pubsub.publish('RIDER_UPDATED', { riderUpdated: { _id: args.id } });
+      return prisma.user.findUnique({ where: { id: args.id }, include: RIDER_INCLUDE });
     },
 
     // Mirrors createVendor's three-way branch (fresh create / finalize a
@@ -374,7 +487,14 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       if (currentUser.userType === 'RIDER' && currentUser.id !== args.id) throw forbiddenError();
       const profile = await loadRiderProfile(args.id);
       if (!profile) throw notFoundError('Rider not found');
-      await prisma.riderProfile.update({ where: { userId: args.id }, data: { available: !profile.available } });
+      const goingOnline = !profile.available;
+      if (goingOnline) {
+        if (profile.approvalStatus !== 'APPROVED') {
+          throw userInputError('Your account is awaiting admin approval before you can go online.');
+        }
+        await assertRiderNotRejected(args.id);
+      }
+      await prisma.riderProfile.update({ where: { userId: args.id }, data: { available: goingOnline } });
       await pubsub.publish('RIDER_UPDATED', { riderUpdated: { _id: args.id } });
       return prisma.user.findUnique({ where: { id: args.id }, include: RIDER_INCLUDE });
     },
@@ -469,6 +589,8 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     employmentType: (parent: RiderParent) => parent.riderProfile?.employmentType ?? 'INDEPENDENT',
     available: (parent: RiderParent) => parent.riderProfile?.available ?? null,
     vehicleType: (parent: RiderParent) => parent.riderProfile?.vehicleType ?? null,
+    approvalStatus: (parent: RiderParent) => parent.riderProfile?.approvalStatus ?? 'APPROVED',
+    approvalNote: (parent: RiderParent) => parent.riderProfile?.approvalNote ?? null,
     currentTask: async (parent: RiderParent) => {
       const order = await prisma.order.findFirst({
         where: { riderId: parent.id, orderStatus: { in: [...ACTIVE_DELIVERY_STATUSES] } },

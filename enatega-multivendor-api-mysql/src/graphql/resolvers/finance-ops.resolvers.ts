@@ -38,6 +38,40 @@ async function loadRun(id: string): Promise<PayoutRun & { items: PayoutRunItem[]
   return run;
 }
 
+function periodLabel(start: Date, end: Date): string {
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+
+async function loadItemRun(item: PayoutRunItem): Promise<PayoutRun> {
+  const run = await prisma.payoutRun.findUnique({ where: { id: item.runId } });
+  if (!run) throw notFoundError('Payout run not found');
+  return run;
+}
+
+async function buildPayoutStatement(item: PayoutRunItem) {
+  const [run, config] = await Promise.all([loadItemRun(item), prisma.configuration.findFirst()]);
+  return {
+    statementNumber: `PDR-PAY-${item.id.slice(-8).toUpperCase()}`,
+    issuedOn: item.createdAt.toISOString(),
+    periodLabel: periodLabel(run.periodStart, run.periodEnd),
+    runLabel: run.label,
+    platformName: config?.platformLegalName || 'LocalSell',
+    platformAddress: config?.platformAddress ?? null,
+    platformGstin: config?.platformGstin ?? null,
+    payeeType: item.subjectType,
+    payeeName: item.payeeName,
+    walletBalance: round2(item.walletBalance),
+    heldCash: round2(item.heldCash),
+    amount: round2(item.amount),
+    status: item.status,
+    method: item.method ?? null,
+    reference: item.reference ?? null,
+    paidAt: item.paidAt?.toISOString() ?? null,
+  };
+}
+
 export const financeOpsResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     walletAdjustments: async (
@@ -128,6 +162,25 @@ export const financeOpsResolvers: IResolvers<unknown, GraphQLContext> = {
           .join(','),
       );
       return [header.join(','), ...lines].join('\n');
+    },
+
+    myPayoutHistory: async (_parent, args: { page?: number; limit?: number }, context) => {
+      const currentUser = requireRole(context, ['VENDOR']);
+      const limit = args.limit ?? 20;
+      const page = args.page ?? 1;
+      const stores = await prisma.restaurant.findMany({ where: { ownerId: currentUser.id }, select: { id: true } });
+      const storeIds = stores.map((s) => s.id);
+      const where = { subjectType: 'STORE', restaurantId: { in: storeIds } };
+      const [items, total] = await Promise.all([
+        prisma.payoutRunItem.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.payoutRunItem.count({ where }),
+      ]);
+      return { items, total };
     },
 
     reconciliationReport: async (
@@ -508,5 +561,9 @@ export const financeOpsResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: PayoutRunItem) => parent.id,
     subjectId: (parent: PayoutRunItem) => parent.riderId ?? parent.restaurantId ?? '',
     paidAt: (parent: PayoutRunItem) => parent.paidAt?.toISOString() ?? null,
+    runLabel: async (parent: PayoutRunItem) => (await loadItemRun(parent)).label,
+    periodStart: async (parent: PayoutRunItem) => (await loadItemRun(parent)).periodStart.toISOString(),
+    periodEnd: async (parent: PayoutRunItem) => (await loadItemRun(parent)).periodEnd.toISOString(),
+    statement: (parent: PayoutRunItem) => buildPayoutStatement(parent),
   },
 };

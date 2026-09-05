@@ -17,7 +17,7 @@ export default function ShopTypeScreenHeader({
   return (
     <ManagementHeading
       title={t('ShopType')}
-      description="Manage the categories available to stores on your platform."
+      description={t('Manage the categories available to stores on your platform.')}
     >
       <TextIconClickable
         className="rounded border-gray-300 border dark:border-dark-600 bg-black text-white sm:w-auto"

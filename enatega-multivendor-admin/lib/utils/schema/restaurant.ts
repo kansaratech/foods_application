@@ -1,6 +1,12 @@
 import * as Yup from 'yup';
 import { IDropdownSelectItem } from '../interfaces';
 
+// Blank is always allowed (edit screens use it to mean "leave unchanged");
+// once a value is typed it must be a real strong password and must match
+// confirmPassword — previously only a non-blocking toast checked this.
+const strongPasswordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
+
 export const RestaurantSchema = Yup.object().shape({
   name: Yup.string()
     .max(35)
@@ -30,4 +36,18 @@ export const RestaurantSchema = Yup.object().shape({
 image: Yup.string().matches(/^http/, 'Invalid image URL').required('Required'),
 logo: Yup.string().matches(/^http/, 'Invalid logo URL').required('Required'),
   phoneNumber: Yup.string().required('Required').min(5,"Minimum 5 Numbers are Required"),
+  password: Yup.string().test(
+    'strong-password',
+    'Password must be at least 6 characters and include an uppercase letter, a lowercase letter, a number and a special character',
+    (value) => !value || strongPasswordRegex.test(value)
+  ),
+  confirmPassword: Yup.string().test(
+    'passwords-match',
+    'Passwords must match',
+    function (value) {
+      const { password } = this.parent;
+      if (!password) return true;
+      return value === password;
+    }
+  ),
 });

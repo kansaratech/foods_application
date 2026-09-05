@@ -282,13 +282,6 @@ export default function RiderRegistrationScreen() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CustomButton
-                    type="button"
-                    className="h-9 border border-gray-300 bg-white px-4 text-sm text-slate-700 dark:border-dark-600 dark:bg-dark-950 dark:text-white"
-                    label={t('Save as draft')}
-                    loading={isSavingDraft}
-                    onClick={() => handleSaveDraft(values)}
-                  />
                   <button
                     type="button"
                     aria-label={t('Close')}

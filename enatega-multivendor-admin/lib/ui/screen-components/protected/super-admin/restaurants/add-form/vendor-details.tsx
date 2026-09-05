@@ -207,19 +207,17 @@ export default function VendorDetails({
                 return (
                   <Form onSubmit={handleSubmit}>
                     <div className="space-y-3">
-                      <div className="hidden">
-                        <div className="flex flex-shrink-0 items-center justify-end">
-                          <CustomInputSwitch
-                            label={t('Add Vendor')}
-                            isActive={showAddForm}
-                            onChange={() => {
-                              if (!showAddForm) {
-                                setFieldValue('_id', null);
-                              }
-                              setShowAddForm((prevState) => !prevState);
-                            }}
-                          />
-                        </div>
+                      <div className="flex flex-shrink-0 items-center justify-end">
+                        <CustomInputSwitch
+                          label={t('Add Vendor')}
+                          isActive={showAddForm}
+                          onChange={() => {
+                            if (!showAddForm) {
+                              setFieldValue('_id', null);
+                            }
+                            setShowAddForm((prevState) => !prevState);
+                          }}
+                        />
                       </div>
                       {!showAddForm ? (
                         <div>

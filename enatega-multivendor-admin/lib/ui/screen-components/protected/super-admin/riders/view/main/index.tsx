@@ -27,8 +27,9 @@ import useToast from '@/lib/hooks/useToast';
 import useDebounce from '@/lib/hooks/useDebounce';
 
 // GraphQL and Utilities
-import { DELETE_RIDER, GET_RIDERS_PAGINATED } from '@/lib/api/graphql';
+import { DELETE_RIDER, GET_RIDERS_PAGINATED, SET_RIDER_APPROVAL } from '@/lib/api/graphql';
 import { IQueryResult } from '@/lib/utils/interfaces';
+import { ApolloError } from '@apollo/client';
 
 // Data
 import { useTranslations } from 'next-intl';
@@ -87,6 +88,30 @@ export default function RidersMain() {
     }
   );
 
+  const [setRiderApproval] = useMutation(SET_RIDER_APPROVAL, {
+    refetchQueries: 'active',
+    awaitRefetchQueries: true,
+    onCompleted: (d) => {
+      showToast({
+        type: 'success',
+        title: t('Rider approval'),
+        message: `${t('Rider is now')} ${t(d?.setRiderApproval?.approvalStatus ?? '')}`,
+        duration: 2000,
+      });
+    },
+    onError: ({ graphQLErrors, networkError }: ApolloError) => {
+      showToast({
+        type: 'error',
+        title: t('Rider approval'),
+        message:
+          graphQLErrors[0]?.message ??
+          networkError?.message ??
+          t('Could not update approval'),
+        duration: 2500,
+      });
+    },
+  });
+
   // For global search
   const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setGlobalFilterValue(e.target.value);
@@ -108,6 +133,18 @@ export default function RidersMain() {
       label: t('Edit'),
       command: (data?: IRiderResponse) => {
         if (data) router.push(`/general/riders/create?id=${data._id}`);
+      },
+    },
+    {
+      label: t('Approve rider'),
+      command: (data?: IRiderResponse) => {
+        if (data) setRiderApproval({ variables: { id: data._id, status: 'APPROVED' } });
+      },
+    },
+    {
+      label: t('Reject rider'),
+      command: (data?: IRiderResponse) => {
+        if (data) setRiderApproval({ variables: { id: data._id, status: 'REJECTED' } });
       },
     },
     {

@@ -16,7 +16,7 @@ export default function NotificationHeader({
   return (
     <ManagementHeading
       title={t('Notification')}
-      description="Create notifications and review your communication history."
+      description={t('Create notifications and review your communication history.')}
     >
       <TextIconClickable
         icon={faAdd}

@@ -43,6 +43,10 @@ export const useConfiguration = () => {
   const EMAIL = configuration?.email;
   const PASSWORD = configuration?.password;
   const ENABLE_EMAIL = configuration?.enableEmail;
+  const SMTP_HOST = configuration?.smtpHost;
+  const SMTP_PORT = configuration?.smtpPort;
+  const SMTP_SECURE = configuration?.smtpSecure;
+  const SMTP_USER = configuration?.smtpUser;
   const DELIVERY_RATE = configuration?.deliveryRate;
   const COST_TYPE = configuration?.costType || 'perKM';
   const TWILIO_ACCOUNT_SID = configuration?.twilioAccountSid;
@@ -85,6 +89,10 @@ export const useConfiguration = () => {
     EMAIL,
     PASSWORD,
     ENABLE_EMAIL,
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_SECURE,
+    SMTP_USER,
 
     // STRIPE
     STRIPE_PUBLIC_KEY,

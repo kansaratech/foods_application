@@ -176,6 +176,7 @@ export default function FoodsMain() {
           },
           title: fd.title,
           variations: fd.variations,
+          pairedFoods: fd.pairedFoods,
         });
       })
     );
