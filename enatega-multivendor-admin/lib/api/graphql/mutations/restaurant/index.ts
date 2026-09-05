@@ -58,6 +58,7 @@ export const UPDATE_DELIVERY_BOUNDS_AND_LOCATION = gql`
     $address: String
     $postCode: String
     $city: String
+    $state: String
   ) {
     result: updateDeliveryBoundsAndLocation(
       id: $id
@@ -68,6 +69,7 @@ export const UPDATE_DELIVERY_BOUNDS_AND_LOCATION = gql`
       address: $address
       postCode: $postCode
       city: $city
+      state: $state
     ) {
       success
       message

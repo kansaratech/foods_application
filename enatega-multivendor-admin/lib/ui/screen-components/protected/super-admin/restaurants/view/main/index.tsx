@@ -200,7 +200,7 @@ export default function RestaurantsMain() {
   // Constants
   const menuItems: IActionMenuItem<IRestaurantResponse>[] = [
     {
-      label: t('View'),
+      label: t('Open Portal'),
       command: (data?: IRestaurantResponse) => {
         if (data) {
           onUseLocalStorage('save', 'restaurantId', data?._id);
@@ -209,6 +209,12 @@ export default function RestaurantsMain() {
           onUseLocalStorage('save', 'routeStack', JSON.stringify(routeStack));
           router.push(`/admin/store/`);
         }
+      },
+    },
+    {
+      label: t('Edit'),
+      command: (data?: IRestaurantResponse) => {
+        if (data) router.push(`/general/stores/create?id=${data._id}`);
       },
     },
     {
@@ -266,7 +272,7 @@ export default function RestaurantsMain() {
   const totalRecords = restaurantData?.totalCount || 0;
 
   return (
-    <div className="min-h-0 flex-1 bg-slate-50 p-3 dark:bg-dark-950">
+    <div className="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-3 dark:bg-dark-950">
       <Table
         header={
           <RestaurantsTableHeader

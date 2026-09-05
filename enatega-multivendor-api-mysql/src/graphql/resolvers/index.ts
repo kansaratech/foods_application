@@ -23,6 +23,7 @@ import { serviceabilityResolvers } from './serviceability.resolvers';
 import { commissionResolvers } from './commission.resolvers';
 import { financeOpsResolvers } from './finance-ops.resolvers';
 import { storeDocsResolvers } from './store-docs.resolvers';
+import { vendorDocsResolvers } from './vendor-docs.resolvers';
 import { auditResolvers } from './audit.resolvers';
 
 type ResolverMap = Record<string, Record<string, unknown>>;
@@ -61,5 +62,6 @@ export const resolvers = mergeResolvers([
   commissionResolvers,
   financeOpsResolvers,
   storeDocsResolvers,
+  vendorDocsResolvers,
   auditResolvers,
 ]);

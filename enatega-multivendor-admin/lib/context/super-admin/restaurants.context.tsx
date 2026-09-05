@@ -1,7 +1,7 @@
 'use client';
 
 // Core
-import { createContext, useState } from 'react';
+import { createContext, useCallback, useState } from 'react';
 
 // Interface
 import {
@@ -36,9 +36,9 @@ export const RestaurantsProvider = ({ children }: IRestaurantsProvider) => {
   const [activeIndex, setActiveIndex] = useState<number>(0);
 
   // Functions
-  const onRestaurantsFormVisible = (status: boolean) => {
+  const onRestaurantsFormVisible = useCallback((status: boolean) => {
     setRestaurantsFormVisible(status);
-  };
+  }, []);
 
   const onActiveStepChange = (activeStep: number) => {
     setActiveIndex(activeStep);

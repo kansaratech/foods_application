@@ -1,5 +1,6 @@
 // Core
 import { useContext, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 // UI Components
 import { RestaurantContext } from '@/lib/context/super-admin/restaurant.context';
@@ -31,6 +32,7 @@ import { useTranslations } from 'next-intl';
 export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
   // Hooks
   const t = useTranslations();
+  const router = useRouter();
   const [vendorPage, setVendorPage] = useState(1);
   const [storePage, setStorePage] = useState(1);
   const vendorPageSize = 7;
@@ -38,7 +40,6 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
 
   // Context
   const {
-    onSetVendorFormVisible,
     globalFilter,
     onSetGlobalFilter,
     filtered,
@@ -47,7 +48,6 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
   } = useContext(VendorContext);
 
   const {
-    onSetRestaurantFormVisible,
     restaurantByOwnerResponse,
 
     restaurantContextData,
@@ -94,7 +94,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
               icon={faAdd}
               iconStyles={{ color: 'white' }}
               title={t('Add Vendor')}
-              onClick={() => onSetVendorFormVisible(true)}
+              onClick={() => router.push('/general/vendors/add')}
             />
           </div>
           <div className="flex flex-col space-y-4">
@@ -168,11 +168,11 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
               />
             </div>
             <TextIconClickable
-              className="rounded border-gray-300 border dark:border-dark-600  bg-black text-white sm:w-auto"
+              className="rounded border-[#1c5bc7] border dark:border-dark-600 bg-[#1c5bc7] text-white sm:w-auto"
               icon={faAdd}
               iconStyles={{ color: 'white' }}
               title={t('Add Store')}
-              onClick={() => onSetRestaurantFormVisible(true)}
+              onClick={() => router.push(`/general/stores/create?vendorId=${vendorId ?? ''}`)}
             />
           </div>
           <div className="flex flex-col items-start space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 md:items-center">

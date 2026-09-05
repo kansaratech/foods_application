@@ -93,7 +93,7 @@ export default function StaffMain({
   ];
 
   return (
-    <div className="p-3">
+    <div className="min-h-0 flex-1 overflow-y-auto p-3">
       <Table
         header={
           <StaffTableHeader
@@ -113,6 +113,8 @@ export default function StaffMain({
           setCurrentPage(page);
           setRowsPerPage(rowCount);
         }}
+        scrollable={false}
+        className="directory-admin-table"
       />
       <CustomDialog
         loading={mutationLoading}

@@ -37,6 +37,11 @@ export const GET_VENDOR_BY_ID = gql`
       firstName
       lastName
       phoneNumber
+      businessName
+      businessTypeId
+      isGstRegistered
+      gstin
+      status
     }
   }
 `;

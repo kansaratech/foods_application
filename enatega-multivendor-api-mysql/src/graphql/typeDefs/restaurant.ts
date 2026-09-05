@@ -21,6 +21,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     orderId: String
     orderPrefix: String
     name: String!
+    description: String
     image: String
     logo: String
     address: String
@@ -38,6 +39,8 @@ export const restaurantTypeDefs = /* GraphQL */ `
     approvalNote: String
     approvedAt: String
     shopType: String
+    "The ShopType id shopType resolves from — lets an edit form preselect the right dropdown option without a slug round-trip."
+    shopTypeId: String
     cuisines: [String!]
     openingTimes: [OpeningTime!]
     owner: Owner
@@ -51,6 +54,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     stripeDetailsSubmitted: Boolean
     deliveryBounds: ZoneLocation
     city: String
+    state: String
     postCode: String
     pickup: Boolean
     delivery: Boolean
@@ -125,6 +129,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
 
   input RestaurantInput {
     name: String!
+    description: String
     address: String
     phone: String
     image: String
@@ -144,6 +149,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
   input RestaurantProfileInput {
     _id: ID!
     name: String
+    description: String
     phone: String
     address: String
     image: String
@@ -288,6 +294,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
       address: String
       postCode: String
       city: String
+      state: String
     ): RestaurantMutationResult!
     updateRestaurantDelivery(id: ID!, minDeliveryFee: Float, deliveryDistance: Float, deliveryFee: Float): RestaurantMutationResult!
     updateRestaurantBussinessDetails(id: String!, bussinessDetails: BussinessDetailsInput): RestaurantMutationResult!

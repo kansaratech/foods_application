@@ -1,4 +1,5 @@
 import { IResolvers } from '@graphql-tools/utils';
+import { randomBytes } from 'crypto';
 import { User } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
@@ -51,6 +52,30 @@ interface VendorInputArgs {
   lastName?: string;
   phoneNumber?: string;
   password?: string;
+  businessName?: string;
+  businessType?: string;
+  isGstRegistered?: boolean;
+  gstin?: string;
+}
+
+// Accepts either a ShopType id or slug — mirrors resolveShopTypeId in
+// restaurant.resolvers.ts (kept local here to avoid a cross-file import for
+// one small lookup).
+async function resolveBusinessTypeId(businessType?: string | null): Promise<string | undefined> {
+  if (!businessType) return undefined;
+  const byId = await prisma.shopType.findUnique({ where: { id: businessType } });
+  if (byId) return byId.id;
+  const bySlug = await prisma.shopType.findUnique({ where: { slug: businessType } });
+  return bySlug?.id;
+}
+
+// The admin's "send account setup link" flow never collects a password from
+// the admin. The account still needs *some* credential on record, so this
+// generates one server-side; it is hashed and stored but never returned to
+// the caller. The vendor sets their real password through the existing OTP
+// forgot-password flow (forgotPassword / resetPassword) using their email.
+function generateInvitePassword(): string {
+  return randomBytes(24).toString('base64url');
 }
 
 export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
@@ -187,21 +212,122 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       return ownerAuthPayload(user);
     },
 
+    // Creates a brand-new vendor, finalizes a draft the registration wizard
+    // started with saveVendorDraft (status DRAFT → ACTIVE), or — since the
+    // same wizard is reused for editing — updates an already-ACTIVE vendor.
+    // Those three cases need different password handling: a fresh account
+    // needs *some* credential; a draft going live for the first time needs a
+    // real one minted if the admin didn't set one; but editing an already-live
+    // vendor must never touch the password just because the field was left
+    // blank — that would silently lock them out.
     createVendor: async (_parent, args: { vendorInput: VendorInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       const input = args.vendorInput;
-      const existing = await prisma.user.findUnique({ where: { email: input.email } });
-      if (existing) throw userInputError('Email is already registered');
+      const email = input.email.trim().toLowerCase();
+
+      const businessTypeId = await resolveBusinessTypeId(input.businessType);
+      const gstRegistered = input.isGstRegistered ?? false;
+
+      const baseData = {
+        email,
+        name: input.name,
+        image: input.image,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phone: input.phoneNumber,
+        userType: 'VENDOR' as const,
+        status: 'ACTIVE',
+        businessName: input.businessName,
+        businessTypeId,
+        isGstRegistered: gstRegistered,
+        gstin: gstRegistered ? input.gstin?.trim().toUpperCase() : null,
+      };
+
+      let vendor;
+      let sendingInvite = false;
+
+      if (input._id) {
+        const existing = await prisma.user.findUnique({ where: { id: input._id } });
+        if (!existing) throw notFoundError('Vendor not found');
+        if (existing.email !== email) {
+          const emailTaken = await prisma.user.findUnique({ where: { email } });
+          if (emailTaken && emailTaken.id !== input._id) throw userInputError('A vendor with this email already exists');
+        }
+
+        const data: typeof baseData & { password?: string } = { ...baseData };
+        if (input.password) {
+          data.password = await hashPassword(input.password);
+        } else if (existing.status === 'DRAFT') {
+          // First time this vendor goes live — it only has the placeholder
+          // password saveVendorDraft gave it, so mint a real one now.
+          data.password = await hashPassword(generateInvitePassword());
+          sendingInvite = true;
+        }
+        // Otherwise this is an edit of an already-ACTIVE vendor with no
+        // password entered: leave the existing password untouched.
+        vendor = await prisma.user.update({ where: { id: input._id }, data });
+      } else {
+        const existing = await prisma.user.findUnique({ where: { email } });
+        if (existing) throw userInputError('A vendor with this email already exists');
+        sendingInvite = !input.password;
+        vendor = await prisma.user.create({
+          data: { ...baseData, password: await hashPassword(input.password ?? generateInvitePassword()) },
+        });
+      }
+
+      if (sendingInvite) {
+        // No email provider is wired up yet (see forgotPassword/resetPassword,
+        // which log their OTP the same way) — this stands in for the email
+        // until one exists.
+        console.log(`[dev] Account setup invitation for ${vendor.email}: use Forgot Password with this email to set a password.`);
+      }
+
+      return vendor;
+    },
+
+    saveVendorDraft: async (_parent, args: { vendorInput: VendorInputArgs }, context) => {
+      requireRole(context, ['ADMIN']);
+      const input = args.vendorInput;
+      const email = input.email.trim().toLowerCase();
+
+      const businessTypeId = await resolveBusinessTypeId(input.businessType);
+      const gstRegistered = input.isGstRegistered ?? false;
+
+      const data = {
+        email,
+        name: input.name,
+        image: input.image,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phone: input.phoneNumber,
+        businessName: input.businessName,
+        businessTypeId,
+        isGstRegistered: gstRegistered,
+        gstin: gstRegistered ? input.gstin?.trim().toUpperCase() : null,
+      };
+
+      if (input._id) {
+        const existing = await prisma.user.findUnique({ where: { id: input._id } });
+        if (!existing) throw notFoundError('Vendor not found');
+        // A draft save must never resurrect / silently edit an already-finalized
+        // vendor's status — only the wizard's own draft is ever touched here.
+        return prisma.user.update({ where: { id: input._id }, data });
+      }
+
+      const existingByEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingByEmail) {
+        if (existingByEmail.status !== 'DRAFT') throw userInputError('A vendor with this email already exists');
+        return prisma.user.update({ where: { id: existingByEmail.id }, data });
+      }
+
       return prisma.user.create({
         data: {
-          email: input.email,
-          name: input.name,
-          image: input.image,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          phone: input.phoneNumber,
-          password: input.password ? await hashPassword(input.password) : undefined,
+          ...data,
           userType: 'VENDOR',
+          status: 'DRAFT',
+          // A draft still needs some credential on record; it's replaced when
+          // the wizard is finalized (createVendor), same as the invite path.
+          password: await hashPassword(generateInvitePassword()),
         },
       });
     },
@@ -212,16 +338,24 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       if (currentUser.userType === 'VENDOR' && input._id !== currentUser.id) {
         throw forbiddenError();
       }
+
+      const businessTypeId = input.businessType !== undefined ? await resolveBusinessTypeId(input.businessType) : undefined;
+      const gstRegistered = input.isGstRegistered;
+
       return prisma.user.update({
         where: { id: input._id },
         data: {
-          email: input.email,
+          email: input.email ? input.email.trim().toLowerCase() : undefined,
           name: input.name,
           image: input.image,
           firstName: input.firstName,
           lastName: input.lastName,
           phone: input.phoneNumber,
           password: input.password ? await hashPassword(input.password) : undefined,
+          businessName: input.businessName,
+          businessTypeId,
+          isGstRegistered: gstRegistered,
+          gstin: gstRegistered === false ? null : input.gstin?.trim().toUpperCase(),
         },
       });
     },

@@ -119,8 +119,9 @@ export default function UpdateBusinessDetails({
     <div className="flex h-full w-full items-center justify-start dark:text-white dark:bg-dark-950 ">
       <div className="h-full w-full">
         <div className="flex flex-col gap-2">
-          <div className="mb-2 flex flex-col">
-            <span className="text-lg">{t('Update Business Details')}</span>
+          <div className="mb-5 flex flex-col">
+            <span className="text-lg font-semibold text-slate-900 dark:text-white">{t('Business details')}</span>
+            <span className="mt-1 text-sm text-slate-500">{t('Update banking, registration and tax information')}</span>
           </div>
 
           <Formik
@@ -142,7 +143,7 @@ export default function UpdateBusinessDetails({
             }) => {
               return (
                 <Form onSubmit={handleSubmit}>
-                  <div className="mb-2 space-y-3">
+                  <div className="mb-2 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                     <CustomTextField
                       type="text"
                       name="bankName"
@@ -276,7 +277,7 @@ export default function UpdateBusinessDetails({
                       }}
                     />
 
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-2 flex justify-end border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-2">
                       <CustomButton
                         className="h-10 w-fit border-gray-300 border dark:border-dark-600 bg-black  px-8 text-white"
                         label={t('Update')}

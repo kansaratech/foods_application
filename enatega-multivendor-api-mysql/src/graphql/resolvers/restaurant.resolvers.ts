@@ -50,6 +50,7 @@ async function resolveCuisineIds(cuisines?: string[] | null): Promise<string[]> 
 
 interface RestaurantInputArgs {
   name: string;
+  description?: string;
   address?: string;
   phone?: string;
   image?: string;
@@ -431,6 +432,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const restaurant = await prisma.restaurant.create({
         data: {
           name: input.name,
+          description: input.description,
           address: input.address,
           phone: input.phone,
           image: input.image,
@@ -515,6 +517,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
         where: { id: input._id },
         data: {
           name: input.name,
+          description: input.description,
           address: input.address,
           phone: input.phone,
           image: input.image,
@@ -652,6 +655,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
         address?: string;
         postCode?: string;
         city?: string;
+        state?: string;
       },
       context,
     ) => {
@@ -677,6 +681,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           address: args.address,
           postCode: args.postCode,
           city: args.city,
+          state: args.state,
         },
       });
       return { success: true, message: 'Delivery bounds updated', data };
@@ -831,6 +836,16 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: { id: string }) => parent.id,
     unique_id: (parent: { id: string }) => parent.id,
     restaurants: (parent: { id: string }) => prisma.restaurant.findMany({ where: { ownerId: parent.id } }),
+    // Prisma's User.phone column predates the phoneNumber field this type
+    // exposes; without this alias the default resolver looks for a literal
+    // `phoneNumber` property and every vendor comes back with a null phone.
+    phoneNumber: (parent: { phone?: string | null; phoneNumber?: string | null }) =>
+      parent.phoneNumber ?? parent.phone ?? null,
+    businessType: async (parent: { businessTypeId?: string | null }) => {
+      if (!parent.businessTypeId) return null;
+      const shopType = await prisma.shopType.findUnique({ where: { id: parent.businessTypeId } });
+      return shopType?.slug ?? null;
+    },
   },
 
   Owner: {

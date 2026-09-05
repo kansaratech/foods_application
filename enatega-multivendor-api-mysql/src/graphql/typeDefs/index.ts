@@ -20,6 +20,7 @@ import { serviceabilityTypeDefs } from './serviceability';
 import { commissionTypeDefs } from './commission';
 import { financeOpsTypeDefs } from './finance-ops';
 import { storeDocsTypeDefs } from './store-docs';
+import { vendorDocsTypeDefs } from './vendor-docs';
 import { auditTypeDefs } from './audit';
 
 export const typeDefs = [
@@ -45,5 +46,6 @@ export const typeDefs = [
   commissionTypeDefs,
   financeOpsTypeDefs,
   storeDocsTypeDefs,
+  vendorDocsTypeDefs,
   auditTypeDefs,
 ];

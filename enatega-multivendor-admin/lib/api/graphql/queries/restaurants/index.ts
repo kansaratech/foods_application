@@ -239,6 +239,7 @@ export const GET_RESTAURANT_PROFILE = gql`
         email
       }
       shopType
+      shopTypeId
       cuisines
 
       bussinessDetails {

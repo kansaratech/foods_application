@@ -1,9 +1,6 @@
 // Core
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
-import { useContext } from 'react';
-
-// Context
-import { VendorContext } from '@/lib/context/super-admin/vendor.context';
+import { useRouter } from 'next/navigation';
 
 // Components
 import TextIconClickable from '@/lib/ui/useable-components/text-icon-clickable';
@@ -15,9 +12,7 @@ import { useTranslations } from 'next-intl';
 export default function VendorHeader() {
   // Hooks
   const t = useTranslations();
-
-  // Context
-  const { onSetVendorFormVisible } = useContext(VendorContext);
+  const router = useRouter();
 
   return (
     <div className="hidden w-full flex-shrink-0 border-b bg-slate-50 px-5 py-4 dark:border-dark-600 dark:bg-dark-950 dark:text-white sm:block">
@@ -33,7 +28,7 @@ export default function VendorHeader() {
           iconStyles={{ color: 'white' }}
           title={t('Add Vendor')}
           onClick={() => {
-            onSetVendorFormVisible(true);
+            router.push('/general/vendors/add');
           }}
         />
         {/* <VendorCustomTab

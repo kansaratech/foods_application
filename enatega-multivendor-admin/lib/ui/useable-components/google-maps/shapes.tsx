@@ -47,32 +47,31 @@ export default function CustomShape({
       ),
     },
   ];
+  const visibleItems = items.filter(
+    (item) => !hidenNames.some((hidden: string) => hidden.toLowerCase() === item.value)
+  );
 
   return (
-    <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-      {items.map((item, index: number) => {
-        if (
-          hidenNames.some(
-            (hidden: string) => hidden.toLowerCase() === item.value
-          )
-        )
-          return;
-
-        return (
+    <div
+      className={`mt-3 grid gap-3 ${visibleItems.length === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}
+      role="group"
+      aria-label={t('Delivery area shape')}
+    >
+      {visibleItems.map((item, index: number) => (
           <button
             key={`${item.value}-${index}`}
-            className={`flex flex-col items-center justify-center p-3 ${
+            aria-pressed={item.value === selected}
+            className={`flex h-20 items-center justify-center gap-3 border px-4 py-3 ${
               item.value === selected
-                ? 'bg-black dark:bg-dark-900 text-white border dark:border-dark-600'
-                : 'bg-[#F4F4F5] text-black dark:bg-dark-900 dark:text-white '
-            } w-30 h-30 transform rounded-lg shadow transition duration-300 ease-in-out hover:scale-105 focus:outline-none active:bg-gray-800`}
+                ? 'border-primary-color bg-primary-color text-white shadow-sm'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white'
+            } rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-offset-2 [&_p]:mt-0`}
             type="button"
             onClick={() => onClick(item.value)}
           >
             {item.child}
           </button>
-        );
-      })}
+      ))}
     </div>
   );
 }

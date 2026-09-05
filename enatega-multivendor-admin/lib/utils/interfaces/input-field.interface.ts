@@ -1,5 +1,5 @@
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { CSSProperties, HTMLInputAutoCompleteAttribute } from 'react';
+import { CSSProperties, FocusEventHandler, HTMLInputAutoCompleteAttribute } from 'react';
 import { TNumberMode } from '../types';
 import { IGlobalComponentProps } from './global.interface';
 
@@ -13,6 +13,8 @@ interface IGlobalTextFieldProps extends IGlobalComponentProps {
   showLabel: boolean;
   style?: CSSProperties;
   isLoading?: boolean;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
+  autoComplete?: HTMLInputAutoCompleteAttribute;
 }
 // Extra
 interface IIconProperties {
@@ -28,6 +30,7 @@ export interface ITextFieldProps extends IGlobalTextFieldProps {
 export interface IIconTextFieldProps extends IGlobalTextFieldProps {
   iconProperties: IIconProperties;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
 }
 export interface IPhoneTextFieldProps extends IGlobalTextFieldProps {
   mask: string;
@@ -35,6 +38,8 @@ export interface IPhoneTextFieldProps extends IGlobalTextFieldProps {
   page?: string;
   onChange?: (value: string) => void;
   // onChange: (event: InputMaskChangeEvent) => void;
+  defaultCountry?: string;
+  error?: string;
 }
 export interface INumberTextFieldProps
   extends Omit<IGlobalTextFieldProps, 'value' | 'type' | 'maxLength'> {

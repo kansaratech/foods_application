@@ -27,11 +27,9 @@ export const VendorContext = createContext<IVendorContextProps>(
 
 export const VendorProvider = ({ children }: IProvider) => {
   // States
-  const [vendorFormVisible, setVendorFormVisible] = useState<boolean>(false);
   const [filtered, setFiltered] = useState<IVendorReponse[]>();
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [globalFilter, setGlobalFilter] = useState<string>('');
-  const [isEditingVendor, setIsEditing] = useState<boolean>(false);
   const [isReset, setIsReset] = useState<boolean>(false);
 
   // API
@@ -52,23 +50,12 @@ export const VendorProvider = ({ children }: IProvider) => {
   }) as IQueryResult<IVendorResponseGraphQL | undefined, undefined>;
 
   // State Handler
-  const onSetVendorFormVisible = (status: boolean, isEdit?: boolean) => {
-    setVendorFormVisible(status);
-
-    if (isEdit !== undefined) {
-      setIsEditing(isEdit);
-    }
-  };
   const onSetVendorId = (id: string) => {
     setVendorId(id);
   };
 
   const onSetGlobalFilter = (filter: string) => {
     setGlobalFilter(filter);
-  };
-
-  const onSetEditingVendor = (status: boolean) => {
-    setIsEditing(status);
   };
 
   const onResetVendor = (state: boolean) => {
@@ -114,8 +101,6 @@ export const VendorProvider = ({ children }: IProvider) => {
   }, [vendorResponse?.data]);
 
   const value: IVendorContextProps = {
-    vendorFormVisible,
-    onSetVendorFormVisible,
     vendorId,
     onSetVendorId,
     // Vendors Data
@@ -124,9 +109,6 @@ export const VendorProvider = ({ children }: IProvider) => {
     globalFilter,
     onSetGlobalFilter,
     filtered,
-    // Editing
-    isEditingVendor,
-    onSetEditingVendor,
     // Reset
     onResetVendor,
   };

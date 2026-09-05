@@ -44,4 +44,5 @@ export interface IDropdownComponentProps extends ISelectionComponentProps {
   options: IDropdownSelectItem[];
   extraFooterButton?: IDropdownExtraButton;
   onChange?: (e: DropdownChangeEvent) => void;
+  error?: string;
 }

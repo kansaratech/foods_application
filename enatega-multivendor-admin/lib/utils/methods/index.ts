@@ -11,5 +11,6 @@ export * from './image';
 export * from './video';
 export * from './security';
 export * from './timing';
+export * from './phone';
 export * from './decryption/decrypt';
 export * from './decryption/decrypt-config-fields';

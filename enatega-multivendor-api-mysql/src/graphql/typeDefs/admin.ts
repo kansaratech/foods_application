@@ -19,6 +19,14 @@ export const adminTypeDefs = /* GraphQL */ `
     lastName: String
     phoneNumber: String
     restaurants: [Restaurant!]!
+    businessName: String
+    businessType: String
+    "The ShopType id businessType resolves from — lets the edit form preselect the right dropdown option without a slug round-trip."
+    businessTypeId: String
+    isGstRegistered: Boolean
+    gstin: String
+    "ACTIVE | DRAFT — a DRAFT vendor was started in the registration wizard but not yet finalized."
+    status: String
   }
 
   type OwnerAuthPayload {
@@ -70,6 +78,11 @@ export const adminTypeDefs = /* GraphQL */ `
     lastName: String
     phoneNumber: String
     password: String
+    businessName: String
+    # Accepts either a ShopType id or slug, resolved server-side.
+    businessType: String
+    isGstRegistered: Boolean
+    gstin: String
   }
 
   type DashboardUsers {
@@ -133,6 +146,8 @@ export const adminTypeDefs = /* GraphQL */ `
     markWebNotificationsAsRead: [WebNotification!]!
 
     createVendor(vendorInput: VendorInput!): Vendor!
+    "Lenient partial save used by the registration wizard's Continue/Save draft actions. Only email is required; leaves status DRAFT."
+    saveVendorDraft(vendorInput: VendorInput!): Vendor!
     editVendor(vendorInput: VendorInput!): Vendor!
     deleteVendor(id: String!): Boolean!
 

@@ -56,7 +56,6 @@ export default function VendorCard({
   // Context
   const { vendorId, onSetVendorId, vendorResponse, onResetVendor } =
     useContext(VendorContext);
-  const { onSetVendorFormVisible } = useContext(VendorContext);
   const { showToast } = useContext(ToastContext);
   const { ISPAID_VERSION } = useConfiguration();
 
@@ -100,7 +99,7 @@ export default function VendorCard({
   };
 
   const onHandlerEdit = () => {
-    onSetVendorFormVisible(true, true);
+    router.push(`/general/vendors/add?id=${_id}`);
   };
 
   // API Hanlders

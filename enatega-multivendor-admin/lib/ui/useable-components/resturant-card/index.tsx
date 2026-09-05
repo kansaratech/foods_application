@@ -144,7 +144,17 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
     }
   };
 
-  const handleViewDetails = (event: React.MouseEvent<HTMLButtonElement>) => {
+  // Edits the store's own basic/location/timing details through the admin
+  // wizard — same place "Edit" opens from everywhere else in the app.
+  const handleEdit = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    router.push(`/general/stores/create?id=${_id}`);
+  };
+
+  // Jumps into the store's own CMS (menu, orders, settings) — a different
+  // destination from Edit, which only touches the basic-details fields.
+  const handleOpenPortal = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
     onUseLocalStorage('save', 'restaurantId', _id);
@@ -226,10 +236,17 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         <CustomInputSwitch loading={loading} isActive={isActive} onChange={handleCheckboxChange} />
         <button
           type="button"
-          onClick={handleViewDetails}
+          onClick={handleEdit}
+          className="h-9 whitespace-nowrap rounded-md border border-gray-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30 dark:border-dark-600 dark:text-white dark:hover:bg-dark-900"
+        >
+          {t('Edit')}
+        </button>
+        <button
+          type="button"
+          onClick={handleOpenPortal}
           className="h-9 whitespace-nowrap rounded-md px-3 text-sm font-semibold text-[#1c5bc7] transition hover:bg-[#e8f0fc] focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30 dark:text-white"
         >
-          {t('View Details')}
+          {t('Open Portal')}
         </button>
         {isHardDeleting ? <CustomLoader size="20px" /> : <button type="button" aria-label={t('Delete')} onClick={handleDelete} className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"><FontAwesomeIcon icon={faTrash}/></button>}
       </div>

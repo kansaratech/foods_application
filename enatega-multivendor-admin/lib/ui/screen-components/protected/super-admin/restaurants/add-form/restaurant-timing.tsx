@@ -83,8 +83,12 @@ const RestaurantTiming = ({
       };
     }) ?? [];
 
-  const initialValues: ITimingForm[] =
-    openingTimes.length > 0 ? openingTimes : TIMING_INITIAL_VALUE;
+  // Always render the complete week. Previously, a response containing only
+  // Monday replaced the whole form, which made the other six days disappear.
+  const initialValues: ITimingForm[] = TIMING_INITIAL_VALUE.map(({ day }) => {
+    const savedDay = openingTimes.find((opening) => opening.day === day);
+    return savedDay ?? { day, times: [] };
+  });
 
   const [mutate, { loading: mutationLoading }] = useMutation(UPDATE_TIMINGS);
 
@@ -140,9 +144,10 @@ const RestaurantTiming = ({
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded dark:text-white dark:bg-dark-950">
-      <div className="mb-2 flex flex-col">
-        <span className="text-lg">{t('Store Timing')}</span>
+    <div className="flex flex-col gap-2 rounded dark:bg-dark-950 dark:text-white">
+      <div className="mb-3 flex flex-col">
+        <span className="text-lg font-semibold text-slate-900 dark:text-white">{t('Store Timing')}</span>
+        <span className="mt-1 text-sm text-slate-500">{t('Set opening hours for each day of the week')}</span>
       </div> 
       <Formik
         initialValues={initialValues}
@@ -151,12 +156,31 @@ const RestaurantTiming = ({
         enableReinitialize
       >
         {({ values, errors, touched, setFieldValue }) => (
-          <Form className="flex flex-col gap-6">
+          <Form className="flex flex-col gap-3">
+            <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-900 dark:bg-blue-950/30">
+              <div>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">{t('Weekly schedule')}</p>
+                <p className="text-xs text-slate-500">{t('Copy Monday hours to quickly fill the complete week')}</p>
+              </div>
+              <button
+                type="button"
+                disabled={!values[0]?.times?.length}
+                onClick={() => {
+                  const mondayTimes = values[0].times.map((slot) => ({ ...slot }));
+                  values.forEach((_, index) => {
+                    if (index > 0) setFieldValue(`${index}.times`, mondayTimes.map((slot) => ({ ...slot })));
+                  });
+                }}
+                className="h-9 rounded-lg border border-primary-color bg-white px-4 text-sm font-semibold text-primary-color disabled:cursor-not-allowed disabled:opacity-40 dark:bg-dark-900"
+              >
+                {t('Copy Monday to all')}
+              </button>
+            </div>
             {values?.map((value, dayIndex) => {
               return (
-                <div key={dayIndex} className="flex items-start gap-5">
+                <div key={dayIndex} className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-dark-600 dark:bg-dark-900 md:grid-cols-[120px_minmax(0,1fr)_110px]">
                   {/* left side */}
-                  <div className="mt-2 flex items-center gap-4">
+                  <div className="flex items-center gap-3 self-start pt-2">
                     <Toggle
                       onClick={() => {
                         const newTimes =
@@ -172,19 +196,19 @@ const RestaurantTiming = ({
                       }}
                       checked={value?.times?.length > 0}
                     />
-                    <span className="w-10 text-sm">{value.day}</span>
+                    <span className="w-10 text-sm font-semibold text-slate-700 dark:text-slate-200">{value.day}</span>
                   </div>
 
                   {/* center */}
                   {value?.times?.length > 0 ? (
-                    <div className="flex flex-col gap-4">
+                    <div className="flex min-w-0 flex-col gap-3">
                       {value?.times?.map((time: ITimeSlot, timeIndex) => {
                         return (
                           <div
                             key={timeIndex}
-                            className="flex items-start gap-4"
+                            className="flex flex-wrap items-start gap-3"
                           >
-                            <div className="flex flex-col gap-0 sm:flex-row sm:gap-4">
+                            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
                               <div className="max-w-4min-w-44 relative flex w-full min-w-44 flex-col">
                                 <CustomTimeInput
                                   name={`${dayIndex}.times[${timeIndex}].startTime`}
@@ -222,7 +246,7 @@ const RestaurantTiming = ({
                                 </ErrorMessage>
                               </div>
 
-                              <span className="self-center text-xs">-</span>
+                              <span className="self-center text-xs text-slate-400">to</span>
 
                               <div className="max-w-4min-w-44 relative flex w-full min-w-44 flex-col">
                                 <CustomTimeInput
@@ -294,23 +318,38 @@ const RestaurantTiming = ({
                     </div>
                   ) : (
                     <div className="flex min-h-10 flex-1 items-center justify-start">
-                      <span className="select-none rounded-full bg-black px-3 py-1 text-xs text-white">
+                      <span className="select-none rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500 dark:bg-dark-950">
                         {t('Closed all Day')}
                       </span>
                     </div>
                   )}
+                  <button
+                    type="button"
+                    disabled={!value.times.length}
+                    onClick={() => {
+                      const copiedTimes = value.times.map((slot) => ({ ...slot }));
+                      values.forEach((_, index) => {
+                        if (index !== dayIndex) setFieldValue(`${index}.times`, copiedTimes.map((slot) => ({ ...slot })));
+                      });
+                    }}
+                    className="h-9 self-start rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-600 dark:text-slate-300 dark:hover:bg-dark-950"
+                  >
+                    {t('Copy to all')}
+                  </button>
                 </div>
               );
             })}
 
-            <CustomButton
-              className="mb-[2px] mr-auto mt-auto flex h-11 rounded-md border dark:border-dark-600 border-gray-300 bg-[black] px-10 text-white"
+            <div className="mt-3 flex justify-end border-t border-slate-200 pt-5 dark:border-dark-600">
+              <CustomButton
+              className="flex h-11 rounded-md border border-primary-color bg-primary-color px-10 text-white"
               label={t('Save')}
               rounded={false}
               disabled={loading}
               type="submit"
               loading={mutationLoading}
             />
+            </div>
           </Form>
         )}
       </Formik>

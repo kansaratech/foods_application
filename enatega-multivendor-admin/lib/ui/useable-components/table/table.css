@@ -10,6 +10,67 @@
   overflow-y: visible;
 }
 
+/* Non-scrollable tables use their screen's single content scrollbar. */
+.responsive-admin-table.table-page-scroll .p-datatable-wrapper {
+  max-height: none !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Shared pagination contract for every screen using the common Table.
+   Keep navigation grouped and predictable instead of allowing each module
+   to spread the controls differently across the full table width. */
+.responsive-admin-table .p-paginator {
+  justify-content: flex-start !important;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-height: 3.25rem;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 0.55rem 1rem;
+}
+
+/* Report text anchors the left edge; the margin pushes every control after
+   it (page links, rows-per-page) to the right edge instead of leaving both
+   sides empty and everything bunched in the middle. */
+.responsive-admin-table .p-paginator .p-paginator-current {
+  margin-right: auto;
+  padding: 0;
+  height: auto;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.responsive-admin-table .p-paginator-page,
+.responsive-admin-table .p-paginator-first,
+.responsive-admin-table .p-paginator-prev,
+.responsive-admin-table .p-paginator-next,
+.responsive-admin-table .p-paginator-last {
+  margin: 0 !important;
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 0.4rem;
+  font-size: 0.75rem;
+}
+
+.responsive-admin-table .p-paginator .p-dropdown {
+  margin: 0 0 0 0.5rem !important;
+  height: 2rem;
+  align-items: center;
+}
+
+.dark .responsive-admin-table .p-paginator {
+  border-color: var(--dark-600);
+  background: var(--dark-950);
+}
+
+.dark .responsive-admin-table .p-paginator .p-paginator-current {
+  color: #cbd5e1;
+}
+
 /* Dense, readable store-management grid. */
 .responsive-admin-table .stores-admin-table .p-datatable-header {
   border: 0;
@@ -57,7 +118,7 @@
 }
 
 .responsive-admin-table .stores-admin-table .p-paginator {
-  justify-content: space-between;
+  justify-content: flex-start !important;
   border: 0;
   border-top: 1px solid #e2e8f0;
   background: #fff;
@@ -126,7 +187,7 @@
 }
 
 .responsive-admin-table .directory-admin-table .p-paginator {
-  justify-content: flex-end;
+  justify-content: flex-start !important;
   border: 0;
   border-top: 1px solid #e2e8f0;
   background: #fff;
@@ -188,6 +249,14 @@
     justify-content: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+  }
+
+  /* On narrow screens the report and the controls each get their own
+     centered row instead of the report hogging the left edge. */
+  .responsive-admin-table .p-paginator .p-paginator-current {
+    flex-basis: 100%;
+    margin-right: 0;
+    text-align: center;
   }
 
   .responsive-admin-table .p-paginator .p-paginator-pages {

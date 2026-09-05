@@ -102,7 +102,7 @@ export default function ZoneAddForm({
         onCompleted: () => {
           showToast({
             type: 'success',
-            title: `${zone ? t('New') : t('Edit')} ${t('Zone')}`,
+            title: `${zone ? t('Edit') : t('New')} ${t('Zone')}`,
             message: `${t('Zone has been')} ${zone ? t('updated') : t('added')} ${t('successfully')}`,
           });
           resetForm();
@@ -116,7 +116,7 @@ export default function ZoneAddForm({
 
           showToast({
             type: 'error',
-            title: `${zone ? t('New') : t('Edit')} ${t('Zone')}`,
+            title: `${zone ? t('Edit') : t('New')} ${t('Zone')}`,
             message,
           });
         },
@@ -132,14 +132,17 @@ export default function ZoneAddForm({
       visible={isAddZoneVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className="w-full dark:border-dark-600 dark:bg-dark-950 dark:text-white"
     >
-      <div className="flex h-full w-full items-center justify-start">
-        <div className="h-full w-full">
+      <div className="min-h-full w-full bg-slate-50 px-4 py-5 dark:bg-dark-950 sm:px-6 lg:px-10">
+        <div className="mx-auto h-full w-full max-w-[1220px]">
           <div className="flex flex-col gap-2">
-            <div className="mb-2 flex flex-col">
-              <span className="text-lg">
+            <div className="mb-3 flex flex-col">
+              <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {zone ? t('Edit') : t('Add')} {t('Zone')}
+              </span>
+              <span className="mt-1 text-sm text-slate-500">
+                {t('Define the service area by searching a location and adjusting its boundary')}
               </span>
             </div>
 
@@ -178,8 +181,8 @@ export default function ZoneAddForm({
                   };
 
                   return (
-                    <Form onSubmit={handleSubmit}>
-                      <div className="mb-4 space-y-4">
+                    <Form onSubmit={handleSubmit} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-dark-600 dark:bg-dark-900">
+                      <div className="grid grid-cols-1 gap-4 border-b border-slate-200 p-4 dark:border-dark-600 sm:p-6 md:grid-cols-2">
                         <div>
                           <CustomTextField
                             type="text"
@@ -219,7 +222,13 @@ export default function ZoneAddForm({
                             }}
                           />
                         </div>
+                      </div>
 
+                      <div className="p-4 sm:p-6">
+                        <div className="mb-3">
+                          <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('Service area')}</h2>
+                          <p className="mt-1 text-sm text-slate-500">{t('Drag the polygon points on the map to fine-tune the boundary')}</p>
+                        </div>
                         {isLoaded && (
                           <CustomGoogleMapsLocationZoneBounds
                             key={values?._id}
@@ -230,11 +239,19 @@ export default function ZoneAddForm({
                             }
                           />
                         )}
+                        {!isLoaded && (
+                          <div className="grid h-[480px] place-items-center rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-500 dark:border-dark-600 dark:bg-dark-950">
+                            {t('Loading map')}
+                          </div>
+                        )}
 
-                        <div className="mt-4 flex justify-end">
+                        <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-dark-600">
+                          <button type="button" onClick={onHide} className="h-10 rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white">
+                            {t('Cancel')}
+                          </button>
                           <CustomButton
-                            className="h-10 w-fit  border-gray-300 border dark:border-dark-600 bg-black px-8 text-white "
-                            label={zone ? t('Update') : t('Add')}
+                            className="h-10 w-fit border border-primary-color bg-primary-color px-8 text-white"
+                            label={zone ? t('Update zone') : t('Create zone')}
                             type="submit"
                             loading={mutationLoading}
                           />

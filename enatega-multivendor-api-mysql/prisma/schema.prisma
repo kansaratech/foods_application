@@ -59,10 +59,18 @@ model User {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
+  // Vendor registration business details (Localsell vendor registration spec).
+  // Store-level fields (address, delivery zone, timings, etc.) stay on
+  // Restaurant and are deliberately not duplicated here.
+  businessName    String?
+  businessTypeId  String?
+  isGstRegistered Boolean @default(false)
+  gstin           String?
+
   addresses         Address[]
-  restaurants       Restaurant[]      @relation("RestaurantOwner")
-  orders            Order[]           @relation("OrderCustomer")
-  riderOrders       Order[]           @relation("OrderRider")
+  restaurants       Restaurant[]       @relation("RestaurantOwner")
+  orders            Order[]            @relation("OrderCustomer")
+  riderOrders       Order[]            @relation("OrderRider")
   riderProfile      RiderProfile?
   reviews           Review[]
   withdrawRequests  WithdrawRequest[]
@@ -70,6 +78,10 @@ model User {
   supportTickets    SupportTicket[]
   webNotifications  WebNotification[]
   orderChatMessages OrderChatMessage[]
+  vendorDocuments   VendorDocument[]
+  businessType      ShopType?          @relation(fields: [businessTypeId], references: [id])
+
+  @@index([businessTypeId])
 }
 
 model Address {
@@ -97,6 +109,7 @@ model ShopType {
 
   cuisines    Cuisine[]
   restaurants Restaurant[]
+  vendors     User[]
 }
 
 model Cuisine {
@@ -113,28 +126,29 @@ model Cuisine {
 }
 
 model Restaurant {
-  id                     String   @id @default(cuid())
+  id                     String    @id @default(cuid())
   ownerId                String
   name                   String
+  description            String?   @db.Text
   image                  String?
   logo                   String?
-  address                String?  @db.Text
+  address                String?   @db.Text
   phone                  String?
-  username               String?  @unique
+  username               String?   @unique
   password               String?
-  slug                   String   @unique
+  slug                   String    @unique
   orderPrefix            String?
-  deliveryTime           Int      @default(30)
-  minimumOrder           Float    @default(0)
-  tax                    Float    @default(0)
-  commissionRate         Float    @default(0)
-  isActive               Boolean  @default(true)
-  isAvailable            Boolean  @default(true)
+  deliveryTime           Int       @default(30)
+  minimumOrder           Float     @default(0)
+  tax                    Float     @default(0)
+  commissionRate         Float     @default(0)
+  isActive               Boolean   @default(true)
+  isAvailable            Boolean   @default(true)
   // Onboarding gate. A store created by a VENDOR starts PENDING and is invisible
   // to customers until an admin approves it. Stores created by an ADMIN, and
   // every store that predates this column, are APPROVED.
-  approvalStatus         String   @default("APPROVED") // PENDING | APPROVED | REJECTED | SUSPENDED
-  approvalNote           String?  @db.Text
+  approvalStatus         String    @default("APPROVED") // PENDING | APPROVED | REJECTED | SUSPENDED
+  approvalNote           String?   @db.Text
   approvedAt             DateTime?
   approvedById           String?
   latitude               Float?
@@ -142,29 +156,30 @@ model Restaurant {
   shopTypeId             String?
   openingTimes           Json?
   bussinessDetails       Json?
-  currentWalletAmount    Float    @default(0)
-  totalWalletAmount      Float    @default(0)
-  withdrawnWalletAmount  Float    @default(0)
+  currentWalletAmount    Float     @default(0)
+  totalWalletAmount      Float     @default(0)
+  withdrawnWalletAmount  Float     @default(0)
   deliveryBounds         Json?
   circleBounds           Json?
   boundType              String?
-  stripeDetailsSubmitted Boolean  @default(false)
+  stripeDetailsSubmitted Boolean   @default(false)
   city                   String?
+  state                  String?
   postCode               String?
-  pickup                 Boolean  @default(true)
-  delivery               Boolean  @default(true)
+  pickup                 Boolean   @default(true)
+  delivery               Boolean   @default(true)
   minDeliveryFee         Float?
   deliveryDistance       Float?
   deliveryFee            Float?
   clonedFromId           String?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  owner      User                @relation("RestaurantOwner", fields: [ownerId], references: [id])
-  shopType   ShopType?           @relation(fields: [shopTypeId], references: [id])
-  cuisines   RestaurantCuisine[]
-  categories Category[]
-  addons     Addon[]
+  owner            User                @relation("RestaurantOwner", fields: [ownerId], references: [id])
+  shopType         ShopType?           @relation(fields: [shopTypeId], references: [id])
+  cuisines         RestaurantCuisine[]
+  categories       Category[]
+  addons           Addon[]
   orders           Order[]
   coupons          Coupon[]
   reviews          Review[]
@@ -183,24 +198,50 @@ model Restaurant {
 // blocker (a store can trade with docs still PENDING) — it's a records + review
 // workflow. One row per (store, kind).
 model StoreDocument {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   restaurantId String
-  kind         String   // FSSAI | GST | PAN | BANK
-  number       String?  // licence / registration / account number
-  fileUrl      String?  // uploaded scan (Cloudinary URL)
-  holderName   String?  // BANK: account holder name
-  extra        Json?    // BANK: { ifsc, bankName }; FSSAI: { expiryDate }
-  status       String   @default("PENDING") // PENDING | VERIFIED | REJECTED
-  reviewNote   String?  @db.Text
+  kind         String // FSSAI | GST | PAN | BANK
+  number       String? // licence / registration / account number
+  fileUrl      String? // uploaded scan (Cloudinary URL)
+  holderName   String? // BANK: account holder name
+  extra        Json? // BANK: { ifsc, bankName }; FSSAI: { expiryDate }
+  status       String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  reviewNote   String?   @db.Text
   reviewedById String?
   reviewedAt   DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, kind])
   @@index([restaurantId])
+  @@index([status])
+}
+
+// Vendor-level KYC/payout documents (PAN, GST certificate, bank details),
+// collected during the 4-step vendor registration wizard. Mirrors
+// StoreDocument's shape/review workflow, scoped to a vendor (User) instead
+// of a Restaurant.
+model VendorDocument {
+  id           String    @id @default(cuid())
+  vendorId     String
+  kind         String // PAN | GST | BANK
+  number       String? // PAN number / GSTIN / bank account number
+  fileUrl      String? // uploaded scan (Cloudinary URL)
+  holderName   String? // BANK: account holder name
+  extra        Json? // BANK: { ifsc, bankName }
+  status       String    @default("PENDING") // PENDING | VERIFIED | REJECTED
+  reviewNote   String?   @db.Text
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  vendor User @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, kind])
+  @@index([vendorId])
   @@index([status])
 }
 
@@ -230,28 +271,28 @@ model Category {
 }
 
 model Food {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  categoryId    String
-  subCategoryId String?
-  title         String
-  description   String?  @db.Text
-  image         String?
-  images        Json?
-  badge         String?  // e.g. "Diwali Special" — shown as a pill on menu cards
-  isActive      Boolean  @default(true)
-  isOutOfStock  Boolean  @default(false)
+  id             String   @id @default(cuid())
+  restaurantId   String
+  categoryId     String
+  subCategoryId  String?
+  title          String
+  description    String?  @db.Text
+  image          String?
+  images         Json?
+  badge          String? // e.g. "Diwali Special" — shown as a pill on menu cards
+  isActive       Boolean  @default(true)
+  isOutOfStock   Boolean  @default(false)
   // Combo / meal-deal: a Food with `isCombo` is a bundle sold at one price
   // (its single Variation). `comboItems` lists what's inside, for the customer
   // card and the kitchen ticket: [{ foodId, variationId?, title, quantity }].
-  isCombo       Boolean  @default(false)
-  comboItems    Json?
-  compareAtPrice Float?  // "worth ₹X" strike-through on combo cards
+  isCombo        Boolean  @default(false)
+  comboItems     Json?
+  compareAtPrice Float? // "worth ₹X" strike-through on combo cards
   // Merchant-curated "frequently bought together" — array of Food ids shown as
   // an upsell in the cart.
-  pairedFoodIds Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  pairedFoodIds  Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   subCategory SubCategory? @relation(fields: [subCategoryId], references: [id])
@@ -334,9 +375,9 @@ model Configuration {
   costType               String  @default("fixed")
 
   // Email (nodemailer)
-  email       String?
-  emailName   String?
-  enableEmail Boolean @default(false)
+  email         String?
+  emailName     String?
+  enableEmail   Boolean @default(false)
   emailPassword String? // secret, never returned over GraphQL
 
   // Contact form notification address (separate from the sender identity above)
@@ -349,8 +390,8 @@ model Configuration {
   sendGridApiKey    String? // secret, never returned over GraphQL
 
   // PayPal
-  paypalClientId String?
-  paypalSandbox  Boolean @default(true)
+  paypalClientId     String?
+  paypalSandbox      Boolean @default(true)
   paypalClientSecret String? // secret, never returned over GraphQL
 
   // Stripe
@@ -365,19 +406,19 @@ model Configuration {
   twilioAuthToken      String? // secret, never returned over GraphQL
 
   // Sentry
-  dashboardSentryUrl    String?
-  webSentryUrl          String?
-  apiSentryUrl          String?
-  customerAppSentryUrl  String?
+  dashboardSentryUrl     String?
+  webSentryUrl           String?
+  apiSentryUrl           String?
+  customerAppSentryUrl   String?
   restaurantAppSentryUrl String?
-  riderAppSentryUrl     String?
+  riderAppSentryUrl      String?
 
   // Google Maps / OAuth client IDs
-  googleMapsApiKey String?
-  webClientID      String?
-  androidClientID  String?
-  iOSClientID      String?
-  expoClientID     String?
+  googleMapsApiKey   String?
+  webClientID        String?
+  androidClientID    String?
+  iOSClientID        String?
+  expoClientID       String?
   googleMapLibraries String?
   googleColor        String?
 
@@ -390,14 +431,14 @@ model Configuration {
   appAmplitudeApiKey String?
 
   // Firebase (client-side web-app config, not the admin SDK service account)
-  firebaseKey       String?
-  authDomain        String?
-  projectId         String?
-  storageBucket     String?
-  msgSenderId       String?
-  appId             String?
-  measurementId     String?
-  vapidKey          String?
+  firebaseKey   String?
+  authDomain    String?
+  projectId     String?
+  storageBucket String?
+  msgSenderId   String?
+  appId         String?
+  measurementId String?
+  vapidKey      String?
 
   // Misc app toggles
   isPaidVersion          Boolean @default(false)
@@ -405,22 +446,22 @@ model Configuration {
   customerDemoZoneId     String?
 
   // Platform commission billing
-  defaultCommissionRate  Float   @default(20)
-  commissionBillingCycle String  @default("MONTHLY") // MONTHLY | YEARLY
+  defaultCommissionRate  Float  @default(20)
+  commissionBillingCycle String @default("MONTHLY") // MONTHLY | YEARLY
 
   // Billing entity shown on vendor commission invoices.
-  platformLegalName      String?
-  platformAddress        String? @db.Text
-  platformGstin          String?
+  platformLegalName String?
+  platformAddress   String? @db.Text
+  platformGstin     String?
 
   // Max undeposited COD cash a rider may hold before the app stops giving them
   // cash orders (Swiggy/Zomato-style cash limit).
-  riderCashLimit         Float   @default(3000)
+  riderCashLimit Float @default(3000)
 
   // Marketplace home location (map-centre fallback for the store-location editor
   // and serviceability tie-breaks). Seeded to the launch town.
-  defaultLatitude        Float?
-  defaultLongitude       Float?
+  defaultLatitude  Float?
+  defaultLongitude Float?
 }
 
 // Immutable per-order commission ledger. One row is written when an order is
@@ -457,21 +498,21 @@ model CommissionRecord {
 // One invoice per vendor per billing period. Generated by an admin closing a
 // period; the platform collects the amount out-of-band (COD) and marks it PAID.
 model CommissionBill {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   vendorId          String
   periodStart       DateTime
   periodEnd         DateTime
   cycle             String // MONTHLY | YEARLY
-  orderCount        Int      @default(0)
-  grossFoodSubtotal Float    @default(0)
-  commissionTotal   Float    @default(0)
-  status            String   @default("PENDING") // PENDING | PAID | WAIVED
-  invoiceNumber     String?  @unique
+  orderCount        Int       @default(0)
+  grossFoodSubtotal Float     @default(0)
+  commissionTotal   Float     @default(0)
+  status            String    @default("PENDING") // PENDING | PAID | WAIVED
+  invoiceNumber     String?   @unique
   paidAt            DateTime?
   paidAmount        Float?
-  note              String?  @db.Text
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  note              String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([vendorId])
   @@index([status])
@@ -521,20 +562,20 @@ model RiderCashEntry {
 // A rider handing collected COD cash back to the platform. Clears one or more
 // RiderCashEntry rows (oldest first).
 model RiderCashRemittance {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   riderId      String
   amount       Float
-  entryCount   Int      @default(0)
-  method       String?  // cash | bank | upi
-  reference    String?  // UPI ref / deposit slip no.
-  note         String?  @db.Text
+  entryCount   Int       @default(0)
+  method       String? // cash | bank | upi
+  reference    String? // UPI ref / deposit slip no.
+  note         String?   @db.Text
   recordedById String?
   // A rider self-reports a deposit as PENDING; an admin CONFIRMs it, and only
   // then are the RiderCashEntry rows cleared. Admin-entered remittances are
   // CONFIRMED immediately.
-  status       String   @default("CONFIRMED") // PENDING | CONFIRMED | REJECTED
+  status       String    @default("CONFIRMED") // PENDING | CONFIRMED | REJECTED
   confirmedAt  DateTime?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime  @default(now())
 
   @@index([riderId])
   @@index([status])
@@ -545,17 +586,17 @@ model RiderCashRemittance {
 // wallet immediately; the row is the paper trail. `runItemId` is set when a
 // payout run consumes it into a statement line.
 model WalletAdjustment {
-  id           String   @id @default(cuid())
-  subjectType  String   // STORE | RIDER
-  restaurantId String?
-  riderId      String?
-  amount       Float    // signed: positive = credit, negative = debit
-  reason       String   // slug: goodwill | chargeback | correction | penalty | other
-  note         String?  @db.Text
-  createdById  String?
+  id             String   @id @default(cuid())
+  subjectType    String // STORE | RIDER
+  restaurantId   String?
+  riderId        String?
+  amount         Float // signed: positive = credit, negative = debit
+  reason         String // slug: goodwill | chargeback | correction | penalty | other
+  note           String?  @db.Text
+  createdById    String?
   createdByEmail String?
-  runItemId    String?
-  createdAt    DateTime @default(now())
+  runItemId      String?
+  createdAt      DateTime @default(now())
 
   @@index([restaurantId])
   @@index([riderId])
@@ -566,19 +607,19 @@ model WalletAdjustment {
 // payee's wallet at run time into PayoutRunItem rows; the admin then marks each
 // line paid with a bank/UPI reference.
 model PayoutRun {
-  id          String   @id @default(cuid())
-  label       String   // e.g. "Week of 1 Sep 2026"
+  id          String    @id @default(cuid())
+  label       String // e.g. "Week of 1 Sep 2026"
   periodStart DateTime
   periodEnd   DateTime
-  status      String   @default("OPEN") // OPEN | COMPLETED
-  itemCount   Int      @default(0)
-  grossTotal  Float    @default(0)
-  paidTotal   Float    @default(0)
-  note        String?  @db.Text
+  status      String    @default("OPEN") // OPEN | COMPLETED
+  itemCount   Int       @default(0)
+  grossTotal  Float     @default(0)
+  paidTotal   Float     @default(0)
+  note        String?   @db.Text
   createdById String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   completedAt DateTime?
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime  @updatedAt
 
   items PayoutRunItem[]
 
@@ -586,21 +627,21 @@ model PayoutRun {
 }
 
 model PayoutRunItem {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   runId         String
-  subjectType   String   // STORE | RIDER
+  subjectType   String // STORE | RIDER
   restaurantId  String?
   riderId       String?
   payeeName     String
-  walletBalance Float    // currentWalletAmount at snapshot time
-  heldCash      Float    @default(0) // rider undeposited COD held against the wallet
-  amount        Float    // what we actually pay out this run (wallet - heldCash, clamped >=0)
-  status        String   @default("PENDING") // PENDING | PAID | SKIPPED
-  method        String?  // bank | upi | cash
+  walletBalance Float // currentWalletAmount at snapshot time
+  heldCash      Float     @default(0) // rider undeposited COD held against the wallet
+  amount        Float // what we actually pay out this run (wallet - heldCash, clamped >=0)
+  status        String    @default("PENDING") // PENDING | PAID | SKIPPED
+  method        String? // bank | upi | cash
   reference     String?
-  note          String?  @db.Text
+  note          String?   @db.Text
   paidAt        DateTime?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime  @default(now())
 
   run PayoutRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
@@ -642,12 +683,12 @@ model Order {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
-  user       User        @relation("OrderCustomer", fields: [userId], references: [id])
-  rider      User?       @relation("OrderRider", fields: [riderId], references: [id])
-  restaurant Restaurant  @relation(fields: [restaurantId], references: [id])
-  address    Address?    @relation(fields: [addressId], references: [id])
-  items      OrderItem[]
-  review     Review?
+  user         User               @relation("OrderCustomer", fields: [userId], references: [id])
+  rider        User?              @relation("OrderRider", fields: [riderId], references: [id])
+  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id])
+  address      Address?           @relation(fields: [addressId], references: [id])
+  items        OrderItem[]
+  review       Review?
   chatMessages OrderChatMessage[]
 
   @@index([userId])
@@ -822,9 +863,9 @@ model Transaction {
 }
 
 model Banner {
-  id          String  @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String?
-  description String? @db.Text
+  description String?   @db.Text
   action      String?
   screen      String?
   file        String?

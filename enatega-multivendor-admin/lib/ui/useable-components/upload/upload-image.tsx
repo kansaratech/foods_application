@@ -51,6 +51,7 @@ function CustomUploadImageComponent({
     'video/webm',
     'video/mp4',
   ],
+  maxFileSize,
 }: IImageUploadComponentProps) {
   // Context
   // const configuration: IConfiguration | undefined =
@@ -146,12 +147,40 @@ function CustomUploadImageComponent({
   const handleFileSelect = useCallback(
     (event: FileUploadSelectEvent): void => {
       const result = filterFiles(event);
-      if (result) {
-        setCurrentFileType(result.type);
-        uploadImageToS3(result);
+      if (!result) return;
+
+      const isVideo = fileTypes.some((type) => type.startsWith('video/'));
+      const kind = isVideo ? t('File') : t('Image');
+      const formatList = fileTypes
+        .map((type) => type.split('/')[1]?.toUpperCase())
+        .filter(Boolean)
+        .join(', ');
+
+      if (fileTypes.length && !(fileTypes as string[]).includes(result.type)) {
+        setImageValidationErr({
+          bool: true,
+          msg: `${t('Supported formats')}: ${formatList}`,
+        });
+        return;
       }
+
+      if (maxFileSize && result.size > maxFileSize) {
+        const readableMax =
+          maxFileSize >= 1024 * 1024
+            ? `${(maxFileSize / (1024 * 1024)).toFixed(maxFileSize % (1024 * 1024) ? 1 : 0)}MB`
+            : `${Math.round(maxFileSize / 1024)}KB`;
+        setImageValidationErr({
+          bool: true,
+          msg: `${kind} ${t('must be smaller than')} ${readableMax}`,
+        });
+        return;
+      }
+
+      setImageValidationErr({ bool: false, msg: '' });
+      setCurrentFileType(result.type);
+      uploadImageToS3(result);
     },
-    [uploadImageToS3]
+    [uploadImageToS3, fileTypes, maxFileSize, t]
   );
 
   // Handle cancel click

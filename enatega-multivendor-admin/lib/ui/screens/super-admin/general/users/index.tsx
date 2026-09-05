@@ -12,7 +12,7 @@ export default function UsersScreen() {
   const debouncedSearch = useDebounce(search, 500);
 
   return (
-    <div className="flex h-[90vh] flex-col overflow-auto">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <UserHeader
         search={search}
         setSearch={setSearch}

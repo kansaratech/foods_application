@@ -184,8 +184,9 @@ export default function UpdateRestaurantDetails({
     <div className="w-full h-full flex items-center justify-start dark:text-white dark:bg-dark-950  ">
       <div className="h-full w-full">
         <div className="flex flex-col gap-2">
-          <div className="flex flex-col mb-2">
-            <span className="text-lg">{t('Update Profile')}</span>
+          <div className="mb-5 flex flex-col">
+            <span className="text-lg font-semibold text-slate-900 dark:text-white">{t('Store details')}</span>
+            <span className="mt-1 text-sm text-slate-500">{t('Update account and basic store information')}</span>
           </div>
 
           <Formik
@@ -208,7 +209,7 @@ export default function UpdateRestaurantDetails({
             }) => {
               return (
                 <Form onSubmit={handleSubmit}>
-                  <div className="space-y-3 mb-2">
+                  <div className="mb-2 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
                     <CustomIconTextField
                       type="email"
                       name="username"
@@ -459,7 +460,7 @@ export default function UpdateRestaurantDetails({
                       }}
                     />
 
-                    <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 dark:border-dark-600 p-4">
+                    <div className="grid grid-cols-1 gap-5 rounded-xl border border-gray-200 bg-slate-50/60 p-4 dark:border-dark-600 dark:bg-dark-900 md:col-span-2 md:grid-cols-2">
                       <CustomUploadImageComponent
                         key="logo"
                         name="logo"
@@ -506,7 +507,7 @@ export default function UpdateRestaurantDetails({
                       />
                     </div>
 
-                    <div className="flex justify-end items-center mt-4">
+                    <div className="mt-2 flex items-center justify-end border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-2">
                       {errors.address && touched.address && (
                         <small className="p-error mr-4">{errors.address}</small>
                       )}

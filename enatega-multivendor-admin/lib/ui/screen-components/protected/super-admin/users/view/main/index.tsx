@@ -72,7 +72,7 @@ export default function UsersMain({
   };
 
   return (
-    <div className="w-full p-3">
+    <div className="min-h-0 w-full flex-1 overflow-y-auto p-3">
       <Table
         data={loading ? [] : paginatedUsers}
         columns={USERS_TABLE_COLUMNS(openMenuId, setOpenMenuId)}

@@ -1455,3 +1455,16 @@ body {
 .p-paginator .p-dropdown-item {
   @apply dark:text-white dark:hover:bg-gray-700;
 }
+/* Full-page store registration owns its three-step progress header. */
+.store-registration-page .p-sidebar-content {
+  padding: 0;
+}
+
+.store-registration-page .p-stepper-nav {
+  display: none;
+}
+
+.store-registration-page .p-stepper-panels {
+  padding: 0;
+  background: transparent;
+}

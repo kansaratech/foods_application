@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { GoogleMap, Polygon } from '@react-google-maps/api';
+import { GoogleMap, Polygon, Polyline } from '@react-google-maps/api';
 import parse from 'autosuggest-highlight/parse';
 import { throttle } from '@/lib/utils/methods';
 
@@ -63,6 +63,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
   const [deliveryZoneType, setDeliveryZoneType] = useState('polygon');
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const [path, setPath] = useState<ILocationPoint[]>(DEFAULT_POLYGON);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   // Auto complete
   const [options, setOptions] = useState<IPlaceSelectedOption[]>([]);
@@ -167,10 +168,15 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
   };
 
   const onClickGoogleMaps = (e: google.maps.MapMouseEvent) => {
-    setPath([
-      ...path,
-      { lat: e?.latLng?.lat() ?? 0, lng: e?.latLng?.lng() ?? 0 },
-    ]);
+    if (!e.latLng) return;
+    const nextPoint = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+    if (deliveryZoneType === 'polygon') {
+      if (!isDrawing) return;
+      setPath((current) => [...current, nextPoint]);
+      return;
+    }
+    setPath([nextPoint]);
+    setCenter(nextPoint);
   };
 
   const onSetCenterAndPolygon = () => {
@@ -235,7 +241,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
   // Use Effects
   useEffect(() => {
     if (!isMounted) return;
-    onSetZoneCoordinates(transformPath(path ?? []));
+    onSetZoneCoordinates(path.length ? transformPath(path) : [[[]]]);
   }, [path, isMounted]);
 
   useEffect(() => {
@@ -274,11 +280,11 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
   }, []);
 
   return (
-    <div>
-      <div className="relative overflow-hidden">
-        <div className="h-[600px] w-full object-cover">
+    <div className="zone-map-editor">
+      <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-dark-600">
+        <div className="h-[420px] w-full object-cover sm:h-[480px]">
           <div className="absolute left-0 right-0 top-0 z-10">
-            <div className={`flex w-full flex-col justify-center gap-y-1 p-2`}>
+            <div className="flex w-full flex-col justify-center gap-y-1 p-3">
               <div className="relative">
                 <AutoComplete
                   id="google-map"
@@ -364,6 +370,56 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
             </div>
           </div>
 
+          <div className="absolute left-4 top-[4.5rem] z-10 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-dark-600 dark:bg-dark-900/95">
+            {!isDrawing ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setDeliveryZoneType('polygon');
+                  setPath([]);
+                  setIsDrawing(true);
+                }}
+                className="h-9 rounded-lg bg-primary-color px-4 text-sm font-semibold text-white"
+              >
+                {t('Draw new polygon')}
+              </button>
+            ) : (
+              <>
+                <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                  {path.length < 3
+                    ? `${t('Click map to add points')} (${path.length}/3)`
+                    : `${path.length} ${t('points added')}`}
+                </span>
+                <button
+                  type="button"
+                  disabled={!path.length}
+                  onClick={() => setPath((current) => current.slice(0, -1))}
+                  className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-600 dark:text-white"
+                >
+                  {t('Undo')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPath([])}
+                  className="h-9 rounded-lg border border-red-200 px-3 text-sm font-medium text-red-600"
+                >
+                  {t('Clear')}
+                </button>
+                <button
+                  type="button"
+                  disabled={path.length < 3}
+                  onClick={() => {
+                    setIsDrawing(false);
+                    focusZone(path);
+                  }}
+                  className="h-9 rounded-lg bg-primary-color px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {t('Finish polygon')}
+                </button>
+              </>
+            )}
+          </div>
+
           {googleMapsContext?.isLoaded && (
             <GoogleMap
               key={deliveryZoneType}
@@ -391,18 +447,24 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
               
               
             >
-              {path.length > 0 && (
+              {isDrawing && path.length > 1 && (
+                <Polyline
+                  path={path}
+                  options={{ strokeColor: '#2563eb', strokeOpacity: 1, strokeWeight: 3 }}
+                />
+              )}
+              {path.length >= 3 && (
                 <Polygon
                   key={'google-map-polygon'}
-                  editable
-                  draggable
+                  editable={!isDrawing}
+                  draggable={!isDrawing}
                   paths={path}
                   options={{
-                    strokeColor: 'black',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 2,
-                    fillColor: '#000000',
-                    fillOpacity: 0.35,
+                    strokeColor: '#2563eb',
+                    strokeOpacity: 1,
+                    strokeWeight: 3,
+                    fillColor: '#2563eb',
+                    fillOpacity: 0.22,
                   }}
                   onMouseUp={onEdit}
                   onDragEnd={onEdit}
@@ -419,6 +481,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
         selected={deliveryZoneType}
         hidenNames={['radius']}
         onClick={(val: string) => {
+          setIsDrawing(false);
           setDeliveryZoneType(val);
           if (lastSelectedLocation) {
             let newPath: ILocationPoint[];

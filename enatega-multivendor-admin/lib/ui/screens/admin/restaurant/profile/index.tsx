@@ -10,12 +10,14 @@ import { ProfileContext } from '@/lib/context/restaurant/profile.context';
 export default function ProfileScreen() {
   const { isUpdateProfileVisible } = useContext(ProfileContext);
 
+  if (isUpdateProfileVisible) {
+    return <UpdateRestaurantsProfileForm />;
+  }
+
   return (
     <div className="screen-container p-4">
       <ProfileHeader />
       <RestaurantMain />
-
-      {isUpdateProfileVisible && <UpdateRestaurantsProfileForm />}
     </div>
   );
 }

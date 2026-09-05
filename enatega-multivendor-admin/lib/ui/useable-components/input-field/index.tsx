@@ -11,22 +11,28 @@ export default function CustomTextField({
   showLabel,
   isLoading = false,
   error,
+  name,
   ...props
 }: ITextFieldProps) {
+  const errorId = error ? `${name}-error` : undefined;
   return !isLoading ? (
     <div className={`flex w-full flex-col justify-center gap-y-1`}>
       {showLabel && (
-        <label htmlFor="username" className="text-sm font-[500] dark:text-white">
+        <label htmlFor={name} className="text-sm font-[500] dark:text-white">
           {placeholder}
         </label>
       )}
 
       <InputText
+        id={name}
+        name={name}
         className={`h-10 w-full rounded-lg border ${error? 'border-red-500': 'border-gray-300'} dark:text-white  px-2 text-sm focus:shadow-none focus:outline-none ${className}`}
         placeholder={placeholder}
+        aria-invalid={!!error}
+        aria-describedby={errorId}
         {...props}
       />
-      {error && <p className="text-sm text-red-500">{error}</p>} 
+      {error && <p id={errorId} className="text-sm text-red-500">{error}</p>}
     </div>
   ) : (
     <InputSkeleton />

@@ -15,7 +15,7 @@ export default function RidersScreen() {
   const [rider, setRider] = useState<null | IRiderResponse>(null);
 
   return (
-    <div className="screen-container">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <RiderHeader setIsAddRiderVisible={setIsAddRiderVisible} />
 
       <RidersMain

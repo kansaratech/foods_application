@@ -26,11 +26,7 @@ import ShopTypesForm from '@/lib/ui/screen-components/protected/super-admin/shop
 import CuisineForm from '@/lib/ui/screen-components/protected/super-admin/cuisines/form';
 
 // Constants
-import {
-  MAX_LANSDCAPE_FILE_SIZE,
-  MAX_SQUARE_FILE_SIZE,
-  RestaurantErrors,
-} from '@/lib/utils/constants';
+import { RestaurantErrors } from '@/lib/utils/constants';
 
 // Interface
 import { IRestaurantForm } from '@/lib/utils/interfaces';
@@ -42,14 +38,17 @@ import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 // Schemas
 import {
   CREATE_RESTAURANT,
+  EDIT_RESTAURANT,
   GET_CUISINES,
+  GET_RESTAURANT_PROFILE,
   GET_RESTAURANTS,
 } from '@/lib/api/graphql';
 import { RestaurantsContext } from '@/lib/context/super-admin/restaurants.context';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
-import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
+import ImageUploadCard from '@/lib/ui/useable-components/image-upload-card';
+import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
 import {
   ICuisine,
   IGetCuisinesData,
@@ -124,8 +123,22 @@ export default function RestaurantDetailsForm({
   const { restaurantsContextData, onSetRestaurantsContextData } =
     useContext(RestaurantsContext);
 
+  // A store id already sitting in context before this step even submits
+  // means we're editing an existing store (either opened via "Edit", or the
+  // admin hit Back after already creating one earlier in this session) —
+  // not creating a new one.
+  const editingRestaurantId = restaurantsContextData?.restaurant?._id?.code;
+  const isEditingExisting = !!editingRestaurantId;
+
   // API
   const { data: restaurantData } = useQuery(GET_RESTAURANTS);
+  const { data: editingProfileData, loading: editingProfileLoading } = useQuery(GET_RESTAURANT_PROFILE, {
+    variables: { id: editingRestaurantId ?? '' },
+    skip: !isEditingExisting,
+    fetchPolicy: 'network-only',
+  });
+  const editingProfile = editingProfileData?.restaurant;
+
   // Mutation
   const [createRestaurant] = useMutation(CREATE_RESTAURANT, {
     onError,
@@ -157,6 +170,19 @@ export default function RestaurantDetailsForm({
     update: update,
   });
 
+  const [editRestaurant] = useMutation(EDIT_RESTAURANT, {
+    onError,
+    onCompleted: () => {
+      showToast({
+        type: 'success',
+        title: t('Store'),
+        message: t('Store details updated successfully'),
+        duration: 3000,
+      });
+      onStepChange(order + 1);
+    },
+  });
+
   const cuisineResponse = useQueryGQL(GET_CUISINES, {
     debounceMs: 300,
   }) as IQueryResult<IGetCuisinesData | undefined, undefined>;
@@ -176,30 +202,90 @@ export default function RestaurantDetailsForm({
     [cuisineResponse.data?.cuisines]
   );
 
+  // Once the existing store's profile (and the shop-type/cuisine option
+  // lists) are loaded, merge them into the form's starting values. Formik's
+  // enableReinitialize picks this up as soon as it resolves.
+  const formInitialValues = useMemo<IRestaurantForm>(() => {
+    if (!isEditingExisting || !editingProfile) return initialValues;
+    const matchedShopType =
+      (dropdownList || []).find((o) => o.code === editingProfile.shopTypeId) ?? null;
+    const cuisineOptions: IDropdownSelectItem[] = cuisinesDropdown ?? [];
+    const matchedCuisines: IDropdownSelectItem[] = [];
+    (editingProfile.cuisines ?? []).forEach((name: string) => {
+      const match = cuisineOptions.find((c) => c.code === name);
+      if (match) matchedCuisines.push(match);
+    });
+    return {
+      name: editingProfile.name ?? '',
+      username: editingProfile.username ?? '',
+      password: '',
+      confirmPassword: '',
+      phoneNumber: editingProfile.phone ?? '',
+      address: editingProfile.address ?? '',
+      deliveryTime: editingProfile.deliveryTime ?? 1,
+      minOrder: editingProfile.minimumOrder ?? 1,
+      salesTax: editingProfile.tax ?? 0,
+      shopType: matchedShopType,
+      cuisines: matchedCuisines,
+      image: editingProfile.image ?? initialValues.image,
+      logo: editingProfile.logo ?? initialValues.logo,
+    };
+  }, [isEditingExisting, editingProfile, dropdownList, cuisinesDropdown]);
+
   // Handlers
   const onCreateRestaurant = async (data: IRestaurantForm) => {
     try {
-      const vendorId = restaurantsContextData?.vendor?._id?.code;
-      if (!vendorId) {
-        showToast({
-          type: 'error',
-          title: t('Create Store'),
-          message: t('Store Creation Failed - Please select a vendor'),
-          duration: 2500,
-        });
-        return;
-      }
-
       // check if values.name is present in restaurantData and show error toast
+      // — excluding the store's own current row when editing, since it will
+      // obviously match its own name.
       const existingRestaurant = restaurantData?.restaurants.find(
-        (restaurant: IRestaurantForm) =>
-          restaurant.name.toLowerCase() === data.name.toLowerCase()
+        (restaurant: IRestaurantForm & { _id?: string }) =>
+          restaurant.name.toLowerCase() === data.name.toLowerCase() &&
+          restaurant._id !== editingRestaurantId
       );
       if (existingRestaurant) {
         showToast({
           type: 'error',
           title: `Restaurant Already Exists`,
           message: 'Restaurant with same name already exists',
+          duration: 2500,
+        });
+        return;
+      }
+
+      if (isEditingExisting) {
+        await editRestaurant({
+          variables: {
+            restaurantInput: {
+              _id: editingRestaurantId,
+              name: data.name,
+              address: data.address,
+              phone: data.phoneNumber,
+              image: data.image,
+              logo: data.logo,
+              deliveryTime: data.deliveryTime,
+              minimumOrder: data.minOrder,
+              username: data.username,
+              // Blank means "leave it as is" — the API only hashes/updates
+              // the password when one is actually provided.
+              ...(data.password ? { password: data.password } : {}),
+              shopType: data.shopType?.code,
+              salesTax: data.salesTax,
+              cuisines: data.cuisines.map(
+                (cuisin: IDropdownSelectItem) => cuisin.code
+              ),
+            },
+          },
+        });
+        return;
+      }
+
+      const vendorId = restaurantsContextData?.vendor?._id?.code;
+      if (!vendorId) {
+        showToast({
+          type: 'error',
+          title: t('Create Store'),
+          message: t('Store Creation Failed - Please select a vendor'),
           duration: 2500,
         });
         return;
@@ -229,8 +315,8 @@ export default function RestaurantDetailsForm({
     } catch (error) {
       showToast({
         type: 'error',
-        title: t('New Store'),
-        message: t('Store Creation Failed'),
+        title: isEditingExisting ? t('Store') : t('New Store'),
+        message: isEditingExisting ? t('Store update failed') : t('Store Creation Failed'),
         duration: 2500,
       });
     }
@@ -272,6 +358,15 @@ export default function RestaurantDetailsForm({
 
   const strongPasswordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
+
+  if (isEditingExisting && editingProfileLoading) {
+    return (
+      <div className="grid h-40 place-items-center">
+        <CustomLoader size="28px" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full w-full items-center justify-start dark:text-white dark:bg-dark-950">
       <div className="h-full w-full">
@@ -282,7 +377,8 @@ export default function RestaurantDetailsForm({
  */}
           <div>
             <Formik
-              initialValues={initialValues}
+              initialValues={formInitialValues}
+              enableReinitialize
               validationSchema={RestaurantSchema}
               onSubmit={async (values) => {
                 await onCreateRestaurant(values);
@@ -300,8 +396,8 @@ export default function RestaurantDetailsForm({
               }) => {
                 return (
                   <Form onSubmit={handleSubmit}>
-                    <div className="mb-3 space-y-3">
-                      <div>
+                    <div className="mb-3 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-12">
+                      <div className="md:col-span-6">
                         <CustomTextField
                           type="text"
                           name="name"
@@ -322,13 +418,14 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-6">
                         <CustomIconTextField
                           type="email"
                           name="username"
                           placeholder={t('Email')}
                           maxLength={35}
                           showLabel={true}
+                          autoComplete="off"
                           iconProperties={{
                             icon: faEnvelope,
                             position: 'right',
@@ -348,13 +445,14 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-6">
                         <CustomPasswordTextField
                           placeholder={t('Password')}
                           name="password"
                           maxLength={20}
                           value={values.password}
                           showLabel={true}
+                          autoComplete="new-password"
                           onChange={handleChange}
                           style={{
                             borderColor: onErrorMessageMatcher(
@@ -368,12 +466,13 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-6">
                         <CustomPasswordTextField
                           placeholder={t('Confirm Password')}
                           name="confirmPassword"
                           maxLength={20}
                           showLabel={true}
+                          autoComplete="new-password"
                           value={values.confirmPassword ?? ''}
                           onChange={handleChange}
                           feedback={false}
@@ -389,24 +488,18 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
-                        <label className="mb-[4px] text-[14px] font-medium text-[#09090B]">
-                          {t('Phone')}
-                        </label>
+                      <div className="md:col-span-4">
                         <CustomPhoneTextField
                           mask="999-999-9999"
                           name="phoneNumber"
                           showLabel={true}
-                          // placeholder="Phone Number"
+                          placeholder={t('Phone')}
+                          defaultCountry="in"
                           onChange={(e) => {
-                            // console.log("phone number format ==> ", e, code);
                             setFieldValue('phoneNumber', e);
-                            // setCountryCode(code);
                           }}
                           value={values.phoneNumber}
-                          // value={values.phoneNumber?.toString().match(/\(\+(\d+)\)\s(.+)/)?.[2]}
                           type="text"
-                          className="rounded-[6px] border-[#D1D5DB]"
                           style={{
                             borderColor: onErrorMessageMatcher(
                               'phoneNumber',
@@ -419,7 +512,7 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-8">
                         <CustomTextField
                           placeholder={t('Address')}
                           name="address"
@@ -445,7 +538,7 @@ export default function RestaurantDetailsForm({
                         )}
                       </div>
 
-                      <div>
+                      <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
                         <CustomNumberField
                           suffix="m"
                           min={1}
@@ -467,7 +560,7 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
+                      <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
                         <CustomNumberField
                           min={1}
                           max={99999}
@@ -487,7 +580,7 @@ export default function RestaurantDetailsForm({
                           }}
                         />
                       </div>
-                      <div>
+                      <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
                         <CustomNumberField
                           prefix="%"
                           min={0}
@@ -510,7 +603,7 @@ export default function RestaurantDetailsForm({
                           }}
                         />
                       </div>
-                      <div>
+                      <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
                         <CustomDropdownComponent
                           name="shopType"
                           placeholder={t('Shop Category')}
@@ -535,7 +628,7 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-12">
                         <CustomMultiSelectComponent
                           name="cuisines"
                           placeholder={t('Cuisines')}
@@ -558,63 +651,34 @@ export default function RestaurantDetailsForm({
                           }}
                         />
                       </div>
-                      <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 p-4">
-                        <CustomUploadImageComponent
-                          key="logo"
-                          name="logo"
-                          title={t('Upload Profile Image')}
-                          onSetImageUrl={setFieldValue}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'logo',
-                              errors?.logo as string,
-                              RestaurantErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                          fileTypes={['image/webp', 'image/jpg', 'image/jpeg']}
-                          maxFileHeight={1080}
-                          maxFileWidth={1080}
-                          maxFileSize={MAX_SQUARE_FILE_SIZE}
-                          orientation="SQUARE"
-                          existingImageUrl={values.logo}
-                          showExistingImage={true}
+                      <div className="grid grid-cols-1 gap-5 rounded-xl border border-gray-200 bg-slate-50/60 p-4 dark:border-dark-600 dark:bg-dark-900 md:col-span-12 md:grid-cols-2">
+                        <ImageUploadCard
+                          label={t('Store logo')}
+                          helperText={t('JPG, PNG or WebP, up to 2MB — 1:1 ratio recommended')}
+                          required
+                          aspect="square"
+                          value={values.logo}
+                          onUploaded={(url) => setFieldValue('logo', url)}
                         />
-                        <CustomUploadImageComponent
-                          key={'image'}
-                          name="image"
-                          title={t('Upload Image')}
-                          onSetImageUrl={setFieldValue}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'image',
-                              errors?.image as string,
-                              RestaurantErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                          existingImageUrl={values.image}
-                          showExistingImage={true}
-                          fileTypes={['image/webp', 'image/jpg', 'image/jpeg']}
-                          maxFileHeight={841}
-                          maxFileWidth={1980}
-                          maxFileSize={MAX_LANSDCAPE_FILE_SIZE}
-                          orientation="LANDSCAPE"
+                        <ImageUploadCard
+                          label={t('Cover image')}
+                          helperText={t('JPG, PNG or WebP, up to 2MB — 16:9 ratio recommended')}
+                          aspect="landscape"
+                          value={values.image}
+                          onUploaded={(url) => setFieldValue('image', url)}
                         />
                       </div>
 
-                      <div className="mt-4 flex justify-between">
+                      <div className="mt-2 flex justify-between border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-12">
                         <CustomButton
-                          className="h-10 w-fit border border-gray-300 dark:hover:bg-dark-600 dark:border-dark-600 bg-black px-8 text-white"
+                          className="h-10 w-fit border border-gray-300 dark:hover:bg-dark-600 dark:border-dark-600 bg-white text-slate-700 dark:bg-dark-950 dark:text-white px-8"
                           label={t('Back')}
                           type="button"
                           onClick={() => onStepChange(order - 1)}
                         />
 
                         <CustomButton
-                          className="h-10 w-fit border border-gray-300 dark:hover:bg-dark-600 dark:border-dark-600 bg-black px-8 text-white"
+                          className="h-10 w-fit border border-gray-300 dark:hover:bg-dark-600 dark:border-dark-600 bg-primary-color px-8 text-white"
                           label={t('Save & Next')}
                           type="submit"
                           loading={isSubmitting}
@@ -634,13 +698,6 @@ export default function RestaurantDetailsForm({
                             }
                           }}
                         />
-                      </div>
-                      <div className="flex justify-end">
-                        {errors.address && touched.address && (
-                          <small className="ml-5 p-error">
-                            {errors.address}
-                          </small>
-                        )}
                       </div>
                     </div>
                   </Form>

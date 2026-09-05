@@ -1,10 +1,6 @@
 'use client';
 
 // React imports
-import { useContext } from 'react';
-
-// Context imports
-import { RestaurantsContext } from '@/lib/context/super-admin/restaurants.context';
 
 // Component imports
 import HeaderText from '@/lib/ui/useable-components/header-text';
@@ -13,13 +9,13 @@ import TextIconClickable from '@/lib/ui/useable-components/text-icon-clickable';
 // Icon imports
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 
 export default function RestaurantsScreenHeader() {
   // Hooks
   const t = useTranslations();
+  const router = useRouter();
 
-  // Context
-  const { onRestaurantsFormVisible } = useContext(RestaurantsContext);
   return (
     <div className="sticky top-0 z-10 w-full flex-shrink-0 bg-white dark:bg-dark-950 p-3 shadow-sm">
       <div className="flex w-full justify-between">
@@ -29,7 +25,7 @@ export default function RestaurantsScreenHeader() {
           icon={faAdd}
           iconStyles={{ color: 'white' }}
           title={t('Add Store')}
-          onClick={() => onRestaurantsFormVisible(true)}
+          onClick={() => router.push('/general/stores/create')}
         />
       </div>
     </div>

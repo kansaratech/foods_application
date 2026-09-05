@@ -8,17 +8,6 @@ export const RestaurantSchema = Yup.object().shape({
     .matches(/\S/, 'Name cannot be only spaces')
     .required('Required'),
   username: Yup.string().email('Invalid email').required('Required'),
-  password: Yup.string()
-  .required('Required')
-  .min(6, 'At least 6 characters')
-  .matches(/[a-z]/, 'At least one lowercase letter (a-z)')
-  .matches(/[A-Z]/, 'At least one uppercase letter (A-Z)')
-  .matches(/[0-9]/, 'At least one number (0-9)')
-  .matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'At least one special character'),
-  confirmPassword: Yup.string()
-    .nullable()
-    .oneOf([Yup.ref('password'), null], 'Password must match')
-    .required('Required'),
     address: Yup.string()
     .max(100, 'Maximum 100 characters allowed')
     .trim()
@@ -32,7 +21,6 @@ export const RestaurantSchema = Yup.object().shape({
   minOrder: Yup.number()
     .required('Required')
     .min(1, 'The value must be greater than or equal to 1'),
-  salesTax: Yup.number().required('Required'),
   shopType: Yup.mixed<IDropdownSelectItem>().required('Required'),
   cuisines: Yup.array()
     .of(Yup.mixed<IDropdownSelectItem>())

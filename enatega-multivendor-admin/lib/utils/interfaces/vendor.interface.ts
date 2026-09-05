@@ -12,21 +12,13 @@ export interface IVendorCardProps extends IGlobalComponentProps {
   isLast?: boolean;
 }
 
-export interface IVendorAddFormComponentProps extends IGlobalComponentProps {
-  position?: TVendorFormPosition;
-}
-
 export interface IVendorContextProps {
-  vendorFormVisible: boolean;
-  onSetVendorFormVisible: (status: boolean, isEdit?: boolean) => void;
   vendorId: string | null;
   onSetVendorId: (val: string) => void;
   vendorResponse: IQueryResult<IVendorResponseGraphQL | undefined, undefined>;
   globalFilter: string;
   onSetGlobalFilter: (filter: string) => void;
   filtered?: IVendorReponse[];
-  isEditingVendor: boolean;
-  onSetEditingVendor: (status: boolean) => void;
   onResetVendor: (state: boolean) => void;
 }
 

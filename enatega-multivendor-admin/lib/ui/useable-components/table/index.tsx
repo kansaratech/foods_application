@@ -96,7 +96,9 @@ const Table = <T extends ITableExtends>({
   }, [loading, data, currentPage, onPageChange, rowsPerPage]);
 
   return (
-    <div className="responsive-admin-table">
+    <div
+      className={`responsive-admin-table ${scrollable ? 'table-internal-scroll' : 'table-page-scroll'}`}
+    >
       <DataTable
         header={header}
         paginator
@@ -122,6 +124,8 @@ const Table = <T extends ITableExtends>({
         removableSort
         rowClassName={rowClassName}
         onRowClick={handleRowClick}
+        paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
         emptyMessage={
           loading ? (
             <div className="flex justify-center items-center h-full">

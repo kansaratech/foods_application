@@ -15,7 +15,7 @@ import { ICreateVendorResponseGraphQL } from '@/lib/utils/interfaces';
 import { IRestauransVendorDetailsForm } from '@/lib/utils/interfaces/forms';
 
 // Constants and Methods
-import { MAX_SQUARE_FILE_SIZE, VendorErrors } from '@/lib/utils/constants';
+import { VendorErrors } from '@/lib/utils/constants';
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
 
 // Components
@@ -23,7 +23,7 @@ import CustomButton from '@/lib/ui/useable-components/button';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomIconTextField from '@/lib/ui/useable-components/input-icon-field';
 import CustomPasswordTextField from '@/lib/ui/useable-components/password-input-field';
-import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
+import ProfilePhotoUpload from '@/lib/ui/useable-components/profile-photo-upload';
 
 // Schema
 import {
@@ -178,8 +178,9 @@ export default function VendorDetails({
   }, []);
 
   return (
-    <div className="flex h-full w-full items-center justify-start dark:text-white dark:bg-dark-950">
-      <div className="h-full w-full">
+    <div className="w-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-dark-600 dark:bg-dark-900 dark:text-white sm:p-8">
+      <div className="w-full">
+        <div className="mb-5"><h2 className="text-lg font-semibold text-slate-900 dark:text-white">Select vendor</h2><p className="mt-1 text-sm text-slate-500">Every store must belong to an existing vendor account.</p></div>
         <div className="flex flex-col gap-2">
           <div>
             <Formik
@@ -206,7 +207,7 @@ export default function VendorDetails({
                 return (
                   <Form onSubmit={handleSubmit}>
                     <div className="space-y-3">
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center lg:items-center">
+                      <div className="hidden">
                         <div className="flex flex-shrink-0 items-center justify-end">
                           <CustomInputSwitch
                             label={t('Add Vendor')}
@@ -378,38 +379,16 @@ export default function VendorDetails({
                           </div>
 
                           <div>
-                            <CustomUploadImageComponent
-                              key="image"
-                              name="image"
-                              title={t('Upload Profile Image')}
-                              fileTypes={[
-                                'image/jpg',
-                                'image/webp',
-                                'image/jpeg',
-                              ]}
-                              maxFileHeight={1080}
-                              maxFileWidth={1080}
-                              maxFileSize={MAX_SQUARE_FILE_SIZE}
-                              orientation="SQUARE"
-                              onSetImageUrl={setFieldValue}
-                              existingImageUrl={values.image}
-                              showExistingImage={true}
-                              style={{
-                                borderColor: onErrorMessageMatcher(
-                                  'image',
-                                  errors?.image as string,
-                                  VendorErrors
-                                )
-                                  ? 'red'
-                                  : '',
-                              }}
+                            <ProfilePhotoUpload
+                              value={values.image}
+                              onUploaded={(url) => setFieldValue('image', url)}
                             />
                           </div>
                         </div>
                       )}
                       <div className="mt-4 flex justify-end">
                         <CustomButton
-                          className="h-10 w-fit border border-gray-300 dark:border-dark-600 bg-black px-8 text-white"
+                          className="h-10 w-fit border border-gray-300 dark:border-dark-600 bg-primary-color px-8 text-white"
                           label={t('Save & Next')}
                           type="submit"
                           loading={isSubmitting}
