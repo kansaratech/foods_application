@@ -59,7 +59,17 @@ if ($Lean) { $xd += (Join-Path $src 'localsell-web\public\assets\images\png') }
 $xf = @(
   '*.log', '*.tsbuildinfo', '*.pdf', '*.stackdump', 'index.html',
   '.env', '*.env', '.env.local', '.env.development', '.env.production',
-  '.env.dev', '.env.stage', '.env.prod'
+  '.env.dev', '.env.stage', '.env.prod',
+  # Root-level reference docs — dev context, not needed to build/run on the
+  # server. Full paths (not bare names) so per-app README.md etc. still copy.
+  (Join-Path $src 'README.md'),
+  (Join-Path $src 'BRAND_SWAP_KIT.md'),
+  (Join-Path $src 'LOCALSELL_BRAND.md'),
+  (Join-Path $src 'PADHARO_ADMIN_OPS.md'),
+  (Join-Path $src 'PADHARO_ASSETS.md'),
+  (Join-Path $src 'PADHARO_COMMISSION.md'),
+  (Join-Path $src 'PADHARO_PRODUCT_COMBOS.md'),
+  (Join-Path $src 'PADHARO_STORE_OPS.md')
 )
 
 $rc = @($src, $stage, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/R:1', '/W:1',

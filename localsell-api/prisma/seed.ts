@@ -3,20 +3,29 @@ import { hashPassword } from '../src/services/auth.service';
 
 const prisma = new PrismaClient();
 
+// Deogarh (Rajsamand, Rajasthan) — same anchor as seed-deogarh.ts, since this
+// base seed's fixtures (zones, sample stores, sample customer) are India-only
+// for this launch, not the original template's San Francisco placeholders.
+const DEOGARH_LAT = 25.534;
+const DEOGARH_LNG = 73.899;
+
 async function main() {
   // ---- Configuration ----
   const existingConfig = await prisma.configuration.findFirst();
   if (!existingConfig) {
     await prisma.configuration.create({
       data: {
-        currency: 'USD',
-        currencySymbol: '$',
-        deliveryRate: 5,
+        currency: 'INR',
+        currencySymbol: '₹',
+        deliveryRate: 20,
         testOtp: '1234',
         skipMobileVerification: true,
         skipEmailVerification: true,
-        termsAndConditions: 'Sample terms and conditions for local testing.',
-        privacyPolicy: 'Sample privacy policy for local testing.',
+        defaultLatitude: DEOGARH_LAT,
+        defaultLongitude: DEOGARH_LNG,
+        platformLegalName: 'Maekotech Solutions LLP',
+        termsAndConditions: 'LocalSell — Terms of Service (placeholder; run seed:deogarh or edit in Admin → Configuration for the full text).',
+        privacyPolicy: 'LocalSell — Privacy Policy (placeholder; run seed:deogarh or edit in Admin → Configuration for the full text).',
       },
     });
   }
@@ -47,39 +56,39 @@ async function main() {
       data: { name: 'Italian', description: 'Pizza and pasta', shopTypeId: restaurantShopType.id },
     }));
 
-  // ---- Zones ----
-  const downtownZone = await prisma.zone.findFirst({ where: { title: 'Downtown Zone' } });
+  // ---- Zones (small boxes on either side of Deogarh town centre) ----
+  const downtownZone = await prisma.zone.findFirst({ where: { title: 'Deogarh North Zone' } });
   const zoneDowntown =
     downtownZone ??
     (await prisma.zone.create({
       data: {
-        title: 'Downtown Zone',
+        title: 'Deogarh North Zone',
         description: 'Central delivery zone',
         boundary: [
           [
-            [-122.43, 37.76],
-            [-122.4, 37.76],
-            [-122.4, 37.79],
-            [-122.43, 37.79],
-            [-122.43, 37.76],
+            [DEOGARH_LNG - 0.03, DEOGARH_LAT],
+            [DEOGARH_LNG + 0.03, DEOGARH_LAT],
+            [DEOGARH_LNG + 0.03, DEOGARH_LAT + 0.03],
+            [DEOGARH_LNG - 0.03, DEOGARH_LAT + 0.03],
+            [DEOGARH_LNG - 0.03, DEOGARH_LAT],
           ],
         ],
       },
     }));
-  const uptownZone = await prisma.zone.findFirst({ where: { title: 'Uptown Zone' } });
+  const uptownZone = await prisma.zone.findFirst({ where: { title: 'Deogarh South Zone' } });
   const zoneUptown =
     uptownZone ??
     (await prisma.zone.create({
       data: {
-        title: 'Uptown Zone',
-        description: 'Northern delivery zone',
+        title: 'Deogarh South Zone',
+        description: 'Southern delivery zone',
         boundary: [
           [
-            [-122.46, 37.79],
-            [-122.43, 37.79],
-            [-122.43, 37.82],
-            [-122.46, 37.82],
-            [-122.46, 37.79],
+            [DEOGARH_LNG - 0.03, DEOGARH_LAT - 0.03],
+            [DEOGARH_LNG + 0.03, DEOGARH_LAT - 0.03],
+            [DEOGARH_LNG + 0.03, DEOGARH_LAT],
+            [DEOGARH_LNG - 0.03, DEOGARH_LAT],
+            [DEOGARH_LNG - 0.03, DEOGARH_LAT - 0.03],
           ],
         ],
       },
@@ -141,7 +150,7 @@ async function main() {
     create: {
       email: 'customer@localsell.in',
       name: 'Sample Customer',
-      phone: '+15550000001',
+      phone: '+919829000099',
       password: await hashPassword('Customer@123'),
       userType: 'CUSTOMER',
       emailIsVerified: true,
@@ -155,10 +164,10 @@ async function main() {
       data: {
         userId: customer.id,
         label: 'Home',
-        deliveryAddress: '456 Market St, San Francisco, CA',
-        details: 'Apt 2B',
-        latitude: 37.775,
-        longitude: -122.418,
+        deliveryAddress: 'Fort Road, Deogarh, Rajsamand, Rajasthan 313331',
+        details: 'Near Deogarh Mahal',
+        latitude: DEOGARH_LAT + 0.005,
+        longitude: DEOGARH_LNG + 0.005,
         selected: true,
       },
     });
@@ -171,7 +180,7 @@ async function main() {
       email: 'rider1@localsell.in',
       username: 'rider1',
       name: 'Alex Rider',
-      phone: '+15550000002',
+      phone: '+919829000098',
       password: await hashPassword('Rider@123'),
       userType: 'RIDER',
       emailIsVerified: true,
@@ -197,7 +206,7 @@ async function main() {
       email: 'rider2@localsell.in',
       username: 'rider2',
       name: 'Sam Delivers',
-      phone: '+15550000003',
+      phone: '+919829000097',
       password: await hashPassword('Rider@123'),
       userType: 'RIDER',
       emailIsVerified: true,
@@ -225,16 +234,16 @@ async function main() {
         name: 'Sample Restaurant',
         slug: 'sample-restaurant',
         orderPrefix: 'SAM',
-        username: 'FalafelTmeer@yopmail.com',
-        password: await hashPassword('Yalla0014yalla0014@'),
-        address: '123 Main St, San Francisco, CA',
-        city: 'San Francisco',
-        postCode: '94103',
+        username: 'sample-restaurant@store.localsell.in',
+        password: await hashPassword('Store@123'),
+        address: 'Fort Road, Deogarh, Rajsamand, Rajasthan',
+        city: 'Deogarh',
+        postCode: '313331',
         deliveryTime: 30,
         minimumOrder: 10,
         tax: 5,
-        latitude: 37.7749,
-        longitude: -122.4194,
+        latitude: DEOGARH_LAT + 0.01,
+        longitude: DEOGARH_LNG - 0.01,
         shopTypeId: restaurantShopType.id,
         isActive: true,
         isAvailable: true,
@@ -278,7 +287,7 @@ async function main() {
         quantityMaximum: 3,
         options: {
           create: [
-            { title: 'Extra Cheese', price: 1.5 },
+            { title: 'Extra Cheese', price: 20 },
             { title: 'Bacon', price: 2 },
           ],
         },
@@ -297,8 +306,8 @@ async function main() {
         isActive: true,
         variations: {
           create: [
-            { title: 'Regular', price: 8.99, addons: { create: [{ addonId: cheeseAddon.id }] } },
-            { title: 'Large', price: 11.99, addons: { create: [{ addonId: cheeseAddon.id }] } },
+            { title: 'Regular', price: 149, addons: { create: [{ addonId: cheeseAddon.id }] } },
+            { title: 'Large', price: 199, addons: { create: [{ addonId: cheeseAddon.id }] } },
           ],
         },
       },
@@ -314,14 +323,14 @@ async function main() {
         name: 'Pizza Palace',
         slug: 'pizza-palace',
         orderPrefix: 'PIZ',
-        address: '789 Uptown Ave, San Francisco, CA',
-        city: 'San Francisco',
-        postCode: '94109',
+        address: 'Station Road, Deogarh, Rajsamand, Rajasthan',
+        city: 'Deogarh',
+        postCode: '313331',
         deliveryTime: 40,
         minimumOrder: 15,
         tax: 5,
-        latitude: 37.805,
-        longitude: -122.445,
+        latitude: DEOGARH_LAT - 0.01,
+        longitude: DEOGARH_LNG + 0.01,
         shopTypeId: restaurantShopType.id,
         isActive: true,
         isAvailable: true,
@@ -344,7 +353,7 @@ async function main() {
         title: 'Margherita Pizza',
         description: 'Tomato, mozzarella, basil',
         isActive: true,
-        variations: { create: [{ title: 'Medium', price: 12.99 }, { title: 'Large', price: 16.99 }] },
+        variations: { create: [{ title: 'Medium', price: 249 }, { title: 'Large', price: 349 }] },
       },
     });
   }
@@ -407,11 +416,11 @@ async function main() {
   console.log(`  Admin login:    admin@localsell.in / Admin@123`);
   console.log(`  Staff login:    staff@localsell.in / Staff@123`);
   console.log(`  Vendor login:   vendor@localsell.in / Vendor@123 (Sample Restaurant)`);
-  console.log(`  Store app login: FalafelTmeer@yopmail.com / Yalla0014yalla0014@ (Sample Restaurant)`);
+  console.log(`  Store app login: sample-restaurant@store.localsell.in / Store@123 (Sample Restaurant)`);
   console.log(`  Vendor login:   vendor2@localsell.in / Vendor@123 (Pizza Palace)`);
   console.log(`  Customer login: customer@localsell.in / Customer@123`);
-  console.log(`  Rider login:    rider1@localsell.in / Rider@123 (available, Downtown Zone)`);
-  console.log(`  Rider login:    rider2@localsell.in / Rider@123 (unavailable, Uptown Zone)`);
+  console.log(`  Rider login:    rider1@localsell.in / Rider@123 (available, Deogarh North Zone)`);
+  console.log(`  Rider login:    rider2@localsell.in / Rider@123 (unavailable, Deogarh South Zone)`);
   console.log('  2 restaurants, 2 zones, 2 cuisines, 1 sub-category, 2 coupons, 1 banner, 1 sample order seeded.');
 }
 

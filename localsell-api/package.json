@@ -17,7 +17,8 @@
     "seed:ahmedabad": "ts-node --transpile-only prisma/seed-ahmedabad.ts",
     "seed:deogarh": "ts-node --transpile-only prisma/seed-deogarh.ts",
     "seed:campaign": "ts-node --transpile-only prisma/seed-campaign.ts",
-    "rebrand:emails": "ts-node --transpile-only prisma/rebrand-emails.ts"
+    "rebrand:emails": "ts-node --transpile-only prisma/rebrand-emails.ts",
+    "db:clean-test-data": "node prisma/clean-test-data.cjs"
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",
