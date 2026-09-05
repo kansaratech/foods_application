@@ -63,7 +63,7 @@ export default function MakeSidebar() {
     {
       text: 'My Website',
       label: t('My Website'),
-      route: 'https://multivendor.enatega.com/',
+      route: 'https://padharo.kansaratech.com/',
       isParent: true,
       icon: faUpRightFromSquare,
       isClickable: true,

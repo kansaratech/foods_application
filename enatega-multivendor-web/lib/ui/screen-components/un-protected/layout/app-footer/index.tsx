@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaApple, FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
+import { FaApple } from "react-icons/fa";
 import { SiGoogleplay } from "react-icons/si";
 import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
 
@@ -33,12 +33,6 @@ const footerGroups = [
       { label: "Terms & conditions", href: "/terms" },
     ],
   },
-];
-
-const socialLinks = [
-  { label: "Instagram", href: "https://www.instagram.com/ninjascodeofficial", icon: FaInstagram },
-  { label: "Facebook", href: "https://www.facebook.com/enatega/", icon: FaFacebookF },
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/enatega/", icon: FaLinkedinIn },
 ];
 
 const AppFooter = () => {
@@ -104,13 +98,6 @@ const AppFooter = () => {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <span>© {new Date().getFullYear()} LocalSell</span>
               <span className="inline-flex items-center gap-1.5"><FiMapPin aria-hidden="true" className="text-[#1c5bc7]" /> Deogarh, Rajasthan</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {socialLinks.map((social) => (
-                <a key={social.label} href={social.href} target="_blank" rel="noreferrer" aria-label={social.label} className="grid h-9 w-9 place-items-center rounded-full border border-white/10 text-white/60 transition hover:border-[#1c5bc7] hover:text-[#1c5bc7]">
-                  <social.icon aria-hidden="true" className="h-3.5 w-3.5" />
-                </a>
-              ))}
             </div>
           </div>
         </section>

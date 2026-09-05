@@ -179,7 +179,7 @@ export default function CustomDrawerContent(
         {/* EXTERNAL LINKS  */}
         <TouchableOpacity
           onPress={() => {
-            Linking.openURL("https://enatega.com/");
+            Linking.openURL("https://padharo.kansaratech.com/about");
           }}
           className="flex-row justify-between items-center px-4 py-4 border-b-[0.5px]"
           style={{ borderColor: appTheme.borderLineColor }}
@@ -203,7 +203,7 @@ export default function CustomDrawerContent(
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            Linking.openURL("https://multivendor.enatega.com/privacy");
+            Linking.openURL("https://padharo.kansaratech.com/privacy");
           }}
           className="flex-row justify-between items-center px-4 py-4 border-b-[0.5px]"
           style={{ borderColor: appTheme.borderLineColor }}
@@ -227,7 +227,7 @@ export default function CustomDrawerContent(
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
-            Linking.openURL("https://enatega-web.netlify.app/");
+            Linking.openURL("https://padharo.kansaratech.com/");
           }}
           className="flex-row justify-between items-center px-4 py-4 border-b-[0.5px]"
           style={{ borderColor: appTheme.borderLineColor }}
