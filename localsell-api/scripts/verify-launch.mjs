@@ -3,7 +3,7 @@
  * enforcement and language-trim work are actually wired up and behaving.
  *
  *   1. start the API:   npm run dev
- *   2. run this:         npm run verify          (from enatega-multivendor-api-mysql/)
+ *   2. run this:         npm run verify          (from localsell-api/)
  *
  * Set API_URL to point elsewhere (default http://localhost:4000/graphql).
  * Exits non-zero if any check fails. Read-only except for a couple of test
@@ -14,7 +14,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const API_URL = process.env.API_URL || 'http://localhost:4000/graphql';
-const API_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'); // enatega-multivendor-api-mysql/ (or /app in the container)
+const API_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'); // localsell-api/ (or /app in the container)
 const REPO = path.resolve(API_ROOT, '..'); // repo root — only meaningful in a full checkout
 const results = [];
 const pass = (n, d = '') => { results.push({ ok: true, n, d }); console.log(`  \x1b[32mPASS\x1b[0m  ${n}${d ? ' — ' + d : ''}`); };
@@ -32,18 +32,18 @@ async function gql(query, variables, token) {
 // ---------------------------------------------------------------- LANGUAGE
 // Skipped when run inside the API's own Docker image — the sibling app folders
 // aren't copied there, only the API is. Run from a full checkout to exercise these.
-const siblingsPresent = fs.existsSync(path.join(REPO, 'enatega-multivendor-admin'));
+const siblingsPresent = fs.existsSync(path.join(REPO, 'localsell-admin'));
 if (!siblingsPresent) {
   console.log('\n# Language pickers — skipped (running from an API-only tree)');
 } else {
   console.log('\n# Language pickers trimmed to English + Hindi');
   const langChecks = [
-    ['customer app modal', 'enatega-multivendor-app/src/components/LanguageModalize/LanguageModal.js', /languageTypes = \[([\s\S]*?)\]/],
-    ['customer app settings', 'enatega-multivendor-app/src/screens/Settings/Settings.js', /languageTypes = \[([\s\S]*?)\]/],
-    ['rider app', 'enatega-multivendor-rider/lib/utils/constants/languages.ts', /LANGUAGES = \[([\s\S]*?)\];/],
-    ['store app', 'enatega-multivendor-store/lib/utils/constants/languages.ts', /LANGUAGES = \[([\s\S]*?)\];/],
-    ['admin', 'enatega-multivendor-admin/lib/utils/constants/global.ts', /languageTypes = \[([\s\S]*?)\]/],
-    ['web', 'enatega-multivendor-web/lib/utils/constants/global.ts', /languageTypes = \[([\s\S]*?)\]/],
+    ['customer app modal', 'localsell-app/src/components/LanguageModalize/LanguageModal.js', /languageTypes = \[([\s\S]*?)\]/],
+    ['customer app settings', 'localsell-app/src/screens/Settings/Settings.js', /languageTypes = \[([\s\S]*?)\]/],
+    ['rider app', 'localsell-rider/lib/utils/constants/languages.ts', /LANGUAGES = \[([\s\S]*?)\];/],
+    ['store app', 'localsell-store/lib/utils/constants/languages.ts', /LANGUAGES = \[([\s\S]*?)\];/],
+    ['admin', 'localsell-admin/lib/utils/constants/global.ts', /languageTypes = \[([\s\S]*?)\]/],
+    ['web', 'localsell-web/lib/utils/constants/global.ts', /languageTypes = \[([\s\S]*?)\]/],
   ];
   for (const [name, rel, re] of langChecks) {
     const src = fs.readFileSync(path.join(REPO, rel), 'utf8');
@@ -51,7 +51,7 @@ if (!siblingsPresent) {
     const codes = [...new Set([...block.matchAll(/code:\s*['"]([a-z]{2})['"]/g)].map((m) => m[1]))].sort().join(',');
     codes === 'en,hi' ? pass(`${name} = [en, hi]`) : fail(`${name}`, `codes: ${codes || '(none)'}`);
   }
-  fs.existsSync(path.join(REPO, 'enatega-multivendor-store/languages/hi.js'))
+  fs.existsSync(path.join(REPO, 'localsell-store/languages/hi.js'))
     ? pass('store app languages/hi.js exists (was English-only)') : fail('store hi.js missing');
 }
 
@@ -65,7 +65,7 @@ pkg.scripts['db:deploy'] ? pass('npm run db:deploy') : fail('db:deploy script');
 
 // ---------------------------------------------------------------- COMMISSION
 console.log('\n# Platform commission — live API');
-const admin = (await gql(`mutation { ownerLogin(email:"admin@enatega.local", password:"Admin@123"){ token } }`)).data?.ownerLogin?.token;
+const admin = (await gql(`mutation { ownerLogin(email:"admin@localsell.in", password:"Admin@123"){ token } }`)).data?.ownerLogin?.token;
 admin ? pass('admin login') : fail('admin login — is the API up + seeded?');
 if (!admin) finish();
 
@@ -95,7 +95,7 @@ Array.isArray(autoNow) && autoNow.length === 0
   ? pass('auto-close leaves the current period open', 'closeCompletedCommissionPeriods = 0 bills (nothing has fully ended)')
   : fail('auto-close touched the current period', JSON.stringify(autoNow));
 
-const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@padharo.local", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
+const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@localsell.in", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
 const sum = (await gql(`{ myCommissionSummary { cycle outstandingTotal bills { _id } } }`, {}, vTok)).data?.myCommissionSummary;
 sum ? pass('myCommissionSummary (vendor view data)', `${sum.cycle} · ${sum.bills.length} bills · ₹${sum.outstandingTotal} outstanding`) : fail('myCommissionSummary');
 
@@ -109,7 +109,7 @@ for (const r of anyR) {
   if (f) { RID = r._id; food = f; break; }
 }
 const cust = (await gql(`mutation { login(email:"deogarh-diner@padharo.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token
-  || (await gql(`mutation { login(email:"customer@enatega.local", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token;
+  || (await gql(`mutation { login(email:"customer@localsell.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token;
 if (RID && food && cust) {
   await gql(`mutation { updateDeliveryBoundsAndLocation(id:"${RID}", boundType:"radius", location:{latitude:25.534, longitude:73.899}, circleBounds:{radius:7}) { data { deliveryDistance } } }`, {}, admin);
   const dd = (await gql(`{ getRestaurantDeliveryZoneInfo(id:"${RID}"){ circleBounds { radius } } }`, {}, admin)).data?.getRestaurantDeliveryZoneInfo;
@@ -501,7 +501,7 @@ console.log('\n# Batch D — combos, upsell, required customization');
   }
 
   // C5: a vendor sees only their own stores in storePerformance
-  const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@padharo.local", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
+  const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@localsell.in", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
   if (vTok) {
     const vp = (await gql(`{ storePerformance(limit:100){ total rows { name } } }`, {}, vTok)).data?.storePerformance;
     const ap = (await gql(`{ storePerformance(limit:1){ total } }`, {}, admin)).data?.storePerformance;
