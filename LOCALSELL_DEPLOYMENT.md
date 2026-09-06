@@ -24,12 +24,13 @@ built from a single "prefix + zone" token pair.
 | Admin host | `admin.localsell.in` | |
 | API host | `api.localsell.in` | HTTP **and** WebSocket |
 | Store host | `store.localsell.in` | |
+| Rider host | `rider.localsell.in` | |
 | Server public IP | `103.92.235.209` | for DNS + Maps key IP restriction — confirm on the actual box this deploys to |
 | Project dir on server | `/var/sentora/hostdata/<host>/public_html/localsell/server` | where `docker-compose.yml` lives — adjust `<host>` to the real Sentora account |
 | Shared MySQL container | `mysql_dev_3308` | `mysql:8.0`, internal port **3306** |
 | Shared Docker network | `mysql_config_dev_default` | the API joins this to reach MySQL by name |
 | DB name / user | `localsell` / `localsell` | |
-| Host ports | web `6000`, admin `6001`, api `6002`, store `6004` | 6003 was taken on this host; pick any free `ss -ltn` ports |
+| Host ports | web `6000`, admin `6001`, api `6002`, store `6004`, rider `6005` | 6003 was taken on this host; pick any free `ss -ltn` ports |
 
 ---
 
@@ -41,6 +42,7 @@ built from a single "prefix + zone" token pair.
 | Admin (Next 14) | `localsell-admin` | `localsell_admin` | 3000 | 6001 | `admin.localsell.in` |
 | API (Apollo + `ws` + Prisma/MySQL + `/uploads`) | `localsell-api` | `localsell_api` | 4000 | 6002 | `api.localsell.in` |
 | Store merchant web (Expo web export → nginx) | `localsell-store` | `localsell_store` | 80 | 6004 | `store.localsell.in` |
+| Rider delivery web (Expo web export → nginx) | `localsell-rider` | `localsell_rider` | 80 | 6005 | `rider.localsell.in` |
 
 - One `docker-compose.yml` at repo root runs all four.
 - Host ports bind to `127.0.0.1` only — Apache reverse‑proxies each public host
@@ -54,7 +56,7 @@ built from a single "prefix + zone" token pair.
                           Internet (HTTPS / WSS)
    ┌───────────────┬──────────────────┼──────────────────┬──────────────┐
    ▼               ▼                  ▼                  ▼
-localsell.in  admin.localsell.in  store.localsell.in  api.localsell.in  (browser → api.* for data + WS)
+localsell.in  admin.localsell.in  store.localsell.in  rider.localsell.in  api.localsell.in
    │               │                  │                  │
         Apache vhosts in /etc/httpd/conf.d/  (TLS, ws upgrade on api.*)
    │               │                  │                  │
@@ -97,6 +99,7 @@ subdomain label:
 admin   A   103.92.235.209   (admin.localsell.in)
 api     A   103.92.235.209   (api.localsell.in)
 store   A   103.92.235.209   (store.localsell.in)
+rider   A   103.92.235.209   (rider.localsell.in)
 ```
 
 Confirm before requesting certs: `dig +short localsell.in`.
@@ -231,6 +234,7 @@ curl -s  http://127.0.0.1:6002/health       ; echo   # {"status":"ok"}
 curl -sI http://127.0.0.1:6000/ | head -n1           # 200  web
 curl -sI http://127.0.0.1:6001/ | head -n1           # 200  admin
 curl -sI http://127.0.0.1:6004/ | head -n1           # 200  store
+curl -sI http://127.0.0.1:6005/ | head -n1           # 200  rider
 ```
 
 ---
@@ -249,7 +253,13 @@ DBPW=$(cat /root/localsell_db_pw.txt)
 
 # 1. schema + config defaults + backfill (safe to re-run on every redeploy)
 docker compose --env-file deploy/localsell.env exec api npm run db:deploy
-#    first launch only — also load the 8 demo Deogarh stores:
+
+#    Demo data — pick ONE (both WIPE all stores/menus/orders first):
+#    a) full four-store marketplace (Hot Pizza Corner, Devshree Kitchen,
+#       Deogarh Mahal Rasoi, Shrinath Sweets & Namkeen) with proper
+#       size/weight variations, add-on option groups and build-your-own thali:
+docker compose --env-file deploy/localsell.env exec api npm run seed:localsell
+#    b) the older 8-store Deogarh set:
 docker compose --env-file deploy/localsell.env exec api npm run db:deploy -- --demo
 
 # 2. the deploy does NOT set the Maps key — add it once
@@ -283,7 +293,7 @@ setup). Two phases: HTTP‑only first (so certbot can validate), then add TLS.
 mkdir -p /var/www/letsencrypt/.well-known/acme-challenge
 
 # host = the full public hostname (dot-subdomain, apex for web), not a prefix
-for pair in "localsell.in:6000" "admin.localsell.in:6001" "store.localsell.in:6004"; do
+for pair in "localsell.in:6000" "admin.localsell.in:6001" "store.localsell.in:6004" "rider.localsell.in:6005"; do
   host=${pair%:*}; port=${pair#*:}
   cat > /etc/httpd/conf.d/${host}.conf <<EOF
 <VirtualHost *:80>
@@ -341,7 +351,7 @@ Test over HTTP: `curl -sI http://localsell.in/ | head -n1` etc.
 ### 9b. Certificates (certbot webroot, one per host)
 
 ```bash
-for d in localsell.in admin.localsell.in store.localsell.in api.localsell.in; do
+for d in localsell.in admin.localsell.in store.localsell.in rider.localsell.in api.localsell.in; do
   certbot certonly --webroot -w /var/www/letsencrypt \
     -d ${d} --non-interactive --agree-tos -m you@example.com \
     || echo "FAILED: $d"

@@ -1,0 +1,13 @@
+node_modules
+.expo
+dist
+android
+ios
+.git
+*.log
+*.pdf
+.env
+.env.*
+google-service-account*.json
+Dockerfile
+.dockerignore

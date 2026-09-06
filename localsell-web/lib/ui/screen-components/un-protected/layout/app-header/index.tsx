@@ -24,6 +24,7 @@ import { useAuth } from "@/lib/context/auth/auth.context";
 import { useUserAddress } from "@/lib/context/address/address.context";
 import useUser from "@/lib/hooks/useUser";
 import useServiceability from "@/lib/hooks/useServiceability";
+import useLocationSearch from "@/lib/hooks/useLocationSearch";
 
 import { setUserLocale } from "@/lib/utils/methods/locale";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
@@ -141,6 +142,8 @@ export default function AppHeader() {
 
   const profileMenuRef = useRef<Menu>(null);
   const didInitLocation = useRef(false);
+  const didAutoLocate = useRef(false);
+  const { detectCurrentLocation } = useLocationSearch();
 
   const isLoggedIn = Boolean(authToken);
   const isHindi = locale === "hi";
@@ -171,7 +174,6 @@ export default function AppHeader() {
 
   // Hydrate the delivery location for the chip: a previously chosen location
   // (localStorage) wins, otherwise the customer's selected profile address.
-  // We never auto-prompt for GPS here — the chip invites the customer to choose.
   useEffect(() => {
     if (didInitLocation.current || currentAddress) return;
 
@@ -192,6 +194,32 @@ export default function AppHeader() {
       didInitLocation.current = true;
     }
   }, [profile, currentAddress, setUserAddress]);
+
+  // First visit with no known location: ask the browser for the real GPS
+  // location (once) instead of silently using the marketplace's home city.
+  // Never re-prompts if the visitor already denied it, and any stored /
+  // profile address takes priority.
+  useEffect(() => {
+    if (didAutoLocate.current || currentAddress) return;
+    if (typeof window === "undefined" || !navigator.geolocation) return;
+    if (onUseLocalStorage("get", USER_CURRENT_LOCATION_LS_KEY)) return;
+    if (profile?.addresses?.some((a) => a.selected)) return;
+    didAutoLocate.current = true;
+
+    const run = () => {
+      void detectCurrentLocation();
+    };
+    if (navigator.permissions?.query) {
+      navigator.permissions
+        .query({ name: "geolocation" as PermissionName })
+        .then((status) => {
+          if (status.state !== "denied") run();
+        })
+        .catch(run);
+    } else {
+      run();
+    }
+  }, [currentAddress, profile, detectCurrentLocation]);
 
   const toggleLocale = () => {
     const next = isHindi ? "en" : "hi";

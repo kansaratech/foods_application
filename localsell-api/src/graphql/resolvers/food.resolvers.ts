@@ -88,20 +88,57 @@ interface OptionInputArgs {
   price: number;
 }
 
-interface AddonInputArgs {
+interface AddonGroupInputArgs {
   _id?: string;
-  restaurant: string;
   title: string;
   description?: string;
   quantityMinimum?: number;
   quantityMaximum?: number;
   isRequired?: boolean;
+  options?: string[]; // option ids from the pool
+}
+
+interface AddonInputArgs {
+  _id?: string;
+  restaurant: string;
+  title?: string;
+  description?: string;
+  quantityMinimum?: number;
+  quantityMaximum?: number;
+  isRequired?: boolean;
   options?: OptionInputArgs[];
+  addons?: AddonGroupInputArgs[] | AddonGroupInputArgs;
+}
+
+// Hidden per-store add-on that holds the "option pool" the admin panel manages.
+// Options are 1:1 with an add-on in this schema, so pooled options are copied
+// into real groups when an add-on references them by id.
+const OPTION_POOL_TITLE = '__option_pool__';
+
+async function getOptionPoolAddon(restaurantId: string) {
+  const existing = await prisma.addon.findFirst({
+    where: { restaurantId, title: OPTION_POOL_TITLE },
+  });
+  if (existing) return existing;
+  return prisma.addon.create({
+    data: { restaurantId, title: OPTION_POOL_TITLE, quantityMinimum: 0, quantityMaximum: 1 },
+  });
+}
+
+function normalizeAddonGroups(
+  addons?: AddonGroupInputArgs[] | AddonGroupInputArgs,
+): AddonGroupInputArgs[] {
+  if (!addons) return [];
+  return Array.isArray(addons) ? addons : [addons];
 }
 
 // Keep isRequired and quantityMinimum consistent: a required group forces at
 // least one pick; an optional one allows zero.
-function normalizeAddonRules(input: AddonInputArgs) {
+function normalizeAddonRules(input: {
+  quantityMinimum?: number;
+  quantityMaximum?: number;
+  isRequired?: boolean;
+}) {
   const max = input.quantityMaximum ?? 1;
   let min = input.quantityMinimum ?? 0;
   if (input.isRequired && min < 1) min = 1;
@@ -149,8 +186,10 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     ) => {
       const limit = args.limit ?? 10;
       const page = args.page ?? 1;
+      // The admin panel's option pool lives in a hidden add-on; the paginated
+      // list is that pool.
       const where = {
-        addon: { restaurantId: args.restaurantId },
+        addon: { restaurantId: args.restaurantId, title: OPTION_POOL_TITLE },
         ...(args.search ? { title: { contains: args.search } } : {}),
       };
       const [data, totalCount] = await Promise.all([
@@ -168,6 +207,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       const page = args.page ?? 1;
       const where = {
         restaurantId: args.restaurantId,
+        NOT: { title: OPTION_POOL_TITLE },
         ...(args.search ? { title: { contains: args.search } } : {}),
       };
       const [data, totalCount] = await Promise.all([
@@ -409,10 +449,36 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     createAddon: async (_parent, args: { addonInput: AddonInputArgs }, context) => {
       await assertOwnsRestaurant(context, args.addonInput.restaurant);
       const input = args.addonInput;
+
+      // Admin-panel shape: `addons: [{ ..., options: [optionId] }]`.
+      const groups = normalizeAddonGroups(input.addons);
+      if (groups.length) {
+        let last;
+        for (const g of groups) {
+          const poolOptions = g.options?.length
+            ? await prisma.option.findMany({ where: { id: { in: g.options } } })
+            : [];
+          last = await prisma.addon.create({
+            data: {
+              restaurantId: input.restaurant,
+              title: g.title,
+              description: g.description,
+              ...normalizeAddonRules(g),
+              options: poolOptions.length
+                ? { create: poolOptions.map((o) => ({ title: o.title, description: o.description, price: o.price })) }
+                : undefined,
+            },
+            include: { options: true },
+          });
+        }
+        return last;
+      }
+
+      // Store-app shape: flat title + inline option objects.
       return prisma.addon.create({
         data: {
           restaurantId: input.restaurant,
-          title: input.title,
+          title: input.title ?? 'Add-on',
           description: input.description,
           ...normalizeAddonRules(input),
           options: input.options?.length
@@ -425,22 +491,86 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     editAddon: async (_parent, args: { addonInput: AddonInputArgs }, context) => {
       await assertOwnsRestaurant(context, args.addonInput.restaurant);
       const input = args.addonInput;
-      if (!input._id) throw notFoundError('Addon _id is required to edit');
+
+      // Admin-panel edit: a single group object under `addons`.
+      const [group] = normalizeAddonGroups(input.addons);
+      const target = group ?? {
+        _id: input._id,
+        title: input.title,
+        description: input.description,
+        quantityMinimum: input.quantityMinimum,
+        quantityMaximum: input.quantityMaximum,
+        isRequired: input.isRequired,
+      };
+      const addonId = target._id ?? input._id;
+      if (!addonId) throw notFoundError('Addon _id is required to edit');
+
       await prisma.addon.update({
-        where: { id: input._id },
+        where: { id: addonId },
         data: {
-          title: input.title,
-          description: input.description,
-          ...normalizeAddonRules(input),
+          title: target.title,
+          description: target.description,
+          ...normalizeAddonRules(target),
         },
       });
-      if (input.options) {
-        await prisma.option.deleteMany({ where: { addonId: input._id } });
+
+      if (group?.options) {
+        // Options given as pool ids → copy their current title/price in.
+        const poolOptions = group.options.length
+          ? await prisma.option.findMany({ where: { id: { in: group.options } } })
+          : [];
+        await prisma.option.deleteMany({ where: { addonId } });
+        if (poolOptions.length) {
+          await prisma.option.createMany({
+            data: poolOptions.map((o) => ({ addonId, title: o.title, description: o.description, price: o.price })),
+          });
+        }
+      } else if (input.options) {
+        await prisma.option.deleteMany({ where: { addonId } });
         await prisma.option.createMany({
-          data: input.options.map((o) => ({ addonId: input._id as string, title: o.title, description: o.description, price: o.price })),
+          data: input.options.map((o) => ({ addonId, title: o.title, description: o.description, price: o.price })),
         });
       }
-      return prisma.addon.findUnique({ where: { id: input._id }, include: { options: true } });
+      return prisma.addon.findUnique({ where: { id: addonId }, include: { options: true } });
+    },
+
+    createOptions: async (_parent, args: { optionInput?: { restaurant: string; options: OptionInputArgs[] } }, context) => {
+      const input = args.optionInput;
+      if (!input?.restaurant) throw userInputError('restaurant is required');
+      await assertOwnsRestaurant(context, input.restaurant);
+      const pool = await getOptionPoolAddon(input.restaurant);
+      const rows = (input.options ?? []).filter((o) => o.title?.trim());
+      if (rows.length) {
+        await prisma.option.createMany({
+          data: rows.map((o) => ({ addonId: pool.id, title: o.title.trim(), description: o.description, price: o.price ?? 0 })),
+        });
+      }
+      return prisma.restaurant.findUnique({ where: { id: input.restaurant } });
+    },
+    editOption: async (
+      _parent,
+      args: { optionInput?: { restaurant: string; options: OptionInputArgs } },
+      context,
+    ) => {
+      const input = args.optionInput;
+      if (!input?.restaurant) throw userInputError('restaurant is required');
+      await assertOwnsRestaurant(context, input.restaurant);
+      const opt = input.options;
+      if (!opt?._id) throw notFoundError('Option _id is required to edit');
+      const existing = await prisma.option.findUnique({ where: { id: opt._id }, include: { addon: true } });
+      if (!existing || existing.addon.restaurantId !== input.restaurant) throw notFoundError('Option not found');
+      await prisma.option.update({
+        where: { id: opt._id },
+        data: { title: opt.title, description: opt.description, price: opt.price ?? existing.price },
+      });
+      return prisma.restaurant.findUnique({ where: { id: input.restaurant } });
+    },
+    deleteOption: async (_parent, args: { id: string; restaurant: string }, context) => {
+      await assertOwnsRestaurant(context, args.restaurant);
+      const existing = await prisma.option.findUnique({ where: { id: args.id }, include: { addon: true } });
+      if (!existing || existing.addon.restaurantId !== args.restaurant) throw notFoundError('Option not found');
+      await prisma.option.delete({ where: { id: args.id } });
+      return prisma.restaurant.findUnique({ where: { id: args.restaurant } });
     },
     deleteAddon: async (_parent, args: { id: string; restaurant: string }, context) => {
       await assertOwnsRestaurant(context, args.restaurant);
@@ -539,5 +669,16 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
   },
   Option: {
     _id: (parent: Option) => parent.id,
+  },
+  Restaurant: {
+    // The admin add-on form's option picker reads `restaurant.options` — surface
+    // the store's option pool (not every option copied into every group).
+    options: async (parent: { id: string }) => {
+      const pool = await prisma.addon.findFirst({
+        where: { restaurantId: parent.id, title: OPTION_POOL_TITLE },
+      });
+      if (!pool) return [];
+      return prisma.option.findMany({ where: { addonId: pool.id }, orderBy: { title: 'asc' } });
+    },
   },
 };
