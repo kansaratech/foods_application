@@ -30,7 +30,21 @@ const normalizeEnvironment = (env) => {
 }
 
 const getEnvironmentConfig = (env) => {
-  return ENV_CONFIG[normalizeEnvironment(env)]
+  const base = ENV_CONFIG[normalizeEnvironment(env)]
+  // Local dev override: point at the API on this machine (CORS_ORIGIN="*").
+  // The deployed api.localsell.in rejects http://localhost origins, so web
+  // login fails against it. Set EXPO_PUBLIC_GRAPHQL_URL in .env to opt in.
+  const graphqlUrl = process.env.EXPO_PUBLIC_GRAPHQL_URL
+  const wsGraphqlUrl = process.env.EXPO_PUBLIC_WS_GRAPHQL_URL
+  if (!graphqlUrl) return base
+  const restUrl = graphqlUrl.replace(/\/graphql\/?$/, '/')
+  return {
+    ...base,
+    GRAPHQL_URL: graphqlUrl,
+    WS_GRAPHQL_URL: wsGraphqlUrl || base.WS_GRAPHQL_URL,
+    SERVER_URL: graphqlUrl,
+    SERVER_REST_URL: restUrl
+  }
 }
 
 module.exports = {

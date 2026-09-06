@@ -10,12 +10,21 @@ export default function OrderStack({
   amount,
   date,
   paymentMethod,
+  deliveryMode,
 }: IStoreEarningsOrderProps) {
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
   const { format } = useCurrency();
 
   const shortId = orderId ? `#${String(orderId).slice(-8)}` : "—";
+  const modeLabel =
+    deliveryMode === "PICKUP"
+      ? t("Pickup")
+      : deliveryMode === "SELF"
+        ? t("My delivery")
+        : deliveryMode === "PLATFORM"
+          ? t("LocalSell fleet")
+          : null;
 
   return (
     <View
@@ -34,7 +43,7 @@ export default function OrderStack({
           className="text-xs mt-1"
           style={{ color: appTheme.fontSecondColor }}
         >
-          {[date, paymentMethod].filter(Boolean).join(" · ")}
+          {[date, paymentMethod, modeLabel].filter(Boolean).join(" · ")}
         </Text>
       </View>
 

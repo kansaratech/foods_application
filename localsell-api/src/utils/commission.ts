@@ -33,15 +33,18 @@ export function orderFoodSubtotal(order: {
  */
 /**
  * Whether the platform already keeps this order's commission through the money
- * flow itself (so it must never be invoiced): online payments and COD-delivery
- * (where the rider deposits the full cash). Only COD-**pickup** — the store
- * holds the cash — leaves the commission owed on a bill.
+ * flow itself (so it must never be invoiced): online payments and
+ * COD-fleet-delivery (where the rider deposits the full cash). When the store
+ * holds the cash — COD **pickup** or COD **self-delivery** — the commission is
+ * owed on a bill.
  */
 export function isCommissionSelfCollected(order: {
   paymentMethod: string;
   isPickedUp: boolean;
+  deliveryMode?: string | null;
 }): boolean {
-  return !(order.paymentMethod === 'COD' && order.isPickedUp);
+  const storeHoldsCash = order.isPickedUp || order.deliveryMode === 'SELF';
+  return !(order.paymentMethod === 'COD' && storeHoldsCash);
 }
 
 export async function recordOrderCommission(order: {
@@ -50,6 +53,7 @@ export async function recordOrderCommission(order: {
   restaurantId: string;
   paymentMethod: string;
   isPickedUp: boolean;
+  deliveryMode?: string | null;
   orderAmount: number;
   deliveryCharges: number;
   tipping: number;

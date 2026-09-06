@@ -107,6 +107,36 @@ export default function DrawerMain() {
         }}
       />
       <Drawer.Screen
+        name="delivery-settings"
+        options={{
+          drawerLabel: t("Delivery Settings"),
+          title: t("Delivery Settings"),
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="bicycle-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="delivery-staff"
+        options={{
+          drawerLabel: t("Delivery Staff"),
+          title: t("Delivery Staff"),
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="reports"
+        options={{
+          drawerLabel: t("Reports"),
+          title: t("Reports"),
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="bar-chart-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="bank-management"
         options={{
           drawerLabel: t("Bank Management"),

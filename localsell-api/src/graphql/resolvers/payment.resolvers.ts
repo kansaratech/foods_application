@@ -91,11 +91,16 @@ async function notifyAdminsOfWithdrawRequest(body: string) {
 // the restaurant's own commissionRate). The rider gets the full delivery fee +
 // tip. The store gets the rest of the food subtotal PLUS the tax it remits as
 // GST. No separate platform delivery cut or flat fee.
+function orderDeliveryMode(order: { isPickedUp: boolean; deliveryMode?: string | null }): string {
+  return order.deliveryMode ?? (order.isPickedUp ? 'PICKUP' : 'PLATFORM');
+}
+
 function computeEarningRow(
   order: {
     id: string;
     orderId: string;
     isPickedUp: boolean;
+    deliveryMode?: string | null;
     paymentMethod: string;
     orderAmount: number;
     deliveryCharges: number;
@@ -114,13 +119,17 @@ function computeEarningRow(
   const tax = order.taxationAmount;
   const platformFee = 0;
   const platformTotal = marketplaceCommission + deliveryCommission + platformFee; // tax is the store's to remit
-  const storeTotal = foodAmount - marketplaceCommission + tax;
-  const riderTotal = order.deliveryCharges + order.tipping;
+  // When the store delivered the order itself it also keeps the delivery fee + tip.
+  const selfDelivered = orderDeliveryMode(order) === 'SELF';
+  const storeTotal =
+    foodAmount - marketplaceCommission + tax + (selfDelivered ? order.deliveryCharges + order.tipping : 0);
+  const riderTotal = order.riderId ? order.deliveryCharges + order.tipping : 0;
 
   return {
     _id: order.id,
     orderId: order.orderId,
     orderType: order.isPickedUp ? 'PICKUP' : 'DELIVERY',
+    deliveryMode: orderDeliveryMode(order),
     paymentMethod: order.paymentMethod,
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
@@ -317,16 +326,24 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const byDate = new Map<
         string,
-        { totalOrderAmount: number; totalEarnings: number; orderDetails: { orderId: string; orderType: string; paymentMethod: string }[] }
+        { totalOrderAmount: number; totalEarnings: number; orderDetails: { orderId: string; orderType: string; deliveryMode: string; paymentMethod: string }[] }
       >();
       for (const order of orders) {
         const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
-        const storeEarning = foodAmount - foodAmount * (restaurant.commissionRate / 100) + order.taxationAmount;
+        const selfDelivered = orderDeliveryMode(order) === 'SELF';
+        const storeEarning =
+          foodAmount - foodAmount * (restaurant.commissionRate / 100) + order.taxationAmount +
+          (selfDelivered ? order.deliveryCharges + order.tipping : 0);
         const dateKey = order.createdAt.toISOString().slice(0, 10);
         const entry = byDate.get(dateKey) ?? { totalOrderAmount: 0, totalEarnings: 0, orderDetails: [] };
         entry.totalOrderAmount += order.orderAmount;
         entry.totalEarnings += storeEarning;
-        entry.orderDetails.push({ orderId: order.orderId, orderType: order.isPickedUp ? 'PICKUP' : 'DELIVERY', paymentMethod: order.paymentMethod });
+        entry.orderDetails.push({
+          orderId: order.orderId,
+          orderType: order.isPickedUp ? 'PICKUP' : 'DELIVERY',
+          deliveryMode: orderDeliveryMode(order),
+          paymentMethod: order.paymentMethod,
+        });
         byDate.set(dateKey, entry);
       }
       const days = [...byDate.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(([date, v]) => ({ ...v, date }));
@@ -356,7 +373,7 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const byDate = new Map<
         string,
-        { tip: number; deliveryFee: number; totalEarnings: number; orderDetails: { orderId: string; orderType: string; paymentMethod: string }[] }
+        { tip: number; deliveryFee: number; totalEarnings: number; orderDetails: { orderId: string; orderType: string; deliveryMode: string; paymentMethod: string }[] }
       >();
       for (const order of orders) {
         const dateKey = order.createdAt.toISOString().slice(0, 10);
@@ -364,7 +381,12 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
         entry.tip += order.tipping;
         entry.deliveryFee += order.deliveryCharges;
         entry.totalEarnings += order.tipping + order.deliveryCharges;
-        entry.orderDetails.push({ orderId: order.orderId, orderType: order.isPickedUp ? 'PICKUP' : 'DELIVERY', paymentMethod: order.paymentMethod });
+        entry.orderDetails.push({
+          orderId: order.orderId,
+          orderType: order.isPickedUp ? 'PICKUP' : 'DELIVERY',
+          deliveryMode: orderDeliveryMode(order),
+          paymentMethod: order.paymentMethod,
+        });
         byDate.set(dateKey, entry);
       }
       const days = [...byDate.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1)).map(([date, v]) => ({ ...v, date }));

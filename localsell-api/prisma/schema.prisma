@@ -169,6 +169,12 @@ model Restaurant {
   postCode               String?
   pickup                 Boolean   @default(true)
   delivery               Boolean   @default(true)
+  // Who fulfils a delivery order for this store. Only meaningful when
+  // `delivery = true`; "pickup only" is `delivery = false`.
+  //   PLATFORM — the LocalSell hyperlocal rider fleet (zone dispatch)
+  //   SELF     — the store delivers with its own people (StoreDeliveryAgent)
+  //   BOTH     — store decides per order after accepting it
+  deliveryProvider       String    @default("PLATFORM")
   minDeliveryFee         Float?
   deliveryDistance       Float?
   deliveryFee            Float?
@@ -187,6 +193,7 @@ model Restaurant {
   withdrawRequests WithdrawRequest[]
   transactions     Transaction[]
   documents        StoreDocument[]
+  deliveryAgents   StoreDeliveryAgent[]
   clonedFrom       Restaurant?         @relation("RestaurantClone", fields: [clonedFromId], references: [id])
   clones           Restaurant[]        @relation("RestaurantClone")
 
@@ -244,6 +251,24 @@ model VendorDocument {
   @@unique([vendorId, kind])
   @@index([vendorId])
   @@index([status])
+}
+
+// A store's own delivery person — a lightweight name + phone contact, not a
+// rider-app account. The store assigns one to a delivery order it fulfils
+// itself (`Order.deliveryMode = SELF`) and then marks the order delivered.
+model StoreDeliveryAgent {
+  id           String   @id @default(cuid())
+  restaurantId String
+  name         String
+  phone        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orders     Order[]
+
+  @@index([restaurantId])
 }
 
 model RestaurantCuisine {
@@ -676,6 +701,11 @@ model Order {
   discountAmount  Float         @default(0)
   instructions    String?       @db.Text
   isPickedUp      Boolean       @default(false)
+  // How this order is fulfilled. Kept in sync with `isPickedUp`
+  // (PICKUP ⇔ isPickedUp). SELF = the store's own delivery person;
+  // PLATFORM = the LocalSell rider fleet.
+  deliveryMode         String   @default("PLATFORM") // PICKUP | SELF | PLATFORM
+  storeDeliveryAgentId String?
   orderDate       DateTime      @default(now())
   expectedTime    DateTime?
   acceptedAt      DateTime?
@@ -693,6 +723,7 @@ model Order {
   rider        User?              @relation("OrderRider", fields: [riderId], references: [id])
   restaurant   Restaurant         @relation(fields: [restaurantId], references: [id])
   address      Address?           @relation(fields: [addressId], references: [id])
+  storeDeliveryAgent StoreDeliveryAgent? @relation(fields: [storeDeliveryAgentId], references: [id])
   items        OrderItem[]
   review       Review?
   chatMessages OrderChatMessage[]
@@ -700,6 +731,7 @@ model Order {
   @@index([userId])
   @@index([restaurantId])
   @@index([riderId])
+  @@index([storeDeliveryAgentId])
 }
 
 model OrderItem {

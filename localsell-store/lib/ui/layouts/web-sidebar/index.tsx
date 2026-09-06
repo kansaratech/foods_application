@@ -4,42 +4,50 @@ import { useApptheme } from "@/lib/context/theme.context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
 import { useContext, useState } from "react";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 import ConfirmModal from "@/lib/ui/useable-components/confirm-modal";
 import { IMAGES } from "@/lib/assets/images";
+import ScrollArea from "./scroll-area";
 
-const navigation = [
-  { label: "Orders", icon: "receipt-outline" as const, route: "/home/orders" },
+type NavItem = { label: string; icon: keyof typeof Ionicons.glyphMap; route: string };
+type NavSection = { title: string | null; items: NavItem[] };
+
+const navSections: NavSection[] = [
   {
-    label: "Work Schedule",
-    icon: "time-outline" as const,
-    route: "/home/work-schedule",
-  },
-  { label: "Menu", icon: "restaurant-outline" as const, route: "/home/menu" },
-  { label: "Wallet", icon: "wallet-outline" as const, route: "/wallet" },
-  { label: "Earnings", icon: "bar-chart-outline" as const, route: "/earnings" },
-  {
-    label: "Bank Management",
-    icon: "card-outline" as const,
-    route: "/home/bank-management",
-  },
-  { label: "Profile", icon: "person-outline" as const, route: "/profile" },
-  {
-    label: "Language",
-    icon: "language-outline" as const,
-    route: "/home/language",
-  },
-  { label: "Help", icon: "help-circle-outline" as const, route: "/home/help" },
-  {
-    label: "About Us",
-    icon: "information-circle-outline" as const,
-    route: "/home/about",
+    title: null,
+    items: [
+      { label: "Live Orders", icon: "receipt-outline", route: "/home/orders" },
+      { label: "Order History", icon: "time-outline", route: "/home/orders/delivered" },
+      { label: "Menu", icon: "restaurant-outline", route: "/home/menu" },
+      { label: "Work Schedule", icon: "calendar-outline", route: "/home/work-schedule" },
+    ],
   },
   {
-    label: "Privacy Policy",
-    icon: "shield-checkmark-outline" as const,
-    route: "/home/privacy",
+    title: "Delivery",
+    items: [
+      { label: "Delivery Settings", icon: "bicycle-outline", route: "/home/delivery-settings" },
+      { label: "Delivery Staff", icon: "people-outline", route: "/home/delivery-staff" },
+    ],
+  },
+  {
+    title: "Money",
+    items: [
+      { label: "Reports", icon: "bar-chart-outline", route: "/home/reports" },
+      { label: "Earnings", icon: "cash-outline", route: "/earnings" },
+      { label: "Wallet", icon: "wallet-outline", route: "/wallet" },
+      { label: "Bank Management", icon: "card-outline", route: "/home/bank-management" },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", icon: "person-outline", route: "/profile" },
+      { label: "Language", icon: "language-outline", route: "/home/language" },
+      { label: "Help", icon: "help-circle-outline", route: "/home/help" },
+      { label: "About Us", icon: "information-circle-outline", route: "/home/about" },
+      { label: "Privacy Policy", icon: "shield-checkmark-outline", route: "/home/privacy" },
+    ],
   },
 ];
 
@@ -52,7 +60,12 @@ export default function WebSidebar() {
   const { logout } = useContext(AuthContext);
 
   const isActive = (route: string) => {
-    if (route === "/home/orders") return pathname.startsWith("/home/orders");
+    if (route === "/home/orders") {
+      return (
+        pathname.startsWith("/home/orders") &&
+        !pathname.startsWith("/home/orders/delivered")
+      );
+    }
     return pathname === route || pathname.startsWith(`${route}/`);
   };
 
@@ -180,46 +193,65 @@ export default function WebSidebar() {
           )}
         </View>
 
-        <ScrollView
-          contentContainerStyle={{
+        <ScrollArea
+          deps={[collapsed]}
+          contentStyle={{
             padding: collapsed ? 10 : 12,
             paddingBottom: 20,
           }}
         >
-          {navigation.map((item) => {
-            const active = isActive(item.route);
-            return (
-              <TouchableOpacity
-                key={item.route}
-                onPress={() => navigateTo(item.route)}
-                className="h-12 flex-row items-center rounded-xl px-3 mb-1"
-                style={{
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  backgroundColor: active
-                    ? appTheme.lowOpacityPrimaryColor
-                    : "transparent",
-                }}
-                accessibilityLabel={item.label}
-              >
-                <Ionicons
-                  name={item.icon}
-                  size={20}
-                  color={active ? appTheme.primary : appTheme.fontSecondColor}
+          {navSections.map((section, si) => (
+            <View key={section.title ?? `section-${si}`} className={si > 0 ? "mt-3" : ""}>
+              {!collapsed && section.title && (
+                <Text
+                  className="px-3 mb-1 text-[11px] font-bold uppercase"
+                  style={{ color: appTheme.fontSecondColor, letterSpacing: 1 }}
+                >
+                  {section.title}
+                </Text>
+              )}
+              {collapsed && si > 0 && (
+                <View
+                  className="mx-3 mb-2"
+                  style={{ height: 1, backgroundColor: appTheme.borderLineColor }}
                 />
-                {!collapsed && (
-                  <Text
-                    className="ml-3 text-sm"
+              )}
+              {section.items.map((item) => {
+                const active = isActive(item.route);
+                return (
+                  <TouchableOpacity
+                    key={item.route}
+                    onPress={() => navigateTo(item.route)}
+                    className="h-12 flex-row items-center rounded-xl px-3 mb-1"
                     style={{
-                      color: active ? appTheme.primary : appTheme.fontMainColor,
-                      fontWeight: active ? "700" : "500",
+                      justifyContent: collapsed ? "center" : "flex-start",
+                      backgroundColor: active
+                        ? appTheme.lowOpacityPrimaryColor
+                        : "transparent",
                     }}
+                    accessibilityLabel={item.label}
                   >
-                    {item.label}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            );
-          })}
+                    <Ionicons
+                      name={item.icon}
+                      size={20}
+                      color={active ? appTheme.primary : appTheme.fontSecondColor}
+                    />
+                    {!collapsed && (
+                      <Text
+                        className="ml-3 text-sm"
+                        style={{
+                          color: active ? appTheme.primary : appTheme.fontMainColor,
+                          fontWeight: active ? "700" : "500",
+                        }}
+                      >
+                        {item.label}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
 
           <View
             className="border-t mt-2 pt-2"
@@ -245,7 +277,7 @@ export default function WebSidebar() {
               )}
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </ScrollArea>
       </View>
 
       <ConfirmModal

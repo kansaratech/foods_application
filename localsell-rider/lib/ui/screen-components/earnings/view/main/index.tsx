@@ -32,10 +32,12 @@ import EarningStack from "../earnings-stack";
 
 // Helpers
 import formatNumber from "@/lib/utils/methods/num-formatter";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 
 export default function EarningsMain() {
   // Hooks
   const { appTheme } = useApptheme();
+  const { symbol: currencySymbol } = useCurrency();
   const { t } = useTranslation();
 
   // Contexts
@@ -73,12 +75,13 @@ export default function EarningsMain() {
                   marginBottom: 0,
                 }}
               >
-                ${formatNumber(earning.totalEarningsSum)}
+                {currencySymbol}
+                {formatNumber(earning.totalEarningsSum)}
               </Text>
             );
           },
         })) ?? ([] as barDataItem[]),
-    [riderEarningsData, appTheme.fontMainColor],
+    [riderEarningsData, appTheme.fontMainColor, currencySymbol],
   );
 
   const renderEarning = useCallback(

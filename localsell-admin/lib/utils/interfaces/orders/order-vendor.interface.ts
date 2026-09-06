@@ -53,6 +53,9 @@ export interface IExtendedOrder extends IOrder {
   itemsTitle?: string;
   OrderdeliveryAddress?: string;
   DateCreated?: string;
+  isPickedUp?: boolean;
+  deliveryMode?: 'PICKUP' | 'SELF' | 'PLATFORM' | string;
+  storeDeliveryAgent?: { _id: string; name: string; phone?: string | null } | null;
   restaurant?: IRestaurant;
   user?: {
     _id: string;

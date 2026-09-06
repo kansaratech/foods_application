@@ -5,6 +5,7 @@ export interface IEarningsOrderDetail {
   orderType: string;
   orderId: string;
   paymentMethod: string;
+  deliveryMode?: string;
 }
 export interface IStoreEarningsArray {
   // API returns this as a list of orders for the day.
@@ -38,6 +39,7 @@ export interface IStoreEarningsOrderProps {
   isLast: boolean;
   date: string;
   paymentMethod?: string;
+  deliveryMode?: string;
 }
 
 export interface IDateFilter {

@@ -1,6 +1,7 @@
 // Interfaces
 import { useApptheme } from "@/lib/context/global/theme.context";
 import { IRiderEarningsOrderProps } from "@/lib/utils/interfaces/rider-earnings.interface";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { useTranslation } from "react-i18next";
 
 // Core
@@ -14,6 +15,7 @@ export default function OrderStack({
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format: formatCurrency } = useCurrency();
   return (
     <View
       className="border-b-2 flex flex-row items-center justify-between p-3"
@@ -35,7 +37,7 @@ export default function OrderStack({
           {t("Completed")}
         </Text>
         <Text className="font-bold" style={{ color: appTheme.fontMainColor }}>
-          ${amount}
+          {formatCurrency(amount, true)}
         </Text>
       </View>
     </View>

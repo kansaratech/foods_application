@@ -124,9 +124,9 @@ export default function Layout() {
         name="delivered"
         options={{
           title:
-            t("Delivered").length > 13
-              ? t("Delivered").substring(0, 13).concat("..")
-              : t("Delivered"),
+            t("History").length > 13
+              ? t("History").substring(0, 13).concat("..")
+              : t("History"),
         }}
       />
     </Tabs>

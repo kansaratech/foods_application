@@ -1,6 +1,7 @@
 "use client"
 import TimingAddForm from '@/lib/ui/screen-components/protected/restaurant/timing/add-form';
 import TimingHeader from '@/lib/ui/screen-components/protected/restaurant/timing/view/header';
+import DeliveryOptions from '@/lib/ui/screen-components/protected/restaurant/timing/deliveryOptions';
 
 
 const TimingScreen = () => {
@@ -9,7 +10,10 @@ const TimingScreen = () => {
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden p-3">
       <TimingHeader />
-      <TimingAddForm />
+      <div className="overflow-auto">
+        <DeliveryOptions />
+        <TimingAddForm />
+      </div>
     </div>
   );
 };

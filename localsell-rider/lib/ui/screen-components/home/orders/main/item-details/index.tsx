@@ -1,7 +1,7 @@
-import { ConfigurationContext } from "@/lib/context/global/configuration.context";
 import { useApptheme } from "@/lib/context/global/theme.context";
 import { IOrder } from "@/lib/utils/interfaces/order.interface";
-import { useContext, useMemo } from "react";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Text, View } from "react-native";
 
@@ -14,7 +14,7 @@ const ItemDetails = ({
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
-  const configuration = useContext(ConfigurationContext);
+  const { format: formatCurrency } = useCurrency();
 
   if (!order) return null;
 
@@ -93,8 +93,7 @@ const ItemDetails = ({
                     <View className="flex-row items-center">
                       <Text style={{ color: appTheme.fontMainColor }}>{item?.variation?.title}</Text>
                       <Text className="ml-2" style={{ color: appTheme.fontMainColor }}>
-                        {configuration?.currencySymbol}
-                        {item?.variation?.price}
+                        {formatCurrency(item?.variation?.price)}
                       </Text>
                     </View>
                   )}
@@ -110,7 +109,7 @@ const ItemDetails = ({
                             return (
                               <View key={option._id} className="flex-row items-center">
                                 <Text style={{ color: appTheme.fontMainColor }}>{option.title}</Text>
-                                <Text className="ml-2" style={{ color: appTheme.fontMainColor }}>({option?.price}{configuration?.currencySymbol})</Text>
+                                <Text className="ml-2" style={{ color: appTheme.fontSecondColor }}>+{formatCurrency(option?.price)}</Text>
                               </View>
                             );
                           })}
@@ -123,11 +122,10 @@ const ItemDetails = ({
 
               <View>
                 <Text
-                  className="font-[Inter] text-[14px] font-semibold text-left "
+                  className="font-[Inter] text-[14px] font-semibold text-right"
                   style={{ color: appTheme.fontMainColor }}
                 >
-                  {configuration?.currencySymbol}
-                  {item.variation?.price}
+                  {formatCurrency((item.variation?.price ?? 0) * (item.quantity ?? 1))}
                 </Text>
               </View>
             </View>
@@ -151,11 +149,10 @@ const ItemDetails = ({
         </Text>
         <View className="flex-row gap-x-1">
           <Text
-            className="font-[Inter] font-semibold text-left "
+            className="font-[Inter] text-[16px] font-bold text-right"
             style={{ color: appTheme.fontMainColor }}
           >
-            {configuration?.currencySymbol}
-            {itemAmount}
+            {formatCurrency(itemAmount, true)}
           </Text>
         </View>
       </View>

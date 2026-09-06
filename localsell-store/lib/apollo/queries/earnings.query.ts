@@ -25,6 +25,7 @@ export const STORE_EARNINGS_GRAPH = gql`
           orderDetails {
             orderId
             orderType
+            deliveryMode
             paymentMethod
           }
           date

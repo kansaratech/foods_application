@@ -74,6 +74,9 @@ export interface IStoreProfile {
   phone: string;
   available: boolean;
   hasBusinessDetails: boolean;
+  pickup?: boolean;
+  delivery?: boolean;
+  deliveryProvider?: "PLATFORM" | "SELF" | "BOTH";
 
   currentWalletAmount: number;
   totalWalletAmount: number;

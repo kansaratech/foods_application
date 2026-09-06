@@ -18,6 +18,9 @@ import { useApptheme } from "@/lib/context/theme.context";
 import useCancelOrder from "@/lib/hooks/useCancelOrder";
 import useOrderPickedUp from "@/lib/hooks/useOrderPickedUp";
 import { useTranslation } from "react-i18next";
+import OrderDispatch, {
+  DeliveryModeBadge,
+} from "@/lib/ui/screen-components/home/orders/dispatch";
 
 interface IOrderProps {
   order: IOrder;
@@ -199,6 +202,9 @@ const Order = ({
             #{order?.orderId}
           </Text>
         </View>
+
+        {/* Fulfilment */}
+        <DeliveryModeBadge order={order} />
 
         {/* Order Items */}
         <View className="flex-row justify-between items-center">
@@ -631,6 +637,8 @@ const Order = ({
                 </View>
               </View>
             </View>
+
+            <OrderDispatch order={order} />
 
             {order.orderStatus === "ASSIGNED" && (
               <View className="flex-row gap-x-4 w-full mt-10">

@@ -13,6 +13,7 @@ import { IRiderEarningsResponse } from "@/lib/utils/interfaces/rider-earnings.in
 
 // Core
 import { useApptheme } from "@/lib/context/global/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
@@ -21,6 +22,7 @@ export default function EarningDetailsHeader() {
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format: formatCurrency } = useCurrency();
 
   // States
   const [riderEarningsGrandTotal, setRiderEarningsGrandTotal] = useState({
@@ -90,7 +92,7 @@ export default function EarningDetailsHeader() {
             className="font-semibold text-lg text-start self-start"
             style={{ color: appTheme.mainTextColor }}
           >
-            ${Number(riderEarningsGrandTotal.earnings).toFixed(2)}
+            {formatCurrency(riderEarningsGrandTotal.earnings, true)}
           </Text>
         </View>
         <View
@@ -104,7 +106,7 @@ export default function EarningDetailsHeader() {
             className="font-semibold text-lg text-start self-start"
             style={{ color: appTheme.mainTextColor }}
           >
-            ${Number(riderEarningsGrandTotal.tips).toFixed(2)}
+            {formatCurrency(riderEarningsGrandTotal.tips, true)}
           </Text>
         </View>
         <View

@@ -20,6 +20,8 @@ import { serviceabilityTypeDefs } from './serviceability';
 import { commissionTypeDefs } from './commission';
 import { financeOpsTypeDefs } from './finance-ops';
 import { storeDocsTypeDefs } from './store-docs';
+import { storeDeliveryTypeDefs } from './store-delivery';
+import { storeReportsTypeDefs } from './store-reports';
 import { vendorDocsTypeDefs } from './vendor-docs';
 import { riderDocsTypeDefs } from './rider-docs';
 import { auditTypeDefs } from './audit';
@@ -47,6 +49,8 @@ export const typeDefs = [
   commissionTypeDefs,
   financeOpsTypeDefs,
   storeDocsTypeDefs,
+  storeDeliveryTypeDefs,
+  storeReportsTypeDefs,
   vendorDocsTypeDefs,
   riderDocsTypeDefs,
   auditTypeDefs,

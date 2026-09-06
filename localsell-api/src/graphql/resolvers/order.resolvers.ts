@@ -37,7 +37,7 @@ interface PlaceOrderArgs {
   instructions?: string;
 }
 
-async function publishOrderUpdate(order: Order) {
+export async function publishOrderUpdate(order: Order) {
   await pubsub.publish(TOPICS.ORDER_STATUS_CHANGED(order.userId), {
     orderStatusChanged: { userId: order.userId, origin: 'order_service', order },
   });
@@ -96,6 +96,8 @@ async function assertRiderUnderCashLimit(riderId: string, orderId: string): Prom
 // no rider yet); 'update' for any later change riders already see should stay
 // in sync with (claimed, picked, delivered, etc).
 async function publishZoneOrder(order: Order) {
+  // Pickup and store-self-delivery orders never go to the rider fleet.
+  if (order.deliveryMode && order.deliveryMode !== 'PLATFORM') return;
   const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
   if (restaurant?.latitude == null || restaurant?.longitude == null) return;
 
@@ -165,7 +167,13 @@ async function applyOrderStatusUpdate(
     const rate = resolveCommissionRate(restaurant.commissionRate, config?.defaultCommissionRate);
     const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
     const commission = Math.round(foodAmount * (rate / 100) * 100) / 100;
-    const storeEarning = foodAmount - commission + order.taxationAmount;
+    // The store keeps its food subtotal minus commission, plus the tax it remits
+    // as GST. When the store delivered the order itself, it also keeps the whole
+    // delivery fee + tip (there's no rider to pay).
+    const selfDelivered = order.deliveryMode === 'SELF';
+    const storeEarning =
+      foodAmount - commission + order.taxationAmount +
+      (selfDelivered ? order.deliveryCharges + order.tipping : 0);
     await prisma.restaurant.update({
       where: { id: restaurant.id },
       data: {
@@ -231,6 +239,28 @@ function computeDateRange(
     default:
       return undefined;
   }
+}
+
+/**
+ * A createdAt range from either an explicit start/end pair (no keyword needed —
+ * an open-ended start is fine) or, failing that, a dateKeyword bucket.
+ */
+function resolveCreatedAtRange(
+  dateKeyword?: string,
+  starting_date?: string,
+  ending_date?: string,
+): { gte?: Date; lte?: Date } | undefined {
+  if (starting_date || ending_date) {
+    const range: { gte?: Date; lte?: Date } = {};
+    if (starting_date) range.gte = new Date(starting_date);
+    if (ending_date) {
+      const end = new Date(ending_date);
+      end.setHours(23, 59, 59, 999);
+      range.lte = end;
+    }
+    return range;
+  }
+  return computeDateRange(dateKeyword, starting_date, ending_date);
 }
 
 async function resolveOrderAddress(userId: string, input: PlaceOrderArgs['address']): Promise<string> {
@@ -315,7 +345,10 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const currentUser = requireRole(context, ['RIDER']);
       return prisma.order.findMany({
         where: {
-          OR: [{ riderId: currentUser.id }, { riderId: null, orderStatus: 'ACCEPTED' }],
+          OR: [
+            { riderId: currentUser.id },
+            { riderId: null, orderStatus: 'ACCEPTED', deliveryMode: 'PLATFORM' },
+          ],
         },
         orderBy: { createdAt: 'desc' },
       });
@@ -352,7 +385,17 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
     },
     ordersByRestId: async (
       _parent,
-      args: { restaurant: string; page?: number; rows?: number; search?: string; orderStatus?: string[] },
+      args: {
+        restaurant: string;
+        page?: number;
+        rows?: number;
+        search?: string;
+        orderStatus?: string[];
+        deliveryMode?: string[];
+        starting_date?: string;
+        ending_date?: string;
+        dateKeyword?: string;
+      },
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -365,9 +408,18 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const requestedStatuses = args.orderStatus
         ?.map((s) => s.toUpperCase() as OrderStatus)
         .filter((s) => ORDER_STATUS_VALUES.includes(s));
+      const requestedModes = args.deliveryMode
+        ?.map((m) => m.toUpperCase())
+        .filter((m) => ['PICKUP', 'SELF', 'PLATFORM'].includes(m));
+      const dateRange = resolveCreatedAtRange(args.dateKeyword, args.starting_date, args.ending_date);
       const where = {
         restaurantId: args.restaurant,
         ...(requestedStatuses?.length ? { orderStatus: { in: requestedStatuses } } : {}),
+        ...(requestedModes?.length ? { deliveryMode: { in: requestedModes } } : {}),
+        ...(dateRange ? { createdAt: dateRange } : {}),
+        ...(args.search
+          ? { OR: [{ orderId: { contains: args.search } }, { user: { name: { contains: args.search } } }] }
+          : {}),
       };
       const [orders, totalCount] = await Promise.all([
         prisma.order.findMany({ where, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
@@ -408,6 +460,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         starting_date?: string;
         ending_date?: string;
         orderStatus?: string[];
+        deliveryMode?: string[];
         search?: string;
         restaurantId?: string;
         riderId?: string;
@@ -420,10 +473,14 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const requestedStatuses = args.orderStatus
         ?.map((s) => s.toUpperCase() as OrderStatus)
         .filter((s) => ORDER_STATUS_VALUES.includes(s));
+      const requestedModes = args.deliveryMode
+        ?.map((m) => m.toUpperCase())
+        .filter((m) => ['PICKUP', 'SELF', 'PLATFORM'].includes(m));
       const dateRange = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
 
       const where = {
         ...(requestedStatuses?.length ? { orderStatus: { in: requestedStatuses } } : {}),
+        ...(requestedModes?.length ? { deliveryMode: { in: requestedModes } } : {}),
         ...(args.restaurantId ? { restaurantId: args.restaurantId } : {}),
         ...(args.riderId ? { riderId: args.riderId } : {}),
         ...(dateRange ? { createdAt: dateRange } : {}),
@@ -536,6 +593,15 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const orderAmount = itemsTotal - discountAmount + args.deliveryCharges + args.tipping + args.taxationAmount;
 
+      // Fulfilment: pickup → PICKUP; a self-delivery-only store → SELF; anything
+      // else (PLATFORM or BOTH) defaults to the LocalSell fleet, and the store
+      // can move a BOTH order to its own person after accepting it.
+      const deliveryMode = args.isPickedUp
+        ? 'PICKUP'
+        : restaurant.deliveryProvider === 'SELF'
+          ? 'SELF'
+          : 'PLATFORM';
+
       const order = await prisma.order.create({
         data: {
           orderId: generateDisplayOrderId(),
@@ -550,6 +616,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
           orderAmount,
           instructions: args.instructions,
           isPickedUp: args.isPickedUp,
+          deliveryMode,
           orderDate: new Date(args.orderDate),
           items: { create: itemsData },
         },
@@ -616,7 +683,17 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         }
       }
 
-      if (args.isPickedUp != null && args.isPickedUp !== order.isPickedUp) data.isPickedUp = args.isPickedUp;
+      if (args.isPickedUp != null && args.isPickedUp !== order.isPickedUp) {
+        data.isPickedUp = args.isPickedUp;
+        // Keep deliveryMode in step with the fulfilment flag.
+        if (args.isPickedUp) {
+          data.deliveryMode = 'PICKUP';
+          data.storeDeliveryAgentId = null;
+        } else {
+          const rest = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+          data.deliveryMode = rest?.deliveryProvider === 'SELF' ? 'SELF' : 'PLATFORM';
+        }
+      }
       if (addressId !== order.addressId) data.addressId = addressId;
       if (deliveryCharges !== order.deliveryCharges) {
         data.deliveryCharges = deliveryCharges;

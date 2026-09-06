@@ -25,6 +25,15 @@ async function main() {
   const config = await prisma.configuration.findFirst();
   const defaultRate = config?.defaultCommissionRate ?? 20;
 
+  // 0 — delivery mode on orders that predate the per-store delivery system.
+  // Pickup orders → PICKUP; everything else → PLATFORM (the fleet). Only touch
+  // rows still at the column default so a re-run is a no-op.
+  const pickupFixed = await prisma.order.updateMany({
+    where: { isPickedUp: true, deliveryMode: 'PLATFORM' },
+    data: { deliveryMode: 'PICKUP' },
+  });
+  console.log(`Orders: ${pickupFixed.count} delivery mode(s) set to PICKUP.`);
+
   // 1 + 2 — rate and radius per store
   const stores = await prisma.restaurant.findMany();
   let rateFixed = 0;

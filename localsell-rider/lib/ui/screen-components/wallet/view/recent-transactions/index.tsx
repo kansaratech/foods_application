@@ -1,5 +1,6 @@
 // Interfaces
 import { useApptheme } from "@/lib/context/global/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { IRiderTransaction } from "@/lib/utils/interfaces/rider.interface";
 
 // Icons
@@ -18,6 +19,7 @@ export default function RecentTransaction({
 }) {
   // Hooks
   const { appTheme } = useApptheme();
+  const { format: formatCurrency } = useCurrency();
   const { t } = useTranslation();
 
   // Constants
@@ -71,7 +73,7 @@ export default function RecentTransaction({
               : appTheme.fontMainColor,
         }}
       >
-        ${transaction?.amountTransferred}
+        {formatCurrency(transaction?.amountTransferred, true)}
       </Text>
     </View>
   );

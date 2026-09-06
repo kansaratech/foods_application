@@ -143,7 +143,17 @@ export const orderTypeDefs = /* GraphQL */ `
     allOrders(page: Int): [Order!]!
     riderOrders: [Order!]!
     getActiveOrders(restaurantId: String, page: Int, rowsPerPage: Int, actions: [String], search: String): OrdersActiveOrdersResult!
-    ordersByRestId(restaurant: String!, page: Int, rows: Int, search: String, orderStatus: [String]): OrdersActiveOrdersResult!
+    ordersByRestId(
+      restaurant: String!
+      page: Int
+      rows: Int
+      search: String
+      orderStatus: [String]
+      deliveryMode: [String]
+      dateKeyword: String
+      starting_date: String
+      ending_date: String
+    ): OrdersActiveOrdersResult!
     "Order history for a single customer — the super-admin's user-detail page."
     ordersByUser(userId: ID!, page: Int, limit: Int): OrdersActiveOrdersResult!
     restaurantOrders: [Order!]!
@@ -155,6 +165,7 @@ export const orderTypeDefs = /* GraphQL */ `
       starting_date: String
       ending_date: String
       orderStatus: [String]
+      deliveryMode: [String]
       search: String
       restaurantId: ID
       riderId: ID

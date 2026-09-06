@@ -58,6 +58,8 @@ export const restaurantTypeDefs = /* GraphQL */ `
     postCode: String
     pickup: Boolean
     delivery: Boolean
+    "Who fulfils a delivery order: PLATFORM (LocalSell fleet) | SELF (store's own people) | BOTH (store picks per order)."
+    deliveryProvider: String
     minDeliveryFee: Float
     deliveryDistance: Float
     deliveryFee: Float
@@ -144,6 +146,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     cuisines: [String!]
     latitude: Float
     longitude: Float
+    deliveryProvider: String
   }
 
   input RestaurantProfileInput {
@@ -165,6 +168,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     isAvailable: Boolean
     latitude: Float
     longitude: Float
+    deliveryProvider: String
   }
 
   type CommissionRateLite {
@@ -188,6 +192,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
   type DeliveryOptionsFields {
     delivery: Boolean
     pickup: Boolean
+    deliveryProvider: String
   }
 
   type DeliveryOptionsResult {
@@ -283,7 +288,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     duplicateRestaurant(id: String!, owner: String!): Restaurant!
 
     updateCommission(id: String!, commissionRate: Float!): Restaurant!
-    updateDeliveryOptions(restId: String!, pickup: Boolean!, delivery: Boolean!): DeliveryOptionsResult!
+    updateDeliveryOptions(restId: String!, pickup: Boolean!, delivery: Boolean!, deliveryProvider: String): DeliveryOptionsResult!
     updateTimings(id: String!, openingTimes: [TimingsInput]): Restaurant!
 
     updateDeliveryBoundsAndLocation(

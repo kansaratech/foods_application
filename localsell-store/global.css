@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* --- Scrollbars (web) --------------------------------------------------- */
+/* Thin, unobtrusive native scrollbars everywhere as the baseline. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+}
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.35);
+  border: 2px solid transparent;
+  border-radius: 9px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* perfect-scrollbar overlay (used on the web sidebar) — LocalSell tint. */
+.ls-scrollarea > .ps__rail-y {
+  opacity: 0.55;
+  background: transparent !important;
+  width: 11px;
+}
+.ls-scrollarea > .ps__rail-y:hover,
+.ls-scrollarea > .ps__rail-y:focus,
+.ls-scrollarea.ps--clicking > .ps__rail-y {
+  opacity: 0.9;
+  background: transparent !important;
+}
+.ls-scrollarea > .ps__rail-y > .ps__thumb-y {
+  background: #9fb0c7 !important;
+  width: 6px;
+  right: 2px;
+  border-radius: 6px;
+}
+.ls-scrollarea > .ps__rail-y:hover > .ps__thumb-y,
+.ls-scrollarea > .ps__rail-y:focus > .ps__thumb-y {
+  width: 7px;
+  background: #7f93af !important;
+}

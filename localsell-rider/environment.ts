@@ -18,12 +18,20 @@ const getEnvVars = (env = Updates.channel) => {
     loadDevMessages();
     loadErrorMessages();
   }
+  // Local dev override: point at the API on this machine (CORS_ORIGIN="*").
+  // The deployed api.localsell.in rejects http://localhost origins, so web
+  // login fails against it. Set EXPO_PUBLIC_GRAPHQL_URL in .env to opt in.
+  const graphqlUrl =
+    process.env.EXPO_PUBLIC_GRAPHQL_URL || "https://api.localsell.in/graphql";
+  const wsGraphqlUrl =
+    process.env.EXPO_PUBLIC_WS_GRAPHQL_URL || "wss://api.localsell.in/graphql";
+
   // The "demo" channel is a release build that must still talk to the local
   // (tunnelled) API, not the Enatega production server.
   if (!__DEV__ && !isDemo) {
     return {
-      GRAPHQL_URL: "https://api.localsell.in/graphql",
-      WS_GRAPHQL_URL: "wss://api.localsell.in/graphql",
+      GRAPHQL_URL: graphqlUrl,
+      WS_GRAPHQL_URL: wsGraphqlUrl,
       SENTRY_DSN:
         configuration?.riderAppSentryUrl ??
         "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",
@@ -35,8 +43,8 @@ const getEnvVars = (env = Updates.channel) => {
   return {
     // Deployed LocalSell backend. For LAN testing use
     // http://<PC-LAN-IP>:4000 instead.
-    GRAPHQL_URL: "https://api.localsell.in/graphql",
-    WS_GRAPHQL_URL: "wss://api.localsell.in/graphql",
+    GRAPHQL_URL: graphqlUrl,
+    WS_GRAPHQL_URL: wsGraphqlUrl,
     SENTRY_DSN:
       configuration?.riderAppSentryUrl ??
       "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",

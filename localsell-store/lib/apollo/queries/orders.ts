@@ -85,13 +85,89 @@ export const GET_ORDERS = gql`
       acceptedAt
       isRinged
       instructions
+      deliveryMode
+      storeDeliveryAgent {
+        _id
+        name
+        phone
+        isActive
+      }
       rider {
         _id
         name
         username
+        phone
         available
       }
       discountAmount
+    }
+  }
+`;
+
+export const ORDERS_BY_REST_ID = gql`
+  query OrdersByRestId(
+    $restaurant: String!
+    $page: Int
+    $rows: Int
+    $search: String
+    $orderStatus: [String]
+    $deliveryMode: [String]
+    $starting_date: String
+    $ending_date: String
+  ) {
+    ordersByRestId(
+      restaurant: $restaurant
+      page: $page
+      rows: $rows
+      search: $search
+      orderStatus: $orderStatus
+      deliveryMode: $deliveryMode
+      starting_date: $starting_date
+      ending_date: $ending_date
+    ) {
+      totalCount
+      currentPage
+      totalPages
+      prevPage
+      nextPage
+      orders {
+        _id
+        orderId
+        orderStatus
+        paymentMethod
+        paymentStatus
+        orderAmount
+        deliveryCharges
+        tipping
+        taxationAmount
+        discountAmount
+        isPickedUp
+        deliveryMode
+        reason
+        createdAt
+        orderDate
+        deliveredAt
+        cancelledAt
+        storeDeliveryAgent {
+          _id
+          name
+          phone
+        }
+        user {
+          _id
+          name
+          phone
+        }
+        rider {
+          _id
+          name
+        }
+        items {
+          _id
+          title
+          quantity
+        }
+      }
     }
   }
 `;

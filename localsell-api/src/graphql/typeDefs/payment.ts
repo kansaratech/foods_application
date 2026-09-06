@@ -120,6 +120,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     _id: ID!
     orderId: String!
     orderType: String!
+    deliveryMode: String!
     paymentMethod: String!
     createdAt: String
     updatedAt: String
@@ -153,6 +154,7 @@ export const paymentTypeDefs = /* GraphQL */ `
   type EarningsGraphOrderDetail {
     orderId: String!
     orderType: String!
+    deliveryMode: String!
     paymentMethod: String!
   }
 

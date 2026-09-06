@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { FlatList, Platform, StyleSheet, Text, View } from "react-native";
+import PreparationTimeDialog from "@/lib/ui/useable-components/preparation-time-dialog";
 // UI
 import CustomTab from "@/lib/ui/useable-components/custom-tab";
 // Constants
@@ -168,15 +169,25 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
           </View>
         </View>
 
-        <ResponsiveFormSheet ref={bottomSheetModalRef} maxWidth={420}>
-          {selectedOrder?._id && (
-            <SetTimeScreenAndAcceptOrder
-              id={selectedOrder?._id ?? ""}
-              orderId={selectedOrder?.orderId ?? ""}
-              handleDismissModal={handleDismissModal}
+        {Platform.OS === "web" ? (
+          selectedOrder && (
+            <PreparationTimeDialog
+              key={selectedOrder._id}
+              order={selectedOrder}
+              onClose={handleDismissModal}
             />
-          )}
-        </ResponsiveFormSheet>
+          )
+        ) : (
+          <ResponsiveFormSheet ref={bottomSheetModalRef} maxWidth={420}>
+            {selectedOrder?._id && (
+              <SetTimeScreenAndAcceptOrder
+                id={selectedOrder?._id ?? ""}
+                orderId={selectedOrder?.orderId ?? ""}
+                handleDismissModal={handleDismissModal}
+              />
+            )}
+          </ResponsiveFormSheet>
+        )}
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );

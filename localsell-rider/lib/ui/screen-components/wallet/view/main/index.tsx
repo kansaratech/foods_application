@@ -41,12 +41,14 @@ import ReactNativeModal from "react-native-modal";
 
 // Skeletons
 import { useApptheme } from "@/lib/context/global/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { WalletScreenMainLoading } from "@/lib/ui/skeletons";
 
 export default function WalletMain() {
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
+  const { format: formatCurrency } = useCurrency();
 
   // States
   const [isBottomModalOpen, setIsBottomModalOpen] = useState(false);
@@ -145,7 +147,7 @@ export default function WalletMain() {
     const currentAmount = riderProfileData?.rider.currentWalletAmount || 0;
     if (withdrawAmount > (currentAmount || 0)) {
       return setAmountErrMsg(
-        `${t("Please enter a valid amount, You have $")}${currentAmount} ${t("available")}.`,
+        `${t("Please enter a valid amount, you have")} ${formatCurrency(currentAmount, true)} ${t("available")}.`,
       );
     } else if (withdrawAmount < 10) {
       return setAmountErrMsg(
@@ -216,7 +218,7 @@ export default function WalletMain() {
             className="font-semibold text-[32px]"
             style={{ color: appTheme.fontMainColor }}
           >
-            ${riderProfileData?.rider.currentWalletAmount ?? 0}
+            {formatCurrency(riderProfileData?.rider.currentWalletAmount ?? 0, true)}
           </Text>
           <CustomContinueButton
             title={t("Withdraw Now")}

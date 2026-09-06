@@ -77,6 +77,16 @@ export const ORDER_SUPER_ADMIN_COLUMNS = () => {
       body: (row: IExtendedOrder) => row.restaurant?.name || '?',
     },
     {
+      headerName: 'Delivery',
+      propertyName: 'deliveryMode',
+      body: (row: IExtendedOrder) => {
+        const mode = row.deliveryMode || (row.isPickedUp ? 'PICKUP' : 'PLATFORM');
+        if (mode === 'PICKUP') return 'Pickup';
+        if (mode === 'SELF') return `Store${row.storeDeliveryAgent?.name ? ` · ${row.storeDeliveryAgent.name}` : ''}`;
+        return 'LocalSell fleet';
+      },
+    },
+    {
       headerName: 'Rider',
       propertyName: 'rider.name',
       body: (row: IExtendedOrder) => row.rider?.name || 'Unassigned',

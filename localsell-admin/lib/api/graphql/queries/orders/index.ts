@@ -341,6 +341,7 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
     $starting_date: String
     $ending_date: String
     $orderStatus: [String]
+    $deliveryMode: [String]
     $search: String
     $restaurantId: ID
     $riderId: ID
@@ -352,6 +353,7 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
       starting_date: $starting_date
       ending_date: $ending_date
       orderStatus: $orderStatus
+      deliveryMode: $deliveryMode
       search: $search
       restaurantId: $restaurantId
       riderId: $riderId
@@ -427,6 +429,13 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         status
         paymentStatus
         isActive
+        isPickedUp
+        deliveryMode
+        storeDeliveryAgent {
+          _id
+          name
+          phone
+        }
         createdAt
         deliveryCharges
         tipping

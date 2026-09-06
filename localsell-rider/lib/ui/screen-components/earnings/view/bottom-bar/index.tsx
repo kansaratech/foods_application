@@ -1,6 +1,7 @@
 // Contexts
 import { useApptheme } from "@/lib/context/global/theme.context";
 import { useUserContext } from "@/lib/context/global/user.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 
 // Interfaces
 import { IEarningBottomProps } from "@/lib/utils/interfaces/earning.interface";
@@ -27,6 +28,7 @@ export default function EarningBottomBar({
 }: IEarningBottomProps) {
   // Hooks
   const { appTheme } = useApptheme();
+  const { format: formatCurrency } = useCurrency();
   const { t } = useTranslation();
 
   // Contexts
@@ -100,7 +102,7 @@ export default function EarningBottomBar({
             {t("Total Earnings")}
           </Text>
           <Text style={{ color: appTheme.fontSecondColor }}>
-            ${totalEarnings}
+            {formatCurrency(totalEarnings, true)}
           </Text>
         </View>
         <View className="flex flex-row justify-between items-center flex-2 p-5">
@@ -114,7 +116,7 @@ export default function EarningBottomBar({
             className="font-bold text-md"
             style={{ color: appTheme.fontSecondColor }}
           >
-            ${totalTips}
+            {formatCurrency(totalTips, true)}
           </Text>
         </View>
         <View className="flex flex-row justify-between p-5 ">
@@ -143,7 +145,7 @@ export default function EarningBottomBar({
             }}
           >
             <Text className="text-md text-[#3B82F6] font-bold">
-              ${totalEarnings - totalTips}
+              {formatCurrency(totalEarnings - totalTips, true)}
             </Text>
             <Ionicons name="arrow-forward" size={23} color={"#3B82F6"} />
           </TouchableOpacity>

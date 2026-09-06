@@ -37,12 +37,19 @@ export const STORE_EARNINGS = gql`
 `;
 
 export const STORE_TRANSACTIONS_HISTORY = gql`
-  query TransactionHistory {
-    transactionHistory {
+  query TransactionHistory($pagination: MoneyPaginationInput) {
+    transactionHistory(pagination: $pagination) {
       data {
+        _id
+        transactionId
         status
         amountTransferred
+        amountCurrency
+        userType
         createdAt
+      }
+      pagination {
+        total
       }
     }
   }
@@ -82,6 +89,9 @@ export const STORE_PROFILE = gql`
       shopType
       phone
       hasBusinessDetails
+      pickup
+      delivery
+      deliveryProvider
       openingTimes {
         day
         times {

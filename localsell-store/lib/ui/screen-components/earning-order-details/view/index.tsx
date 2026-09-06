@@ -37,6 +37,7 @@ export default function EarningsOrderDetailsMain() {
             orderId: od.orderId,
             orderType: od.orderType,
             paymentMethod: od.paymentMethod,
+            deliveryMode: od.deliveryMode,
             date: day.date,
             amount: perOrder,
           }));
@@ -64,6 +65,7 @@ export default function EarningsOrderDetailsMain() {
             orderId={item.orderId}
             date={item.date}
             paymentMethod={item.paymentMethod}
+            deliveryMode={item.deliveryMode}
           />
         )}
       />

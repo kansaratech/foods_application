@@ -227,22 +227,49 @@ body {
   font-weight: 400;
 }
 
-/* Scroll Bar  */
+/* Scroll Bar — thin, unobtrusive, consistent across LocalSell apps */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-  /* Added height for horizontal scrollbars */
-  background: rgba(255,
-      255,
-      255,
-      0.8);
-  /* Light gray background for better visibility */
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d3d3d3;
-  /* A more lighter gray color for the scrollbar thumb */
-  border-radius: 7px;
+  background: rgba(100, 116, 139, 0.35);
+  border: 2px solid transparent;
+  border-radius: 9px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.55);
+  background-clip: content-box;
 }
 
 /* ------------- Prime React ------------- */

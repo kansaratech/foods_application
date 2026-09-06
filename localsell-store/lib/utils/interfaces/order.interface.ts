@@ -78,6 +78,7 @@ export interface Rider {
   _id: string;
   name: string;
   username: string;
+  phone?: string | null;
   available: boolean;
 }
 
@@ -89,6 +90,16 @@ export interface Review {
 export interface Zone {
   _id: string;
   name: string;
+}
+
+export interface IStoreDeliveryAgent {
+  _id: string;
+  restaurantId?: string;
+  name: string;
+  phone?: string | null;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IOrder {
@@ -120,6 +131,8 @@ export interface IOrder {
   expectedTime?: string;
   preparationTime?: string;
   isPickedUp: boolean;
+  deliveryMode?: "PICKUP" | "SELF" | "PLATFORM";
+  storeDeliveryAgent?: IStoreDeliveryAgent | null;
   acceptedAt?: string;
   pickedAt?: string;
   deliveredAt?: string;

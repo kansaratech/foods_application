@@ -24,7 +24,11 @@ import { useTranslation } from "react-i18next";
 import { FlashMessageComponent, NoRecordFound } from "@/lib/ui/useable-components";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
 
-const money = (n: number) => `₹${(n ?? 0).toFixed(2)}`;
+const inrFmt = new Intl.NumberFormat("en-IN", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+const money = (n: number) => `₹${inrFmt.format(Number.isFinite(n) ? n : 0)}`;
 const day = (d: string) =>
   new Date(d).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
 

@@ -65,12 +65,23 @@ interface RestaurantInputArgs {
   cuisines?: string[];
   latitude?: number;
   longitude?: number;
+  deliveryProvider?: string;
 }
 
 interface RestaurantProfileInputArgs extends Partial<RestaurantInputArgs> {
   _id: string;
   orderPrefix?: string;
   isAvailable?: boolean;
+}
+
+const DELIVERY_PROVIDERS = ['PLATFORM', 'SELF', 'BOTH'];
+function normalizeDeliveryProvider(value?: string | null): string | undefined {
+  if (value == null) return undefined;
+  const upper = value.toUpperCase();
+  if (!DELIVERY_PROVIDERS.includes(upper)) {
+    throw userInputError(`deliveryProvider must be one of ${DELIVERY_PROVIDERS.join(', ')}`);
+  }
+  return upper;
 }
 
 function assertOwnsRestaurant(user: { id: string; userType: string }, restaurant: Restaurant) {
@@ -451,6 +462,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           commissionRate,
           latitude: input.latitude,
           longitude: input.longitude,
+          deliveryProvider: normalizeDeliveryProvider(input.deliveryProvider) ?? 'PLATFORM',
           slug: slugify(input.name),
           orderPrefix: input.name.slice(0, 3).toUpperCase(),
           ownerId: owner.id,
@@ -537,6 +549,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           isAvailable: input.isAvailable,
           latitude: input.latitude,
           longitude: input.longitude,
+          deliveryProvider: normalizeDeliveryProvider(input.deliveryProvider),
           ...(cuisineIds
             ? { cuisines: { deleteMany: {}, create: cuisineIds.map((cuisineId) => ({ cuisineId })) } }
             : {}),
@@ -620,7 +633,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     updateDeliveryOptions: async (
       _parent,
-      args: { restId: string; pickup: boolean; delivery: boolean },
+      args: { restId: string; pickup: boolean; delivery: boolean; deliveryProvider?: string },
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -629,9 +642,19 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       assertOwnsRestaurant(currentUser, restaurant);
       const updated = await prisma.restaurant.update({
         where: { id: args.restId },
-        data: { pickup: args.pickup, delivery: args.delivery },
+        data: {
+          pickup: args.pickup,
+          delivery: args.delivery,
+          deliveryProvider: normalizeDeliveryProvider(args.deliveryProvider),
+        },
       });
-      return { deliveryOptions: { pickup: updated.pickup, delivery: updated.delivery } };
+      return {
+        deliveryOptions: {
+          pickup: updated.pickup,
+          delivery: updated.delivery,
+          deliveryProvider: updated.deliveryProvider,
+        },
+      };
     },
 
     updateTimings: async (
@@ -749,6 +772,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: Restaurant) => parent.id,
     unique_restaurant_id: (parent: Restaurant) => parent.id,
     approvalStatus: (parent: Restaurant) => parent.approvalStatus ?? 'APPROVED',
+    deliveryProvider: (parent: Restaurant) => parent.deliveryProvider ?? 'PLATFORM',
     approvalNote: (parent: Restaurant) => parent.approvalNote ?? null,
     approvedAt: (parent: Restaurant) => parent.approvedAt?.toISOString() ?? null,
     location: (parent: Restaurant) =>

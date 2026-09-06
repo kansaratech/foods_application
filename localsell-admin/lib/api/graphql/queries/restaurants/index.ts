@@ -199,6 +199,17 @@ export const GET_RESTAURANT_DELIVERY_ZONE_INFO = gql`
   }
 `;
 
+export const GET_RESTAURANT_DELIVERY_OPTIONS = gql`
+  query RestaurantDeliveryOptions($id: String!) {
+    restaurant(id: $id) {
+      _id
+      pickup
+      delivery
+      deliveryProvider
+    }
+  }
+`;
+
 export const GET_RESTAURANT_PROFILE = gql`
   query Restaurant($id: String!) {
     restaurant(id: $id) {

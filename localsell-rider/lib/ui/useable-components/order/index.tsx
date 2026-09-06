@@ -17,11 +17,18 @@ import useOrder from "@/lib/hooks/useOrder";
 import { BikeRidingIcon, ChatIcon, ClockIcon } from "../svg";
 
 // Hooks
-import { ConfigurationContext } from "@/lib/context/global/configuration.context";
 import { useLocationContext } from "@/lib/context/global/location.context";
 import { useApptheme } from "@/lib/context/global/theme.context";
 import { IOrder } from "@/lib/utils/interfaces/order.interface";
 import { calculateDistance } from "@/lib/utils/methods/custom-functions";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
+
+// Professional, consistent status colours (soft fill + readable text).
+const STATUS_STYLE: Record<string, { bg: string; fg: string }> = {
+  new_orders: { bg: "#DCFCE7", fg: "#15803D" }, // emerald
+  processing: { bg: "#FEF3C7", fg: "#B45309" }, // amber
+  delivered: { bg: "#E0E7FF", fg: "#4338CA" }, // indigo
+};
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import SpinnerComponent from "../spinner";
@@ -42,11 +49,11 @@ const Order = ({
   // Hooks
   const { t } = useTranslation();
   const { appTheme } = useApptheme();
+  const { format: formatCurrency } = useCurrency();
   const { mutateAssignOrder, loadingAssignOrder } = useOrder({
     _id,
     acceptedAt,
   } as IOrder);
-  const configuration = useContext(ConfigurationContext);
   const router = useRouter();
   const { location: riderLocation } = useLocationContext();
 
@@ -189,34 +196,20 @@ const Order = ({
                         {t("Status")}
                       </Text>
                       <View
-                        className={`px-3 py-1 border border-1 rounded-[12px]`}
+                        className="px-3 py-1 rounded-full"
                         style={{
                           backgroundColor:
-                            tab === "delivered"
-                              ? "cyan"
-                              : tab === "processing"
-                                ? "lightyellow"
-                                : "lightgreen",
-                          borderColor:
-                            tab === "delivered"
-                              ? "blue"
-                              : tab === "processing"
-                                ? "orange"
-                                : "green",
+                            (STATUS_STYLE[tab] ?? STATUS_STYLE.new_orders).bg,
                         }}
                       >
                         <Text
-                          className={`font-[Inter] text-[12px] font-semibold text-center decoration-skip-ink-0`}
+                          className="font-[Inter] text-[12px] font-semibold text-center"
                           style={{
                             color:
-                              tab === "delivered"
-                                ? "blue"
-                                : tab === "processing"
-                                  ? "orange"
-                                  : "green",
+                              (STATUS_STYLE[tab] ?? STATUS_STYLE.new_orders).fg,
                           }}
                         >
-                          {orderStatus}
+                          {t(orderStatus)}
                         </Text>
                       </View>
                     </View>
@@ -349,39 +342,61 @@ const Order = ({
                   </View>
                 </View>
 
-                {/* Payment Method */}
-                <View className="w-[99%] flex-row justify-between items-center">
-                  <Text
-                    className="flex-1 font-[Inter] text-[16px] text-base font-[500] "
-                    style={{ color: appTheme.fontSecondColor }}
-                  >
-                    {t("Payment Method")}
-                  </Text>
-                  <Text
-                    className="flex-1 font-[Inter] text-base font-semibold text-right underline-offset-auto decoration-skip-ink "
-                    style={{ color: appTheme.fontMainColor }}
-                  >
-                    {paymentMethod}
-                  </Text>
-                </View>
+                {/* Payment + Amount */}
+                <View
+                  className="w-[99%] rounded-2xl px-4 py-3"
+                  style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}
+                >
+                  <View className="flex-row justify-between items-center">
+                    <Text
+                      className="font-[Inter] text-[13px] font-medium"
+                      style={{ color: appTheme.fontSecondColor }}
+                    >
+                      {t("Payment Method")}
+                    </Text>
+                    <Text
+                      className="font-[Inter] text-[13px] font-semibold"
+                      style={{ color: appTheme.fontMainColor }}
+                    >
+                      {paymentMethod}
+                    </Text>
+                  </View>
 
-                {/* Order Amount */}
-                <View className="w-[99%] flex-row justify-between">
-                  <Text
-                    className="flex-1 font-[Inter] text-[16px] text-base font-[500] "
-                    style={{ color: appTheme.fontSecondColor }}
-                  >
-                    {t("Order Amount")}
-                  </Text>
+                  <View className="flex-row justify-between items-center mt-2">
+                    <Text
+                      className="font-[Inter] text-[15px] font-semibold"
+                      style={{ color: appTheme.fontMainColor }}
+                    >
+                      {t("Order Amount")}
+                    </Text>
+                    <Text
+                      className="font-[Inter] text-[20px] font-bold"
+                      style={{ color: appTheme.fontMainColor }}
+                    >
+                      {formatCurrency(orderAmount, true)}
+                    </Text>
+                  </View>
 
-                  <Text
-                    className="flex-1 font-[Inter] font-semibold text-right "
-                    style={{ color: appTheme.fontMainColor }}
-                  >
-                    {configuration?.currencySymbol}
-                    {orderAmount}
-                    {paymentStatus === "PAID" ? t("Paid") : t("(Not paid yet)")}
-                  </Text>
+                  <View className="flex-row justify-end mt-1.5">
+                    <View
+                      className="px-2.5 py-1 rounded-full"
+                      style={{
+                        backgroundColor:
+                          paymentStatus === "PAID" ? "#DCFCE7" : "#FEF3C7",
+                      }}
+                    >
+                      <Text
+                        className="font-[Inter] text-[11px] font-semibold"
+                        style={{
+                          color: paymentStatus === "PAID" ? "#15803D" : "#B45309",
+                        }}
+                      >
+                        {paymentStatus === "PAID"
+                          ? t("Paid online")
+                          : `${t("Collect")} ${formatCurrency(orderAmount, true)}`}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
                 {["PICKED"].includes(orderStatus) && (
@@ -450,7 +465,7 @@ const Order = ({
                   //   }
                   // />
                   <TouchableOpacity
-                    className="h-14 rounded-3xl py-3 mt-10 w-full"
+                    className="h-14 rounded-3xl items-center justify-center mt-8 w-full"
                     disabled={loadingAssignOrder}
                     style={{ backgroundColor: appTheme.primary }}
                     onPress={() =>
@@ -463,8 +478,8 @@ const Order = ({
                       <SpinnerComponent />
                     ) : (
                       <Text
-                        className="text-center text-lg font-medium"
-                        style={{ color: appTheme.black }}
+                        className="text-center text-lg font-semibold"
+                        style={{ color: "#FFFFFF" }}
                       >
                         {t("Assign me")}
                       </Text>

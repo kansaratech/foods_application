@@ -5,7 +5,6 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import {
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -48,7 +47,7 @@ import useDetails from "@/lib/hooks/useDetail";
 import useOrderDetail from "@/lib/hooks/useOrderDetails";
 
 // Context
-import { ConfigurationContext } from "@/lib/context/global/configuration.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 
 // UI Components
 import { RIDER_ORDERS } from "@/lib/apollo/queries";
@@ -88,7 +87,7 @@ export default function OrderDetailScreen() {
   const router = useRouter();
 
   // Context
-  const configuration = useContext(ConfigurationContext);
+  const { format: formatCurrency } = useCurrency();
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const insets = useSafeAreaInsets();
 
@@ -663,24 +662,45 @@ export default function OrderDetailScreen() {
               </View>
 
               {/* Order Amount */}
-              <View className="w-[99%] flex-row justify-between">
-                <Text
-                  className="flex-1 font-[Inter] text-[16px] text-base font-[500] "
-                  style={{ color: appTheme.fontSecondColor }}
-                >
-                  {t("Order Amount")}
-                </Text>
-
-                <Text
-                  className="flex-1 font-[Inter] font-semibold text-right "
-                  style={{ color: appTheme.fontMainColor }}
-                >
-                  {configuration?.currencySymbol}
-                  {order?.orderAmount}
-                  {order?.paymentStatus === "PAID"
-                    ? t("Paid")
-                    : t("(Not paid yet)")}
-                </Text>
+              <View
+                className="w-[99%] rounded-2xl px-4 py-3 mb-2"
+                style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}
+              >
+                <View className="flex-row justify-between items-center">
+                  <Text
+                    className="font-[Inter] text-[15px] font-semibold"
+                    style={{ color: appTheme.fontMainColor }}
+                  >
+                    {t("Order Amount")}
+                  </Text>
+                  <Text
+                    className="font-[Inter] text-[20px] font-bold"
+                    style={{ color: appTheme.fontMainColor }}
+                  >
+                    {formatCurrency(order?.orderAmount, true)}
+                  </Text>
+                </View>
+                <View className="flex-row justify-end mt-1.5">
+                  <View
+                    className="px-2.5 py-1 rounded-full"
+                    style={{
+                      backgroundColor:
+                        order?.paymentStatus === "PAID" ? "#DCFCE7" : "#FEF3C7",
+                    }}
+                  >
+                    <Text
+                      className="font-[Inter] text-[11px] font-semibold"
+                      style={{
+                        color:
+                          order?.paymentStatus === "PAID" ? "#15803D" : "#B45309",
+                      }}
+                    >
+                      {order?.paymentStatus === "PAID"
+                        ? t("Paid online")
+                        : `${t("Collect")} ${formatCurrency(order?.orderAmount, true)}`}
+                    </Text>
+                  </View>
+                </View>
               </View>
 
               {/* Divider */}
@@ -755,7 +775,7 @@ export default function OrderDetailScreen() {
                   onPress={() => {
                     const isUnpaid = order?.paymentStatus !== "PAID";
                     const amountNote = isUnpaid
-                      ? `\n\n${t("Confirm you have collected")} ${configuration?.currencySymbol ?? ""}${order?.orderAmount}.`
+                      ? `\n\n${t("Confirm you have collected")} ${formatCurrency(order?.orderAmount, true)}.`
                       : "";
                     const message = `${t("This completes the order and cannot be undone.")}${amountNote}`;
                     const markDelivered = async () => {

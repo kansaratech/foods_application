@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 // Core
 import { useApptheme } from "@/lib/context/global/theme.context";
+import { useCurrency } from "@/lib/utils/methods/use-currency";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function EarningStack({
@@ -18,6 +19,7 @@ export default function EarningStack({
   tip,
   totalDeliveries,
 }: IEarningStackProps) {
+  const { format: formatCurrency } = useCurrency();
   // Hooks
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
@@ -52,7 +54,7 @@ export default function EarningStack({
         className="flex flex-row gap-2 items-center flex-2"
         onPress={handleForwardPress}
       >
-        <Text className="font-bold text-[#3B82F6]">${earning}</Text>
+        <Text className="font-bold text-[#3B82F6]">{formatCurrency(earning, true)}</Text>
         <RightChevron color="#3B82F6" />
       </TouchableOpacity>
     </View>
