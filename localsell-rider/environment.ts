@@ -22,8 +22,8 @@ const getEnvVars = (env = Updates.channel) => {
   // (tunnelled) API, not the Enatega production server.
   if (!__DEV__ && !isDemo) {
     return {
-      GRAPHQL_URL: "https://padharo-api.kansaratech.com/graphql",
-      WS_GRAPHQL_URL: "wss://padharo-api.kansaratech.com/graphql",
+      GRAPHQL_URL: "https://api.localsell.in/graphql",
+      WS_GRAPHQL_URL: "wss://api.localsell.in/graphql",
       SENTRY_DSN:
         configuration?.riderAppSentryUrl ??
         "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",
@@ -33,10 +33,10 @@ const getEnvVars = (env = Updates.channel) => {
   }
 
   return {
-    // Deployed LocalSell backend (Sentora VPS). For LAN testing use
+    // Deployed LocalSell backend. For LAN testing use
     // http://<PC-LAN-IP>:4000 instead.
-    GRAPHQL_URL: "https://padharo-api.kansaratech.com/graphql",
-    WS_GRAPHQL_URL: "wss://padharo-api.kansaratech.com/graphql",
+    GRAPHQL_URL: "https://api.localsell.in/graphql",
+    WS_GRAPHQL_URL: "wss://api.localsell.in/graphql",
     SENTRY_DSN:
       configuration?.riderAppSentryUrl ??
       "https://e963731ba0f84e5d823a2bbe2968ea4d@o1103026.ingest.sentry.io/6135261",

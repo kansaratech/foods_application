@@ -11,9 +11,9 @@
 // docker-compose build args. When they are unset (local dev) the cloudflared
 // tunnel below is used.
 const DEFAULT_GRAPHQL_URL =
-  "https://padharo-api.kansaratech.com/graphql";
+  "https://api.localsell.in/graphql";
 const DEFAULT_WS_GRAPHQL_URL =
-  "wss://padharo-api.kansaratech.com/graphql";
+  "wss://api.localsell.in/graphql";
 
 const getEnvVars = () => ({
   GRAPHQL_URL: process.env.EXPO_PUBLIC_GRAPHQL_URL || DEFAULT_GRAPHQL_URL,
