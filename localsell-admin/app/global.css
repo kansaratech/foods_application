@@ -1,25 +1,15 @@
-@layer tailwind-base, primereact, tailwind-utilities;
-
-/* PrimeReact "styled" mode — core + icons + the light theme (always on).
-   Dark mode = the same theme's dark rules, scoped under `.dark` and toggled by
-   next-themes (see prime-dark.generated.css). Keep everything in @layer(primereact)
-   so Tailwind utilities keep winning the cascade. */
-@import 'primereact/resources/primereact.min.css' layer(primereact);
-@import 'primeicons/primeicons.css' layer(primereact);
-@import 'primereact/resources/themes/lara-light-blue/theme.css' layer(primereact);
-@import './prime-dark.generated.css' layer(primereact);
-
-/* Design tokens — imported unlayered so token values win over the theme above. */
+/* Cascade order is set here by @import order (css-loader inlines each in place).
+   Next 14.2 mangles `@import ... layer()`, so no cascade layers — plain @import,
+   and theme-tokens.css comes last so brand values win over the lara theme. */
+@import 'primereact/resources/primereact.min.css';
+@import 'primeicons/primeicons.css';
+@import 'primereact/resources/themes/lara-light-blue/theme.css';
+@import './prime-dark.generated.css';
 @import './theme-tokens.css';
 
-@layer tailwind-base {
-  @tailwind base;
-}
-
-@layer tailwind-utilities {
-  @tailwind components;
-  @tailwind utilities;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* ============================================================================
    Document

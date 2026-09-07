@@ -36,6 +36,14 @@ root.walkAtRules((at) => {
   if (at.name === 'font-face' || at.name === 'keyframes') at.remove();
 });
 
+// Flatten `@layer primereact { ... }` — Next 14.2 doesn't honour `@import
+// ... layer()`, so the theme is JS-imported unlayered; keep the dark copy
+// unlayered too so it stays consistent with the light theme's cascade.
+root.walkAtRules('layer', (at) => {
+  if (at.nodes) at.replaceWith(at.nodes);
+  else at.remove();
+});
+
 const scopeSelector = (selector) => {
   const s = selector.trim();
   if (s === ':root' || s === 'html' || s === 'body' || s === '*') return SCOPE;

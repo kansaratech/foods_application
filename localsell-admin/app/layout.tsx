@@ -5,7 +5,8 @@ import Script from 'next/script';
 import { FontawesomeConfig } from '@/lib/config';
 import { Providers } from './providers';
 
-// Styles — PrimeReact core/themes, design tokens, Tailwind (see global.css)
+// Styles — global.css @imports the PrimeReact theme, the generated dark theme
+// and the design tokens in order, then the Tailwind layers.
 import './global.css';
 
 export const metadata = {
