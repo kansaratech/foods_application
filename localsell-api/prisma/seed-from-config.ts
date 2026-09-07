@@ -20,6 +20,7 @@
  *   Customer  customer@localsell.in / Customer@123
  *   Rider     rider1 / Rider@123
  */
+import 'dotenv/config';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { PrismaClient, Prisma } from '@prisma/client';
@@ -137,6 +138,10 @@ const CONFIG_OPERATIONAL_KEYS = [
   'platformGstin', 'skipEmailVerification', 'skipMobileVerification', 'skipWhatsAppOTP',
   'testOtp', 'termsAndConditions', 'privacyPolicy', 'defaultLatitude', 'defaultLongitude',
   'costType', 'isPaidVersion', 'enableCustomerDemoMode',
+  // SMTP: JSON owns the non-secret parts; emailPassword comes from env
+  // (SMTP_PASSWORD) or is kept from the existing row — never from the JSON.
+  'enableEmail', 'email', 'emailName', 'smtpHost', 'smtpPort', 'smtpSecure',
+  'smtpUser', 'formEmail',
 ];
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -215,13 +220,25 @@ async function seedConfiguration(preserved: Record<string, unknown> | null) {
       kept[k] = v;
     }
   }
-  const fromJson: Record<string, unknown> = { ...cfg.configuration };
+  const fromJson: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(cfg.configuration)) {
+    if (k.startsWith('_')) continue; // JSON comment keys
+    fromJson[k] = v;
+  }
   if (fromJson.defaultLatitude == null) fromJson.defaultLatitude = CENTER.lat;
   if (fromJson.defaultLongitude == null) fromJson.defaultLongitude = CENTER.lng;
 
+  // SMTP password: env wins, else keep whatever was already on the row. Never
+  // from the JSON (it isn't there).
+  const smtpPass = process.env.SMTP_PASSWORD?.trim();
+  if (smtpPass) fromJson.emailPassword = smtpPass;
+
   await prisma.configuration.create({ data: { ...kept, ...fromJson } as Prisma.ConfigurationCreateInput });
+  const emailReady =
+    !!(fromJson.enableEmail && fromJson.smtpHost && (fromJson.emailPassword || kept.emailPassword));
   console.log(
-    `  · Configuration rebuilt${Object.keys(kept).length ? ` (kept ${Object.keys(kept).length} infra fields)` : ''}`,
+    `  · Configuration rebuilt${Object.keys(kept).length ? ` (kept ${Object.keys(kept).length} infra fields)` : ''}` +
+      ` — email ${emailReady ? 'ready' : 'NOT configured (set SMTP_PASSWORD)'}`,
   );
 }
 

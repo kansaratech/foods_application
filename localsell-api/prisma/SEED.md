@@ -11,9 +11,19 @@ It **wipes every data table** (users, stores, menus, add-ons, options, orders,
 commission / payout / rider-cash ledgers, reviews, riders, customers, zones,
 cuisines, the Configuration row) and rebuilds the whole marketplace from the
 JSON. The one thing it keeps: **infra secrets** already on the Configuration row
-(Google Maps / Stripe / PayPal / SMTP / Sentry / Cloudinary / Firebase keys) are
+(Google Maps / Stripe / PayPal / Sentry / Cloudinary / Firebase keys) are
 read back before the wipe and merged into the fresh Configuration, so a reseed
 never loses your API keys.
+
+### Email (SMTP)
+
+`seed-data.json` → `configuration` carries the **non-secret** SMTP settings
+(`enableEmail`, `email`, `smtpHost`, `smtpPort`, `smtpSecure`, `smtpUser`). The
+password is **never** in the JSON — the seed reads it from **`SMTP_PASSWORD`**
+in the env (`localsell-api/.env` locally, `deploy/localsell.env` on the server).
+If `SMTP_PASSWORD` is unset, the seed keeps whatever `emailPassword` was already
+on the Configuration row. The seed prints `email ready` / `email NOT configured`.
+Default: Gmail (`smtp.gmail.com:465` SSL, `localsell.dgh@gmail.com`).
 
 > ⚠️ **Never run `npm run seed` (or `db:deploy -- --demo`) against a live
 > production database.** It is a full reset.

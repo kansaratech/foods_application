@@ -35,6 +35,16 @@
     "skipMobileVerification": true,
     "skipWhatsAppOTP": true,
     "testOtp": "1234",
+
+    "_email": "SMTP for transactional email (partner-application alerts, etc). The password is NOT here — seed reads SMTP_PASSWORD from the env (localsell-api/.env locally, deploy/localsell.env on the server), else keeps whatever is already on the Configuration row.",
+    "enableEmail": true,
+    "email": "localsell.dgh@gmail.com",
+    "emailName": "LocalSell",
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": 465,
+    "smtpSecure": true,
+    "smtpUser": "localsell.dgh@gmail.com",
+    "formEmail": "localsell.dgh@gmail.com",
     "termsAndConditions": "LocalSell — Terms of Service. By placing an order you agree to pay the listed price plus applicable delivery fee and taxes. Orders are prepared and fulfilled by independent partner stores; LocalSell operates the marketplace and (where selected) the delivery. Cash-on-delivery orders must be paid in full to the delivery partner. Edit this text in Admin → Configuration.",
     "privacyPolicy": "LocalSell — Privacy Policy. We collect your name, phone, delivery address and order history to fulfil orders and provide support. We share the minimum necessary details with the partner store and the delivery partner assigned to your order. We do not sell your data. Edit this text in Admin → Configuration."
   },
