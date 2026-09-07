@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { GET_CONFIGURATION } from "../api/graphql/query/configuration";
 import {
   ASSIGN_ORDER,
+  CONFIRM_DELIVERY,
   UPDATE_ORDER_STATUS_RIDER,
 } from "../apollo/mutations/order.mutation";
 import { RIDER_EARNINGS_GRAPH } from "../apollo/queries/earnings.query";
@@ -108,7 +109,23 @@ const useDetails = (orderData: IOrder) => {
     },
   );
 
+  const [mutateConfirmDelivery, { loading: loadingConfirmDelivery }] = useMutation(
+    CONFIRM_DELIVERY,
+    {
+      onCompleted,
+      onError,
+      update,
+      refetchQueries: () => [
+        { query: RIDER_PROFILE, variables: { id: userId } },
+        { query: RIDER_EARNINGS_GRAPH, variables: { rideId: userId } },
+      ],
+    },
+  );
+
   async function onCompleted(result: any) {
+    if (result.confirmDelivery) {
+      FlashMessageComponent({ message: t("Order delivered") });
+    }
     if (result.updateOrderStatusRider) {
       FlashMessageComponent({
         message: `${t("Order marked as")} ${result.updateOrderStatusRider.orderStatus}`,
@@ -168,15 +185,15 @@ const useDetails = (orderData: IOrder) => {
         }
       }
     }
-    if (data?.updateOrderStatusRider) {
+    const statusChange = data?.updateOrderStatusRider ?? data?.confirmDelivery;
+    if (statusChange) {
       const existingData = cache.readQuery({ query: RIDER_ORDERS });
       if (existingData) {
         const index = existingData.riderOrders.findIndex(
-          (o: IOrder) => o._id === data.updateOrderStatusRider._id,
+          (o: IOrder) => o._id === statusChange._id,
         );
         if (index > -1) {
-          existingData.riderOrders[index].orderStatus =
-            data.updateOrderStatusRider.orderStatus;
+          existingData.riderOrders[index].orderStatus = statusChange.orderStatus;
           cache.writeQuery({
             query: RIDER_ORDERS,
             data: { riderOrders: [...existingData.riderOrders] },
@@ -194,8 +211,10 @@ const useDetails = (orderData: IOrder) => {
     errorConfig,
     mutateAssignOrder,
     mutateOrderStatus,
+    mutateConfirmDelivery,
     loadingAssignOrder,
     loadingOrderStatus,
+    loadingConfirmDelivery,
   };
 };
 

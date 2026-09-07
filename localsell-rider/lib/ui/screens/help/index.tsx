@@ -1,3 +1,4 @@
+import WorkspacePage from "@/lib/ui/layouts/workspace-page";
 // Core
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -9,13 +10,19 @@ const HelpScreen = () => {
   // Hooks
   const { appTheme } = useApptheme();
   return (
-    <SafeAreaView
-      edges={["bottom", "right", "left"]}
-      className="w-full h-full"
-      style={{ backgroundColor: appTheme.screenBackground }}
+    <WorkspacePage
+      title="Help & Support"
+      description="Find answers and get help with your deliveries."
+      compact
     >
-      <HelpMain />
-    </SafeAreaView>
+      <SafeAreaView
+        edges={["bottom", "right", "left"]}
+        className="w-full h-full"
+        style={{ backgroundColor: appTheme.screenBackground }}
+      >
+        <HelpMain />
+      </SafeAreaView>
+    </WorkspacePage>
   );
 };
 

@@ -11,7 +11,8 @@ import { Button } from "primereact/button";
 
 // libraries and utils
 import { useRouter } from "next/navigation";
-import { sendEmail } from "@/lib/utils/methods";
+import { useMutation } from "@apollo/client";
+import { SUBMIT_PARTNER_APPLICATION } from "@/lib/api/graphql/mutations";
 import "react-phone-input-2/lib/style.css";
 
 // interfaces
@@ -58,16 +59,19 @@ const EmailForm: React.FC<formProps> = ({
   const { showToast } = useToast();
   const router = useRouter();
   const t = useTranslations();
+  const [submitApplication] = useMutation(SUBMIT_PARTNER_APPLICATION);
 
   const handleSubmit = async (formData: VendorFormValues) => {
-    const templateParams = {
-      ...formData,
-      role: role,
-      isRider: false,
-    };
-
     try {
-      await sendEmail("template_eogfh2k", templateParams);
+      await submitApplication({
+        variables: {
+          role,
+          firstName: formData.firstName?.trim(),
+          lastName: formData.lastName?.trim(),
+          email: formData.email?.trim(),
+          phone: formData.phoneNumber?.trim(),
+        },
+      });
 
       showToast({
         type: "success",
@@ -78,13 +82,19 @@ const EmailForm: React.FC<formProps> = ({
 
       router.push("/");
     } catch (error) {
-      console.error("Failed to send email:", error);
+      // Surface the actual reason instead of a generic message.
+      const reason =
+        (error as { graphQLErrors?: { message?: string }[] })?.graphQLErrors?.[0]
+          ?.message ||
+        (error as Error)?.message ||
+        t("failed_to_submit_form_please_try_again");
+      console.error("Partner application failed:", error);
 
       showToast({
         type: "error",
         title: t("toast_error"),
-        message: t("failed_to_submit_form_please_try_again"),
-        duration: 4000,
+        message: reason,
+        duration: 5000,
       });
     }
   };

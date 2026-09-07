@@ -23,6 +23,17 @@ export const UPDATE_ORDER_STATUS_RIDER = gql`
   }
 `;
 
+export const CONFIRM_DELIVERY = gql`
+  mutation ConfirmDelivery($orderId: ID!, $otp: String!) {
+    confirmDelivery(orderId: $orderId, otp: $otp) {
+      _id
+      orderStatus
+      deliveryConfirmedBy
+      paymentStatus
+    }
+  }
+`;
+
 export const cancelOrder = `#graphql
           mutation($abortOrderId: String!){
             abortOrder(id: $abortOrderId) {

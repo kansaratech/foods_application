@@ -36,7 +36,7 @@ import { GraphQLError } from "graphql";
 import { router } from "expo-router";
 
 // Core
-import { Keyboard, ScrollView, Text, View } from "react-native";
+import { Keyboard, Platform, ScrollView, Text, View } from "react-native";
 import ReactNativeModal from "react-native-modal";
 
 // Skeletons
@@ -62,11 +62,7 @@ export default function WalletMain() {
     data: riderTransactionData,
     fetch: fetchRiderTransactions,
     loading: isRiderTransactionLoading,
-  } = useLazyQueryQL(
-    RIDER_TRANSACTIONS_HISTORY,
-    {},
-    {},
-  ) as ILazyQueryResult<
+  } = useLazyQueryQL(RIDER_TRANSACTIONS_HISTORY, {}, {}) as ILazyQueryResult<
     IRiderTransactionHistoryResponse | undefined,
     Record<string, never>
   >;
@@ -201,12 +197,32 @@ export default function WalletMain() {
   return (
     <View
       className="flex flex-col justify-between  w-[100%] h-full "
-      style={{ backgroundColor: appTheme.screenBackground }}
+      style={{
+        backgroundColor: appTheme.screenBackground,
+        ...(Platform.OS === "web"
+          ? {
+              height: "auto",
+              minHeight: "100%",
+              justifyContent: "flex-start",
+              padding: 8,
+            }
+          : {}),
+      }}
     >
       {!isLoading && (
         <View
           className="flex flex-column gap-4 items-center m-4 p-4 rounded-lg"
-          style={{ backgroundColor: appTheme.themeBackground }}
+          style={{
+            backgroundColor: appTheme.themeBackground,
+            ...(Platform.OS === "web"
+              ? {
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: appTheme.borderLineColor,
+                  padding: 28,
+                }
+              : {}),
+          }}
         >
           <Text
             className="text-[18px] font-[600]"
@@ -218,7 +234,10 @@ export default function WalletMain() {
             className="font-semibold text-[32px]"
             style={{ color: appTheme.fontMainColor }}
           >
-            {formatCurrency(riderProfileData?.rider.currentWalletAmount ?? 0, true)}
+            {formatCurrency(
+              riderProfileData?.rider.currentWalletAmount ?? 0,
+              true,
+            )}
           </Text>
           <CustomContinueButton
             title={t("Withdraw Now")}

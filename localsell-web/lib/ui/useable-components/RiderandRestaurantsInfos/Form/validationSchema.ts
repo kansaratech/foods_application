@@ -7,7 +7,11 @@ const emailValidationSchema = (t: (key: string) => string) =>
     phoneNumber: Yup.string()
       .matches(/^\+?[0-9]{7,15}$/, t("phoneNumberInvalid"))
       .required(t("phoneNumberRequired")),
-    email: Yup.string().email(t("emailInvalid")).required(t("emailRequired")),
+    email: Yup.string()
+      .trim()
+      // Requires a real domain with a dot + 2+ char TLD — rejects "x@com" / "x@gmailcom".
+      .matches(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, t("emailInvalid"))
+      .required(t("emailRequired")),
     password: Yup.string()
       .min(6, t("passwordMin"))
       .required(t("passwordRequired")),

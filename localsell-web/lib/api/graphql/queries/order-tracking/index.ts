@@ -75,6 +75,8 @@ export const ORDER_TRACKING = gql`query OrderDetails($orderDetailsId: String!) {
     orderDate
     expectedTime
     isPickedUp
+    deliveryOtp
+    deliveryConfirmedBy
     createdAt
     cancelledAt
     deliveredAt

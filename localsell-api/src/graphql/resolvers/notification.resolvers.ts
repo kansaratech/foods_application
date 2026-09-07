@@ -3,6 +3,11 @@ import { Notification, WebNotification } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
+import { userInputError } from '../../utils/errors';
+
+// A real address: local part, "@", domain with at least one dot and a 2+ char TLD.
+// Rejects "x@com" and "x@gmailcom".
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // Audience for admin broadcast notifications: the restaurant-side roles that
 // share the admin app's notification bell (vendors + their staff).
@@ -41,6 +46,33 @@ export const notificationResolvers: IResolvers<unknown, GraphQLContext> = {
       if (recipients.length > 0) {
         await prisma.webNotification.createMany({
           data: recipients.map((r) => ({ userId: r.id, body: args.notificationBody })),
+        });
+      }
+      return true;
+    },
+
+    submitPartnerApplication: async (
+      _parent,
+      args: { role: string; firstName: string; lastName: string; email: string; phone: string },
+    ) => {
+      const isRider = (args.role ?? '').toLowerCase().includes('rider');
+      const label = isRider ? 'Rider' : 'Restaurant partner';
+      const name = `${(args.firstName ?? '').trim()} ${(args.lastName ?? '').trim()}`.trim();
+      const email = (args.email ?? '').trim().toLowerCase();
+      const phone = (args.phone ?? '').replace(/[\s-]/g, '').trim();
+
+      if (!name) throw userInputError('Please enter your name.');
+      if (!EMAIL_RE.test(email)) throw userInputError('Please enter a valid email address (e.g. name@example.com).');
+      if (!/^\+?[0-9]{7,15}$/.test(phone)) throw userInputError('Please enter a valid phone number.');
+
+      const title = `New ${label} application`;
+      const body = `${name} · ${email} · ${phone}`;
+      await prisma.notification.create({ data: { title, body } });
+
+      const admins = await prisma.user.findMany({ where: { userType: 'ADMIN' }, select: { id: true } });
+      if (admins.length > 0) {
+        await prisma.webNotification.createMany({
+          data: admins.map((a) => ({ userId: a.id, body: `${title}: ${body}`, navigateTo: '/general/notification' })),
         });
       }
       return true;

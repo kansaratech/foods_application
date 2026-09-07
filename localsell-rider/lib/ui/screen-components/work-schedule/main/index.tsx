@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import {
   Animated,
   Dimensions,
+  Platform,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -137,7 +138,7 @@ export default function ScheduleScreen() {
 
       // Sort slots by start time to ensure proper order
       const sortedSlots = [...slots].sort(
-        (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+        (a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime),
       );
 
       for (let i = 0; i < sortedSlots.length - 1; i++) {
@@ -158,7 +159,7 @@ export default function ScheduleScreen() {
     dayIndex: number,
     slotIndex: number,
     type: "startTime" | "endTime",
-    value: string
+    value: string,
   ) => {
     const updatedSchedule = JSON.parse(JSON.stringify(schedule));
 
@@ -204,7 +205,7 @@ export default function ScheduleScreen() {
         } else {
           return newTime > otherStart && newTime <= otherEnd;
         }
-      }
+      },
     );
 
     if (isOverlapping) {
@@ -283,7 +284,7 @@ export default function ScheduleScreen() {
             day,
             enabled: false,
             slots: [{ startTime: "09:00", endTime: "17:00" }],
-          }))
+          })),
     );
 
     // Auto-detect user's time zone on first render
@@ -434,22 +435,27 @@ export default function ScheduleScreen() {
         )}
       </View>
 
-      {!loadingProfile && <TouchableOpacity
-        className="h-12 w-full rounded-3xl py-3"
-        style={{ width: width * 0.9, backgroundColor: appTheme.primary }}
-        onPress={onHandlerSubmit}
-      >
-        {isUpatingSchedule ? (
-          <SpinnerComponent />
-        ) : (
-          <Text
-            className="text-center text-lg font-medium"
-            style={{ color: appTheme.fontMainColor }}
-          >
-            {t("Update Schedule")}
-          </Text>
-        )}
-      </TouchableOpacity>}
+      {!loadingProfile && (
+        <TouchableOpacity
+          className="h-12 w-full rounded-3xl py-3"
+          style={{
+            width: Platform.OS === "web" ? "90%" : width * 0.9,
+            backgroundColor: appTheme.primary,
+          }}
+          onPress={onHandlerSubmit}
+        >
+          {isUpatingSchedule ? (
+            <SpinnerComponent />
+          ) : (
+            <Text
+              className="text-center text-lg font-medium"
+              style={{ color: appTheme.fontMainColor }}
+            >
+              {t("Update Schedule")}
+            </Text>
+          )}
+        </TouchableOpacity>
+      )}
 
       {/* Dropdown & Overlay */}
       {dropdown && (
@@ -506,7 +512,7 @@ export default function ScheduleScreen() {
               style={{ maxHeight: 300 }}
               onScroll={Animated.event(
                 [{ nativeEvent: { contentOffset: { y: parallaxAnim } } }],
-                { useNativeDriver: false }
+                { useNativeDriver: false },
               )}
               scrollEventThrottle={16}
             >
@@ -518,7 +524,7 @@ export default function ScheduleScreen() {
                       dropdown.dayIndex,
                       dropdown.slotIndex,
                       dropdown.type === "start" ? "startTime" : "endTime",
-                      time
+                      time,
                     )
                   }
                   className="p-2 border-b border-gray-300"
@@ -672,7 +678,7 @@ export default function ScheduleScreen() {
   //       </View>
   //       <TouchableOpacity
   //         className="h-12 w-full rounded-3xl py-3"
-  //         style={{ width: width * 0.9, backgroundColor: appTheme.primary }}
+  //         style={{ width: Platform.OS === "web" ? "90%" : width * 0.9, backgroundColor: appTheme.primary }}
   //         onPress={onHandlerSubmit}
   //       >
   //         {isUpatingSchedule ? (

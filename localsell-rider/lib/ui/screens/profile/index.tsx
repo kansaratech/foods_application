@@ -1,3 +1,4 @@
+import WorkspacePage from "@/lib/ui/layouts/workspace-page";
 // Core
 import { useState } from "react";
 import { FlatList, KeyboardAvoidingView, Platform } from "react-native";
@@ -23,73 +24,94 @@ export default function ComponentName() {
   // Hooks
   const { appTheme } = useApptheme();
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: appTheme.screenBackground }}
+    <WorkspacePage
+      title="Profile"
+      description="Manage your personal details and rider documents."
+      compact
     >
-      <FlatList
+      <SafeAreaView
         style={{ flex: 1, backgroundColor: appTheme.screenBackground }}
-        contentContainerStyle={{ flexGrow: 1 }}
-        data={[
-          <ProfileHeader />,
-          <ProfileMain
-            isFormOpened={isFormOpened}
-            setIsFormOpened={setIsFormOpened}
-          />,
-        ]}
-        renderItem={(item) => {
-          return item.item;
-        }}
-      />
-      {isFormOpened !== null && (
-        <ReactNativeModal
-          isVisible={isFormOpened !== null}
-          animationIn={"slideInUp"}
-          animationOut={"slideOutDown"}
-          onBackdropPress={() => {
-            setIsFormOpened(null);
+      >
+        <FlatList
+          style={{ flex: 1, backgroundColor: appTheme.screenBackground }}
+          contentContainerStyle={{ flexGrow: 1 }}
+          data={[
+            <ProfileHeader />,
+            <ProfileMain
+              isFormOpened={isFormOpened}
+              setIsFormOpened={setIsFormOpened}
+            />,
+          ]}
+          renderItem={(item) => {
+            return item.item;
           }}
-          style={{ margin: 0, justifyContent: "flex-end" }}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : undefined}
+        />
+        {isFormOpened !== null && (
+          <ReactNativeModal
+            isVisible={isFormOpened !== null}
+            animationIn={"slideInUp"}
+            animationOut={"slideOutDown"}
+            onBackdropPress={() => {
+              setIsFormOpened(null);
+            }}
             style={{
-              width: "100%",
-              maxHeight: "70%",
-              backgroundColor: appTheme.themeBackground,
-              borderWidth: 1,
-              borderColor: appTheme.borderLineColor,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              padding: 2,
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
+              margin: Platform.OS === "web" ? 24 : 0,
+              justifyContent: Platform.OS === "web" ? "center" : "flex-end",
+              alignItems: Platform.OS === "web" ? "center" : undefined,
             }}
           >
-            {isFormOpened === "LICENSE_FORM" && (
-              <DrivingLicenseForm setIsFormOpened={setIsFormOpened} />
-            )}
-            {isFormOpened === "VEHICLE_FORM" && (
-              <VehiclePlateForm setIsFormOpened={setIsFormOpened} />
-            )}
-            {isFormOpened === "RIDER_DOC_LICENSE" && (
-              <RiderDocumentForm kind="LICENSE" setIsFormOpened={setIsFormOpened} />
-            )}
-            {isFormOpened === "RIDER_DOC_IDENTITY" && (
-              <RiderDocumentForm kind="IDENTITY" setIsFormOpened={setIsFormOpened} />
-            )}
-            {isFormOpened === "RIDER_DOC_BANK" && (
-              <RiderDocumentForm kind="BANK" setIsFormOpened={setIsFormOpened} />
-            )}
-            {isFormOpened === null && <></>}
-          </KeyboardAvoidingView>
-        </ReactNativeModal>
-      )}
-    </SafeAreaView>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+              style={{
+                width: "100%",
+                maxHeight: Platform.OS === "web" ? "90%" : "70%",
+                maxWidth: Platform.OS === "web" ? 560 : undefined,
+                borderRadius: Platform.OS === "web" ? 20 : undefined,
+                backgroundColor: appTheme.themeBackground,
+                borderWidth: 1,
+                borderColor: appTheme.borderLineColor,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                padding: 2,
+                alignItems: "center",
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.25,
+                shadowRadius: 4,
+              }}
+            >
+              {isFormOpened === "LICENSE_FORM" && (
+                <DrivingLicenseForm setIsFormOpened={setIsFormOpened} />
+              )}
+              {isFormOpened === "VEHICLE_FORM" && (
+                <VehiclePlateForm setIsFormOpened={setIsFormOpened} />
+              )}
+              {isFormOpened === "RIDER_DOC_LICENSE" && (
+                <RiderDocumentForm
+                  kind="LICENSE"
+                  setIsFormOpened={setIsFormOpened}
+                />
+              )}
+              {isFormOpened === "RIDER_DOC_IDENTITY" && (
+                <RiderDocumentForm
+                  kind="IDENTITY"
+                  setIsFormOpened={setIsFormOpened}
+                />
+              )}
+              {isFormOpened === "RIDER_DOC_BANK" && (
+                <RiderDocumentForm
+                  kind="BANK"
+                  setIsFormOpened={setIsFormOpened}
+                />
+              )}
+              {isFormOpened === null && <></>}
+            </KeyboardAvoidingView>
+          </ReactNativeModal>
+        )}
+      </SafeAreaView>
+    </WorkspacePage>
   );
 }

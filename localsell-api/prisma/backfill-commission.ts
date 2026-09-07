@@ -34,6 +34,24 @@ async function main() {
   });
   console.log(`Orders: ${pickupFixed.count} delivery mode(s) set to PICKUP.`);
 
+  // 0b — proof-of-delivery code for in-flight delivery orders that were
+  // accepted before the OTP feature. One code each; DELIVERED clears it.
+  const needOtp = await prisma.order.findMany({
+    where: {
+      isPickedUp: false,
+      deliveryOtp: null,
+      orderStatus: { in: ['ACCEPTED', 'ASSIGNED', 'PICKED'] },
+    },
+    select: { id: true },
+  });
+  for (const o of needOtp) {
+    await prisma.order.update({
+      where: { id: o.id },
+      data: { deliveryOtp: String(Math.floor(1000 + Math.random() * 9000)) },
+    });
+  }
+  console.log(`Orders: ${needOtp.length} delivery code(s) minted.`);
+
   // 1 + 2 — rate and radius per store
   const stores = await prisma.restaurant.findMany();
   let rateFixed = 0;

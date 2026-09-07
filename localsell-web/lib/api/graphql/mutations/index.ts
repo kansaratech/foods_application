@@ -5,3 +5,4 @@ export * from "./Notification";
 export * from "./orders";
 export * from "./waitlist";
 
+export * from "./partner";

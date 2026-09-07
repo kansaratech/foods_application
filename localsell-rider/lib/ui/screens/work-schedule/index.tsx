@@ -1,13 +1,15 @@
-import { View } from "react-native";
+import WorkspacePage from "@/lib/ui/layouts/workspace-page";
 
-import { useApptheme } from "@/lib/context/global/theme.context";
 import WorkScheduleMainScreen from "@/lib/ui/screen-components/work-schedule/main";
 
 export default function WorkScheduleScreen() {
-  // Hooks
-  const { appTheme } = useApptheme();
   return (
- 
+    <WorkspacePage
+      title="Work schedule"
+      description="Set your working days and delivery availability."
+      compact
+    >
       <WorkScheduleMainScreen />
+    </WorkspacePage>
   );
 }

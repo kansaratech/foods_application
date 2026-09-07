@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useMutation, useQuery } from "@apollo/client";
 import { useTranslation } from "react-i18next";
 import { showMessage } from "react-native-flash-message";
@@ -12,7 +12,7 @@ import useOrderPickedUp from "@/lib/hooks/useOrderPickedUp";
 import { STORE_DELIVERY_AGENTS } from "@/lib/apollo/queries/delivery.query";
 import {
   ASSIGN_STORE_DELIVERY_AGENT,
-  MARK_ORDER_DELIVERED,
+  CONFIRM_DELIVERY,
 } from "@/lib/apollo/mutations/delivery.mutation";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
 import { IOrder, IStoreDeliveryAgent } from "@/lib/utils/interfaces/order.interface";
@@ -53,6 +53,8 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
   const { refetch } = useRestaurantContext();
   const { pickedUp } = useOrderPickedUp();
   const [pickChoice, setPickChoice] = useState<"NONE" | "SELF">("NONE");
+  const [otpVisible, setOtpVisible] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const status = order.orderStatus ?? "";
   const mode = order.deliveryMode ?? (order.isPickedUp ? "PICKUP" : "PLATFORM");
@@ -67,7 +69,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
 
   const onError = (e: { message: string }) => showMessage({ message: e.message, type: "danger" });
   const [assign, { loading: assigning }] = useMutation(ASSIGN_STORE_DELIVERY_AGENT, { onError });
-  const [markDelivered, { loading: delivering }] = useMutation(MARK_ORDER_DELIVERED, { onError });
+  const [confirmDelivery, { loading: delivering }] = useMutation(CONFIRM_DELIVERY, { onError });
 
   if (order.isPickedUp || !isWorkable) return null;
 
@@ -172,17 +174,16 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
                 disabled={delivering}
                 className="h-14 rounded-2xl items-center justify-center"
                 style={{ backgroundColor: appTheme.primary }}
-                onPress={async () => {
-                  await markDelivered({ variables: { id: order._id, orderStatus: "DELIVERED" } });
-                  showMessage({ message: t("Order delivered"), type: "success" });
-                  await after();
+                onPress={() => {
+                  setOtp("");
+                  setOtpVisible(true);
                 }}
               >
                 {delivering ? (
                   <SpinnerComponent color={appTheme.white} />
                 ) : (
                   <Text className="text-base font-semibold" style={{ color: appTheme.white }}>
-                    {t("Mark delivered")}
+                    {t("Complete delivery")}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -266,6 +267,96 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
           )}
         </>
       )}
+
+      <Modal
+        visible={otpVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOtpVisible(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: "#0008", justifyContent: "center", padding: 24 }}>
+          <View
+            style={{
+              backgroundColor: appTheme.themeBackground,
+              borderRadius: 20,
+              padding: 22,
+              maxWidth: 380,
+              width: "100%",
+              alignSelf: "center",
+            }}
+          >
+            <Text style={{ color: appTheme.fontMainColor, fontSize: 18, fontWeight: "700" }}>
+              {t("Enter delivery code")}
+            </Text>
+            <Text style={{ color: appTheme.fontSecondColor, fontSize: 13, marginTop: 6 }}>
+              {t("Ask the customer for the 4-digit code on their order screen.")}
+            </Text>
+            <TextInput
+              value={otp}
+              onChangeText={(v) => setOtp(v.replace(/[^0-9]/g, "").slice(0, 4))}
+              keyboardType="number-pad"
+              maxLength={4}
+              placeholder="0000"
+              placeholderTextColor={appTheme.fontSecondColor}
+              autoFocus
+              style={{
+                marginTop: 16,
+                borderWidth: 1,
+                borderColor: appTheme.borderLineColor,
+                borderRadius: 12,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                fontSize: 24,
+                letterSpacing: 10,
+                textAlign: "center",
+                color: appTheme.fontMainColor,
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: 12, marginTop: 18 }}>
+              <TouchableOpacity
+                onPress={() => setOtpVisible(false)}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: appTheme.borderLineColor,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: appTheme.fontMainColor, fontWeight: "600" }}>{t("Cancel")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={otp.length !== 4 || delivering}
+                onPress={async () => {
+                  const res = await confirmDelivery({ variables: { orderId: order._id, otp } });
+                  if (res.data?.confirmDelivery) {
+                    setOtpVisible(false);
+                    showMessage({ message: t("Order delivered"), type: "success" });
+                    await after();
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor:
+                    otp.length === 4 && !delivering ? appTheme.primary : appTheme.secondaryTextColor,
+                }}
+              >
+                {delivering ? (
+                  <SpinnerComponent color={appTheme.white} />
+                ) : (
+                  <Text style={{ color: appTheme.white, fontWeight: "700" }}>{t("Confirm delivery")}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

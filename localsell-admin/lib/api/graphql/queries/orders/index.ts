@@ -431,6 +431,8 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         isActive
         isPickedUp
         deliveryMode
+        deliveryOtp
+        deliveryConfirmedBy
         storeDeliveryAgent {
           _id
           name
