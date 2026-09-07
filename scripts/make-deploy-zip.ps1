@@ -20,9 +20,10 @@
 [CmdletBinding()]
 param(
   [string]$Out = (Join-Path ([Environment]::GetFolderPath('Desktop')) 'localsell-deploy.zip'),
-  # Also drop web/public/assets/images/png (~44 MB of unoptimised marketing
-  # images that aren't referenced by any rendered component). Shrinks the zip
-  # from ~58 MB to ~13 MB. Eyeball the web marketing pages after deploying.
+  # Legacy switch — kept for compatibility, now a no-op. The old -Lean dropped
+  # the entire web png folder, but 14 of those images ARE statically imported
+  # by web components, so the web build fails without them. We now always keep
+  # the folder and only drop the 4 giant (9-12 MB) unused hero webp/pngs.
   [switch]$Lean
 )
 
@@ -57,7 +58,14 @@ $xd = @(
   (Join-Path $src 'scripts'),
   (Join-Path $src '.github')
 )
-if ($Lean) { $xd += (Join-Path $src 'localsell-web\public\assets\images\png') }
+# The 4 oversized unused hero images (9-12 MB each) — not imported anywhere,
+# only ever referenced as background-image URLs on marketing sections.
+$xf_png = @(
+  (Join-Path $src 'localsell-web\public\assets\images\png\Support.webp'),
+  (Join-Path $src 'localsell-web\public\assets\images\png\Amazing support.webp'),
+  (Join-Path $src 'localsell-web\public\assets\images\png\Flexible schedules.webp'),
+  (Join-Path $src 'localsell-web\public\assets\images\png\new-rider-bg.png')
+)
 $xf = @(
   '*.log', '*.tsbuildinfo', '*.pdf', '*.stackdump', 'index.html',
   '.env', '*.env', '.env.local', '.env.development', '.env.production',
@@ -76,7 +84,7 @@ $xf = @(
 )
 
 $rc = @($src, $stage, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/R:1', '/W:1',
-        '/XD') + $xd + @('/XF') + $xf
+        '/XD') + $xd + @('/XF') + $xf + $xf_png
 & robocopy @rc | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed (exit $LASTEXITCODE)" }
 
