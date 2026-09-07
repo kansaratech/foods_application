@@ -74,13 +74,18 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
       ?.map((addonId) => addons?.find((a) => a._id === addonId))
       .filter(Boolean) || [];
 
-  // Function to get options for a specific addon
+  // Function to get options for a specific addon. `addon.options` comes in two
+  // shapes: inline option objects (store app / seed) or option-id strings that
+  // reference the restaurant's shared option pool (admin panel). Handle both.
   const getAddonOptions = (addon: IAddon | undefined) => {
-    return (
-      addon?.options
-        ?.map((optionId) => options?.find((o) => o._id === optionId))
-        .filter(Boolean) || []
-    );
+    const raw = addon?.options;
+    if (!raw?.length) return [];
+    if (typeof raw[0] === "object" && raw[0] !== null) {
+      return (raw as unknown as Option[]).filter(Boolean);
+    }
+    return (raw as unknown as string[])
+      .map((optionId) => options?.find((o) => o._id === optionId))
+      .filter(Boolean);
   };
 
   // Handle selection for a specific addon
