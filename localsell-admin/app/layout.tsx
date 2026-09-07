@@ -1,17 +1,18 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import Script from 'next/script';
-import { ThemeProvider } from 'next-themes';
 
-// ✅ Add metadata export for favicon
+import { FontawesomeConfig } from '@/lib/config';
+import { Providers } from './providers';
+
+// Styles — PrimeReact core/themes, design tokens, Tailwind (see global.css)
+import './global.css';
+
 export const metadata = {
   title: 'LocalSell Admin',
   description: 'Shop Local. Find More.',
   icons: {
     icon: '/favicon.png',
-    // You can add more like:
-    // shortcut: "/favicon.png",
-    // apple: "/apple-touch-icon.png"
   },
 };
 
@@ -24,8 +25,10 @@ export default async function RootLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <FontawesomeConfig />
         {/* Microsoft Clarity */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
@@ -37,12 +40,10 @@ export default async function RootLayout({
           `}
         </Script>
       </head>
-      <body>
-        <ThemeProvider attribute={'class'}>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </ThemeProvider>
+      <body className="flex flex-col flex-wrap">
+        <NextIntlClientProvider messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

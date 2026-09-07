@@ -1,10 +1,16 @@
 @layer tailwind-base, primereact, tailwind-utilities;
 
-/* IMPORTANT: In "styled" mode you must add the PrimeReact Theme here. Do NOT include in "unstyled" mode */
+/* PrimeReact "styled" mode — core + icons + the light theme (always on).
+   Dark mode = the same theme's dark rules, scoped under `.dark` and toggled by
+   next-themes (see prime-dark.generated.css). Keep everything in @layer(primereact)
+   so Tailwind utilities keep winning the cascade. */
 @import 'primereact/resources/primereact.min.css' layer(primereact);
 @import 'primeicons/primeicons.css' layer(primereact);
-@import 'primereact/resources/themes/lara-light-blue/theme.css'
-layer(primereact);
+@import 'primereact/resources/themes/lara-light-blue/theme.css' layer(primereact);
+@import './prime-dark.generated.css' layer(primereact);
+
+/* Design tokens — imported unlayered so token values win over the theme above. */
+@import './theme-tokens.css';
 
 @layer tailwind-base {
   @tailwind base;
@@ -13,19 +19,6 @@ layer(primereact);
 @layer tailwind-utilities {
   @tailwind components;
   @tailwind utilities;
-}
-
-:root {
-  --primary-color: #1c5bc7;
-  --primary-dark: #17499e;
-  --primary-light: #e8f0fc;
-  --secondary-color: #16293f;
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 255, 255, 255;
-  --background-end-rgb: 255, 255, 255;
-  --dark-950: #030712;
-  --dark-900: #111827;
-  --dark-600: #4b5563;
 }
 
 html,

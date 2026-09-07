@@ -1,67 +1,10 @@
-'use client';
-
-// Core
-import { ApolloProvider } from '@apollo/client';
-
-// Prime React
-import { PrimeReactProvider } from 'primereact/api';
-
-// Providers
-import { LayoutProvider } from '@/lib/context/global/layout.context';
-import { SidebarProvider } from '@/lib/context/global/sidebar.context';
-import { UserProvider } from '@/lib/context/global/user-context';
-
-// Context
-import { ConfigurationProvider } from '@/lib/context/global/configuration.context';
-import { ToastProvider } from '@/lib/context/global/toast.context';
-
-// Configuration
-import { FontawesomeConfig } from '@/lib/config';
-
-// Styles
-import 'primereact/resources/primereact.css';
-import 'primeicons/primeicons.css';
-import 'primereact/resources/themes/lara-light-blue/theme.css';
-import 'primeicons/primeicons.css';
-import './global.css';
-
-// Apollo
-import { useSetupApollo } from '@/lib/hooks/useSetApollo';
-
-export default function RootLayout({
+// The `(localized)` route group no longer owns document structure or providers —
+// <html>/<body>, styles and the provider tree all live in the root layout.
+// This passthrough is kept only so the route group has a layout boundary.
+export default function LocalizedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Apollo
-  const client = useSetupApollo();
-
-  // Constants
-  const value = {
-    ripple: true,
-  };
-
-  return (
-    <html lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <FontawesomeConfig />
-      </head>
-      <body className={'flex flex-col flex-wrap'}>
-        <PrimeReactProvider value={value}>
-          <ApolloProvider client={client}>
-            <ConfigurationProvider>
-              <LayoutProvider>
-                <UserProvider>
-                  <SidebarProvider>
-                    <ToastProvider>{children}</ToastProvider>
-                  </SidebarProvider>
-                </UserProvider>
-              </LayoutProvider>
-            </ConfigurationProvider>
-          </ApolloProvider>
-        </PrimeReactProvider>
-      </body>
-    </html>
-  );
+  return <>{children}</>;
 }

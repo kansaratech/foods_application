@@ -1,5 +1,10 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * Colours are CSS-variable-backed (see app/theme-tokens.css). A class like
+ * `bg-surface` or `text-content-muted` resolves per-theme automatically, so most
+ * `dark:` colour variants are unnecessary — the token already flipped.
+ */
 const config = {
   darkMode: ['class'],
   content: [
@@ -9,7 +14,6 @@ const config = {
     './src/**/*.{ts,tsx}',
     './lib/**/*.{ts,tsx}',
   ],
-  // content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
   prefix: '',
   theme: {
     container: {
@@ -22,10 +26,38 @@ const config = {
 
     extend: {
       transitionProperty: {
-        // Customize or disable transition properties
         none: 'none',
       },
       colors: {
+        /* Semantic — theme-aware, prefer these */
+        primary: {
+          DEFAULT: 'var(--primary-color)',
+          contrast: 'var(--primary-color-text)',
+          dark: 'var(--ls-blue-dark)',
+          light: 'var(--ls-blue-tint)',
+          hover: 'var(--ls-blue-hover)',
+        },
+        brand: {
+          navy: 'var(--ls-navy)',
+          'navy-dark': 'var(--ls-navy-dark)',
+          blue: 'var(--ls-blue)',
+          mist: 'var(--ls-mist)',
+          sky: 'var(--ls-sky)',
+        },
+        surface: {
+          DEFAULT: 'var(--app-bg)',
+          card: 'var(--app-surface)',
+          alt: 'var(--app-surface-alt)',
+          overlay: 'var(--app-overlay)',
+          border: 'var(--app-border)',
+          hover: 'var(--app-hover)',
+        },
+        content: {
+          DEFAULT: 'var(--app-text)',
+          muted: 'var(--app-text-muted)',
+        },
+
+        /* Legacy aliases — still resolve, now theme-aware */
         'primary-color': 'var(--primary-color)',
         'primary-dark': 'var(--primary-dark)',
         'primary-light': 'var(--primary-light)',
