@@ -1,5 +1,6 @@
 import { IDateTextField } from '@/lib/utils/interfaces';
-import TimeInputSkeleton from '../custom-skeletons/time-inputfield.skeleton';
+import { twMerge } from 'tailwind-merge';
+import FieldShell from '../form/field-shell';
 
 const CustomDateInput = ({
   className,
@@ -7,31 +8,30 @@ const CustomDateInput = ({
   showLabel,
   isLoading = false,
   value,
+  name,
+  error,
   onChange,
   ...props
-}: IDateTextField) => {
-  return !isLoading ? (
-    <div className="flex w-full flex-col justify-center gap-y-1">
-      {showLabel && (
-        <label htmlFor="timeInput" className="text-sm font-[500]">
-          {placeholder}
-        </label>
-      )}
+}: IDateTextField & { name?: string; error?: string }) => {
+  const id = name ?? 'date-input';
+  return (
+    <FieldShell
+      htmlFor={id}
+      label={placeholder}
+      showLabel={showLabel}
+      error={error}
+      isLoading={isLoading}
+    >
       <input
-        id="timeInput"
+        id={id}
+        name={name}
         type="date"
-        className={`h-10 w-full rounded-lg border border-gray-300 dark:border-dark-600 px-8 text-sm outline-none focus:shadow-none focus:outline-none ${className}`}
-        placeholder={placeholder}
-        // 'HH:MM' format
+        className={twMerge('ls-field', error && 'ls-field-invalid', className)}
         value={value ?? ''}
-        onChange={(e) => {
-          onChange(e.target.value); // Pass the time string "HH:MM"
-        }}
+        onChange={(e) => onChange(e.target.value)}
         {...props}
       />
-    </div>
-  ) : (
-    <TimeInputSkeleton />
+    </FieldShell>
   );
 };
 

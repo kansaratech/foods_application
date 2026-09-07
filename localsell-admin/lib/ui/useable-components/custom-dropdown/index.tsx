@@ -4,12 +4,13 @@ import { IDropdownComponentProps } from '@/lib/utils/interfaces';
 
 // Prime React
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown';
-import InputSkeleton from '../custom-skeletons/inputfield.skeleton';
+import { twMerge } from 'tailwind-merge';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
-import TextIconClickable from '../text-icon-clickable';
 import { useTranslations } from 'next-intl';
-import { useTheme } from 'next-themes';
 
+import TextIconClickable from '../text-icon-clickable';
+import InputSkeleton from '../custom-skeletons/inputfield.skeleton';
+import FieldShell from '../form/field-shell';
 
 const CustomDropdownComponent = ({
   name,
@@ -25,41 +26,32 @@ const CustomDropdownComponent = ({
   ...props
 }: IDropdownComponentProps) => {
   const t = useTranslations();
-  const { theme } = useTheme();
-  const errorId = error ? `${name}-error` : undefined;
 
-  const itemTemplate = (option: { label: string }) => {
-    return (
-      <div className="align-items-center flex dark:text-white ">
-        <div>{option.label}</div>
+  const itemTemplate = (option: { label: string }) => (
+    <div className="flex items-center">{option.label}</div>
+  );
+
+  const panelFooterTemplate = () =>
+    extraFooterButton?.title ? (
+      <div className="flex justify-between space-x-2 p-1">
+        <TextIconClickable
+          className="h-fit w-full rounded text-content"
+          icon={faAdd}
+          title={extraFooterButton.title}
+          onClick={extraFooterButton.onChange}
+        />
       </div>
-    );
-  };
+    ) : null;
 
-  const panelFooterTemplate = () => {
-    return (
-      <div className="flex justify-between space-x-2 dark:bg-dark-950">
-        {extraFooterButton?.title && (
-          <TextIconClickable
-            className="w-full h-fit rounded  text-black dark:text-white"
-            icon={faAdd}
-            iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }}
-            title={extraFooterButton.title}
-            onClick={extraFooterButton.onChange}
-          />
-        )}
-      </div>
-    );
-  };
+  if (isLoading) return <InputSkeleton />;
 
-  return !isLoading ? (
-    <div className={`flex w-full flex-col justify-center gap-y-1`}>
-      {showLabel && (
-        <label htmlFor={name} className="text-sm font-[500] dark:text-white">
-          {placeholder}
-        </label>
-      )}
-
+  return (
+    <FieldShell
+      htmlFor={name}
+      label={placeholder}
+      showLabel={showLabel}
+      error={error}
+    >
       <Dropdown
         inputId={name}
         value={selectedItem}
@@ -68,20 +60,16 @@ const CustomDropdownComponent = ({
         optionLabel="label"
         placeholder={placeholder}
         itemTemplate={itemTemplate}
-        className={`md:w-20rem p-dropdown-no-box-shadow m-0 h-10 w-full border dark:border-dark-600 dark:bg-dark-950 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}  p-0 align-middle text-sm focus:shadow-none focus:outline-none`}
-        panelClassName="border-gray-200 border-2"
+        className={twMerge('ls-field', error && 'ls-field-invalid')}
         filter={filter}
-        checkmark={true}
+        checkmark
         panelFooterTemplate={panelFooterTemplate}
         aria-invalid={!!error}
-        aria-describedby={errorId}
+        aria-describedby={error ? `${name}-error` : undefined}
+        emptyMessage={t('No available options')}
         {...props}
-        emptyMessage={t("No available options")}
       />
-      {error && <p id={errorId} className="text-sm text-red-500">{error}</p>}
-    </div>
-  ) : (
-    <InputSkeleton />
+    </FieldShell>
   );
 };
 

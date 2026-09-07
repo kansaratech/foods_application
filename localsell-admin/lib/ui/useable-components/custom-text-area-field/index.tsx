@@ -1,5 +1,7 @@
 import { ICustomTextAreaField } from '@/lib/utils/interfaces/custom-text-area.interface';
 import { InputTextarea } from 'primereact/inputtextarea';
+import { twMerge } from 'tailwind-merge';
+import FieldShell from '../form/field-shell';
 
 export default function CustomTextAreaField({
   label,
@@ -10,29 +12,29 @@ export default function CustomTextAreaField({
   name,
   error,
   onChange,
-  rows = 0,
+  rows = 3,
   maxLength,
   ...props
 }: ICustomTextAreaField) {
   return (
-    <div className="flex flex-col justify-center gap-y-1">
-      {showLabel && (
-        <label htmlFor={name ?? 'text-area'} className="text-sm font-[500]">
-          {label}
-        </label>
-      )}
+    <FieldShell
+      htmlFor={name ?? 'text-area'}
+      label={label}
+      showLabel={showLabel}
+      error={error}
+    >
       <InputTextarea
-        value={value}
-        className={`min-h-20 w-full rounded-lg border ${error? 'border-red-500': 'border-gray-300'} px-2 pt-1 text-sm focus:shadow-none focus:outline-none ${className ?? ''}`}
         id={name}
+        name={name}
+        value={value}
+        className={twMerge('ls-field', error && 'ls-field-invalid', className)}
         placeholder={placeholder}
         onChange={onChange}
         maxLength={maxLength}
-        name={name}
         rows={rows}
+        aria-invalid={!!error}
         {...props}
       />
-      {error && <p className="text-sm text-red-500">{error}</p>} 
-    </div>
+    </FieldShell>
   );
 }

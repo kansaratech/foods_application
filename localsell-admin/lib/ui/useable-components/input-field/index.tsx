@@ -3,7 +3,8 @@ import { ITextFieldProps } from '@/lib/utils/interfaces';
 
 // Prime React
 import { InputText } from 'primereact/inputtext';
-import InputSkeleton from '../custom-skeletons/inputfield.skeleton';
+import { twMerge } from 'tailwind-merge';
+import FieldShell from '../form/field-shell';
 
 export default function CustomTextField({
   className,
@@ -14,27 +15,23 @@ export default function CustomTextField({
   name,
   ...props
 }: ITextFieldProps) {
-  const errorId = error ? `${name}-error` : undefined;
-  return !isLoading ? (
-    <div className={`flex w-full flex-col justify-center gap-y-1`}>
-      {showLabel && (
-        <label htmlFor={name} className="text-sm font-[500] dark:text-white">
-          {placeholder}
-        </label>
-      )}
-
+  return (
+    <FieldShell
+      htmlFor={name}
+      label={placeholder}
+      showLabel={showLabel}
+      error={error}
+      isLoading={isLoading}
+    >
       <InputText
         id={name}
         name={name}
-        className={`h-10 w-full rounded-lg border ${error? 'border-red-500': 'border-gray-300'} dark:text-white  px-2 text-sm focus:shadow-none focus:outline-none ${className}`}
+        className={twMerge('ls-field', error && 'ls-field-invalid', className)}
         placeholder={placeholder}
         aria-invalid={!!error}
-        aria-describedby={errorId}
+        aria-describedby={error ? `${name}-error` : undefined}
         {...props}
       />
-      {error && <p id={errorId} className="text-sm text-red-500">{error}</p>}
-    </div>
-  ) : (
-    <InputSkeleton />
+    </FieldShell>
   );
 }
