@@ -43,12 +43,14 @@ New-Item -ItemType Directory -Path $stage | Out-Null
 # scripts) is path-anchored to the repo root so the app copies keep theirs.
 $xd = @(
   'node_modules', '.next', '.expo', '.expo-shared', '.cache', '.turbo',
-  '.git', 'dist', 'build', 'coverage', 'cypress', '.nyc_output',
+  '.git', 'dist', 'build', 'coverage', 'cypress', '.nyc_output', '.tmp',
   '.claude', '.vscode', '.idea',
   (Join-Path $src 'localsell-app'),
-  (Join-Path $src 'localsell-rider'),
   (Join-Path $src 'localsell-store\android'),
   (Join-Path $src 'localsell-store\ios'),
+  (Join-Path $src 'localsell-rider\android'),
+  (Join-Path $src 'localsell-rider\ios'),
+  (Join-Path $src 'localsell-rider\splash_claud_assets'),
   (Join-Path $src 'assets'),
   (Join-Path $src 'brand'),
   (Join-Path $src 'lib'),
@@ -60,6 +62,7 @@ $xf = @(
   '*.log', '*.tsbuildinfo', '*.pdf', '*.stackdump', 'index.html',
   '.env', '*.env', '.env.local', '.env.development', '.env.production',
   '.env.dev', '.env.stage', '.env.prod',
+  'google-service-account*.json', 'google-services.json', 'GoogleService-Info.plist',
   # Root-level reference docs — dev context, not needed to build/run on the
   # server. Full paths (not bare names) so per-app README.md etc. still copy.
   (Join-Path $src 'README.md'),
@@ -101,7 +104,12 @@ $must = @(
   'localsell-store\package-lock.json',
   'localsell-store\Dockerfile',
   'localsell-store\nginx.conf',
-  'localsell-store\languages\hi.js'
+  'localsell-store\languages\hi.js',
+  'localsell-rider\package-lock.json',
+  'localsell-rider\Dockerfile',
+  'localsell-rider\nginx.conf',
+  'localsell-api\prisma\seed-data.json',
+  'localsell-api\prisma\seed-from-config.ts'
 )
 $missing = $must | Where-Object { -not (Test-Path (Join-Path $stage $_)) }
 if ($missing) { throw "staging is missing required files:`n  " + ($missing -join "`n  ") }
@@ -118,8 +126,13 @@ echo "== build + (re)start all services =="
 docker compose $E up -d --build
 docker compose $E ps
 
-echo "== schema + config defaults + backfill (idempotent) =="
+echo "== schema + config defaults + backfill (idempotent, non-destructive) =="
 docker compose $E exec -T api npm run db:deploy
+#  ^ safe on every redeploy. It does NOT touch existing stores/orders/menus.
+#  To replace all data with the clean 4-store Deogarh marketplace instead
+#  (keeps Maps/SMTP keys), run ONCE, deliberately:
+#     docker compose $E exec -T api npm run seed
+#  Never on a marketplace with real vendors/orders.
 
 echo "== scheduler =="
 docker compose $E logs api | grep -m1 scheduler || echo "  (no scheduler line yet - check: docker compose $E logs api)"

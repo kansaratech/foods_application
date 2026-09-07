@@ -31,17 +31,46 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
     skipEmailVerification: true,
     skipMobileVerification: true,
     skipWhatsAppOTP: true,
+    // Transactional email (Gmail SMTP). Non-secret parts default here; the
+    // password comes from SMTP_PASSWORD in the env (deploy/localsell.env).
+    // Only applied when SMTP_PASSWORD is set — leaves email off otherwise.
+    smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+    smtpPort: Number(process.env.SMTP_PORT || 465),
+    smtpSecure: (process.env.SMTP_SECURE || 'true') === 'true',
+    smtpUser: process.env.SMTP_USER || 'localsell.dgh@gmail.com',
+    email: process.env.SMTP_FROM || process.env.SMTP_USER || 'localsell.dgh@gmail.com',
+    emailName: process.env.SMTP_FROM_NAME || 'LocalSell',
   };
+  const smtpPassword = process.env.SMTP_PASSWORD?.trim();
 
   const existing = await prisma.configuration.findFirst();
 
   if (!existing) {
-    await prisma.configuration.create({ data: defaults });
-    console.log('  · Configuration row created with launch defaults');
+    await prisma.configuration.create({
+      data: { ...defaults, ...(smtpPassword ? { enableEmail: true, emailPassword: smtpPassword } : {}) },
+    });
+    console.log(
+      `  · Configuration row created with launch defaults${smtpPassword ? ' (+ SMTP)' : ''}`,
+    );
     return;
   }
 
   const patch: Record<string, unknown> = {};
+
+  // SMTP — fill the non-secret fields + turn email on, but only once a
+  // SMTP_PASSWORD is present and the row doesn't already have a password an
+  // admin set. Never overwrites an existing emailPassword.
+  if (smtpPassword && !existing.emailPassword) {
+    patch.smtpHost = defaults.smtpHost;
+    patch.smtpPort = defaults.smtpPort;
+    patch.smtpSecure = defaults.smtpSecure;
+    patch.smtpUser = defaults.smtpUser;
+    patch.email = defaults.email;
+    patch.emailName = defaults.emailName;
+    patch.emailPassword = smtpPassword;
+    patch.enableEmail = true;
+  }
+
   if (!existing.currency || existing.currency === 'USD') patch.currency = defaults.currency;
   if (!existing.currencySymbol || existing.currencySymbol === '$') patch.currencySymbol = defaults.currencySymbol;
   if (!existing.defaultCommissionRate || existing.defaultCommissionRate <= 0)
