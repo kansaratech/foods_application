@@ -25,12 +25,21 @@ same form presentation everywhere. Driven by `app/theme-tokens.css` tokens.
 
 ## TODO
 
-### Phase 1 — Primitives  ▢
-- [ ] `useable-components/form/Field.tsx` — the shared shell (`<Field label error help required>` + `control` slot)
-- [ ] Rebuild on top of it: `TextField`, `TextAreaField`, `NumberField`, `PasswordField`, `SelectField`, `MultiSelectField`, `DateField`, `PhoneField` (thin wrappers, identical shell)
-- [ ] Delete dead variants: `custom-input`, `custom-text-input`, `text-field`, `custom-radius-input`, `custom-commission-input`, `password-input-field-using-tf`
-- [ ] `FormDialog.tsx` — Formik-aware, token header/footer, responsive width, scroll body, standard Save/Cancel
-- [ ] `FormPage.tsx` — breadcrumb + title + card + sticky action bar
+### Phase 1 — Primitives  ✅ (commit 77e84601 + follow-ups)
+- [x] `useable-components/form/field-shell.tsx` — shared label + error + help + skeleton
+- [x] `app/form-controls.css` — one `.ls-field` spec for every control type + one focus ring
+- [x] Rewrote input-field, number-input-field, custom-text-area-field, input-icon-field,
+      password-input-field, date-input, time-input, custom-dropdown, custom-multi-select on it
+- [x] Deleted dead: `custom-text-input`, `password-input-field-using-tf`
+      (`text-field` = a text *display* component, kept; `custom-radius-input` /
+      `custom-commission-input` / `custom-input` = number steppers, kept — merge in Phase 4)
+- [x] `form/form-dialog.tsx` + `form/form-actions.tsx` (Cancel/Save row)
+- [x] `management.css` gutted from a parallel design system → layout scaffold on tokens
+- [x] `.p-button` branded (lara bakes #3b82f6 into every rule) — `form-controls.css` buttons block
+- [x] theme now loads via `prime-light.generated.css` + `prime-dark.generated.css`
+      (both `@layer`-flattened by `scripts/gen-prime-theme.mjs`) — the raw `@layer primereact`
+      was losing to Tailwind's `@layer base` reset, killing `.p-button`
+- [ ] `FormPage.tsx` — breadcrumb + title + card + sticky action bar  ← next
 - [ ] Consolidate 3 delete-confirm dialogs → 1 (`ConfirmDialog`)
 
 ### Phase 2 — Table unification  ▢
@@ -38,10 +47,15 @@ same form presentation everywhere. Driven by `app/theme-tokens.css` tokens.
 - [ ] Migrate raw `<DataTable>` pages → shared `<Table>`: super-admin orders, vendor orders, order-table, users (×2), restaurants, dispatch, growth-overview, user-detail order-history
 - [ ] one paginator template, one empty state, one skeleton, one scroll model everywhere
 
-### Phase 3 — Forms migration  ▢
-- [ ] ≤ 4 fields → `FormDialog`: cuisines, shop-types, zone, super-admin coupons, notifications, restaurant withdraw, super-admin withdraw, category, add-subcategories, options, add-ons
-- [ ] > 4 fields → `FormPage` route: banners, staff, food, super-admin restaurant, vendor restaurant, vendor profile, coupons (restaurant)
-- [ ] delete the `Sidebar` form wrappers once migrated
+### Phase 3 — Forms migration  ▣ in progress
+- [x] cuisines → FormDialog
+- [x] shop-types → FormDialog
+- [x] notifications → FormDialog
+- [ ] ≤ 4 fields → `FormDialog`: restaurant withdraw, super-admin withdraw, add-subcategories, restaurant coupons
+- [ ] > 4 fields → `FormPage` route: banners (13), staff (10), food, super-admin restaurant,
+      vendor restaurant, vendor profile (9), coupons super-admin (9), add-ons (9), zone (map),
+      category (5), options (6)
+- [ ] delete the `Sidebar` form wrappers once migrated (17 → 3 done)
 
 ### Phase 4 — Polish  ▢
 - [ ] Buttons — one `<Button>` (variant/size), kill ad-hoc `<button className=…>`

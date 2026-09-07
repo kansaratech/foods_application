@@ -3,7 +3,7 @@
    and theme-tokens.css comes last so brand values win over the lara theme. */
 @import 'primereact/resources/primereact.min.css';
 @import 'primeicons/primeicons.css';
-@import 'primereact/resources/themes/lara-light-blue/theme.css';
+@import './prime-light.generated.css';
 @import './prime-dark.generated.css';
 @import './theme-tokens.css';
 @import './form-controls.css';

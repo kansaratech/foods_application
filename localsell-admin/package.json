@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "cross-env NODE_OPTIONS='--inspect' next dev",
     "dev:preview": "next dev -p 3007",
-    "gen:theme": "node scripts/gen-prime-dark.mjs",
+    "gen:theme": "node scripts/gen-prime-theme.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

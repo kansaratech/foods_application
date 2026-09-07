@@ -1,8 +1,6 @@
 /*
- * AUTO-GENERATED — do not edit.
- * Source: primereact/resources/themes/lara-dark-blue/theme.css
- * Regenerate: node scripts/gen-prime-dark.mjs
- * Every rule is scoped under `.dark`; brand-token overrides live in theme-tokens.css.
+ * AUTO-GENERATED — do not edit. Run: node scripts/gen-prime-theme.mjs
+ * Source: primereact/resources/themes/lara-dark-blue/theme.css (@layer flattened, scoped under `.dark`)
  */
 .dark {
   font-family: "Inter var", sans-serif;

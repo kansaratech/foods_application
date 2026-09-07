@@ -3,8 +3,6 @@ import { SEND_NOTIFICATION_USER } from '@/lib/api/graphql';
 
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
-import CustomButton from '@/lib/ui/useable-components/button';
-
 //Components
 import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-field';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
@@ -17,8 +15,11 @@ import { NotificationSchema } from '@/lib/utils/schema/notification';
 import { useMutation } from '@apollo/client';
 import { Form, Formik } from 'formik';
 import { useTranslations } from 'next-intl';
-import { Sidebar } from 'primereact/sidebar';
 import { ChangeEvent, useContext } from 'react';
+
+// Form primitives
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
+import FormActions from '@/lib/ui/useable-components/form/form-actions';
 
 export default function NotificationForm({
   setVisible,
@@ -59,11 +60,11 @@ export default function NotificationForm({
   });
 
   return (
-    <Sidebar
+    <FormDialog
       visible={visible}
       onHide={() => setVisible(false)}
-      position="right"
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      title={t('Send Notification')}
+      size="md"
     >
       <Formik
         initialValues={initialValues}
@@ -85,11 +86,6 @@ export default function NotificationForm({
         {({ handleSubmit, setFieldValue, values, isSubmitting, errors }) => {
           return (
             <Form onSubmit={handleSubmit}>
-              <div className="mb-2 flex flex-col">
-                <h2 className='className="mb-3 text-xl font-bold'>
-                  {t('Send Notification')}
-                </h2>
-              </div>
               <div className="space-y-4">
                 <CustomTextField
                   value={values.title}
@@ -131,19 +127,16 @@ export default function NotificationForm({
                   rows={5}
                 />
 
-                <div className="mt-4 flex justify-end">
-                  <CustomButton
-                    className="h-10 w-fit border border-gray-300 bg-black dark:border-gray-100 px-8 text-white"
-                    label={t('Send')}
-                    type="submit"
-                    loading={isSubmitting}
-                  />
-                </div>
+                <FormActions
+                  onCancel={() => setVisible(false)}
+                  submitLabel={t('Send')}
+                  loading={isSubmitting}
+                />
               </div>
             </Form>
           );
         }}
       </Formik>
-    </Sidebar>
+    </FormDialog>
   );
 }
