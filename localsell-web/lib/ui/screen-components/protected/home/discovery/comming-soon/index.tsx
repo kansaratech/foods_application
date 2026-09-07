@@ -5,8 +5,7 @@ import { useMutation } from "@apollo/client";
 import { useTranslations } from "next-intl";
 
 import { JOIN_WAITLIST } from "@/lib/api/graphql/mutations";
-import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
-import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
+import { OPEN_LOCATION_PICKER_EVENT } from "@/lib/utils/constants";
 import { useUserAddress } from "@/lib/context/address/address.context";
 
 interface IAreaUnavailableProps {
@@ -25,7 +24,7 @@ export default function AreaUnavailable({
   nearestDistanceKm,
 }: IAreaUnavailableProps) {
   const t = useTranslations();
-  const { userAddress, setUserAddress } = useUserAddress();
+  const { userAddress } = useUserAddress();
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -73,8 +72,11 @@ export default function AreaUnavailable({
   };
 
   const handleChangeLocation = () => {
-    onUseLocalStorage("delete", USER_CURRENT_LOCATION_LS_KEY);
-    setUserAddress(null);
+    // Open the header's delivery-location picker rather than clearing the
+    // address (clearing it drops this screen and bounces the user elsewhere).
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT));
+    }
   };
 
   return (

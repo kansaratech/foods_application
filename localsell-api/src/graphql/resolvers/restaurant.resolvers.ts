@@ -12,6 +12,33 @@ function slugify(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
 }
 
+/**
+ * Permanently delete a store and everything hanging off it. The only relation
+ * that isn't `onDelete: Cascade` in the schema is `Order` (RESTRICT), so we
+ * clear the order graph + the ledger rows that key off it by id, then let the
+ * cascade take the rest (menu, add-ons, coupons, cuisines, docs, agents,
+ * transactions, withdraw requests, reviews).
+ */
+export async function purgeRestaurant(restaurantId: string): Promise<void> {
+  const orders = await prisma.order.findMany({
+    where: { restaurantId },
+    select: { id: true },
+  });
+  const orderIds = orders.map((o) => o.id);
+
+  await prisma.$transaction([
+    prisma.riderCashEntry.deleteMany({ where: { orderId: { in: orderIds } } }),
+    prisma.commissionRecord.deleteMany({ where: { restaurantId } }),
+    prisma.walletAdjustment.deleteMany({ where: { restaurantId } }),
+    prisma.payoutRunItem.deleteMany({ where: { restaurantId } }),
+    // cascades OrderItem / OrderItemAddon(Option) / Review / OrderChatMessage
+    prisma.order.deleteMany({ where: { restaurantId } }),
+    // cascades Category→Food→Variation, Addon→Option, RestaurantCuisine,
+    // Coupon, StoreDocument, StoreDeliveryAgent, Transaction, WithdrawRequest
+    prisma.restaurant.delete({ where: { id: restaurantId } }),
+  ]);
+}
+
 // A store a customer may see and order from: live, and past the onboarding gate.
 const CUSTOMER_VISIBLE_STORE = { isActive: true, approvalStatus: 'APPROVED' } as const;
 const STORE_APPROVAL_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'];
@@ -581,7 +608,15 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     hardDeleteRestaurant: async (_parent, args: { id: string }, context) => {
       requireRole(context, ['ADMIN']);
-      await prisma.restaurant.delete({ where: { id: args.id } });
+      const existing = await prisma.restaurant.findUnique({ where: { id: args.id } });
+      if (!existing) throw notFoundError('Restaurant not found');
+      await purgeRestaurant(args.id);
+      await recordAudit(context, {
+        action: 'store.delete',
+        targetType: 'Restaurant',
+        targetId: args.id,
+        summary: `Store permanently deleted: ${existing.name}`,
+      });
       return true;
     },
 

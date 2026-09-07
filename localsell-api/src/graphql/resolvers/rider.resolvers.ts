@@ -6,6 +6,7 @@ import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken } from '../../services/auth.service';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
+import { normalizeIndianPhone } from '../../utils/phone';
 import { pubsub, TOPICS } from '../../utils/pubsub';
 import { recordAudit } from '../../utils/audit';
 import { RIDER_REQUIRED_DOC_KINDS, assertRiderNotRejected } from './rider-docs.resolvers';
@@ -332,6 +333,7 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       requireRole(context, ['ADMIN']);
       const input = args.riderInput;
       const email = input.email ? input.email.trim().toLowerCase() : undefined;
+      const phone = normalizeIndianPhone(input.phone);
 
       if (input.username) {
         const existingUsername = await prisma.user.findUnique({ where: { username: input.username } });
@@ -345,11 +347,17 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
           throw userInputError('A rider with this email already exists');
         }
       }
+      if (phone) {
+        const existingPhone = await prisma.user.findUnique({ where: { phone } });
+        if (existingPhone && existingPhone.id !== input._id) {
+          throw userInputError('This phone number is already registered to another account.');
+        }
+      }
 
       const baseData = {
         name: input.name,
         username: input.username || undefined,
-        phone: input.phone || undefined,
+        phone: phone || undefined,
         email,
         image: input.image,
         isActive: input.isActive ?? true,
@@ -387,7 +395,9 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
             userType: 'RIDER',
             status: 'ACTIVE',
             password: await hashPassword(input.password ?? generateInvitePassword()),
-            riderProfile: { create: profileData },
+            // A brand-new rider is never auto-approved — an admin must review
+            // and approve/reject them before they can go online or take orders.
+            riderProfile: { create: { ...profileData, approvalStatus: 'PENDING' } },
           },
         });
       }
@@ -589,7 +599,7 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     employmentType: (parent: RiderParent) => parent.riderProfile?.employmentType ?? 'INDEPENDENT',
     available: (parent: RiderParent) => parent.riderProfile?.available ?? null,
     vehicleType: (parent: RiderParent) => parent.riderProfile?.vehicleType ?? null,
-    approvalStatus: (parent: RiderParent) => parent.riderProfile?.approvalStatus ?? 'APPROVED',
+    approvalStatus: (parent: RiderParent) => parent.riderProfile?.approvalStatus ?? 'PENDING',
     approvalNote: (parent: RiderParent) => parent.riderProfile?.approvalNote ?? null,
     currentTask: async (parent: RiderParent) => {
       const order = await prisma.order.findFirst({

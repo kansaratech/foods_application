@@ -1,5 +1,5 @@
 // Core
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from '@/lib/ui/useable-components/safe-image';
 
@@ -34,6 +34,7 @@ import { useConfiguration } from '@/lib/hooks/useConfiguration';
 import CustomInputSwitch from '../custom-input-switch';
 import TextComponent from '../text-field';
 import CustomLoader from '../custom-progress-indicator';
+import CustomDialog from '../delete-dialog';
 import { CarSVG } from '@/lib/utils/assets/svgs/Car';
 import { FrameSVG } from '@/lib/utils/assets/svgs/Frame';
 import { useTranslations } from 'next-intl';
@@ -47,7 +48,6 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
     address,
     shopType,
     isActive,
-    unique_restaurant_id,
   } = restaurant;
 
   const configuration = useContext(ConfigurationContext);
@@ -60,7 +60,8 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
     throw new Error(t('Cannot get the value of the Configuration Context'));
   }
 
-  const { deliveryRate, isPaidVersion } = configuration;
+  const { deliveryRate } = configuration;
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const {
     restaurantByOwnerResponse,
@@ -132,16 +133,11 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
     }
   };
 
-  const handleDelete = async () => {
-    if (isPaidVersion) {
-      hardDeleteRestaurant({ variables: { id: _id } });
-    } else {
-      showToast({
-        type: 'error',
-        title: t('You are using free version'),
-        message: t('This Feature is only Available in Paid Version'),
-      });
-    }
+  const handleDelete = () => setConfirmDeleteOpen(true);
+
+  const confirmDelete = async () => {
+    await hardDeleteRestaurant({ variables: { id: _id } });
+    setConfirmDeleteOpen(false);
   };
 
   // Edits the store's own basic/location/timing details through the admin
@@ -186,10 +182,6 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
           <TextComponent
             className={` dark:text-white card-h2 truncate`}
             text={name}
-          />
-          <TextComponent
-            className={`card-h3 truncate text-gray-500 dark:text-white`}
-            text={unique_restaurant_id}
           />
           <TextComponent
             className={`card-h3 truncate text-gray-500 dark:text-white`}
@@ -250,6 +242,14 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         </button>
         {isHardDeleting ? <CustomLoader size="20px" /> : <button type="button" aria-label={t('Delete')} onClick={handleDelete} className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"><FontAwesomeIcon icon={faTrash}/></button>}
       </div>
+      <CustomDialog
+        visible={confirmDeleteOpen}
+        onHide={() => setConfirmDeleteOpen(false)}
+        onConfirm={confirmDelete}
+        loading={isHardDeleting}
+        title="Delete store"
+        message={`Delete "${name}"? This permanently removes the store, its menu, and order history. This cannot be undone.`}
+      />
     </div>
   );
 }

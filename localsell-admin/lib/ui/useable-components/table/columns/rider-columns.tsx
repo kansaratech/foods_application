@@ -207,17 +207,22 @@ export const RIDER_TABLE_COLUMNS = ({
     },
     {
       headerName: t('Status'),
-      propertyName: 'documentSummary',
+      propertyName: 'status',
       body: (rider: IRiderResponse) => {
-        const summary = rider.documentSummary;
-        const pending = !summary || summary.verified < summary.required;
+        // Net operational state, not document KYC: a rider is "Active" once an
+        // admin has approved them AND their account is enabled.
+        const approval = rider.approvalStatus || 'PENDING';
+        const state =
+          approval === 'REJECTED'
+            ? { label: t('Rejected'), cls: 'bg-red-50 text-red-700' }
+            : approval !== 'APPROVED'
+              ? { label: t('Awaiting approval'), cls: 'bg-amber-50 text-amber-700' }
+              : rider.isActive === false
+                ? { label: t('Disabled'), cls: 'bg-slate-100 text-slate-500' }
+                : { label: t('Active'), cls: 'bg-green-50 text-green-700' };
         return (
-          <span
-            className={`rounded px-2 py-0.5 text-xs font-medium ${
-              pending ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'
-            }`}
-          >
-            {pending ? t('Verification pending') : t('Active')}
+          <span className={`rounded px-2 py-0.5 text-xs font-medium ${state.cls}`}>
+            {state.label}
           </span>
         );
       },

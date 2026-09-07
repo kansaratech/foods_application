@@ -816,10 +816,11 @@ model RiderProfile {
   // INDEPENDENT | STORE_ASSIGNED
   employmentType        String  @default("INDEPENDENT")
 
-  // PENDING | APPROVED | REJECTED — admin-created riders start APPROVED;
-  // a rider who self-registers from the app starts PENDING and cannot go
-  // online / take orders until an admin approves (mirrors Restaurant's gate).
-  approvalStatus String    @default("APPROVED")
+  // PENDING | APPROVED | REJECTED — every new rider (admin-created or a
+  // self-registration from the app) starts PENDING and cannot go online or
+  // take orders until an admin explicitly approves them (mirrors Restaurant's
+  // gate). Seed / migration data may set APPROVED explicitly.
+  approvalStatus String    @default("PENDING")
   approvalNote   String?   @db.Text
   approvedAt     DateTime?
   approvedById   String?

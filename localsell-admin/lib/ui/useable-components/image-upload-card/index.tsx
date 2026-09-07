@@ -103,7 +103,7 @@ export default function ImageUploadCard({
           <CustomButton
             type="button"
             className="h-9 border border-primary bg-white px-4 text-sm text-primary dark:border-primary-color dark:bg-dark-950"
-            label={value ? t('Replace') : t('Upload file')}
+            label={value ? t('Upload') : t('Upload file')}
             loading={loading}
             onClick={() => inputRef.current?.click()}
           />

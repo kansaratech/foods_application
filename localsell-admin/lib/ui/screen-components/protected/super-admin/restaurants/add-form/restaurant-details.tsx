@@ -55,7 +55,7 @@ import {
 } from '@/lib/utils/interfaces/cuisine.interface';
 import { IRestaurantsAddRestaurantComponentProps } from '@/lib/utils/interfaces/restaurants.interface';
 import { toTextCase } from '@/lib/utils/methods';
-import { RestaurantSchema } from '@/lib/utils/schema/restaurant';
+import { makeRestaurantSchema } from '@/lib/utils/schema/restaurant';
 import {
   ApolloCache,
   ApolloError,
@@ -379,7 +379,7 @@ export default function RestaurantDetailsForm({
             <Formik
               initialValues={formInitialValues}
               enableReinitialize
-              validationSchema={RestaurantSchema}
+              validationSchema={makeRestaurantSchema(true)}
               onSubmit={async (values) => {
                 await onCreateRestaurant(values);
               }}

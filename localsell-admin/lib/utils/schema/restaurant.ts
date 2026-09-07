@@ -7,7 +7,13 @@ import { IDropdownSelectItem } from '../interfaces';
 const strongPasswordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
 
-export const RestaurantSchema = Yup.object().shape({
+/**
+ * `requirePassword` — the create form (new store creds) and, per the security
+ * ask, the edit form both make the admin (re)enter the store password to save.
+ * A blank password on edit no longer silently keeps the old one.
+ */
+export const makeRestaurantSchema = (requirePassword: boolean) =>
+  Yup.object().shape({
   name: Yup.string()
     .max(35)
     .trim()
@@ -36,11 +42,15 @@ export const RestaurantSchema = Yup.object().shape({
 image: Yup.string().matches(/^http/, 'Invalid image URL').required('Required'),
 logo: Yup.string().matches(/^http/, 'Invalid logo URL').required('Required'),
   phoneNumber: Yup.string().required('Required').min(5,"Minimum 5 Numbers are Required"),
-  password: Yup.string().test(
-    'strong-password',
-    'Password must be at least 6 characters and include an uppercase letter, a lowercase letter, a number and a special character',
-    (value) => !value || strongPasswordRegex.test(value)
-  ),
+  password: Yup.string()
+    .test(
+      'strong-password',
+      'Password must be at least 6 characters and include an uppercase letter, a lowercase letter, a number and a special character',
+      (value) => !value || strongPasswordRegex.test(value)
+    )
+    .test('password-required', 'Enter the store password to save', (value) =>
+      requirePassword ? !!value : true
+    ),
   confirmPassword: Yup.string().test(
     'passwords-match',
     'Passwords must match',
@@ -50,4 +60,9 @@ logo: Yup.string().matches(/^http/, 'Invalid logo URL').required('Required'),
       return value === password;
     }
   ),
-});
+  });
+
+// Lenient default kept for the store-portal self-profile + vendor edit forms
+// (blank password = keep current). The super-admin store create/edit form
+// passes `makeRestaurantSchema(true)` to force the password.
+export const RestaurantSchema = makeRestaurantSchema(false);

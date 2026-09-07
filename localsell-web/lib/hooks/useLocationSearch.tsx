@@ -109,48 +109,75 @@ export default function useLocationSearch() {
 
   const detectCurrentLocation = useCallback(() => {
     setError(null);
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setError("Location isn't available in this browser.");
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.geolocation ||
+      (typeof window !== "undefined" && !window.isSecureContext)
+    ) {
+      setError(
+        typeof window !== "undefined" && !window.isSecureContext
+          ? "Your browser only shares location on secure (https) pages. Search for your area below."
+          : "Location isn't available in this browser. Search for your area below.",
+      );
       return Promise.resolve(false);
     }
 
     setLocating(true);
+
+    const onOk = async (
+      position: GeolocationPosition,
+      resolve: (v: boolean) => void,
+    ) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        const res = await fetch(
+          `${base}/maps/reverse-geocode?latitude=${latitude}&longitude=${longitude}&language=en`,
+        );
+        const body = await res.json();
+        const label =
+          body?.data?.formattedAddress ||
+          `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        persist(label, longitude, latitude);
+      } catch {
+        // Still usable — we have coordinates, just no readable label.
+        persist(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, longitude, latitude);
+      } finally {
+        setLocating(false);
+        resolve(true);
+      }
+    };
+
+    const messageFor = (geoErr: GeolocationPositionError) =>
+      geoErr.code === geoErr.PERMISSION_DENIED
+        ? "Location permission is blocked. Allow it in your browser's site settings, or search for your area below."
+        : geoErr.code === geoErr.TIMEOUT
+          ? "Getting your location took too long. Try again, or search for your area below."
+          : "Couldn't pin your location. Search for your area below.";
+
     return new Promise<boolean>((resolve) => {
+      // First a quick, low-power fix (works on desktops with no GPS). If the
+      // device can't provide one, retry once with high accuracy + a longer
+      // window before giving up.
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const res = await fetch(
-              `${base}/maps/reverse-geocode?latitude=${latitude}&longitude=${longitude}&language=en`,
-            );
-            const body = await res.json();
-            const label =
-              body?.data?.formattedAddress ||
-              `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-            persist(label, longitude, latitude);
-            resolve(true);
-          } catch {
-            // Still usable — we have coordinates, just no readable label.
-            persist(
-              `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-              longitude,
-              latitude,
-            );
-            resolve(true);
-          } finally {
+        (position) => onOk(position, resolve),
+        (firstErr) => {
+          if (firstErr.code === firstErr.PERMISSION_DENIED) {
             setLocating(false);
+            setError(messageFor(firstErr));
+            resolve(false);
+            return;
           }
-        },
-        (geoErr) => {
-          setLocating(false);
-          setError(
-            geoErr.code === geoErr.PERMISSION_DENIED
-              ? "Location permission is blocked. Allow it in your browser, or search for your area below."
-              : "Couldn't get your location. Search for your area instead.",
+          navigator.geolocation.getCurrentPosition(
+            (position) => onOk(position, resolve),
+            (secondErr) => {
+              setLocating(false);
+              setError(messageFor(secondErr));
+              resolve(false);
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 },
           );
-          resolve(false);
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 },
       );
     });
   }, [base, persist]);

@@ -68,6 +68,10 @@ export const PAYMENT_METHOD_LIST = [
 
 export const USER_CURRENT_LOCATION_LS_KEY = "user-current-location";
 
+// Fired on `window` to ask the app header to open its delivery-location picker
+// (e.g. from the "area unavailable" screen's "Change delivery location").
+export const OPEN_LOCATION_PICKER_EVENT = "ls:open-location-picker";
+
 
 // Launch scope is English + Hindi only. Other locale files still ship in the
 // repo but are intentionally not offered in the picker.

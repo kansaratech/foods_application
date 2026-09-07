@@ -6,6 +6,19 @@ import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../services/auth.service';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
+import { normalizeIndianPhone } from '../../utils/phone';
+import { recordAudit } from '../../utils/audit';
+import { purgeRestaurant } from './restaurant.resolvers';
+
+/** Friendly "phone already in use" — never let the raw `User_phone_key`
+ *  Prisma error reach the client. */
+async function assertPhoneFree(phone: string | undefined, ignoreUserId?: string): Promise<void> {
+  if (!phone) return;
+  const clash = await prisma.user.findUnique({ where: { phone } });
+  if (clash && clash.id !== ignoreUserId) {
+    throw userInputError('This phone number is already registered to another account.');
+  }
+}
 
 const OWNER_ROLES = ['ADMIN', 'VENDOR', 'STAFF'] as const;
 
@@ -224,6 +237,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       requireRole(context, ['ADMIN']);
       const input = args.vendorInput;
       const email = input.email.trim().toLowerCase();
+      const phone = normalizeIndianPhone(input.phoneNumber);
 
       const businessTypeId = await resolveBusinessTypeId(input.businessType);
       const gstRegistered = input.isGstRegistered ?? false;
@@ -234,7 +248,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         image: input.image,
         firstName: input.firstName,
         lastName: input.lastName,
-        phone: input.phoneNumber,
+        phone,
         userType: 'VENDOR' as const,
         status: 'ACTIVE',
         businessName: input.businessName,
@@ -253,6 +267,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
           const emailTaken = await prisma.user.findUnique({ where: { email } });
           if (emailTaken && emailTaken.id !== input._id) throw userInputError('A vendor with this email already exists');
         }
+        await assertPhoneFree(phone, input._id);
 
         const data: typeof baseData & { password?: string } = { ...baseData };
         if (input.password) {
@@ -269,6 +284,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       } else {
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) throw userInputError('A vendor with this email already exists');
+        await assertPhoneFree(phone);
         sendingInvite = !input.password;
         vendor = await prisma.user.create({
           data: { ...baseData, password: await hashPassword(input.password ?? generateInvitePassword()) },
@@ -341,6 +357,8 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const businessTypeId = input.businessType !== undefined ? await resolveBusinessTypeId(input.businessType) : undefined;
       const gstRegistered = input.isGstRegistered;
+      const phone = input.phoneNumber !== undefined ? normalizeIndianPhone(input.phoneNumber) : undefined;
+      await assertPhoneFree(phone, input._id);
 
       return prisma.user.update({
         where: { id: input._id },
@@ -350,7 +368,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
           image: input.image,
           firstName: input.firstName,
           lastName: input.lastName,
-          phone: input.phoneNumber,
+          phone,
           password: input.password ? await hashPassword(input.password) : undefined,
           businessName: input.businessName,
           businessTypeId,
@@ -361,7 +379,30 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
     },
     deleteVendor: async (_parent, args: { id: string }, context) => {
       requireRole(context, ['ADMIN']);
-      await prisma.user.delete({ where: { id: args.id } });
+      const vendor = await prisma.user.findUnique({
+        where: { id: args.id },
+        include: { restaurants: { select: { id: true, name: true } } },
+      });
+      if (!vendor) throw notFoundError('Vendor not found');
+
+      // Wipe every store this vendor owns (menus, orders, ledgers) before the
+      // owner row — Restaurant.ownerId is RESTRICT, not cascade.
+      for (const r of vendor.restaurants) {
+        await purgeRestaurant(r.id);
+      }
+      // Ledgers keyed by vendorId have no FK relation — clear them by hand.
+      await prisma.$transaction([
+        prisma.commissionRecord.deleteMany({ where: { vendorId: args.id } }),
+        prisma.commissionBill.deleteMany({ where: { vendorId: args.id } }),
+        prisma.user.delete({ where: { id: args.id } }), // cascades VendorDocument
+      ]);
+
+      await recordAudit(context, {
+        action: 'vendor.delete',
+        targetType: 'User',
+        targetId: args.id,
+        summary: `Vendor permanently deleted: ${vendor.name ?? vendor.email} (${vendor.restaurants.length} store(s))`,
+      });
       return true;
     },
 

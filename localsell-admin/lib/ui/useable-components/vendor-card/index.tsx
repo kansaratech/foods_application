@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 
 // Context
 import { VendorContext } from '@/lib/context/super-admin/vendor.context';
-import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 // Interface
 import { IVendorCardProps } from '@/lib/utils/interfaces';
@@ -57,7 +56,6 @@ export default function VendorCard({
   const { vendorId, onSetVendorId, vendorResponse, onResetVendor } =
     useContext(VendorContext);
   const { showToast } = useContext(ToastContext);
-  const { ISPAID_VERSION } = useConfiguration();
 
   // States
   const [isPopupOpen, setPopupOpen] = useState<boolean>(false);
@@ -105,17 +103,8 @@ export default function VendorCard({
   // API Hanlders
   const onHandleConfirmDeleteVendor = async () => {
     try {
-      if (ISPAID_VERSION) {
-        await deleteVendor({ variables: { id: vendorId } });
-        setDeletePopupOpen(false);
-      } else {
-        setDeletePopupOpen(false);
-        showToast({
-          type: 'error',
-          title: t('You are using free version'),
-          message: t('This Feature is only Available in Paid Version'),
-        });
-      }
+      await deleteVendor({ variables: { id: vendorId } });
+      setDeletePopupOpen(false);
     } catch (error) {
       showToast({
         type: 'error',

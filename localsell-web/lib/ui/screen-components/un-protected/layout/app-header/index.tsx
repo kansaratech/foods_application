@@ -28,7 +28,10 @@ import useLocationSearch from "@/lib/hooks/useLocationSearch";
 
 import { setUserLocale } from "@/lib/utils/methods/locale";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
-import { USER_CURRENT_LOCATION_LS_KEY } from "@/lib/utils/constants";
+import {
+  USER_CURRENT_LOCATION_LS_KEY,
+  OPEN_LOCATION_PICKER_EVENT,
+} from "@/lib/utils/constants";
 
 const ORANGE = "#1c5bc7";
 const MAROON = "#16293f";
@@ -171,6 +174,17 @@ export default function AppHeader() {
     const dir = document.documentElement.getAttribute("dir") || "ltr";
     setSidebarSide(dir === "rtl" ? "left" : "right");
   }, [locale]);
+
+  // Other screens (e.g. the "area unavailable" page) can ask us to open the
+  // delivery-location picker.
+  useEffect(() => {
+    const open = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setIsLocationOpen(true);
+    };
+    window.addEventListener(OPEN_LOCATION_PICKER_EVENT, open);
+    return () => window.removeEventListener(OPEN_LOCATION_PICKER_EVENT, open);
+  }, []);
 
   // Hydrate the delivery location for the chip: a previously chosen location
   // (localStorage) wins, otherwise the customer's selected profile address.
