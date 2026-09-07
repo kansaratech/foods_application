@@ -656,6 +656,8 @@ const ordersFieldsBody = `
     orderDate
     expectedTime
     isPickedUp
+    deliveryOtp
+    deliveryConfirmedBy
     deliveryCharges
     acceptedAt
     pickedAt

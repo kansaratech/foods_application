@@ -420,6 +420,47 @@ function OrderDetail(props) {
             </View>
           )}
         </View>
+        {/* Proof-of-delivery code — the customer reads this to whoever hands
+            over the order (LocalSell rider or the store's own person). */}
+        {!order?.isPickedUp &&
+          order?.deliveryOtp &&
+          [
+            ORDER_STATUS_ENUM.ACCEPTED,
+            ORDER_STATUS_ENUM.ASSIGNED,
+            ORDER_STATUS_ENUM.PICKED
+          ].includes(order?.orderStatus) && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderWidth: 1,
+                borderColor: currentTheme.primary,
+                backgroundColor: currentTheme.gray100,
+                borderRadius: scale(12),
+                padding: scale(12),
+                marginHorizontal: scale(16),
+                marginBottom: scale(8)
+              }}
+            >
+              <View style={{ flex: 1, paddingRight: scale(8) }}>
+                <TextDefault textColor={currentTheme.primary} bolder H5>
+                  {t('deliveryCode')}
+                </TextDefault>
+                <TextDefault textColor={currentTheme.gray600} small style={{ ...alignment.MTxSmall }}>
+                  {t('deliveryCodeHint')}
+                </TextDefault>
+              </View>
+              <TextDefault
+                textColor={currentTheme.primary}
+                bolder
+                H1
+                style={{ letterSpacing: scale(4) }}
+              >
+                {order.deliveryOtp}
+              </TextDefault>
+            </View>
+        )}
         <Instructions title={'Instructions'} theme={currentTheme} message={order?.instructions} />
         <Detail navigation={props?.navigation} currencySymbol={configuration.currencySymbol} items={items} from={restaurant?.name} orderNo={order?.orderId} deliveryAddress={deliveryAddress?.deliveryAddress} subTotal={subTotal} tip={tip} tax={tax} deliveryCharges={deliveryCharges} total={total} theme={currentTheme} id={id} rider={order?.rider} orderStatus={order?.orderStatus} hasUnread={hasUnreadMessage} onChatOpen={() => setHasUnreadMessage(false)} />
         <Taxes tax={tax} deliveryCharges={deliveryCharges} currency={configuration.currencySymbol} tip={tip} discountAmount={discountAmount} />
