@@ -19,11 +19,11 @@ This is a **core MVP**: authentication, restaurant/menu browsing & management, c
    ```bash
    npx prisma db push && npx prisma generate
    ```
-5. Seed data — see **`prisma/SEED.md`** for the full walkthrough. Quick version:
+5. Seed data — one config-driven seed, see **`prisma/SEED.md`**:
    ```bash
-   npm run seed           # base admin/vendor/customer accounts + one sample store
-   npm run seed:deogarh   # Padharo Deogarh marketplace (8 stores) + the demo festival campaign
+   npm run seed   # WIPES all data + rebuilds the marketplace from prisma/seed-data.json
    ```
+   Edit `prisma/seed-data.json` to change stores / menus / accounts, then reseed.
 6. Start the dev server:
    ```bash
    npm run dev

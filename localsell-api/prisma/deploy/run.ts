@@ -2,7 +2,7 @@
  * One ordered, idempotent database bring-up / upgrade for ANY environment.
  *
  *   npm run db:deploy            schema sync + client + config defaults + backfill
- *   npm run db:deploy -- --demo  ... and then the demo data (base + Deogarh seed)
+ *   npm run db:deploy -- --demo  ... and then WIPE + reseed from prisma/seed-data.json
  *
  * Every step is safe to re-run. Run it on a fresh production database and on
  * every redeploy after a schema change — see PADHARO_DEPLOYMENT.md.
@@ -62,8 +62,10 @@ async function main() {
   );
 
   if (withDemo) {
-    await step('Seed base data', () => sh('npm run seed'));
-    await step('Seed Deogarh marketplace + campaign', () => sh('npm run seed:deogarh'));
+    // Config-driven marketplace seed. WIPES all data tables and rebuilds from
+    // prisma/seed-data.json (infra secrets on Configuration are preserved).
+    // Never pass --demo against a live production database.
+    await step('Seed marketplace from seed-data.json', () => sh('npm run seed'));
   }
 
   console.log('\n✅ DB deploy complete.');

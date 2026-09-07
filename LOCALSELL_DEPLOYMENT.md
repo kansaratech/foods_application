@@ -254,13 +254,12 @@ DBPW=$(cat /root/localsell_db_pw.txt)
 # 1. schema + config defaults + backfill (safe to re-run on every redeploy)
 docker compose --env-file deploy/localsell.env exec api npm run db:deploy
 
-#    Demo data — pick ONE (both WIPE all stores/menus/orders first):
-#    a) full four-store marketplace (Hot Pizza Corner, Devshree Kitchen,
-#       Deogarh Mahal Rasoi, Shrinath Sweets & Namkeen) with proper
-#       size/weight variations, add-on option groups and build-your-own thali:
-docker compose --env-file deploy/localsell.env exec api npm run seed:localsell
-#    b) the older 8-store Deogarh set:
-docker compose --env-file deploy/localsell.env exec api npm run db:deploy -- --demo
+#    Demo data — config-driven, defined by localsell-api/prisma/seed-data.json.
+#    WIPES every data table and rebuilds the marketplace (Hot Pizza Corner,
+#    Devshree Kitchen, Deogarh Mahal Rasoi, Shrinath Sweets & Namkeen). Infra
+#    secrets on Configuration (Maps / Stripe / SMTP keys) are preserved.
+#    NEVER run this against a marketplace with real vendors/orders.
+docker compose --env-file deploy/localsell.env exec api npm run seed
 
 # 2. the deploy does NOT set the Maps key — add it once
 docker exec -it mysql_dev_3308 mysql -ulocalsell -p"$DBPW" localsell \
@@ -270,11 +269,13 @@ docker exec -it mysql_dev_3308 mysql -ulocalsell -p"$DBPW" localsell \
 docker compose --env-file deploy/localsell.env restart api
 ```
 
-`db:deploy -- --demo` runs `npm run seed` (prints base logins — admin
-`admin@localsell.in` / `Admin@123`, etc.) and `seed:deogarh` (8 stores, flips
-`Configuration` to INR / ₹, commission 20% / MONTHLY, map centre Deogarh).
-Store‑app logins: `dgh-<slug>@store.localsell.in` / `Store@123`
-(e.g. `dgh-shrinath-mishthan-bhandar@store.localsell.in`).
+`db:deploy -- --demo` runs `npm run seed` — the config-driven marketplace seed
+(`prisma/seed-data.json`). Default logins: admin `admin@localsell.in` /
+`Admin@123`; vendor `<slug>-owner@localsell.in` / `Vendor@123`; store app
+`<slug>@store.localsell.in` / `Store@123` (e.g.
+`hot-pizza-corner@store.localsell.in`); customer `customer@localsell.in` /
+`Customer@123`; rider `rider1` / `Rider@123`. The seed also sets `Configuration`
+to INR / ₹, commission 20% / MONTHLY, map centre Deogarh.
 
 **On every later redeploy after a schema change:** just
 `docker compose … exec api npm run db:deploy` (no `--demo`).
