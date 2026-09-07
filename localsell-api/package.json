@@ -13,10 +13,7 @@
     "db:deploy": "ts-node --transpile-only prisma/deploy/run.ts",
     "db:backfill": "ts-node --transpile-only prisma/backfill-commission.ts",
     "verify": "node scripts/verify-launch.mjs",
-    "seed": "ts-node --transpile-only prisma/seed.ts",
-    "seed:ahmedabad": "ts-node --transpile-only prisma/seed-ahmedabad.ts",
-    "seed:deogarh": "ts-node --transpile-only prisma/seed-deogarh.ts",
-    "seed:campaign": "ts-node --transpile-only prisma/seed-campaign.ts",
+    "seed": "ts-node --transpile-only prisma/seed-from-config.ts",
     "rebrand:emails": "ts-node --transpile-only prisma/rebrand-emails.ts",
     "db:clean-test-data": "node prisma/clean-test-data.cjs"
   },
@@ -41,7 +38,7 @@
     "ws": "^8.18.0"
   },
   "prisma": {
-    "seed": "ts-node --transpile-only prisma/seed.ts"
+    "seed": "ts-node --transpile-only prisma/seed-from-config.ts"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -1,5 +1,10 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * Colours are CSS-variable-backed (see app/theme-tokens.css). A class like
+ * `bg-surface` or `text-content-muted` resolves per-theme automatically, so most
+ * `dark:` colour variants are unnecessary — the token already flipped.
+ */
 const config = {
   darkMode: ['class'],
   content: [
@@ -9,7 +14,6 @@ const config = {
     './src/**/*.{ts,tsx}',
     './lib/**/*.{ts,tsx}',
   ],
-  // content: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
   prefix: '',
   theme: {
     container: {
@@ -22,10 +26,40 @@ const config = {
 
     extend: {
       transitionProperty: {
-        // Customize or disable transition properties
         none: 'none',
       },
       colors: {
+        /* Semantic — theme-aware, prefer these.
+           `rgb(var(--x-rgb) / <alpha-value>)` so `bg-primary` and
+           `ring-primary/30` both work; the channel var flips per theme. */
+        primary: {
+          DEFAULT: 'rgb(var(--primary-rgb) / <alpha-value>)',
+          contrast: 'var(--primary-color-text)',
+          dark: 'var(--ls-blue-dark)',
+          light: 'var(--primary-light)',
+          hover: 'var(--ls-blue-hover)',
+        },
+        brand: {
+          navy: 'rgb(var(--ls-navy-rgb) / <alpha-value>)',
+          'navy-dark': 'var(--ls-navy-dark)',
+          blue: 'rgb(var(--primary-rgb) / <alpha-value>)',
+          mist: 'var(--ls-mist)',
+          sky: 'rgb(var(--ls-sky-rgb) / <alpha-value>)',
+        },
+        surface: {
+          DEFAULT: 'var(--app-bg)',
+          card: 'var(--app-surface)',
+          alt: 'var(--app-surface-alt)',
+          overlay: 'var(--app-overlay)',
+          border: 'var(--app-border)',
+          hover: 'var(--app-hover)',
+        },
+        content: {
+          DEFAULT: 'var(--app-text)',
+          muted: 'var(--app-text-muted)',
+        },
+
+        /* Legacy aliases — still resolve, now theme-aware */
         'primary-color': 'var(--primary-color)',
         'primary-dark': 'var(--primary-dark)',
         'primary-light': 'var(--primary-light)',

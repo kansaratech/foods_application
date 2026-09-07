@@ -141,7 +141,7 @@ export default function DispatchTableHeader({
           </OverlayPanel>
 
           <TextIconClickable
-            className="w-full rounded border border-dotted border-[#E4E4E7] text-black dark:border-dark-600 dark:text-white sm:w-24"
+            className="w-full rounded border border-dotted border-surface-border text-black dark:border-dark-600 dark:text-white sm:w-24"
             icon={faAdd}
             iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }}
             title={selectedActions.length > 0 ? t('Filter') : t('Actions')}

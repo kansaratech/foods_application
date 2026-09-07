@@ -14,10 +14,11 @@ import {
 import { VEHICLE_TYPE } from "@/lib/utils/constants";
 import { IVehicleTypeItem } from "@/lib/utils/interfaces";
 import { useMutation } from "@apollo/client";
-import { useState } from "react";
+import { ReactElement, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   FlatList,
+  Platform,
   Text,
   TouchableOpacity,
   useWindowDimensions,
@@ -32,7 +33,7 @@ export default function VehicleTypeMainScreen() {
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
 
-  const vehicleMap: Record<string, JSX.Element> = {
+  const vehicleMap: Record<string, ReactElement> = {
     bicycle: <BikeRidingIcon color={appTheme.fontMainColor} />,
     motorbike: <MotorBikeIcon color={appTheme.fontMainColor} />,
     car: <CarIcon color={appTheme.fontMainColor} />,
@@ -61,7 +62,8 @@ export default function VehicleTypeMainScreen() {
       <TouchableOpacity
         className={`flex-row items-center p-4  border-b my-1`}
         style={{
-          width: width * 0.95,
+          width: Platform.OS === "web" ? "100%" : width * 0.95,
+          borderRadius: Platform.OS === "web" ? 12 : 0,
           borderColor: isSelected ? appTheme.primary : appTheme.gray,
         }}
         onPress={() => setSelectedCode(item.code)}

@@ -231,7 +231,8 @@ export default function RegisterScreen() {
                             checked={vehicleType === code}
                             onChange={() => setVehicleType(code)}
                           />
-                          {t(label)}
+                          <VehicleIcon type={code} />
+                          <span>{t(label)}</span>
                         </label>
                       ))}
                     </div>

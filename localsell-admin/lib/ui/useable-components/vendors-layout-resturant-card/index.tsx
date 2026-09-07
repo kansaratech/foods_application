@@ -155,7 +155,7 @@ export default function VendorsLayoutRestaurantCard({
   };
 
   return (
-    <div className="flex flex-col rounded-lg border-2 border-[#F4F4F5] dark:border-dark-600 bg-white dark:bg-dark-950 shadow-md">
+    <div className="flex flex-col rounded-lg border-2 border-surface-border dark:border-dark-600 bg-white dark:bg-dark-950 shadow-md">
       <div className="mb-4 flex items-center rounded-t-lg bg-gray-200 dark:bg-dark-900 p-4">
         {image ? (
           <Image

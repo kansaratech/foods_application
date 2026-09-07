@@ -95,18 +95,30 @@ Array.isArray(autoNow) && autoNow.length === 0
   ? pass('auto-close leaves the current period open', 'closeCompletedCommissionPeriods = 0 bills (nothing has fully ended)')
   : fail('auto-close touched the current period', JSON.stringify(autoNow));
 
-const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@localsell.in", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
+// Any seeded vendor — the seed gives every store owner the password Vendor@123.
+const aVendorEmail = (await gql(`{ restaurants { owner { email } } }`, {}, admin)).data?.restaurants
+  ?.map((r) => r.owner?.email)
+  .find((e) => e && e.includes('-owner@'));
+const vTok = aVendorEmail
+  ? (await gql(`mutation($e:String!){ ownerLogin(email:$e, password:"Vendor@123"){ token } }`, { e: aVendorEmail })).data?.ownerLogin?.token
+  : null;
 const sum = (await gql(`{ myCommissionSummary { cycle outstandingTotal bills { _id } } }`, {}, vTok)).data?.myCommissionSummary;
 sum ? pass('myCommissionSummary (vendor view data)', `${sum.cycle} · ${sum.bills.length} bills · ₹${sum.outstandingTotal} outstanding`) : fail('myCommissionSummary');
 
-// accrual — pick any active restaurant with a menu
-const anyR = (await gql(`{ restaurants { _id isActive isAvailable } }`, {}, admin)).data?.restaurants || [];
+// accrual — pick an active restaurant with a menu. The COD-delivery / bill-preview
+// checks below assume a PLATFORM-fleet store (a SELF-delivery store holds its own
+// COD cash, so its commission IS billed — different, correct path), so prefer one.
+const anyR = (await gql(`{ restaurants { _id isActive isAvailable deliveryProvider } }`, {}, admin)).data?.restaurants || [];
 let RID, food;
-for (const r of anyR) {
-  if (!r.isActive || !r.isAvailable) continue;
-  const rr = (await gql(`{ restaurant(id:"${r._id}"){ minimumOrder categories { foods { _id variations { _id price } } } } }`, {}, admin)).data?.restaurant;
-  const f = rr?.categories?.flatMap((c) => c.foods).find((x) => x.variations?.length);
-  if (f) { RID = r._id; food = f; break; }
+for (const pass of ['platform', 'any']) {
+  for (const r of anyR) {
+    if (!r.isActive || !r.isAvailable) continue;
+    if (pass === 'platform' && (r.deliveryProvider ?? 'PLATFORM') !== 'PLATFORM') continue;
+    const rr = (await gql(`{ restaurant(id:"${r._id}"){ minimumOrder categories { foods { _id variations { _id price } } } } }`, {}, admin)).data?.restaurant;
+    const f = rr?.categories?.flatMap((c) => c.foods).find((x) => x.variations?.length);
+    if (f) { RID = r._id; food = f; break; }
+  }
+  if (RID) break;
 }
 const cust = (await gql(`mutation { login(email:"deogarh-diner@padharo.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token
   || (await gql(`mutation { login(email:"customer@localsell.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token;
@@ -501,7 +513,12 @@ console.log('\n# Batch D — combos, upsell, required customization');
   }
 
   // C5: a vendor sees only their own stores in storePerformance
-  const vTok = (await gql(`mutation { ownerLogin(email:"dgh-deogarh-chaat-bhandar-owner@localsell.in", password:"Vendor@123"){ token } }`)).data?.ownerLogin?.token;
+  const c5VendorEmail = (await gql(`{ restaurants { owner { email } } }`, {}, admin)).data?.restaurants
+    ?.map((r) => r.owner?.email)
+    .find((e) => e && e.includes('-owner@'));
+  const vTok = c5VendorEmail
+    ? (await gql(`mutation($e:String!){ ownerLogin(email:$e, password:"Vendor@123"){ token } }`, { e: c5VendorEmail })).data?.ownerLogin?.token
+    : null;
   if (vTok) {
     const vp = (await gql(`{ storePerformance(limit:100){ total rows { name } } }`, {}, vTok)).data?.storePerformance;
     const ap = (await gql(`{ storePerformance(limit:1){ total } }`, {}, admin)).data?.storePerformance;

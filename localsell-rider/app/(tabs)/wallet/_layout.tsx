@@ -4,7 +4,7 @@ import { Stack } from "expo-router";
 
 // Hooks
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function StackLayout() {
@@ -15,7 +15,7 @@ export default function StackLayout() {
   return (
     <View
       style={{
-        paddingTop: top + 10,
+        paddingTop: Platform.OS === "web" ? 0 : top + 10,
         flex: 1,
         backgroundColor: appTheme.themeBackground,
       }}
@@ -24,7 +24,7 @@ export default function StackLayout() {
         <Stack.Screen
           name="index"
           options={{
-            headerShown: true,
+            headerShown: Platform.OS !== "web",
             headerTitle: t("Wallet"),
             headerTitleAlign: "center",
             headerShadowVisible: false,

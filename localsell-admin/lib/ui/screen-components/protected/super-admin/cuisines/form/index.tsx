@@ -17,9 +17,9 @@ import { IAddCuisineProps } from '@/lib/utils/interfaces/cuisine.interface';
 import { CuisineFormSchema } from '@/lib/utils/schema';
 import { Form, Formik } from 'formik';
 
-// Prime react
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { Sidebar } from 'primereact/sidebar';
+// Form primitives
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
+import FormActions from '@/lib/ui/useable-components/form/form-actions';
 
 // Hooks
 import { ApolloError, useMutation } from '@apollo/client';
@@ -113,30 +113,29 @@ export default function CuisineForm({
     });
   }
 
+  const resetAndClose = () => {
+    setIsEditing({
+      bool: false,
+      data: {
+        __typename: '',
+        _id: '',
+        description: '',
+        name: '',
+        shopType: '',
+        image: '',
+      },
+    });
+    setVisible(false);
+  };
+
   return (
-    <Sidebar
+    <FormDialog
       visible={visible}
-      onHide={() => {
-        setIsEditing({
-          bool: false,
-          data: {
-            __typename: '',
-            _id: '',
-            description: '',
-            name: '',
-            shopType: '',
-            image: '',
-          },
-        });
-        setVisible(false);
-      }}
-      position="right"
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      onHide={resetAndClose}
+      title={`${isEditing.bool ? t('Edit') : t('Add')} ${t('Cuisine')}`}
+      size="md"
     >
       <div className="flex flex-col gap-4">
-        <h2 className="mb-3 text-xl font-bold">
-          {isEditing.bool ? t('Edit') : t('Add')} {t('Cuisine')}
-        </h2>
         <Formik
           initialValues={initialValues}
           validationSchema={CuisineFormSchema}
@@ -283,34 +282,19 @@ export default function CuisineForm({
                     orientation="SQUARE"
                   />
 
-                  <button
-                    className="float-end my-2 block rounded-md border dark:border-dark-600 bg-black px-12 py-2 text-white"
-                    disabled={
+                  <FormActions
+                    onCancel={resetAndClose}
+                    submitLabel={isEditing.bool ? t('Update') : t('Add')}
+                    loading={
                       isSubmitting || createCuisineLoading || editCuisineLoading
                     }
-                    type="submit"
-                  >
-                    {isSubmitting ||
-                      createCuisineLoading ||
-                      editCuisineLoading ? (
-                      <ProgressSpinner
-                        className="m-0 h-6 w-6 items-center self-center p-0"
-                        strokeWidth="5"
-                        style={{ fill: 'white', accentColor: 'white' }}
-                        color="white"
-                      />
-                    ) : isEditing.bool ? (
-                      t('Update')
-                    ) : (
-                      t('Add')
-                    )}
-                  </button>
+                  />
                 </div>
               </Form>
             );
           }}
         </Formik>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

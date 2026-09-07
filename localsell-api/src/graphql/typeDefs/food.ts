@@ -132,12 +132,36 @@ export const foodTypeDefs = /* GraphQL */ `
   input AddonInput {
     _id: ID
     restaurant: ID!
+    title: String
+    description: String
+    quantityMinimum: Int
+    quantityMaximum: Int
+    isRequired: Boolean
+    "Inline options (store app)."
+    options: [OptionInput!]
+    "One or more add-on groups whose options are existing Option ids (admin panel)."
+    addons: [AddonGroupInput!]
+  }
+
+  "Admin-panel shape: an add-on group that references options from the store's option pool by id."
+  input AddonGroupInput {
+    _id: ID
     title: String!
     description: String
     quantityMinimum: Int
     quantityMaximum: Int
     isRequired: Boolean
-    options: [OptionInput!]
+    options: [ID!]
+  }
+
+  input CreateOptionInput {
+    restaurant: ID!
+    options: [OptionInput!]!
+  }
+
+  input editOptionInput {
+    restaurant: ID!
+    options: OptionInput!
   }
 
   extend type Query {
@@ -189,6 +213,11 @@ export const foodTypeDefs = /* GraphQL */ `
     createAddon(addonInput: AddonInput!): Addon!
     editAddon(addonInput: AddonInput!): Addon!
     deleteAddon(id: String!, restaurant: String!): Boolean!
+
+    "Option pool CRUD (admin panel). Options live in a hidden per-store pool add-on and are copied into real groups when an add-on references them."
+    createOptions(optionInput: CreateOptionInput): Restaurant
+    editOption(optionInput: editOptionInput): Restaurant
+    deleteOption(id: String!, restaurant: String!): Restaurant
 
     createSubCategories(subCategories: [SubCategoryInput!]!): Boolean!
     deleteSubCategory(_id: String!): Boolean!

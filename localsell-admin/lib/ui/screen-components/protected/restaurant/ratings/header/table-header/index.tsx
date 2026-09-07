@@ -54,7 +54,7 @@ const RatingsHeaderDataView: React.FC<ICommissionRateHeaderProps> = ({
         <div className="flex w-full flex-row items-center gap-4 sm:w-auto sm:flex-col">
           <div className="sm:hidden">
             <TextIconClickable
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-dotted dark:border-dark-600 border-[#E4E4E7]"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-dotted dark:border-dark-600 border-surface-border"
               icon={faAdd}
               iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }  }
               onClick={(e) => overlayPanelRef.current?.toggle(e)}
@@ -75,7 +75,7 @@ const RatingsHeaderDataView: React.FC<ICommissionRateHeaderProps> = ({
 
         <div className="hidden sm:block">
           <TextIconClickable
-            className="w-44 rounded border border-dotted border-[#E4E4E7] text-black dark:border-dark-600 dark:text-white bg-white dark:bg-dark-950"
+            className="w-44 rounded border border-dotted border-surface-border text-black dark:border-dark-600 dark:text-white bg-white dark:bg-dark-950"
             icon={faAdd}
               iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }  }
             title={t('Filter Ratings')}

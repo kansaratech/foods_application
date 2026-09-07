@@ -50,6 +50,14 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // The service worker must never be HTTP-cached, or update checks stall.
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: [
           {

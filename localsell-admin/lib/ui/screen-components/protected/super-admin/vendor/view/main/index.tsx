@@ -154,7 +154,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
       >
         {/* Header for Restaurants section */}
         <div className="border-b pb-3 pt-3 dark:border-dark-600">
-          {selectedVendor && <div className="mb-4 flex items-center gap-3 rounded-lg bg-slate-50 p-3 dark:bg-dark-900"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#e8f0fc] text-lg font-bold text-[#1c5bc7]">{(selectedVendor.name || selectedVendor.email || 'V').split(' ').map((part) => part[0]).slice(0,2).join('').toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-base font-semibold text-slate-900 dark:text-white">{selectedVendor.name || t('Vendor')}</p><p className="truncate text-xs text-slate-500">{selectedVendor.email}</p></div><span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600">Active</span></div>}
+          {selectedVendor && <div className="mb-4 flex items-center gap-3 rounded-lg bg-slate-50 p-3 dark:bg-dark-900"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-light text-lg font-bold text-primary">{(selectedVendor.name || selectedVendor.email || 'V').split(' ').map((part) => part[0]).slice(0,2).join('').toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-base font-semibold text-slate-900 dark:text-white">{selectedVendor.name || t('Vendor')}</p><p className="truncate text-xs text-slate-500">{selectedVendor.email}</p></div><span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600">Active</span></div>}
           <div className="mb-4 flex items-center justify-between">
             <div className="hidden sm:block">
               <HeaderText text={`${t('Stores')} (${storeTotal})`} />
@@ -168,7 +168,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
               />
             </div>
             <TextIconClickable
-              className="rounded border-[#1c5bc7] border dark:border-dark-600 bg-[#1c5bc7] text-white sm:w-auto"
+              className="rounded border-primary border dark:border-dark-600 bg-primary text-white sm:w-auto"
               icon={faAdd}
               iconStyles={{ color: 'white' }}
               title={t('Add Store')}

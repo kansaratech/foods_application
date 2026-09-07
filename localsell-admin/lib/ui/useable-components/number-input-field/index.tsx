@@ -3,7 +3,8 @@ import { INumberTextFieldProps } from '@/lib/utils/interfaces';
 
 // Prime React
 import { InputNumber, InputNumberChangeEvent } from 'primereact/inputnumber';
-import InputSkeleton from '../custom-skeletons/inputfield.skeleton';
+import { twMerge } from 'tailwind-merge';
+import FieldShell from '../form/field-shell';
 
 // Hooks
 import useToast from '@/lib/hooks/useToast';
@@ -17,60 +18,48 @@ export default function CustomNumberField({
   onChangeFieldValue,
   isLoading = false,
   disabled = false,
+  error,
   min,
   max,
   ...props
-}: INumberTextFieldProps) {
-  // Toast
+}: INumberTextFieldProps & { error?: string }) {
   const { showToast } = useToast();
 
   const onNumberChangeHandler = (e: InputNumberChangeEvent) => {
-    if (onChange) {
-      onChange(name, e.value);
-    } else if (onChangeFieldValue) {
-      onChangeFieldValue(name, e.value ?? 0);
-    } else {
-      alert(`Either pass onChange or setFieldValue ${name}`);
-    }
+    if (onChange) onChange(name, e.value);
+    else if (onChangeFieldValue) onChangeFieldValue(name, e.value ?? 0);
   };
 
-  return !isLoading ? (
-    <div className={`flex w-full flex-col justify-center gap-y-1`}>
-      {showLabel && (
-        <label htmlFor="username" className="text-sm font-[500]">
-          {placeholder}
-        </label>
-      )}
-
+  return (
+    <FieldShell
+      htmlFor={name}
+      label={placeholder}
+      showLabel={showLabel}
+      error={error}
+      isLoading={isLoading}
+    >
       <InputNumber
-        
-        className={`h-10 w-full rounded-lg border border-gray-300 dark:border-dark-600 bg-gray-300 text-sm focus:shadow-none focus:outline-none ${className}`}
+        inputId={name}
+        name={name}
+        className={twMerge('ls-field', error && 'ls-field-invalid', className)}
         placeholder={placeholder}
         min={min}
         max={max}
+        disabled={disabled}
         onKeyDown={(e) => {
           if (max !== undefined && Number(e.currentTarget.value) > max) {
             e.preventDefault();
             return showToast({
               type: 'error',
-              title: 'Coupon',
-              message:
-                'As Discount is a %age field, please choose a value from 0 to 100.',
+              title: 'Value out of range',
+              message: `Please choose a value from ${min ?? 0} to ${max}.`,
             });
           }
-          // prevent floating point numbers. only allow numbers
-          if ((e.key === '.' || e.key === 'e' || e.key === '-')) {
-            e.preventDefault();
-          }
+          if (e.key === '.' || e.key === 'e' || e.key === '-') e.preventDefault();
         }}
-        onChange={(e: InputNumberChangeEvent) => {
-          onNumberChangeHandler(e);
-        }}
+        onChange={onNumberChangeHandler}
         {...props}
-        disabled={disabled}
       />
-    </div>
-  ) : (
-    <InputSkeleton />
+    </FieldShell>
   );
 }

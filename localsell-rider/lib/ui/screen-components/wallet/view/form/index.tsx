@@ -2,7 +2,13 @@
 import { IWithdrawModalProps } from "@/lib/utils/interfaces/withdraw.interface";
 
 // Core
-import { KeyboardAvoidingView, Platform, Text, TextInput, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { ReactNativeModal } from "react-native-modal";
 
 // Components
@@ -45,13 +51,19 @@ export default function WithdrawModal({
         setIsBottomModalOpen(false);
       }}
       useNativeDriver={true}
-      style={{ margin: 0, justifyContent: "flex-end" }}
+      style={{
+        margin: Platform.OS === "web" ? 24 : 0,
+        justifyContent: Platform.OS === "web" ? "center" : "flex-end",
+        alignItems: Platform.OS === "web" ? "center" : undefined,
+      }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{
           width: "100%",
-          maxHeight: "70%",
+          maxHeight: Platform.OS === "web" ? "90%" : "70%",
+          maxWidth: Platform.OS === "web" ? 560 : undefined,
+          borderRadius: Platform.OS === "web" ? 20 : undefined,
           backgroundColor: appTheme.themeBackground,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,

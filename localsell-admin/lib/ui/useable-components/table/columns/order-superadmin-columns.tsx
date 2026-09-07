@@ -81,9 +81,26 @@ export const ORDER_SUPER_ADMIN_COLUMNS = () => {
       propertyName: 'deliveryMode',
       body: (row: IExtendedOrder) => {
         const mode = row.deliveryMode || (row.isPickedUp ? 'PICKUP' : 'PLATFORM');
-        if (mode === 'PICKUP') return 'Pickup';
-        if (mode === 'SELF') return `Store${row.storeDeliveryAgent?.name ? ` · ${row.storeDeliveryAgent.name}` : ''}`;
-        return 'LocalSell fleet';
+        const label =
+          mode === 'PICKUP'
+            ? 'Pickup'
+            : mode === 'SELF'
+              ? `Store${row.storeDeliveryAgent?.name ? ` · ${row.storeDeliveryAgent.name}` : ''}`
+              : 'LocalSell fleet';
+        const proof =
+          row.orderStatus === 'DELIVERED' && row.deliveryConfirmedBy
+            ? row.deliveryConfirmedBy === 'OTP'
+              ? ' · code ✓'
+              : ' · manual'
+            : row.deliveryOtp
+              ? ` · code ${row.deliveryOtp}`
+              : '';
+        return (
+          <span>
+            {label}
+            <small style={{ color: '#64748b' }}>{proof}</small>
+          </span>
+        );
       },
     },
     {

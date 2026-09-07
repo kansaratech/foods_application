@@ -1,3 +1,4 @@
+import WorkspacePage from "@/lib/ui/layouts/workspace-page";
 // Hooks
 import { useApptheme } from "@/lib/context/global/theme.context";
 
@@ -11,8 +12,16 @@ export default function EarningsScreen() {
   // Hooks
   const { appTheme } = useApptheme();
   return (
-    <SafeAreaView edges={["bottom", "left", "right"]} style={{ backgroundColor: appTheme.screenBackground }}>
-      <EarningsMain />
-    </SafeAreaView>
+    <WorkspacePage
+      title="Earnings"
+      description="Review your delivery earnings and recent activity."
+    >
+      <SafeAreaView
+        edges={["bottom", "left", "right"]}
+        style={{ backgroundColor: appTheme.screenBackground }}
+      >
+        <EarningsMain />
+      </SafeAreaView>
+    </WorkspacePage>
   );
 }

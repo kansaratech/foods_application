@@ -29,7 +29,7 @@ export default function StepperHeader({
                   isDone
                     ? 'bg-primary-color text-white'
                     : isActive
-                      ? 'bg-primary-color text-white ring-4 ring-[#e8f0fc] dark:ring-dark-900'
+                      ? 'bg-primary-color text-white ring-4 ring-primary-light dark:ring-dark-900'
                       : 'border-2 border-slate-300 text-slate-400 dark:border-dark-600'
                 }`}
               >

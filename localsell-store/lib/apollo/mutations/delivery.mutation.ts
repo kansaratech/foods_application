@@ -79,3 +79,14 @@ export const MARK_ORDER_DELIVERED = gql`
     }
   }
 `;
+
+export const CONFIRM_DELIVERY = gql`
+  mutation ConfirmDelivery($orderId: ID!, $otp: String!) {
+    confirmDelivery(orderId: $orderId, otp: $otp) {
+      _id
+      orderStatus
+      deliveryConfirmedBy
+      paymentStatus
+    }
+  }
+`;

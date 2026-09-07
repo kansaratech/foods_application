@@ -344,6 +344,28 @@ function TrackingStatusCard({ orderTrackingDetails }: TrackingStatusCardProps) {
         {getStatusMessage()}
       </p>
 
+      {/* Proof-of-delivery code — show it to the customer while the order is
+          out for delivery so they can read it to the delivery partner. */}
+      {!orderTrackingDetails.isPickedUp &&
+        orderTrackingDetails.deliveryOtp &&
+        ["ACCEPTED", "ASSIGNED", "PICKED"].includes(
+          orderTrackingDetails.orderStatus,
+        ) && (
+          <div className="mt-4 rounded-xl border border-primary-color/30 bg-primary-light dark:bg-[#16293f] p-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary-color">
+                Delivery code
+              </p>
+              <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5">
+                Share this with your delivery partner to receive your order
+              </p>
+            </div>
+            <span className="text-2xl font-black tracking-[0.3em] text-primary-color dark:text-white shrink-0">
+              {orderTrackingDetails.deliveryOtp}
+            </span>
+          </div>
+        )}
+
       {/* Real-time update indicator */}
       {orderTrackingDetails.orderStatus !== "DELIVERED" &&
         orderTrackingDetails.orderStatus !== "COMPLETED" &&

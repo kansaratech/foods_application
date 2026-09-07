@@ -22,38 +22,28 @@ export default function ClientProviders({
   children: React.ReactNode;
 }) {
   const client = useSetupApollo();
-  const hasCleanedSW = useRef(false);
+  const swRegistered = useRef(false);
   const primeReactConfig = useMemo(() => ({ ripple: true }), []);
 
-  // The app used to register a Workbox service worker that precached
-  // build-specific `/_next/static` chunk URLs. After any rebuild those URLs
-  // 404, the SW answered with ERR_FAILED, and the shell could never hydrate.
-  // We no longer use a service worker — actively tear down any lingering
-  // registration and its caches so returning visitors self-heal.
+  // PWA service worker. The earlier one precached build-specific
+  // `/_next/static` chunk URLs and got stuck after every rebuild — this one
+  // precaches nothing build-specific and serves navigations network-first, so
+  // a new deploy is always picked up. See public/sw.js.
   useEffect(() => {
-    if (hasCleanedSW.current) return;
+    if (swRegistered.current) return;
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
-    hasCleanedSW.current = true;
+    if (process.env.NODE_ENV !== "production") return;
+    swRegistered.current = true;
 
-    navigator.serviceWorker
-      .getRegistrations()
-      .then((registrations) => {
-        registrations.forEach((registration) => {
-          // Pull the self-unregistering /sw.js, then drop the registration.
-          registration.update().catch(() => {});
-          registration.unregister().catch(() => {});
-        });
-      })
-      .catch(() => {});
-
-    if (typeof caches !== "undefined") {
-      caches
-        .keys()
-        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+    const register = () =>
+      navigator.serviceWorker
+        .register("/sw.js", { scope: "/" })
         .catch(() => {});
-    }
+
+    if (document.readyState === "complete") register();
+    else window.addEventListener("load", register, { once: true });
   }, []);
 
   return (

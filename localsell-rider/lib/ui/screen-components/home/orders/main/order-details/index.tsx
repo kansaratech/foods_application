@@ -18,8 +18,10 @@ import {
   Dimensions,
   Image,
   Linking,
+  Modal,
   Platform,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -105,8 +107,16 @@ export default function OrderDetailScreen() {
     locationPin,
   } = useOrderDetail();
   const { userId } = useUserContext();
-  const { mutateAssignOrder, mutateOrderStatus, loadingAssignOrder, loadingOrderStatus } =
-    useDetails(order);
+  const {
+    mutateAssignOrder,
+    mutateOrderStatus,
+    mutateConfirmDelivery,
+    loadingAssignOrder,
+    loadingOrderStatus,
+    loadingConfirmDelivery,
+  } = useDetails(order);
+  const [otpVisible, setOtpVisible] = useState(false);
+  const [otp, setOtp] = useState("");
 
   // States
   // customMapStyles is a pure derivation of the active theme — memoize it
@@ -771,49 +781,20 @@ export default function OrderDetailScreen() {
                 <TouchableOpacity
                   className="h-14 rounded-3xl py-3 w-full mt-4 mb-10"
                   style={{ backgroundColor: appTheme.primary }}
-                  disabled={loadingOrderStatus}
+                  disabled={loadingConfirmDelivery}
                   onPress={() => {
-                    const isUnpaid = order?.paymentStatus !== "PAID";
-                    const amountNote = isUnpaid
-                      ? `\n\n${t("Confirm you have collected")} ${formatCurrency(order?.orderAmount, true)}.`
-                      : "";
-                    const message = `${t("This completes the order and cannot be undone.")}${amountNote}`;
-                    const markDelivered = async () => {
-                      await mutateOrderStatus({
-                        variables: {
-                          id: order?._id,
-                          status: "DELIVERED",
-                        },
-                        onCompleted: () => {
-                          setOrderId(order?.orderId);
-                        },
-                      });
-                    };
-                    // `Alert.alert` with multiple buttons is a no-op on
-                    // react-native-web, so fall back to window.confirm there.
-                    if (Platform.OS === "web") {
-                      if (
-                        typeof window !== "undefined" &&
-                        window.confirm(`${t("Mark as Delivered?")}\n\n${message}`)
-                      ) {
-                        markDelivered();
-                      }
-                      return;
-                    }
-                    Alert.alert(t("Mark as Delivered?"), message, [
-                      { text: t("Cancel"), style: "cancel" },
-                      { text: t("Mark as Delivered"), onPress: markDelivered },
-                    ]);
+                    setOtp("");
+                    setOtpVisible(true);
                   }}
                 >
-                  {loadingOrderStatus ? (
+                  {loadingConfirmDelivery ? (
                     <SpinnerComponent color="white" />
                   ) : (
                     <Text
                       className="text-center text-lg font-medium"
-                      style={{ color: appTheme.black }}
+                      style={{ color: "#FFFFFF" }}
                     >
-                      {t("Mark as Delivered")}
+                      {t("Complete delivery")}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -862,6 +843,110 @@ export default function OrderDetailScreen() {
           status={order?.orderStatus === "DELIVERED" ? "Delivered" : ""}
         />
       }
+
+      <Modal
+        visible={otpVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOtpVisible(false)}
+      >
+        <View
+          style={{ flex: 1, backgroundColor: "#0008", justifyContent: "center", padding: 24 }}
+        >
+          <View
+            style={{
+              backgroundColor: appTheme.themeBackground,
+              borderRadius: 20,
+              padding: 22,
+              maxWidth: 380,
+              width: "100%",
+              alignSelf: "center",
+            }}
+          >
+            <Text style={{ color: appTheme.fontMainColor, fontSize: 18, fontWeight: "700" }}>
+              {t("Enter delivery code")}
+            </Text>
+            <Text style={{ color: appTheme.fontSecondColor, fontSize: 13, marginTop: 6 }}>
+              {t("Ask the customer for the 4-digit code on their order screen.")}
+              {order?.paymentStatus !== "PAID"
+                ? ` ${t("Collect")} ${formatCurrency(order?.orderAmount, true)}.`
+                : ""}
+            </Text>
+            <TextInput
+              value={otp}
+              onChangeText={(v) => setOtp(v.replace(/[^0-9]/g, "").slice(0, 4))}
+              keyboardType="number-pad"
+              maxLength={4}
+              placeholder="0000"
+              placeholderTextColor={appTheme.fontSecondColor}
+              autoFocus
+              style={{
+                marginTop: 16,
+                borderWidth: 1,
+                borderColor: appTheme.borderLineColor,
+                borderRadius: 12,
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                fontSize: 24,
+                letterSpacing: 10,
+                textAlign: "center",
+                color: appTheme.fontMainColor,
+              }}
+            />
+            <View style={{ flexDirection: "row", gap: 12, marginTop: 18 }}>
+              <TouchableOpacity
+                onPress={() => setOtpVisible(false)}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: appTheme.borderLineColor,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: appTheme.fontMainColor, fontWeight: "600" }}>
+                  {t("Cancel")}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={otp.length !== 4 || loadingConfirmDelivery}
+                onPress={async () => {
+                  await mutateConfirmDelivery({
+                    variables: { orderId: order?._id, otp },
+                    onCompleted: (d: { confirmDelivery?: { _id: string } }) => {
+                      if (d?.confirmDelivery) {
+                        setOtpVisible(false);
+                        setOrderId(order?.orderId);
+                      }
+                    },
+                  });
+                }}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor:
+                    otp.length === 4 && !loadingConfirmDelivery
+                      ? appTheme.primary
+                      : appTheme.secondaryTextColor,
+                }}
+              >
+                {loadingConfirmDelivery ? (
+                  <SpinnerComponent color="white" />
+                ) : (
+                  <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>
+                    {t("Confirm delivery")}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }

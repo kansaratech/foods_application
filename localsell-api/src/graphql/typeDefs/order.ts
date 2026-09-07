@@ -90,6 +90,10 @@ export const orderTypeDefs = /* GraphQL */ `
     reason: String
     isRinged: Boolean
     review: Review
+    "4-digit proof-of-delivery code. Visible only to the customer who placed the order and to admins."
+    deliveryOtp: String
+    "How the hand-over was confirmed: OTP | MANUAL"
+    deliveryConfirmedBy: String
   }
 
   type OrdersActiveOrdersResult {
@@ -202,6 +206,8 @@ export const orderTypeDefs = /* GraphQL */ `
     assignOrder(id: String!): Order!
     updateOrderStatusRider(id: String!, status: String!): Order!
     acceptOrder(_id: String!, time: String): Order!
+    "Close a delivery order with the customer's 4-digit code. Used by the LocalSell rider app and the store app (for self-delivery)."
+    confirmDelivery(orderId: ID!, otp: String!): Order!
     cancelOrder(_id: String!, reason: String!): Order!
     muteRing(orderId: String): Boolean!
     orderPickedUp(_id: String!): Order!

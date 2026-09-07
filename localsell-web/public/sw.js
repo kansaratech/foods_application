@@ -1,48 +1,103 @@
 /*
- * LocalSell no longer uses a service worker.
+ * LocalSell service worker — offline shell, safe update model.
  *
- * The previous file here was a pre-built Workbox bundle with a hard-coded
- * precache manifest pointing at specific `/_next/static/chunks/*.js?v=…` URLs.
- * Every production rebuild changes those chunk hashes, so the stale SW then
- * answered chunk requests with `net::ERR_FAILED` ("could not generate a
- * response") and the app shell could never hydrate — an infinite spinner.
- *
- * This replacement installs immediately, wipes every Cache Storage entry the
- * old SW created, unregisters itself, and reloads open tabs. Browsers that
- * still have the old worker pick this up on their normal update check and
- * self-heal with no user action.
+ * Design (learned from the previous Workbox precache that got stuck on stale
+ * `/_next/static` chunk URLs after every rebuild):
+ *   - NOTHING build-specific is precached. Only stable URLs (offline page,
+ *     icons, manifest).
+ *   - Navigations are NETWORK-FIRST — a new deploy's HTML is served instantly;
+ *     the cached copy is only a fallback, and offline.html a last resort.
+ *   - Hashed static assets are cached on demand (cache-first). They're
+ *     immutable, so stale entries are harmless and get purged on version bump.
+ *   - Cross-origin requests (api.localsell.in, Maps, fonts, CDNs) are never
+ *     touched.
+ *   - Bump CACHE_VERSION on a breaking change to wipe every old cache.
  */
+const APP = "localsell-web";
+const CACHE_VERSION = "v1";
+const CACHE = `${APP}-${CACHE_VERSION}`;
+const OFFLINE_URL = "/offline.html";
+const PRECACHE = [OFFLINE_URL, "/manifest.json", "/192.png", "/512.png"];
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(PRECACHE))
+      .catch(() => {})
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    (async () => {
-      try {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((key) => caches.delete(key)));
-      } catch (err) {
-        // Cache Storage may be unavailable; nothing to clean up then.
-      }
-
-      try {
-        await self.registration.unregister();
-      } catch (err) {
-        /* already gone */
-      }
-
-      const clients = await self.clients.matchAll({ type: "window" });
-      for (const client of clients) {
-        try {
-          client.navigate(client.url);
-        } catch (err) {
-          /* client may not allow navigation */
-        }
-      }
-    })(),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((k) => k.startsWith(`${APP}-`) && k !== CACHE)
+            .map((k) => caches.delete(k)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
-// Never intercept fetches — let the network/HTTP cache do its job.
+const isStaticAsset = (url) =>
+  /\/(_next\/static|_expo\/static|assets|static)\//.test(url.pathname) ||
+  /\.(js|css|woff2?|ttf|otf|png|jpe?g|svg|webp|gif|ico)$/i.test(url.pathname);
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") return;
+
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return;
+  }
+  if (url.origin !== self.location.origin) return; // leave API / Maps / CDNs alone
+
+  // App shell / pages — network first, cache fallback, then offline page.
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(request, copy)).catch(() => {});
+          return res;
+        })
+        .catch(() =>
+          caches
+            .match(request)
+            .then((cached) => cached || caches.match(OFFLINE_URL)),
+        ),
+    );
+    return;
+  }
+
+  // Immutable hashed assets — cache first.
+  if (isStaticAsset(url)) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ||
+          fetch(request)
+            .then((res) => {
+              if (res.ok) {
+                const copy = res.clone();
+                caches.open(CACHE).then((c) => c.put(request, copy)).catch(() => {});
+              }
+              return res;
+            })
+            .catch(() => cached),
+      ),
+    );
+    return;
+  }
+
+  // Anything else same-origin — network, fall back to cache if offline.
+  event.respondWith(fetch(request).catch(() => caches.match(request)));
+});

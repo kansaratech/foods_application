@@ -261,7 +261,7 @@ export default function RiderRegistrationScreen() {
                   >
                     <Link
                       href="/general/riders"
-                      className="font-medium hover:text-[#1c5bc7] hover:underline"
+                      className="font-medium hover:text-primary hover:underline"
                     >
                       {t('Riders')}
                     </Link>
@@ -634,7 +634,7 @@ export default function RiderRegistrationScreen() {
                     />
                     <CustomButton
                       type="submit"
-                      className="h-10 border border-[#1c5bc7] bg-[#1c5bc7] px-6 text-sm text-white"
+                      className="h-10 border border-primary bg-primary px-6 text-sm text-white"
                       label={isEditMode ? t('Update rider') : t('Create rider')}
                       loading={isSubmitting}
                     />

@@ -706,6 +706,11 @@ model Order {
   // PLATFORM = the LocalSell rider fleet.
   deliveryMode         String   @default("PLATFORM") // PICKUP | SELF | PLATFORM
   storeDeliveryAgentId String?
+  // Proof of delivery. A 4-digit code shown to the customer while the order is
+  // out for delivery; whoever delivers (LocalSell rider or the store's own
+  // person) must enter it to close the order. Cleared once DELIVERED.
+  deliveryOtp          String?
+  deliveryConfirmedBy  String?  // OTP | MANUAL
   orderDate       DateTime      @default(now())
   expectedTime    DateTime?
   acceptedAt      DateTime?

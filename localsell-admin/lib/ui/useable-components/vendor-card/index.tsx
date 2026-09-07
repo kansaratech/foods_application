@@ -151,7 +151,7 @@ export default function VendorCard({
       className="relative border-b border-slate-100 last:border-b-0 dark:border-dark-600"
     >
       <div
-        className={`group flex min-h-[72px] items-center border-l-2 px-4 py-3 transition ${vendorId === _id ? 'border-[#1c5bc7] bg-[#eef4ff] dark:bg-dark-900' : 'border-transparent bg-white hover:bg-slate-50 dark:bg-dark-950 dark:hover:bg-dark-900'} cursor-pointer`}
+        className={`group flex min-h-[72px] items-center border-l-2 px-4 py-3 transition ${vendorId === _id ? 'border-primary bg-[#eef4ff] dark:bg-dark-900' : 'border-transparent bg-white hover:bg-slate-50 dark:bg-dark-950 dark:hover:bg-dark-900'} cursor-pointer`}
       >
         <Image
           width={40}

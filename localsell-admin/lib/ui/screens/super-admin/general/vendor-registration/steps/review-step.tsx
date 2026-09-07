@@ -27,7 +27,7 @@ function SummaryCard({
     <div className="rounded-lg border border-slate-200 p-4 dark:border-dark-600">
       <div className="mb-2 flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-900 dark:text-white">{title}</p>
-        <button type="button" onClick={onEdit} className="text-xs font-medium text-[#1c5bc7] hover:underline">
+        <button type="button" onClick={onEdit} className="text-xs font-medium text-primary hover:underline">
           {t('Edit')}
         </button>
       </div>

@@ -1,0 +1,821 @@
+{
+  "_readme": [
+    "LocalSell marketplace seed — edit this file, then run:  npm run seed",
+    "",
+    "It WIPES every data table (users, stores, menus, orders, ledgers, riders,",
+    "customers, zones, config) and rebuilds the marketplace from this file.",
+    "Infra secrets on the Configuration row (Google Maps / Stripe / PayPal /",
+    "SMTP / Sentry keys) are read back and preserved — only the operational",
+    "fields below are reset.",
+    "",
+    "Passwords here are the literal login passwords; they are hashed on seed.",
+    "images: a food's `image` is either a full https URL or a key into `images`.",
+    "addons: a food's `addons` entry is either a key into `addonGroups` or an",
+    "inline group object { title, min?, max, options: [{title, price}] }."
+  ],
+
+  "marketplace": {
+    "town": "Deogarh",
+    "district": "Rajsamand",
+    "state": "Rajasthan",
+    "postCode": "313331",
+    "center": { "lat": 25.534, "lng": 73.899 },
+    "storeSpreadKm": 1.5
+  },
+
+  "configuration": {
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "deliveryRate": 20,
+    "defaultCommissionRate": 20,
+    "commissionBillingCycle": "MONTHLY",
+    "riderCashLimit": 3000,
+    "platformLegalName": "Maekotech Solutions LLP",
+    "skipEmailVerification": true,
+    "skipMobileVerification": true,
+    "skipWhatsAppOTP": true,
+    "testOtp": "1234",
+
+    "_email": "SMTP for transactional email (partner-application alerts, etc). The password is NOT here — seed reads SMTP_PASSWORD from the env (localsell-api/.env locally, deploy/localsell.env on the server), else keeps whatever is already on the Configuration row.",
+    "enableEmail": true,
+    "email": "localsell.dgh@gmail.com",
+    "emailName": "LocalSell",
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": 465,
+    "smtpSecure": true,
+    "smtpUser": "localsell.dgh@gmail.com",
+    "formEmail": "localsell.dgh@gmail.com",
+    "termsAndConditions": "LocalSell — Terms of Service. By placing an order you agree to pay the listed price plus applicable delivery fee and taxes. Orders are prepared and fulfilled by independent partner stores; LocalSell operates the marketplace and (where selected) the delivery. Cash-on-delivery orders must be paid in full to the delivery partner. Edit this text in Admin → Configuration.",
+    "privacyPolicy": "LocalSell — Privacy Policy. We collect your name, phone, delivery address and order history to fulfil orders and provide support. We share the minimum necessary details with the partner store and the delivery partner assigned to your order. We do not sell your data. Edit this text in Admin → Configuration."
+  },
+
+  "shopTypes": [
+    { "name": "Restaurant", "slug": "restaurant" },
+    { "name": "Grocery", "slug": "grocery" }
+  ],
+
+  "zones": [
+    {
+      "title": "Deogarh Town",
+      "description": "Deogarh & nearby villages, Rajsamand",
+      "radiusKm": 7
+    }
+  ],
+
+  "admin": {
+    "email": "admin@localsell.in",
+    "name": "LocalSell Admin",
+    "password": "Admin@123"
+  },
+
+  "customers": [
+    {
+      "email": "customer@localsell.in",
+      "name": "Deogarh Diner",
+      "phone": "+919829000001",
+      "password": "Customer@123",
+      "address": {
+        "label": "Home",
+        "line": "Station Road, Deogarh, Rajsamand, Rajasthan 313331",
+        "details": "Near Bus Stand",
+        "lat": 25.534,
+        "lng": 73.899
+      }
+    }
+  ],
+
+  "riders": [
+    {
+      "username": "rider1",
+      "name": "Mohan Lal",
+      "phone": "+919829111101",
+      "password": "Rider@123",
+      "vehicleType": "MOTORCYCLE",
+      "available": true,
+      "zone": "Deogarh Town"
+    },
+    {
+      "username": "rider2",
+      "name": "Suresh Kumar",
+      "phone": "+919829111102",
+      "password": "Rider@123",
+      "vehicleType": "MOTORCYCLE",
+      "available": true,
+      "zone": "Deogarh Town"
+    }
+  ],
+
+  "demoOrders": {
+    "enabled": true,
+    "perStoreDeliveredOrders": 5,
+    "note": "A handful of DELIVERED + reviewed orders per store so ratings, earnings, commission and reports have data. Set enabled=false for an empty ledger."
+  },
+
+  "images": {
+    "pizzaShop": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=70",
+    "pizzaMargherita": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=70",
+    "pizzaFarmhouse": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=70",
+    "pizzaPaneer": "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=800&q=70",
+    "pizzaChicken": "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=70",
+    "garlicBread": "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=800&q=70",
+    "sandwich": "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=70",
+    "clubSandwich": "https://images.unsplash.com/photo-1567234669003-dce7a7a88821?auto=format&fit=crop&w=800&q=70",
+    "burger": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=70",
+    "fries": "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=800&q=70",
+    "manchurian": "https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=800&q=70",
+    "chilliPaneer": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=70",
+    "noodles": "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=800&q=70",
+    "friedRice": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=70",
+    "coffeeHot": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=70",
+    "coffeeCold": "https://images.unsplash.com/photo-1461023058943-07fb0f1ff6a4?auto=format&fit=crop&w=800&q=70",
+    "coldDrink": "https://images.unsplash.com/photo-1581636625402-29b2a704ef13?auto=format&fit=crop&w=800&q=70",
+    "thali": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=70",
+    "dalMakhani": "https://images.unsplash.com/photo-1626500155537-92d8f37c8c9c?auto=format&fit=crop&w=800&q=70",
+    "kadhai": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=70",
+    "laalMaas": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70",
+    "dalBaati": "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=70",
+    "roti": "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=70",
+    "gulabJamun": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70",
+    "kaju": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=70",
+    "ghewar": "https://images.unsplash.com/photo-1666181593796-3e7c1e02b2b0?auto=format&fit=crop&w=800&q=70",
+    "besan": "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?auto=format&fit=crop&w=800&q=70",
+    "bhujia": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=70",
+    "mixBox": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70"
+  },
+
+  "addonGroups": {
+    "EXTRA_TOPPINGS": {
+      "title": "Extra Toppings",
+      "max": 6,
+      "options": [
+        { "title": "Extra Cheese", "price": 60 },
+        { "title": "Paneer", "price": 70 },
+        { "title": "Mushroom", "price": 50 },
+        { "title": "Onion & Capsicum", "price": 30 },
+        { "title": "Sweet Corn", "price": 35 },
+        { "title": "Jalapeño", "price": 40 },
+        { "title": "Black Olives", "price": 45 }
+      ]
+    },
+    "PIZZA_CRUST": {
+      "title": "Crust",
+      "min": 1,
+      "max": 1,
+      "options": [
+        { "title": "Hand Tossed", "price": 0 },
+        { "title": "Thin Crust", "price": 0 },
+        { "title": "Cheese Burst", "price": 90 },
+        { "title": "Wheat Base", "price": 20 }
+      ]
+    },
+    "SPICE_LEVEL": {
+      "title": "Spice Level",
+      "min": 1,
+      "max": 1,
+      "options": [
+        { "title": "Mild", "price": 0 },
+        { "title": "Medium", "price": 0 },
+        { "title": "Extra Spicy", "price": 0 }
+      ]
+    },
+    "SANDWICH_ADDON": {
+      "title": "Make it better",
+      "max": 3,
+      "options": [
+        { "title": "Extra Cheese Slice", "price": 25 },
+        { "title": "Grilled", "price": 15 },
+        { "title": "Peri Peri Sprinkle", "price": 10 }
+      ]
+    }
+  },
+
+  "vendors": [
+    {
+      "name": "Hot Pizza Corner Owner",
+      "email": "hot-pizza-corner-owner@localsell.in",
+      "password": "Vendor@123",
+      "stores": [
+        {
+          "name": "Hot Pizza Corner",
+          "slug": "hot-pizza-corner",
+          "tagline": "Wood-fired pizzas, sandwiches, Indo-Chinese & shakes",
+          "area": "Station Road",
+          "image": "pizzaShop",
+          "cuisines": ["Pizza", "Fast Food"],
+          "deliveryTime": 30,
+          "minOrder": 149,
+          "salesTax": 5,
+          "commissionRate": 20,
+          "rating": 4.4,
+          "deliveryProvider": "BOTH",
+          "hours": { "open": "09", "close": "23" },
+          "storeLogin": { "username": "hot-pizza-corner@store.localsell.in", "password": "Store@123" },
+          "deliveryAgents": [
+            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
+            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+          ],
+          "categories": [
+            {
+              "title": "Pizzas",
+              "foods": [
+                {
+                  "title": "Margherita Pizza",
+                  "desc": "Classic 100% real mozzarella on our signature sauce",
+                  "image": "pizzaMargherita",
+                  "variations": [
+                    { "title": "Regular 7\"", "price": 149 },
+                    { "title": "Medium 10\"", "price": 279 },
+                    { "title": "Large 12\"", "price": 429 }
+                  ],
+                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                },
+                {
+                  "title": "Farmhouse Pizza",
+                  "desc": "Onion, capsicum, tomato, grilled mushroom & corn",
+                  "image": "pizzaFarmhouse",
+                  "variations": [
+                    { "title": "Regular 7\"", "price": 199 },
+                    { "title": "Medium 10\"", "price": 359 },
+                    { "title": "Large 12\"", "price": 529 }
+                  ],
+                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                },
+                {
+                  "title": "Peppy Paneer Pizza",
+                  "desc": "Paneer, crisp capsicum and red paprika",
+                  "image": "pizzaPaneer",
+                  "variations": [
+                    { "title": "Regular 7\"", "price": 219 },
+                    { "title": "Medium 10\"", "price": 389 },
+                    { "title": "Large 12\"", "price": 569 }
+                  ],
+                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                },
+                {
+                  "title": "Chicken Tikka Pizza",
+                  "desc": "Tandoori chicken tikka, onion and mint mayo drizzle",
+                  "image": "pizzaChicken",
+                  "variations": [
+                    { "title": "Regular 7\"", "price": 259 },
+                    { "title": "Medium 10\"", "price": 449 },
+                    { "title": "Large 12\"", "price": 649 }
+                  ],
+                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                },
+                {
+                  "title": "Cheesy Garlic Bread",
+                  "desc": "Stuffed garlic bread with mozzarella & herbs (6 pcs)",
+                  "image": "garlicBread",
+                  "price": 129,
+                  "addons": [
+                    { "title": "Dip", "max": 2, "options": [
+                      { "title": "Cheese Dip", "price": 25 },
+                      { "title": "Peri Peri Dip", "price": 25 }
+                    ] }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Sandwiches & Burgers",
+              "foods": [
+                {
+                  "title": "Veg Grilled Sandwich",
+                  "desc": "Aloo, beetroot, cucumber, tomato & chutney, grilled",
+                  "image": "sandwich",
+                  "variations": [
+                    { "title": "2 Slice", "price": 89 },
+                    { "title": "4 Slice Club", "price": 149 }
+                  ],
+                  "addons": ["SANDWICH_ADDON"]
+                },
+                {
+                  "title": "Paneer Tikka Sandwich",
+                  "desc": "Masala paneer, onion and mint mayo",
+                  "image": "clubSandwich",
+                  "variations": [
+                    { "title": "2 Slice", "price": 119 },
+                    { "title": "4 Slice Club", "price": 189 }
+                  ],
+                  "addons": ["SANDWICH_ADDON"]
+                },
+                {
+                  "title": "Aloo Tikki Burger",
+                  "desc": "Spiced potato patty, lettuce, tomato & burger sauce",
+                  "image": "burger",
+                  "price": 79,
+                  "addons": [
+                    { "title": "Upgrade", "max": 2, "options": [
+                      { "title": "Add Cheese Slice", "price": 20 },
+                      { "title": "Double Patty", "price": 40 }
+                    ] }
+                  ]
+                },
+                {
+                  "title": "Peri Peri Fries",
+                  "desc": "Crispy fries tossed in peri peri seasoning",
+                  "image": "fries",
+                  "variations": [
+                    { "title": "Regular", "price": 69 },
+                    { "title": "Large", "price": 109 }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Indo-Chinese",
+              "foods": [
+                {
+                  "title": "Veg Manchurian",
+                  "desc": "Fried veg dumplings in spicy-sweet garlic gravy",
+                  "image": "manchurian",
+                  "variations": [
+                    { "title": "Half", "price": 119 },
+                    { "title": "Full", "price": 189 }
+                  ],
+                  "addons": [
+                    "SPICE_LEVEL",
+                    { "title": "Style", "min": 1, "max": 1, "options": [
+                      { "title": "Gravy", "price": 0 },
+                      { "title": "Dry", "price": 0 }
+                    ] }
+                  ]
+                },
+                {
+                  "title": "Chilli Paneer",
+                  "desc": "Paneer cubes, bell pepper, onion in chilli soy toss",
+                  "image": "chilliPaneer",
+                  "variations": [
+                    { "title": "Half", "price": 149 },
+                    { "title": "Full", "price": 239 }
+                  ],
+                  "addons": ["SPICE_LEVEL"]
+                },
+                {
+                  "title": "Veg Hakka Noodles",
+                  "desc": "Wok-tossed noodles with julienne vegetables",
+                  "image": "noodles",
+                  "variations": [
+                    { "title": "Half", "price": 99 },
+                    { "title": "Full", "price": 159 }
+                  ],
+                  "addons": [
+                    { "title": "Add-on", "max": 3, "options": [
+                      { "title": "Add Manchurian (2 pc)", "price": 40 },
+                      { "title": "Add Paneer", "price": 50 },
+                      { "title": "Add Egg", "price": 25 }
+                    ] }
+                  ]
+                },
+                {
+                  "title": "Veg Fried Rice",
+                  "desc": "Basmati rice tossed with vegetables and soy",
+                  "image": "friedRice",
+                  "variations": [
+                    { "title": "Half", "price": 99 },
+                    { "title": "Full", "price": 159 }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Beverages",
+              "foods": [
+                {
+                  "title": "Filter Coffee",
+                  "desc": "South-Indian style strong filter coffee",
+                  "image": "coffeeHot",
+                  "price": 40
+                },
+                {
+                  "title": "Cold Coffee",
+                  "desc": "Thick blended cold coffee with ice cream",
+                  "image": "coffeeCold",
+                  "variations": [
+                    { "title": "Regular", "price": 90 },
+                    { "title": "Large", "price": 130 }
+                  ],
+                  "addons": [
+                    { "title": "Add-on", "max": 2, "options": [
+                      { "title": "Extra Ice Cream Scoop", "price": 30 },
+                      { "title": "Chocolate Shot", "price": 20 }
+                    ] }
+                  ]
+                },
+                {
+                  "title": "Masala Cold Drink (300 ml)",
+                  "desc": "Chilled soft drink",
+                  "image": "coldDrink",
+                  "price": 40
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Devshree Kitchen Owner",
+      "email": "devshree-kitchen-owner@localsell.in",
+      "password": "Vendor@123",
+      "stores": [
+        {
+          "name": "Devshree Kitchen",
+          "slug": "devshree-kitchen",
+          "tagline": "Home-style North Indian, pizzas & build-your-own thali",
+          "area": "Rajmahal Road",
+          "image": "thali",
+          "cuisines": ["North Indian", "Thali"],
+          "deliveryTime": 35,
+          "minOrder": 120,
+          "salesTax": 5,
+          "commissionRate": 20,
+          "rating": 4.5,
+          "deliveryProvider": "SELF",
+          "hours": { "open": "09", "close": "23" },
+          "storeLogin": { "username": "devshree-kitchen@store.localsell.in", "password": "Store@123" },
+          "deliveryAgents": [
+            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
+            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+          ],
+          "categories": [
+            {
+              "title": "Build Your Own Thali",
+              "foods": [
+                {
+                  "title": "Make Your Thali",
+                  "desc": "Pick your breads and sabzis — we plate it fresh. Price updates with your choices.",
+                  "image": "thali",
+                  "price": 90,
+                  "combo": { "worth": 260 },
+                  "addons": [
+                    {
+                      "title": "Choose your bread",
+                      "min": 1,
+                      "max": 4,
+                      "options": [
+                        { "title": "Tawa Roti", "price": 12 },
+                        { "title": "Butter Roti", "price": 18 },
+                        { "title": "Missi Roti", "price": 22 },
+                        { "title": "Butter Naan", "price": 40 }
+                      ]
+                    },
+                    {
+                      "title": "Choose 2 sabzi",
+                      "min": 2,
+                      "max": 2,
+                      "options": [
+                        { "title": "Dal Fry", "price": 60 },
+                        { "title": "Aloo Matar", "price": 60 },
+                        { "title": "Gatte ki Sabzi", "price": 80 },
+                        { "title": "Paneer Butter Masala", "price": 110 },
+                        { "title": "Mix Veg", "price": 70 },
+                        { "title": "Ker Sangri", "price": 90 }
+                      ]
+                    },
+                    {
+                      "title": "Add extras",
+                      "max": 4,
+                      "options": [
+                        { "title": "Jeera Rice", "price": 45 },
+                        { "title": "Boondi Raita", "price": 30 },
+                        { "title": "Gulab Jamun (2 pc)", "price": 40 },
+                        { "title": "Buttermilk", "price": 25 }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "title": "Rajasthani Special Thali",
+                  "desc": "Dal-baati-churma, gatte ki sabzi, ker sangri, rice, salad",
+                  "image": "dalBaati",
+                  "combo": { "worth": 320 },
+                  "variations": [
+                    { "title": "Regular", "price": 240 },
+                    { "title": "Jumbo (extra baati + sweet)", "price": 320 }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "North Indian Mains",
+              "foods": [
+                {
+                  "title": "Dal Makhani",
+                  "desc": "Slow-cooked black lentils, butter & cream",
+                  "image": "dalMakhani",
+                  "variations": [
+                    { "title": "Half", "price": 120 },
+                    { "title": "Full", "price": 190 }
+                  ]
+                },
+                {
+                  "title": "Shahi Paneer",
+                  "desc": "Paneer in a rich cashew-tomato gravy",
+                  "image": "pizzaPaneer",
+                  "variations": [
+                    { "title": "Half", "price": 150 },
+                    { "title": "Full", "price": 230 }
+                  ]
+                },
+                {
+                  "title": "Kadhai Veg",
+                  "desc": "Seasonal vegetables in freshly ground kadhai masala",
+                  "image": "kadhai",
+                  "variations": [
+                    { "title": "Half", "price": 130 },
+                    { "title": "Full", "price": 200 }
+                  ]
+                },
+                {
+                  "title": "Tandoori Roti",
+                  "desc": "Fresh from the tandoor",
+                  "image": "roti",
+                  "price": 12,
+                  "addons": [
+                    { "title": "Make it", "max": 1, "options": [ { "title": "With Butter", "price": 6 } ] }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Pizzas",
+              "foods": [
+                {
+                  "title": "Margherita Pizza",
+                  "desc": "Mozzarella and house tomato sauce",
+                  "image": "pizzaMargherita",
+                  "variations": [
+                    { "title": "Regular 7\"", "price": 149 },
+                    { "title": "Large 12\"", "price": 399 }
+                  ],
+                  "addons": ["EXTRA_TOPPINGS"]
+                },
+                {
+                  "title": "Paneer Makhani Pizza",
+                  "desc": "Makhani sauce base, paneer and onion",
+                  "image": "pizzaPaneer",
+                  "variations": [
+                    { "title": "Regular 7\"", "price": 219 },
+                    { "title": "Large 12\"", "price": 519 }
+                  ],
+                  "addons": ["EXTRA_TOPPINGS"]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Deogarh Mahal Rasoi Owner",
+      "email": "deogarh-mahal-rasoi-owner@localsell.in",
+      "password": "Vendor@123",
+      "stores": [
+        {
+          "name": "Deogarh Mahal Rasoi",
+          "slug": "deogarh-mahal-rasoi",
+          "tagline": "Royal Mewari thalis, laal maas & heritage recipes",
+          "area": "Fort Road",
+          "image": "laalMaas",
+          "cuisines": ["Rajasthani", "Thali"],
+          "deliveryTime": 40,
+          "minOrder": 200,
+          "salesTax": 5,
+          "commissionRate": 20,
+          "rating": 4.7,
+          "deliveryProvider": "PLATFORM",
+          "hours": { "open": "09", "close": "23" },
+          "storeLogin": { "username": "deogarh-mahal-rasoi@store.localsell.in", "password": "Store@123" },
+          "categories": [
+            {
+              "title": "Royal Thali",
+              "foods": [
+                {
+                  "title": "Deogarh Mahal Thali",
+                  "desc": "Dal, baati, churma, gatte, ker sangri, kadhi, rice, 2 breads, salad, sweet",
+                  "image": "thali",
+                  "combo": { "worth": 420 },
+                  "variations": [
+                    { "title": "Veg Royal", "price": 320 },
+                    { "title": "Non-Veg (with Laal Maas)", "price": 480 }
+                  ],
+                  "addons": [
+                    {
+                      "title": "Add to your thali",
+                      "max": 4,
+                      "options": [
+                        { "title": "Extra Baati (2 pc)", "price": 40 },
+                        { "title": "Extra Churma", "price": 50 },
+                        { "title": "Mawa Kachori", "price": 60 },
+                        { "title": "Chaas", "price": 25 }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "title": "Mini Rajasthani Thali",
+                  "desc": "1 sabzi, dal, rice, 2 roti, salad, papad, sweet",
+                  "image": "dalBaati",
+                  "combo": { "worth": 240 },
+                  "price": 190
+                }
+              ]
+            },
+            {
+              "title": "Mewari Specials",
+              "foods": [
+                {
+                  "title": "Laal Maas",
+                  "desc": "Fiery Mathania red-chilli mutton curry",
+                  "image": "laalMaas",
+                  "variations": [
+                    { "title": "Half", "price": 280 },
+                    { "title": "Full", "price": 460 }
+                  ],
+                  "addons": ["SPICE_LEVEL"]
+                },
+                {
+                  "title": "Gatte ki Sabzi",
+                  "desc": "Gram-flour dumplings in spiced yoghurt gravy",
+                  "image": "kadhai",
+                  "variations": [
+                    { "title": "Half", "price": 110 },
+                    { "title": "Full", "price": 180 }
+                  ]
+                },
+                {
+                  "title": "Ker Sangri",
+                  "desc": "Desert beans & berries tempered dry sabzi",
+                  "image": "kadhai",
+                  "price": 190
+                },
+                {
+                  "title": "Dal Baati Churma",
+                  "desc": "Panchmel dal, 3 baati, sweet churma",
+                  "image": "dalBaati",
+                  "variations": [
+                    { "title": "3 Baati", "price": 190 },
+                    { "title": "5 Baati", "price": 270 }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Breads & Extras",
+              "foods": [
+                {
+                  "title": "Bajra Roti",
+                  "desc": "Pearl-millet roti with white butter",
+                  "image": "roti",
+                  "price": 25
+                },
+                {
+                  "title": "Churma Ladoo (2 pc)",
+                  "desc": "Ghee-rich wheat churma ladoo",
+                  "image": "besan",
+                  "price": 70
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Shrinath Sweets & Namkeen Owner",
+      "email": "shrinath-sweets-namkeen-owner@localsell.in",
+      "password": "Vendor@123",
+      "stores": [
+        {
+          "name": "Shrinath Sweets & Namkeen",
+          "slug": "shrinath-sweets-namkeen",
+          "tagline": "Fresh mithai, ghewar & Bikaneri namkeen by weight",
+          "area": "Sadar Bazaar",
+          "image": "gulabJamun",
+          "cuisines": ["Sweets", "Namkeen"],
+          "deliveryTime": 25,
+          "minOrder": 100,
+          "salesTax": 5,
+          "commissionRate": 20,
+          "rating": 4.6,
+          "deliveryProvider": "BOTH",
+          "hours": { "open": "09", "close": "23" },
+          "storeLogin": { "username": "shrinath-sweets-namkeen@store.localsell.in", "password": "Store@123" },
+          "deliveryAgents": [
+            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
+            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+          ],
+          "categories": [
+            {
+              "title": "Mithai (by weight)",
+              "foods": [
+                {
+                  "title": "Kaju Katli",
+                  "desc": "Cashew fudge with edible silver leaf",
+                  "image": "kaju",
+                  "variations": [
+                    { "title": "250 g", "price": 260 },
+                    { "title": "500 g", "price": 500 },
+                    { "title": "1 kg", "price": 950 }
+                  ]
+                },
+                {
+                  "title": "Gulab Jamun",
+                  "desc": "Soft khoya dumplings in cardamom syrup",
+                  "image": "gulabJamun",
+                  "variations": [
+                    { "title": "4 pc", "price": 90 },
+                    { "title": "500 g", "price": 220 },
+                    { "title": "1 kg", "price": 420 }
+                  ]
+                },
+                {
+                  "title": "Besan Chakki",
+                  "desc": "Roasted gram-flour fudge with cardamom",
+                  "image": "besan",
+                  "variations": [
+                    { "title": "250 g", "price": 130 },
+                    { "title": "500 g", "price": 250 },
+                    { "title": "1 kg", "price": 480 }
+                  ]
+                },
+                {
+                  "title": "Mawa Ghewar (seasonal)",
+                  "desc": "Disc-shaped honeycomb sweet soaked in rabri",
+                  "image": "ghewar",
+                  "variations": [
+                    { "title": "1 pc", "price": 90 },
+                    { "title": "Box of 4", "price": 340 }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Namkeen (by weight)",
+              "foods": [
+                {
+                  "title": "Bikaneri Bhujia",
+                  "desc": "Crisp spiced moth-bean noodles",
+                  "image": "bhujia",
+                  "variations": [
+                    { "title": "250 g", "price": 70 },
+                    { "title": "500 g", "price": 130 },
+                    { "title": "1 kg", "price": 250 }
+                  ]
+                },
+                {
+                  "title": "Navratan Mixture",
+                  "desc": "Nine-ingredient sweet-and-salty namkeen mix",
+                  "image": "bhujia",
+                  "variations": [
+                    { "title": "250 g", "price": 80 },
+                    { "title": "500 g", "price": 150 },
+                    { "title": "1 kg", "price": 280 }
+                  ]
+                },
+                {
+                  "title": "Pyaaz Kachori (2 pc)",
+                  "desc": "Spiced onion kachori, served hot",
+                  "image": "besan",
+                  "price": 60
+                }
+              ]
+            },
+            {
+              "title": "Gift Boxes",
+              "foods": [
+                {
+                  "title": "Assorted Mithai Box",
+                  "desc": "Chef's selection of 6 sweets",
+                  "image": "mixBox",
+                  "combo": { "worth": 700 },
+                  "variations": [
+                    { "title": "500 g", "price": 360 },
+                    { "title": "1 kg", "price": 690 }
+                  ]
+                },
+                {
+                  "title": "Sweet + Namkeen Hamper",
+                  "desc": "500 g Kaju Katli + 500 g Bhujia + dry fruits pack",
+                  "image": "mixBox",
+                  "combo": { "worth": 900 },
+                  "price": 780
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+
+  "coupons": [
+    { "title": "WELCOME10", "discount": 10, "enabled": true, "lifeTimeActive": true }
+  ],
+
+  "banners": []
+}

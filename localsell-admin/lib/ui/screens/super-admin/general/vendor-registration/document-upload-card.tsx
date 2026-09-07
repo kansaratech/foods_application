@@ -103,7 +103,7 @@ export default function DocumentUploadCard({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="text-xs font-medium text-[#1c5bc7] underline"
+              className="text-xs font-medium text-primary underline"
             >
               {t('Replace')}
             </button>
@@ -116,7 +116,7 @@ export default function DocumentUploadCard({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={loading}
-            className="flex h-9 items-center gap-1.5 rounded-md border border-[#1c5bc7] px-3 text-sm font-medium text-[#1c5bc7] transition hover:bg-[#e8f0fc] disabled:opacity-50 dark:hover:bg-dark-900"
+            className="flex h-9 items-center gap-1.5 rounded-md border border-primary px-3 text-sm font-medium text-primary transition hover:bg-primary-light disabled:opacity-50 dark:hover:bg-dark-900"
           >
             {loading ? <CustomLoader size="14px" /> : <FontAwesomeIcon icon={faUpload} />}
             {t('Upload file')}

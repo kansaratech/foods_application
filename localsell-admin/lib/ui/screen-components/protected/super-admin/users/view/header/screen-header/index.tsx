@@ -1,7 +1,7 @@
 import React from 'react';
 // Components
 import HeaderText from '@/lib/ui/useable-components/header-text';
-import CustomTextInput from '@/lib/ui/useable-components/custom-text-input';
+import { InputText } from 'primereact/inputtext';
 import CustomMultiSelectComponent from '@/lib/ui/useable-components/custom-multi-select';
 
 // Hooks
@@ -59,11 +59,11 @@ const UserHeader: React.FC<UserHeaderProps> = ({
       <div className="flex flex-col w-full flex-wrap items-start justify-between gap-3">
         <HeaderText text={t('Customers')} />
         <div className="flex flex-row flex-wrap w-full items-center gap-3">
-          <CustomTextInput
+          <InputText
             value={search}
             onChange={handleSearchChange}
             placeholder={t('search_by_name_or_email')}
-            className="min-w-[300px] px-2 py-3 border rounded-md"
+            className="ls-field min-w-[300px]"
           />
           <CustomMultiSelectComponent
             name={'registration_method'}

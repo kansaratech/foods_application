@@ -5,15 +5,15 @@ schema and data bootstrapping goes through one idempotent entry point so a
 production deploy can't miss a step.
 
 ```bash
-# from enatega-multivendor-api-mysql/
+# from localsell-api/
 npm run db:deploy            # schema + client + config defaults + backfill
-npm run db:deploy -- --demo  # ... and load demo data (base + Deogarh seed)
+npm run db:deploy -- --demo  # ... and then WIPE + reseed from prisma/seed-data.json
 ```
 
 In Docker (production):
 
 ```bash
-docker compose exec padharo_api npm run db:deploy
+docker compose exec localsell_api npm run db:deploy
 ```
 
 ## What it does, in order (`run.ts`)
@@ -24,7 +24,7 @@ docker compose exec padharo_api npm run db:deploy
 | 2 | `prisma generate` | yes | Typed client. No-op if the image already built it. |
 | 3 | `ensureConfigDefaults` (`config-defaults.ts`) | yes, **non-destructive** | Creates the singleton `Configuration` row if missing; otherwise only fills fields still at null/`USD`/`$`/`0`. Never touches API keys or an admin-tuned rate. |
 | 4 | `backfill-commission.ts` | yes | Stores at `commissionRate = 0` → default; stores with no `deliveryDistance` → circle radius or 60 km; a `CommissionRecord` for every already-`DELIVERED` order. |
-| 5 | *(with `--demo`)* `npm run seed` + `npm run seed:deogarh` | yes | Demo accounts + 8 Deogarh stores + festival campaign. **Skip on real production.** |
+| 5 | *(with `--demo`)* `npm run seed` | **destructive** | Wipes every data table and rebuilds the marketplace from `prisma/seed-data.json` (infra secrets on Configuration are preserved). **Never on real production.** |
 
 ## Configuration overrides
 

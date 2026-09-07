@@ -700,4 +700,6 @@ export const en = {
   whatsInThisCombo: 'What is in this combo',
   youSave: 'You save',
   outOfStock: 'Out of stock',
+  deliveryCode: 'Delivery code',
+  deliveryCodeHint: 'Share this with your delivery partner to receive your order',
 }

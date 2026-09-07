@@ -1,0 +1,84 @@
+/*
+ * LocalSell Admin — design tokens (single source of truth).
+ *
+ * Layered on top of PrimeReact's `lara-light-blue` theme (always loaded) and
+ * `prime-dark.generated.css` (scoped under `.dark`, toggled by next-themes).
+ * This file is imported UNLAYERED so its token values win the cascade.
+ *
+ * Three groups:
+ *   1. Brand palette          — raw LocalSell colours (`--ls-*`), see LOCALSELL_BRAND.md
+ *   2. PrimeReact overrides    — repoint the component library's semantic tokens
+ *   3. App semantic aliases    — what Tailwind + component classNames consume
+ *
+ * Anything colour-related in a component should reference a token here (directly
+ * or via a Tailwind class), never a raw hex.
+ */
+
+:root {
+  /* 1. Brand palette --------------------------------------------------------- */
+  --ls-blue: #1c5bc7; /* primary / CTA            */
+  --ls-blue-hover: #1a52b4;
+  --ls-blue-pressed: #154695;
+  --ls-blue-dark: #17499e;
+  --ls-blue-tint: #e8f0fc; /* light fill / selected bg */
+  --ls-blue-disabled: #a7c1ea;
+  --ls-navy: #16293f; /* brand / headings / text */
+  --ls-navy-dark: #0e1b2b;
+  --ls-mist: #f4f7fb; /* surface tint            */
+  --ls-sky: #3e93db; /* accent                  */
+
+  /* RGB channels — for Tailwind's `<alpha-value>` colours (bg-primary/30 etc.) */
+  --primary-rgb: 28 91 199;
+  --ls-navy-rgb: 22 41 63;
+  --ls-sky-rgb: 62 147 219;
+
+  /* 2. PrimeReact semantic-token overrides (light) ------------------------- */
+  --primary-color: var(--ls-blue);
+  --primary-color-text: #ffffff;
+  --highlight-bg: var(--ls-blue-tint);
+  --highlight-text-color: var(--ls-blue-dark);
+  --focus-ring: 0 0 0 0.2rem rgba(28, 91, 199, 0.32);
+
+  /* 3. App semantic aliases (resolve per-theme via the surface/text tokens) - */
+  --app-bg: var(--surface-ground);
+  --app-surface: var(--surface-card);
+  --app-surface-alt: var(--surface-section);
+  --app-overlay: var(--surface-overlay);
+  --app-border: var(--surface-border);
+  --app-hover: var(--surface-hover);
+  --app-text: var(--text-color);
+  --app-text-muted: var(--text-color-secondary);
+  --app-primary: var(--primary-color);
+  --app-primary-contrast: var(--primary-color-text);
+
+  /* Legacy var names — kept so existing consumers don't break mid-migration.
+     Prefer the aliases above / Tailwind classes for anything new. */
+  --primary-dark: var(--ls-blue-dark);
+  --primary-light: var(--ls-blue-tint);
+  --secondary-color: var(--ls-navy);
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 255, 255, 255;
+  --dark-950: #030712;
+  --dark-900: #111827;
+  --dark-600: #4b5563;
+}
+
+.dark {
+  /* PrimeReact semantic-token overrides (dark) — lighter primary for contrast
+     on dark surfaces (WCAG AA against --surface-ground). */
+  --primary-color: #5b8def;
+  --primary-color-text: #0b1220;
+  --primary-rgb: 91 141 239;
+  --highlight-bg: rgba(91, 141, 239, 0.16);
+  --highlight-text-color: rgba(255, 255, 255, 0.92);
+  --focus-ring: 0 0 0 0.2rem rgba(91, 141, 239, 0.35);
+
+  /* Legacy names in dark context */
+  --primary-dark: #17499e;
+  --primary-light: rgba(91, 141, 239, 0.16);
+  --secondary-color: #e6edf6;
+  --foreground-rgb: 249, 250, 251;
+  --background-start-rgb: 3, 7, 18;
+  --background-end-rgb: 3, 7, 18;
+}

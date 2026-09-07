@@ -115,61 +115,40 @@ async function publishZoneOrder(order: Order) {
   }
 }
 
-async function applyOrderStatusUpdate(
-  context: GraphQLContext,
-  id: string,
-  statusInput: string,
-  allowedRoles: Array<'ADMIN' | 'VENDOR' | 'RIDER'> = ['ADMIN', 'VENDOR'],
+/** A fresh 4-digit proof-of-delivery code. */
+function makeDeliveryOtp(): string {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+/**
+ * The one place the DELIVERED transition happens: flips status + timestamps,
+ * settles COD, credits the store + rider wallets once, records the commission
+ * ledger and the rider's COD cash. Idempotent on an already-DELIVERED order.
+ * `confirmedBy` records how the hand-over was proven (OTP | MANUAL).
+ */
+async function finalizeDelivery(
+  order: Order,
+  restaurant: { id: string; commissionRate: number },
+  confirmedBy: 'OTP' | 'MANUAL',
 ): Promise<Order> {
-  const currentUser = requireRole(context, allowedRoles);
-  const status = statusInput.toUpperCase() as OrderStatus;
-  if (!ORDER_STATUS_VALUES.includes(status)) throw userInputError(`Invalid order status: ${statusInput}`);
-
-  const order = await prisma.order.findUnique({ where: { id } });
-  if (!order) throw notFoundError('Order not found');
-  const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
-  if (!restaurant) throw notFoundError('Order not found');
-  if (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id) {
-    throw notFoundError('Order not found');
-  }
-  if (currentUser.userType === 'RIDER' && order.riderId !== currentUser.id) {
-    throw notFoundError('Order not found');
-  }
-
-  const timestampField: Partial<Record<OrderStatus, string>> = {
-    ACCEPTED: 'acceptedAt',
-    PICKED: 'pickedAt',
-    DELIVERED: 'deliveredAt',
-    CANCELLED: 'cancelledAt',
-  };
-  const field = timestampField[status];
-  // Cash-on-delivery orders are settled the moment the rider hands them over -
-  // there's no separate "collect payment" step in this app.
-  const isCodSettledOnDelivery = status === 'DELIVERED' && order.paymentMethod === 'COD';
-
+  const alreadyDelivered = order.orderStatus === 'DELIVERED';
   const updated = await prisma.order.update({
-    where: { id },
+    where: { id: order.id },
     data: {
-      orderStatus: status,
-      status: status === 'CANCELLED' ? 'CANCELLED' : status === 'DELIVERED' || status === 'COMPLETED' ? 'COMPLETED' : 'ACTIVE',
-      ...(field ? { [field]: new Date() } : {}),
-      ...(isCodSettledOnDelivery ? { paymentStatus: 'PAID', paidAmount: order.orderAmount } : {}),
+      orderStatus: 'DELIVERED',
+      status: 'COMPLETED',
+      deliveredAt: order.deliveredAt ?? new Date(),
+      deliveryConfirmedBy: order.deliveryConfirmedBy ?? confirmedBy,
+      deliveryOtp: null,
+      ...(order.paymentMethod === 'COD' ? { paymentStatus: 'PAID', paidAmount: order.orderAmount } : {}),
     },
   });
 
-  // Credit store and rider wallets once, the moment the order lands as
-  // DELIVERED. The store keeps its food subtotal minus the platform commission,
-  // plus the tax it remits as GST; the rider gets the delivery fee + tip; the
-  // platform keeps the commission. See PADHARO_COMMISSION.md for how the cash
-  // (COD vs online, delivery vs pickup) actually settles.
-  if (status === 'DELIVERED' && order.orderStatus !== 'DELIVERED') {
+  if (!alreadyDelivered) {
     const config = await prisma.configuration.findFirst();
     const rate = resolveCommissionRate(restaurant.commissionRate, config?.defaultCommissionRate);
     const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
     const commission = Math.round(foodAmount * (rate / 100) * 100) / 100;
-    // The store keeps its food subtotal minus commission, plus the tax it remits
-    // as GST. When the store delivered the order itself, it also keeps the whole
-    // delivery fee + tip (there's no rider to pay).
     const selfDelivered = order.deliveryMode === 'SELF';
     const storeEarning =
       foodAmount - commission + order.taxationAmount +
@@ -191,12 +170,61 @@ async function applyOrderStatusUpdate(
         },
       });
     }
-
-    // Record the commission (for reporting + a bill only when the store holds
-    // the cash) and the COD cash the rider now carries. Both idempotent.
     await recordOrderCommission({ ...order, deliveredAt: updated.deliveredAt });
     await recordRiderCash({ ...order, deliveredAt: updated.deliveredAt });
   }
+
+  await publishOrderUpdate(updated);
+  return updated;
+}
+
+async function applyOrderStatusUpdate(
+  context: GraphQLContext,
+  id: string,
+  statusInput: string,
+  allowedRoles: Array<'ADMIN' | 'VENDOR' | 'RIDER'> = ['ADMIN', 'VENDOR'],
+): Promise<Order> {
+  const currentUser = requireRole(context, allowedRoles);
+  const status = statusInput.toUpperCase() as OrderStatus;
+  if (!ORDER_STATUS_VALUES.includes(status)) throw userInputError(`Invalid order status: ${statusInput}`);
+
+  const order = await prisma.order.findUnique({ where: { id } });
+  if (!order) throw notFoundError('Order not found');
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+  if (!restaurant) throw notFoundError('Order not found');
+  if (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id) {
+    throw notFoundError('Order not found');
+  }
+  if (currentUser.userType === 'RIDER' && order.riderId !== currentUser.id) {
+    throw notFoundError('Order not found');
+  }
+
+  // Proof of delivery: a delivery order (not pickup) can only be closed by
+  // whoever delivered it via `confirmDelivery` with the customer's code.
+  // An admin may still force it through — logged as a MANUAL confirmation.
+  if (status === 'DELIVERED' && order.orderStatus !== 'DELIVERED') {
+    if (!order.isPickedUp && currentUser.userType !== 'ADMIN') {
+      throw userInputError("Enter the customer's delivery code to complete this order.");
+    }
+    return finalizeDelivery(order, restaurant, currentUser.userType === 'ADMIN' ? 'MANUAL' : 'OTP');
+  }
+
+  const timestampField: Partial<Record<OrderStatus, string>> = {
+    ACCEPTED: 'acceptedAt',
+    PICKED: 'pickedAt',
+    DELIVERED: 'deliveredAt',
+    CANCELLED: 'cancelledAt',
+  };
+  const field = timestampField[status];
+
+  const updated = await prisma.order.update({
+    where: { id },
+    data: {
+      orderStatus: status,
+      status: status === 'CANCELLED' ? 'CANCELLED' : status === 'DELIVERED' || status === 'COMPLETED' ? 'COMPLETED' : 'ACTIVE',
+      ...(field ? { [field]: new Date() } : {}),
+    },
+  });
 
   await publishOrderUpdate(updated);
   return updated;
@@ -785,10 +813,52 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
       const updated = await prisma.order.update({
         where: { id: order.id },
-        data: { orderStatus: 'ACCEPTED', status: 'ACTIVE', acceptedAt: new Date(), preparationTime: args.time },
+        data: {
+          orderStatus: 'ACCEPTED',
+          status: 'ACTIVE',
+          acceptedAt: new Date(),
+          preparationTime: args.time,
+          // Mint the proof-of-delivery code now, so the customer sees it the
+          // moment the order is confirmed. Pickup orders don't need one.
+          ...(!order.isPickedUp && !order.deliveryOtp ? { deliveryOtp: makeDeliveryOtp() } : {}),
+        },
       });
       await publishOrderUpdate(updated);
       return updated;
+    },
+
+    // Whoever delivers the order — a LocalSell rider or the store's own person —
+    // closes it here with the 4-digit code the customer shows them.
+    confirmDelivery: async (_parent, args: { orderId: string; otp: string }, context) => {
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR', 'RIDER']);
+      const order = await prisma.order.findUnique({ where: { id: args.orderId } });
+      if (!order) throw notFoundError('Order not found');
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+      if (!restaurant) throw notFoundError('Order not found');
+      if (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id) {
+        throw notFoundError('Order not found');
+      }
+      if (currentUser.userType === 'RIDER' && order.riderId !== currentUser.id) {
+        throw notFoundError('Order not found');
+      }
+      if (order.orderStatus === 'DELIVERED' || order.orderStatus === 'COMPLETED') return order;
+      if (order.orderStatus === 'CANCELLED' || order.orderStatus === 'PENDING') {
+        throw userInputError('This order is not out for delivery.');
+      }
+
+      if (!order.deliveryOtp) {
+        // Legacy order accepted before this feature — mint the code now and ask
+        // them to try again once the customer can see it.
+        await prisma.order.update({ where: { id: order.id }, data: { deliveryOtp: makeDeliveryOtp() } });
+        throw userInputError(
+          "Delivery code is now ready on the customer's order screen — ask them for it and try again.",
+        );
+      }
+      if ((args.otp ?? '').trim() !== order.deliveryOtp) {
+        throw userInputError('Incorrect delivery code. Ask the customer to read it from their order screen.');
+      }
+
+      return finalizeDelivery(order, restaurant, 'OTP');
     },
 
     cancelOrder: async (_parent, args: { _id: string; reason: string }, context) => {
@@ -835,6 +905,13 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       parent.addressId ? prisma.address.findUnique({ where: { id: parent.addressId } }) : null,
     user: (parent: Order) => prisma.user.findUnique({ where: { id: parent.userId } }),
     rider: (parent: Order) => (parent.riderId ? prisma.user.findUnique({ where: { id: parent.riderId } }) : null),
+    // Only the customer who placed the order (and admins) may read the code —
+    // the person delivering has to be told it in person.
+    deliveryOtp: (parent: Order, _args: unknown, context: GraphQLContext) => {
+      const u = context.user;
+      if (!u) return null;
+      return u.userType === 'ADMIN' || u.id === parent.userId ? parent.deliveryOtp : null;
+    },
     items: (parent: Order) => prisma.orderItem.findMany({ where: { orderId: parent.id } }),
     orderDate: (parent: Order) => parent.orderDate?.toISOString(),
     createdAt: (parent: Order) => parent.createdAt?.toISOString(),

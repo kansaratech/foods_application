@@ -89,6 +89,8 @@ export interface IOrderTrackingDetail {
   orderDate: string;
   expectedTime: string;
   isPickedUp: boolean;
+  deliveryOtp?: string | null;
+  deliveryConfirmedBy?: string | null;
   createdAt: string;
   completionTime: string;
   cancelledAt: string;

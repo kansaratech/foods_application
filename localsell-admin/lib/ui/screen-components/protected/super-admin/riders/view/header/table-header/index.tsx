@@ -96,7 +96,7 @@ export default function RidersTableHeader({
           <button
             type="button"
             onClick={onClearFilters}
-            className="flex h-10 items-center gap-1.5 whitespace-nowrap px-2 text-sm font-medium text-[#1c5bc7] hover:underline"
+            className="flex h-10 items-center gap-1.5 whitespace-nowrap px-2 text-sm font-medium text-primary hover:underline"
           >
             <FontAwesomeIcon icon={faRotateLeft} />
             {t('Clear filters')}

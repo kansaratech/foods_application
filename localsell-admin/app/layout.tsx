@@ -1,17 +1,22 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import Script from 'next/script';
-import { ThemeProvider } from 'next-themes';
 
-// ✅ Add metadata export for favicon
+import { FontawesomeConfig } from '@/lib/config';
+import { Providers } from './providers';
+import PwaRegister from './PwaRegister';
+
+// Styles — global.css @imports the PrimeReact theme, the generated dark theme
+// and the design tokens in order, then the Tailwind layers.
+import './global.css';
+
 export const metadata = {
   title: 'LocalSell Admin',
   description: 'Shop Local. Find More.',
+  manifest: '/manifest.webmanifest',
   icons: {
     icon: '/favicon.png',
-    // You can add more like:
-    // shortcut: "/favicon.png",
-    // apple: "/apple-touch-icon.png"
+    apple: '/apple-touch-icon.png',
   },
 };
 
@@ -24,8 +29,15 @@ export default async function RootLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="theme-color" content="#1c5bc7" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="LS Admin" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <FontawesomeConfig />
         {/* Microsoft Clarity */}
         <Script id="microsoft-clarity" strategy="afterInteractive">
           {`
@@ -37,12 +49,11 @@ export default async function RootLayout({
           `}
         </Script>
       </head>
-      <body>
-        <ThemeProvider attribute={'class'}>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
-        </ThemeProvider>
+      <body className="flex flex-col flex-wrap">
+        <PwaRegister />
+        <NextIntlClientProvider messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

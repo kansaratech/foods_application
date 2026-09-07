@@ -26,9 +26,9 @@ import { ShopTypeFormSchema } from '@/lib/utils/schema';
 // Formik
 import { Form, Formik } from 'formik';
 
-// Prime react
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { Sidebar } from 'primereact/sidebar';
+// Form primitives
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
+import FormActions from '@/lib/ui/useable-components/form/form-actions';
 
 // Methods
 import { onErrorMessageMatcher } from '@/lib/utils/methods';
@@ -144,24 +144,26 @@ export default function ShopTypesForm({
     }
   );
 
+  const resetAndClose = () => {
+    setVisible(false);
+    setIsEditing({
+      bool: false,
+      data: {
+        __typename: '',
+        _id: '',
+        name: '',
+        isActive: true,
+        image: '',
+      },
+    });
+  };
+
   return (
-    <Sidebar
+    <FormDialog
       visible={visible}
-      onHide={() => {
-        setVisible(false);
-        setIsEditing({
-          bool: false,
-          data: {
-            __typename: '',
-            _id: '',
-            name: '',
-            isActive: true,
-            image: '',
-          },
-        });
-      }}
-      position="right"
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      onHide={resetAndClose}
+      title={`${isEditing.bool ? t('Edit') : t('Add')} ${t('ShopType')}`}
+      size="md"
     >
       <Formik
         initialValues={initialValues}
@@ -217,11 +219,8 @@ export default function ShopTypesForm({
           return (
             <Form onSubmit={handleSubmit}>
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <h2 className='className="mb-3 text-xl font-bold'>
-                    {isEditing.bool ? t('Edit') : t('Add')} {t('ShopType')}
-                  </h2>
-                  <div className="flex items-center gap-x-1">
+                <div className="flex justify-end">
+                  <div className="flex items-center gap-x-1 text-sm">
                     {values.isActive ? t('Enabled') : t('Disabled')}
                     <CustomInputSwitch
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -273,33 +272,18 @@ export default function ShopTypesForm({
                   }}
                 />
 
-                <button
-                  className="float-end h-10 w-fit rounded-md border dark:border-dark-600 border-gray-300 bg-black px-8 text-white"
-                  disabled={
+                <FormActions
+                  onCancel={resetAndClose}
+                  submitLabel={isEditing.bool ? t('Update') : t('Add')}
+                  loading={
                     isSubmitting || editShopTypeLoading || createShopTypeLoading
                   }
-                  type="submit"
-                >
-                  {isSubmitting ||
-                  editShopTypeLoading ||
-                  createShopTypeLoading ? (
-                    <ProgressSpinner
-                      className="m-0 h-6 w-6 items-center self-center p-0"
-                      strokeWidth="5"
-                      style={{ fill: 'white', accentColor: 'white' }}
-                      color="white"
-                    />
-                  ) : isEditing.bool ? (
-                    t('Update')
-                  ) : (
-                    t('Add')
-                  )}
-                </button>
+                />
               </div>
             </Form>
           );
         }}
       </Formik>
-    </Sidebar>
+    </FormDialog>
   );
 }

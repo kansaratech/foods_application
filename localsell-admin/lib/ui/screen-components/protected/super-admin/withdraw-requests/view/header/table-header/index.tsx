@@ -128,7 +128,7 @@ export default function WithdrawRequestSuperAdminTableHeader({
                 filterOptions.find((opt) => opt.value === action)?.type ===
                 'status'
             )
-              } rounded border border-dotted dark:border-dark-600 border-[#E4E4E7] text-black dark:text-white transition-all`}
+              } rounded border border-dotted dark:border-dark-600 border-surface-border text-black dark:text-white transition-all`}
             icon={faAdd}
             iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'dark' }}
             title={

@@ -75,3 +75,6 @@ goodbite-multivendor-app
 deploy/padharo.env
 deploy/localsell.env
 
+# Scratch / build-artifact dirs (expo web exports, metro logs, typecheck dumps)
+.tmp/
+

@@ -1,0 +1,226 @@
+/* ============================================================================
+   LocalSell Admin — ONE form-control spec.
+
+   Every field wrapper in lib/ui/useable-components/form/ adds the `.ls-field`
+   class to its PrimeReact control (or native input). This file makes all of
+   them — InputText, InputTextarea, Dropdown, MultiSelect, InputNumber,
+   Password, Calendar, native date/time — render identically: same 40px height,
+   same 8px radius, same token border/bg, same focus ring.
+
+   Do not re-add bespoke `h-10 rounded-lg border-gray-300` classes in the
+   wrappers; change it here instead.
+   ========================================================================== */
+
+/* --- the bordered box ---------------------------------------------------- */
+.ls-field.p-inputtext,
+.ls-field.p-inputtextarea,
+.ls-field.p-dropdown,
+.ls-field.p-multiselect,
+.ls-field.p-inputnumber,
+.ls-field.p-password,
+.ls-field.p-calendar,
+input.ls-field {
+  width: 100%;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.5rem;
+  background: var(--surface-card);
+  color: var(--text-color);
+  font-size: 0.875rem;
+  font-family: inherit;
+  box-shadow: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* single-line controls: fixed height + centred text */
+.ls-field.p-inputtext:not(textarea),
+.ls-field.p-dropdown,
+.ls-field.p-multiselect,
+.ls-field.p-inputnumber,
+.ls-field.p-password,
+.ls-field.p-calendar,
+input.ls-field {
+  height: 2.5rem;
+}
+
+.ls-field.p-inputtext:not(textarea),
+input.ls-field {
+  padding: 0 0.75rem;
+}
+
+.ls-field.p-inputtextarea {
+  min-height: 5rem;
+  padding: 0.5rem 0.75rem;
+  line-height: 1.4;
+}
+
+/* --- inner input of the wrapper components ------------------------------- */
+.ls-field.p-dropdown .p-dropdown-label,
+.ls-field.p-multiselect .p-multiselect-label,
+.ls-field.p-inputnumber .p-inputnumber-input,
+.ls-field.p-password .p-password-input,
+.ls-field.p-calendar > .p-inputtext {
+  height: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+}
+
+.ls-field.p-inputnumber .p-inputnumber-input,
+.ls-field.p-password .p-password-input {
+  width: 100%;
+}
+
+/* trigger area (dropdown chevron / multiselect / calendar button) */
+.ls-field .p-dropdown-trigger,
+.ls-field .p-multiselect-trigger {
+  width: 2.5rem;
+  color: var(--text-color-secondary);
+}
+
+/* multiselect chips shouldn't blow the height out on a single row */
+.ls-field.p-multiselect .p-multiselect-label {
+  padding-block: 0.25rem;
+}
+
+/* --- focus ------------------------------------------------------------- */
+.ls-field.p-inputtext:enabled:focus,
+.ls-field.p-inputtextarea:enabled:focus,
+input.ls-field:focus,
+.ls-field.p-dropdown:not(.p-disabled).p-focus,
+.ls-field.p-multiselect:not(.p-disabled).p-focus,
+.ls-field.p-inputnumber.p-inputwrapper-focus,
+.ls-field.p-password.p-inputwrapper-focus,
+.ls-field.p-calendar.p-focus,
+.ls-field.p-calendar:focus-within {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px var(--primary-color);
+  outline: none;
+}
+
+/* --- invalid --------------------------------------------------------- */
+.ls-field.p-invalid,
+.ls-field.p-invalid.p-inputtext,
+.ls-field[aria-invalid='true'],
+input.ls-field[aria-invalid='true'],
+.ls-field.ls-field-invalid {
+  border-color: #ef4444;
+}
+.ls-field.p-invalid:enabled:focus,
+.ls-field.ls-field-invalid:focus,
+.ls-field.ls-field-invalid.p-focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef4444;
+}
+
+/* --- disabled ------------------------------------------------------- */
+.ls-field.p-disabled,
+.ls-field:disabled,
+input.ls-field:disabled {
+  opacity: 0.6;
+  background: var(--surface-ground);
+}
+
+/* --- placeholder --------------------------------------------------- */
+.ls-field.p-inputtext::placeholder,
+.ls-field.p-inputtextarea::placeholder,
+input.ls-field::placeholder,
+.ls-field .p-dropdown-label.p-placeholder,
+.ls-field .p-multiselect-label.p-placeholder {
+  color: var(--text-color-secondary);
+  opacity: 1;
+}
+
+/* --- native date/time: normalise the picker indicator ------------- */
+input.ls-field[type='date'],
+input.ls-field[type='time'] {
+  padding-right: 0.5rem;
+}
+
+/* ============================================================================
+   FormDialog — the modal for short forms
+   ========================================================================== */
+.ls-form-dialog .p-dialog-header {
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+.ls-form-dialog .p-dialog-content.ls-form-dialog-body {
+  padding: 0.5rem 1.5rem 1.5rem;
+}
+.ls-form-dialog .p-dialog-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+}
+/* forms inside the dialog: consistent vertical rhythm */
+.ls-form-dialog-body form > .space-y-4,
+.ls-form-dialog-body .ls-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ============================================================================
+   Buttons — brand the PrimeReact <Button> (lara bakes #3b82f6 into every rule)
+   ========================================================================== */
+.p-button {
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color-text);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.p-button:enabled:hover {
+  background: var(--ls-blue-hover);
+  border-color: var(--ls-blue-hover);
+  color: var(--primary-color-text);
+}
+.p-button:enabled:focus,
+.p-button:focus-visible {
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+.p-button.p-button-outlined,
+.p-button.p-button-text {
+  background: transparent;
+  color: var(--primary-color);
+}
+.p-button.p-button-outlined {
+  border-color: var(--primary-color);
+}
+.p-button.p-button-text {
+  border-color: transparent;
+}
+.p-button.p-button-outlined:enabled:hover,
+.p-button.p-button-text:enabled:hover {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+.p-button.p-button-secondary {
+  background: var(--surface-card);
+  border-color: var(--surface-border);
+  color: var(--text-color);
+}
+.p-button.p-button-secondary:enabled:hover {
+  background: var(--surface-hover);
+  border-color: var(--surface-border);
+  color: var(--text-color);
+}
+.p-button.p-button-danger {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+.p-button:disabled,
+.p-button.p-disabled {
+  opacity: 0.55;
+}
+.p-button.p-button-sm {
+  font-size: 0.8125rem;
+  padding: 0.4rem 0.75rem;
+}

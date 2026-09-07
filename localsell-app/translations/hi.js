@@ -675,4 +675,6 @@ export const hi = {
   whatsInThisCombo: 'इस कॉम्बो में क्या है',
   youSave: 'आपकी बचत',
   outOfStock: 'स्टॉक ख़त्म',
+  deliveryCode: 'डिलीवरी कोड',
+  deliveryCodeHint: 'ऑर्डर पाने के लिए यह कोड अपने डिलीवरी पार्टनर को बताएं',
 }

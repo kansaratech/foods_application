@@ -154,7 +154,7 @@ export default function VendorUpdateForms() {
                   <>
                     <div>
                       <Form onSubmit={handleSubmit}>
-                        <div className="edit-profile-file-upload ml-[11px] space-y-3 rounded-[10px] border border-[#E4E4E7] dark:border-dark-600 p-[34px] max-[991px]:p-[20px]">
+                        <div className="edit-profile-file-upload ml-[11px] space-y-3 rounded-[10px] border border-surface-border dark:border-dark-600 p-[34px] max-[991px]:p-[20px]">
                           <div className="mb-[32px] flex flex-wrap max-[991px]:mb-[20px] max-[400px]:mb-[0px] max-[400px]:justify-center">
                             <div className="h-[120px] w-[120px] shrink-0 overflow-hidden rounded-full">
                               <Image
@@ -186,7 +186,7 @@ export default function VendorUpdateForms() {
                               />
                             </div>
                           </div>
-                          <div className="border-t border-[#E4E4E7] dark:border-dark-600 pt-[32px] max-[991px]:pt-[20px]">
+                          <div className="border-t border-surface-border dark:border-dark-600 pt-[32px] max-[991px]:pt-[20px]">
                             <div>
                               <h3 className="pb-[32px] text-[20px] font-semibold dark:text-white text-[#18181B] max-[991px]:pb-[8px]">
                                 {t('Personal Information')}
@@ -195,7 +195,7 @@ export default function VendorUpdateForms() {
                           </div>
                           <div className="!mb-8 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
                             <div>
-                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-[#09090B]">
+                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-content">
                                 {t('First Name')}
                               </label>
                               <CustomTextField
@@ -216,12 +216,12 @@ export default function VendorUpdateForms() {
                                     ? 'red'
                                     : '',
                                 }}
-                                className="rounded-[6px] border-dark-600 border-[#D1D5DB]"
+                                className="rounded-[6px] border-dark-600 border-surface-border"
                               />
                             </div>
 
                             <div>
-                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-[#09090B]">
+                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-content">
                                 {t('Last Name')}
                               </label>
                               <CustomTextField
@@ -242,11 +242,11 @@ export default function VendorUpdateForms() {
                                     ? 'red'
                                     : '',
                                 }}
-                                className="rounded-[6px] border-[#D1D5DB]"
+                                className="rounded-[6px] border-surface-border"
                               />
                             </div>
                             <div>
-                              <label className="mb-[4px] text-[14px] font-medium text-[#09090B]">
+                              <label className="mb-[4px] text-[14px] font-medium text-content">
                                 {t('Email')}
                               </label>
                               <CustomTextField
@@ -255,7 +255,7 @@ export default function VendorUpdateForms() {
                                 placeholder=""
                                 maxLength={35}
                                 showLabel={true}
-                                className="rounded-[6px] border-[#D1D5DB]"
+                                className="rounded-[6px] border-surface-border"
                                 value={values.email}
                                 onChange={handleChange}
                                 error={errors?.email ? t(errors.email) : ''}
@@ -272,7 +272,7 @@ export default function VendorUpdateForms() {
                             </div>
 
                             <div>
-                              <label className="mb-[4px] text-[14px] font-medium text-[#09090B]">
+                              <label className="mb-[4px] text-[14px] font-medium text-content">
                                 {t('Phone')}
                               </label>
                               <CustomPhoneTextField
@@ -298,12 +298,12 @@ export default function VendorUpdateForms() {
                                     ? 'red'
                                     : '',
                                 }}
-                                className="rounded-[6px] border-[#D1D5DB]"
+                                className="rounded-[6px] border-surface-border"
                               />
                             </div>
                           </div>
 
-                          <div className="border-t border-[#E4E4E7] dark:border-dark-600 pt-[32px] max-[991px]:pt-[20px]">
+                          <div className="border-t border-surface-border dark:border-dark-600 pt-[32px] max-[991px]:pt-[20px]">
                             <div>
                               <h3 className="pb-[32px] text-[20px] font-semibold dark:text-white text-[#18181B] max-[991px]:pb-[20px]">
                                 {t('Change Password')}
@@ -313,7 +313,7 @@ export default function VendorUpdateForms() {
 
                           <div className="!mt-0 grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
                             <div>
-                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-[#09090B]">
+                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-content">
                                 {t('Current Password')}
                               </label>
                               <CustomPasswordTextField
@@ -334,11 +334,11 @@ export default function VendorUpdateForms() {
                                     ? 'red'
                                     : '',
                                 }}
-                                className="rounded-[6px] border-[#D1D5DB]"
+                                className="rounded-[6px] border-surface-border"
                               />
                             </div>
                             <div>
-                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-[#09090B]">
+                              <label className="mb-[4px] text-[14px] font-medium dark:text-white text-content">
                                 {' '}
                                 {t('New Password')}
                               </label>
@@ -359,7 +359,7 @@ export default function VendorUpdateForms() {
                                     : '',
                                 }}
                                 onChange={handleChange}
-                                className="rounded-[6px] border-[#D1D5DB]"
+                                className="rounded-[6px] border-surface-border"
                               />
                             </div>
                           </div>

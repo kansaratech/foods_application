@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
 
 // Core
-import { Text, TouchableOpacity, View } from "react-native";
+import { Platform, Text, TouchableOpacity, View } from "react-native";
 
 // React Native Modal
 import ReactNativeModal from "react-native-modal";
@@ -51,7 +51,9 @@ export default function EarningBottomBar({
       }}
       style={{
         maxHeight: 350,
-        width: "100%",
+        width: Platform.OS === "web" ? "90%" : "100%",
+        maxWidth: Platform.OS === "web" ? 560 : undefined,
+        alignSelf: Platform.OS === "web" ? "center" : undefined,
         height: "100%",
         backgroundColor: appTheme.themeBackground,
         borderRadius: 20,
@@ -64,8 +66,10 @@ export default function EarningBottomBar({
           width: 0,
           height: 2,
         },
-        marginLeft: 0,
-        marginTop: "125%",
+        marginLeft: Platform.OS === "web" ? "auto" : 0,
+        marginRight: Platform.OS === "web" ? "auto" : undefined,
+        marginBottom: Platform.OS === "web" ? "auto" : undefined,
+        marginTop: Platform.OS === "web" ? "auto" : "125%",
         shadowOpacity: 0.25,
         shadowRadius: 4,
       }}

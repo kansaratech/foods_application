@@ -4,7 +4,7 @@ const TableSkeleton = () => {
   return (
     <div className="mt-8 w-full space-y-3">
       <Skeleton width="19%" height="2.65rem" />
-      <div className="flex flex-col gap-2 bg-[#f4f4f500]">
+      <div className="flex flex-col gap-2 bg-transparent">
         <Skeleton width="100%" height="2.47rem" />
         <div className="flex flex-col divide-y divide-[#cccccc9c]">
           {Array.from({ length: 5 }).map((_, colIndex) => (

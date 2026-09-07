@@ -64,7 +64,8 @@ module.exports = {
     ],
     platforms: ['ios', 'android', 'web'],
     web: {
-      bundler: 'metro'
+      bundler: 'metro',
+      output: 'single'
     },
     ios: {
       supportsTablet: true,

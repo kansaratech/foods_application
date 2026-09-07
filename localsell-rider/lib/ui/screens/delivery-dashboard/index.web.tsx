@@ -76,6 +76,8 @@ export function Availability() {
   );
 }
 const NAV_ICONS: Record<string, string> = {
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  close: '<path d="m6 6 12 12M6 18 18 6"/>',
   package:
     '<path d="M16.5 9.4 7.5 4.2"/><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
@@ -126,6 +128,7 @@ const NAV_GROUPS = [
   [
     "EARNINGS",
     ["chart", "Earnings", "/earnings"],
+    ["wallet", "Wallet", "/wallet"],
     ["wallet", "Cash collection", "/home/cash"],
     ["card", "Bank account", "/home/bank-management"],
   ],
@@ -145,15 +148,18 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
   const [menu, setMenu] = useState(false);
   const [collapsed, setCollapsed] = useState(() => {
     try {
-      return localStorage.getItem("rd-nav-collapsed") === "1";
+      return localStorage.getItem("rd-nav-collapsed") !== "0";
     } catch {
-      return false;
+      return true;
     }
   });
   const [wide, setWide] = useState(true);
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 761px)");
-    const sync = () => setWide(mq.matches);
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => {
+      setWide(mq.matches);
+      setMenu(false);
+    };
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
@@ -170,8 +176,45 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
       return next;
     });
 
-  const navRef = usePerfectScrollbar<HTMLElement>([]);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    setMenu(false);
+  }, [path]);
+  useEffect(() => {
+    if (!menu || wide) return;
+    const sidebar = sidebarRef.current;
+    const items = sidebar?.querySelectorAll<HTMLButtonElement>(
+      "button:not(:disabled)",
+    );
+    items?.[0]?.focus();
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenu(false);
+        toggleRef.current?.focus();
+      }
+      if (event.key === "Tab" && items?.length) {
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [menu, wide]);
+  const navRef = usePerfectScrollbar<HTMLElement>([collapsed, wide, menu]);
   const isCollapsed = collapsed && wide;
+  const activeRoute = NAV_GROUPS.flatMap<readonly [string, string, string]>(
+    ([, ...links]) => links,
+  )
+    .filter(([, , href]) => path === href || path.startsWith(`${href}/`))
+    .sort((a, b) => b[2].length - a[2].length)[0];
   const initials =
     (dataProfile?.name || "Rider")
       .split(" ")
@@ -188,25 +231,36 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
   return (
     <div className="rider-desk">
       <style>{css}</style>
-      <button
-        className="rd-menu"
-        aria-label="Toggle navigation"
-        aria-expanded={menu}
-        onClick={() => setMenu(!menu)}
-      >
-        ☰
-      </button>
+      {menu && !wide && (
+        <button
+          className="rd-backdrop"
+          aria-label={t("Close navigation")}
+          tabIndex={-1}
+          onClick={() => {
+            setMenu(false);
+            toggleRef.current?.focus();
+          }}
+        />
+      )}
       <aside
+        id="rider-navigation"
+        ref={sidebarRef}
+        aria-label={t("Rider navigation")}
+        role={!wide && menu ? "dialog" : undefined}
+        aria-modal={!wide && menu ? true : undefined}
         className={`rd-sidebar ${menu ? "open" : ""} ${isCollapsed ? "collapsed" : ""}`}
       >
         <div className="rd-head">
-          {wide && (
+          {!wide && (
             <button
               className="rd-collapse"
-              aria-label={isCollapsed ? "Expand menu" : "Collapse menu"}
-              onClick={toggleCollapsed}
+              aria-label={t("Close navigation")}
+              onClick={() => {
+                setMenu(false);
+                toggleRef.current?.focus();
+              }}
             >
-              {isCollapsed ? "»" : "«"}
+              <NavIcon name="close" />
             </button>
           )}
           <div className="rd-brand">
@@ -223,7 +277,9 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
               <strong>{dataProfile?.name || t("Rider")}</strong>
               <small>
                 <span
-                  className={dataProfile?.available ? "rd-dot online" : "rd-dot"}
+                  className={
+                    dataProfile?.available ? "rd-dot online" : "rd-dot"
+                  }
                 />
                 {dataProfile?.available ? t("Online") : t("Offline")}
               </small>
@@ -231,7 +287,7 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
           </div>
           {!isCollapsed && <Availability />}
         </div>
-        <nav className="rd-nav" ref={navRef}>
+        <nav className="rd-nav" ref={navRef} aria-label={t("Main navigation")}>
           {NAV_GROUPS.map(([title, ...links]) => (
             <div className="rd-nav-group" key={title}>
               <h2>{t(title)}</h2>
@@ -239,7 +295,9 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
                 <button
                   key={href}
                   title={t(label)}
-                  className={path.replace(/\/$/, "") === href ? "selected" : ""}
+                  aria-label={t(label)}
+                  aria-current={activeRoute?.[2] === href ? "page" : undefined}
+                  className={activeRoute?.[2] === href ? "selected" : ""}
                   onClick={() => {
                     router.push(href as Href);
                     setMenu(false);
@@ -258,6 +316,7 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
         <button
           className="rd-signout"
           title={t("Sign out")}
+          aria-label={t("Sign out")}
           onClick={() => void logout()}
         >
           <span className="rd-ic">
@@ -266,7 +325,37 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
           <span className="rd-label">{t("Sign out")}</span>
         </button>
       </aside>
-      <div className="rd-content">{children}</div>
+      <div className="rd-content" inert={!wide && menu ? true : undefined}>
+        <header className="rd-topbar">
+          <button
+            ref={toggleRef}
+            className="rd-menu-toggle"
+            aria-label={t(
+              wide
+                ? isCollapsed
+                  ? "Expand navigation"
+                  : "Collapse navigation"
+                : "Open navigation",
+            )}
+            aria-expanded={wide ? !isCollapsed : menu}
+            aria-controls="rider-navigation"
+            onClick={() => (wide ? toggleCollapsed() : setMenu(true))}
+          >
+            <NavIcon name="menu" />
+          </button>
+          <div className="rd-page-title">
+            <small>{t("Rider workspace")}</small>
+            <strong>{t(activeRoute?.[1] ?? "Rider")}</strong>
+          </div>
+          <span className="rd-topbar-status">
+            <span
+              className={dataProfile?.available ? "rd-dot online" : "rd-dot"}
+            />
+            {t(dataProfile?.available ? "Online" : "Offline")}
+          </span>
+        </header>
+        <div className="rd-page-content">{children}</div>
+      </div>
     </div>
   );
 }
@@ -621,4 +710,42 @@ function DeliveryCard({ order: o, tab }: { order: IOrder; tab: string }) {
 const css = `
 .rider-desk{display:flex;flex:1;height:100dvh;overflow:hidden;width:100%;font-family:Inter,system-ui,sans-serif;color:#111c30;background:#f0f6fd}.rider-desk *{box-sizing:border-box}.rider-desk .ps__rail-y{opacity:.55;background:transparent!important;width:11px}.rider-desk .ps__rail-y:hover,.rider-desk .ps__rail-y:focus,.rider-desk .ps--clicking .ps__rail-y{opacity:.9;background:transparent!important}.rider-desk .ps__thumb-y{background:#9fb0c7!important;width:6px;right:2px;border-radius:6px}.rider-desk .ps__rail-y:hover .ps__thumb-y,.rider-desk .ps__rail-y:focus .ps__thumb-y{width:7px;background:#7f93af!important}.rider-desk button,.rider-desk input,.rider-desk select{font:inherit}.rider-desk button{cursor:pointer}.rider-desk button:disabled{opacity:.5;cursor:default}.rider-desk button:focus-visible,.rider-desk input:focus-visible,.rider-desk select:focus-visible{outline:2px solid #4287ff;outline-offset:3px}.rd-sidebar{width:252px;flex-shrink:0;display:flex;flex-direction:column;background:#fff;color:#3a4658;height:100dvh;position:sticky;top:0;border-right:1px solid #e6ecf5;transition:width .16s ease;overflow:hidden}.rd-sidebar.collapsed{width:72px}.rd-head{position:relative;background:linear-gradient(140deg,#07203d,#0c3a72);color:#e9f1ff;padding:16px 14px 14px}.rd-collapse{position:absolute;top:10px;right:9px;width:24px;height:24px;border-radius:7px;border:0;background:#ffffff1f;color:#fff;display:grid;place-items:center;font-size:13px;line-height:1}.rd-collapse:hover{background:#ffffff36}.rd-brand{display:flex;align-items:baseline;gap:7px;margin-bottom:14px}.rd-brand img{width:112px;height:26px;object-fit:contain;display:block}.rd-brand>span{font-size:9px;letter-spacing:3px;color:#9fc0ee}.rd-identity{display:flex;align-items:center;gap:10px}.rd-avatar{display:grid;place-items:center;background:#fff;color:#0b56c9;border-radius:12px;width:40px;height:40px;font-weight:800;font-size:14px;flex-shrink:0}.rd-idtext{min-width:0}.rd-idtext strong{font-size:13px;display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}.rd-idtext small{display:flex;align-items:center;gap:6px;font-size:10px;color:#bcd4f2;margin-top:3px}.rd-availability{display:flex;align-items:center;gap:8px;width:100%;margin-top:12px;background:#ffffff14;border:0;border-radius:10px;color:#eaf2ff;padding:9px 10px;font-size:11px!important;white-space:nowrap}.rd-heading .rd-availability{width:auto;margin:0;background:#fff;border:1px solid #e3eaf2;color:#268539;border-radius:22px}.rd-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0}.rd-dot.online{background:#3ddc84}.rd-switch{width:34px;height:19px;border-radius:20px;background:#ffffff40;position:relative;margin-left:auto;flex-shrink:0}.rd-switch:after{content:"";position:absolute;width:13px;height:13px;top:3px;left:3px;background:#fff;border-radius:50%;transition:left .15s}.rd-switch.on{background:#2f8dff}.rd-switch.on:after{left:18px}.rd-heading .rd-switch{background:#cdd9e8}.rd-nav{flex:1;overflow:auto;padding:10px}.rd-nav-group{margin-top:14px}.rd-nav-group:first-child{margin-top:2px}.rd-nav-group h2{font-size:10px;letter-spacing:1px;font-weight:700;padding:0 10px;margin:0 0 6px;color:#93a1b5;text-transform:uppercase}.rd-nav-group button,.rd-signout{display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;border:0;background:none;color:#3c4a5e;border-radius:9px;text-align:left;font-size:12.5px!important;min-height:38px;font-weight:500}.rd-ic{width:20px;height:20px;display:grid;place-items:center;flex-shrink:0}.rd-ic svg{width:19px;height:19px}.rd-nav-group button:hover{background:#eef4ff}.rd-nav-group button.selected{color:#0b63e5;background:#e7f0ff;font-weight:700}.rd-nav-group b{border-radius:20px;background:#0b63e5;color:#fff;font-size:10px;padding:3px 7px;margin-left:auto;font-weight:700}.rd-signout{color:#d3413b;border-top:1px solid #e6ecf5;border-radius:0;margin:4px 8px 8px;padding:12px 6px 2px;width:auto}.rd-signout:hover{color:#b5322d;background:#fdeceb}.rd-sidebar.collapsed .rd-brand,.rd-sidebar.collapsed .rd-idtext,.rd-sidebar.collapsed .rd-nav-group h2,.rd-sidebar.collapsed .rd-label,.rd-sidebar.collapsed .rd-nav-group b{display:none}.rd-sidebar.collapsed .rd-head{padding:14px 8px}.rd-sidebar.collapsed .rd-identity{justify-content:center}.rd-sidebar.collapsed .rd-avatar.online{box-shadow:0 0 0 2px #0c3a72,0 0 0 4px #3ddc84}.rd-sidebar.collapsed .rd-nav-group button,.rd-sidebar.collapsed .rd-signout{justify-content:center;gap:0;padding-left:0;padding-right:0;margin-left:0;margin-right:0}.rd-content{flex:1;min-width:0;display:flex;flex-direction:column}.rd-dashboard{padding:25px 32px;overflow:auto;flex:1;background:linear-gradient(125deg,#f0f7ff,#f5f9fe)}.rd-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.rd-heading h1{font-size:25px;letter-spacing:-.7px;margin:0 0 5px;font-weight:700}.rd-heading p{color:#7888a3;font-size:13px;margin:0}.rd-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}.rd-stat{display:flex;gap:20px;align-items:center;background:white;border:1px solid #e2eaf5;border-radius:8px;padding:16px 18px}.rd-stat-icon{width:50px;height:50px;border-radius:10px;display:grid;place-items:center;font-size:30px}.tone-0{background:#eaf2ff;color:#006cff}.tone-1{background:#edfaef;color:#25b32d}.tone-2{background:#fff8e6;color:#f2a000}.rd-stat p{font-size:12px;font-weight:500;color:#6e809e;margin:0 0 4px}.rd-stat strong{font-size:26px;line-height:1}.rd-tabs{display:flex;border:1px solid #e2eaf5;border-radius:8px;padding:2px;background:#f8fbff;margin-bottom:13px}.rd-tabs button{flex:1;border:0;background:none;color:#6b7e9a;height:38px;border-radius:7px;font-weight:600;font-size:12px}.rd-tabs button.active{background:linear-gradient(120deg,#0873f8,#0860ea);color:white}.rd-tabs button span{margin-left:12px;border-radius:50%;padding:4px 7px;background:#ffffff40}.rd-filters{display:flex;gap:13px;margin-bottom:13px}.rd-filters label{display:flex;align-items:center;gap:10px;flex:2;background:white;border:1px solid #dde7f4;border-radius:7px;padding:0 13px;color:#7687a1}.rd-filters label>span{font-size:25px}.rd-filters input{border:0;outline:none;width:100%;font-size:12px;height:39px;min-width:0}.rd-filters select{flex:1;min-width:0;border:1px solid #dde7f4;border-radius:7px;background:white;color:#263b5b;padding:0 13px;font-size:12px}.rd-filters>button{height:41px;width:45px;border:1px solid #dde7f4;background:white;border-radius:7px;font-size:25px;color:#637a9a}.rd-orders{display:grid;gap:12px}.rd-order{display:flex;gap:20px;border:1px solid #e2eaf5;border-radius:10px;background:white;padding:14px 19px;box-shadow:0 3px 10px #183f6704}.rd-order-main{flex:1;min-width:0}.rd-order-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:11px}.rd-order-meta strong{font-size:12px}.rd-order-meta small{font-size:10px;color:#8190a7}.rd-badge{padding:4px 11px;border:1px solid #75d986;border-radius:20px;color:#248b29;background:#d9f8dc;font-size:10px;font-weight:650}.rd-badge.working{background:#fff1d5;color:#a56a00;border-color:#eed18a}.rd-restaurant{display:flex;align-items:center;gap:14px}.rd-restaurant img,.rd-store-placeholder{width:41px;height:39px;object-fit:cover;border-radius:10px;background:#f1f5fa}.rd-store-placeholder{display:grid;place-items:center}.rd-restaurant h2{font-size:16px;margin:0;font-weight:650}.rd-address{padding-left:55px}.rd-address p{font-size:11px;line-height:1.5;color:#637796;margin:5px 0;display:flex;gap:10px}.rd-address p>span{color:#0865d8}.rd-address p>span.drop{color:#fb5e66}.rd-metrics{display:flex;gap:12px;margin-top:11px;flex-wrap:wrap}.rd-metrics span{background:#f0f4f8;border-radius:18px;color:#607390;font-size:11px;padding:6px 12px}.rd-order-payment{width:35%;min-width:245px;border-left:1px solid #e2e9f3;padding-left:19px}.rd-order-payment h3{margin:0 0 4px;font-size:12px;padding:8px 11px;border-radius:7px}.cash{color:#70441e;background:#fff8e9}.prepaid{color:#0063f2;background:#eaf3ff}.rd-amount{display:flex;justify-content:space-between;gap:10px;padding:7px 0;color:#697e9d;font-size:11px}.rd-amount:first-of-type{border-bottom:1px solid #e3eaf4}.rd-amount strong{color:#18233a;font-size:13px}.rd-primary,.rd-outline{width:100%;height:34px;border-radius:6px;font-size:12px!important;font-weight:600!important}.rd-primary{border:0;color:white;background:linear-gradient(120deg,#0869f1,#075ada);margin-top:5px}.rd-outline{color:#0062ff;border:1px solid #5895ff;background:white;margin-top:6px;height:29px}.rd-empty{text-align:center;background:white;padding:50px 20px;border:1px solid #e0e9f4;border-radius:10px;color:#687d9c}.rd-empty h2{font-size:20px;color:#233959}.rd-error{color:#b32626;font-size:11px}.rd-menu{display:none}@media(max-width:1050px){.rd-sidebar{width:228px}.rd-dashboard{padding:24px 18px}.rd-order{gap:12px;padding:14px}.rd-order-payment{min-width:220px}.rd-stat{gap:10px;padding:14px 12px}.rd-heading h1{font-size:23px}}@media(max-width:760px){.rd-sidebar{display:none;position:fixed;z-index:30;left:0;top:44px;height:calc(100dvh - 44px);width:220px}.rd-sidebar.open{display:block}.rd-menu{display:block;position:fixed;top:8px;left:12px;z-index:31;border:0;background:#08254b;color:white;border-radius:5px;padding:4px 10px}.rd-dashboard{padding:52px 14px 24px}.rd-heading{flex-wrap:wrap}.rd-stats{gap:8px}.rd-stat{padding:12px 8px;gap:8px;flex-direction:column;align-items:flex-start}.rd-stat-icon{width:32px;height:32px;font-size:22px}.rd-stat p{font-size:10px}.rd-stat strong{font-size:22px}.rd-filters{flex-wrap:wrap;gap:8px}.rd-filters label{flex-basis:100%}.rd-filters select{height:38px}.rd-order{flex-direction:column}.rd-order-payment{width:100%;border-left:0;border-top:1px solid #e3eaf4;padding:12px 0 0}.rd-order-meta{gap:8px}.rd-address{padding-left:0}.rd-content{padding-top:0}}
 .ps{overflow:hidden!important;overflow-anchor:none;-ms-overflow-style:none;touch-action:auto}.ps__rail-x,.ps__rail-y{display:none;opacity:0;transition:opacity .2s linear;position:absolute}.ps__rail-x{height:15px;bottom:0}.ps__rail-y{width:15px;right:0}.ps--active-x>.ps__rail-x,.ps--active-y>.ps__rail-y{display:block;background:transparent}.ps:hover>.ps__rail-x,.ps:hover>.ps__rail-y,.ps--focus>.ps__rail-x,.ps--focus>.ps__rail-y,.ps--scrolling-x>.ps__rail-x,.ps--scrolling-y>.ps__rail-y{opacity:.6}.ps__thumb-x,.ps__thumb-y{background:#aaa;border-radius:6px;position:absolute;transition:background .2s linear,width .2s ease,height .2s ease}.ps__thumb-x{height:6px;bottom:2px}.ps__thumb-y{width:6px;right:2px}
+
+/* Shared responsive workspace navigation. */
+.rider-desk{--rider-page-gutter:20px}
+@media(max-width:1023px){.rider-desk{--rider-page-gutter:16px}}
+@media(max-width:480px){.rider-desk{--rider-page-gutter:12px}}
+.rd-sidebar{width:280px;position:relative;min-height:0;border-radius:0 24px 24px 0;overflow:hidden;transition:width .2s ease}
+.rd-sidebar.collapsed{width:76px}
+.rd-head{padding:24px 18px;background:#092b50}
+.rd-brand{align-items:center;margin-bottom:24px}
+.rd-identity{gap:12px}.rd-idtext strong{font-size:14px;max-width:190px}
+.rd-idtext small{font-size:12px;margin-top:6px}
+.rd-sidebar.collapsed .rd-head{padding:24px 18px}
+.rd-nav{position:relative;min-height:0;padding:16px 12px}
+.rd-nav-group{margin-top:20px}.rd-nav-group h2{font-size:10px;color:#687b93;margin-bottom:8px}
+.rd-nav-group button{min-height:44px;margin-bottom:4px;font-size:13px!important;border-radius:10px}
+.rd-nav-group button.selected{box-shadow:inset 3px 0 #0b63e5}
+.rd-sidebar.collapsed .rd-nav-group+.rd-nav-group{border-top:1px solid #e6ecf5;padding-top:12px;margin-top:12px}
+.rd-signout{min-height:48px;padding:12px;margin:8px 12px 16px;flex-shrink:0;font-size:13px!important}
+.rd-topbar{height:76px;flex-shrink:0;display:flex;align-items:center;gap:16px;padding:0 var(--rider-page-gutter);border-bottom:1px solid #e3eaf2;background:#fff}
+.rd-menu-toggle{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:1px solid #dce5ef;border-radius:12px;background:#fff;color:#193653}
+.rd-menu-toggle:hover{background:#eef4ff;border-color:#a9c8f1}
+.rd-menu-toggle svg,.rd-collapse svg{width:22px;height:22px}
+.rd-page-title{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rd-page-title small{font-size:11px;color:#73839a}.rd-page-title strong{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rd-topbar-status{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:#5d7089;background:#f4f7fb;padding:8px 12px;border-radius:20px}
+.rd-content,.rd-page-content{min-height:0}.rd-page-content{display:flex;flex:1;flex-direction:column;min-width:0;overflow:hidden}
+.rd-dashboard{min-height:0;padding:24px var(--rider-page-gutter);background:#f5f7fb}
+.rd-heading h1{font-size:28px}.rd-stat{border-radius:14px;padding:20px}.rd-order,.rd-empty{border-radius:14px}
+.rd-backdrop{position:fixed;inset:0;z-index:29;background:#0b1c3866;border:0;backdrop-filter:blur(2px)}
+@media(min-width:1024px){.rd-sidebar{display:flex;height:100dvh;top:0}.rd-sidebar.collapsed{width:76px}}
+@media(max-width:1023px){
+ .rd-sidebar{display:none;position:fixed;left:0;top:0;bottom:0;height:100dvh;width:min(320px,calc(100vw - 48px));z-index:30;box-shadow:12px 0 48px #10274330}
+ .rd-sidebar.open{display:flex}.rd-collapse{width:32px;height:32px;top:16px;right:12px}
+ .rd-head{padding-top:24px}.rd-brand{padding-right:28px}.rd-topbar{padding:0 var(--rider-page-gutter)}
+ .rd-dashboard{padding:24px var(--rider-page-gutter)}.rd-order{flex-direction:column}.rd-order-payment{width:100%;min-width:0;border-left:0;border-top:1px solid #e3eaf4;padding:14px 0 0}
+}
+@media(max-width:480px){.rd-topbar{height:68px;padding:0 var(--rider-page-gutter);gap:10px}.rd-topbar-status{padding:8px;font-size:11px}.rd-page-title strong{font-size:13px}.rd-dashboard{padding:20px var(--rider-page-gutter)}.rd-heading h1{font-size:24px}.rd-stat{padding:12px 8px}.rd-stats{gap:8px}.rd-heading p{line-height:1.6}}
+@media(prefers-reduced-motion:reduce){.rd-sidebar,.rd-switch:after{transition:none}}
 `;

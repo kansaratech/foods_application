@@ -1,6 +1,7 @@
 'use client';
 import { useId } from 'react';
 import './multi-select.css';
+
 // Interface
 import { IMultiSelectComponentProps } from '@/lib/utils/interfaces';
 
@@ -8,9 +9,11 @@ import { IMultiSelectComponentProps } from '@/lib/utils/interfaces';
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { MultiSelect, MultiSelectChangeEvent } from 'primereact/multiselect';
-import InputSkeleton from '../custom-skeletons/inputfield.skeleton';
 import { twMerge } from 'tailwind-merge';
 import { useTranslations } from 'next-intl';
+
+import InputSkeleton from '../custom-skeletons/inputfield.skeleton';
+import FieldShell from '../form/field-shell';
 
 const CustomMultiSelectComponent = ({
   name,
@@ -25,21 +28,18 @@ const CustomMultiSelectComponent = ({
   onChange,
   className,
   multiSelectClassName,
+  error,
   ...props
-}: IMultiSelectComponentProps) => {
+}: IMultiSelectComponentProps & { error?: string }) => {
   const t = useTranslations();
   const inputId = useId();
-  const itemTemplate = (option: { label: string }) => {
-    return (
-      <div className="align-items-center flex">
-        <div>{option.label}</div>
-      </div>
-    );
-  };
+
+  const itemTemplate = (option: { label: string }) => (
+    <div className="flex items-center">{option.label}</div>
+  );
 
   const panelFooterTemplate = () => {
     const length = selectedItems ? selectedItems.length : 0;
-
     return (
       <div className="custom-multiselect-footer">
         <span>
@@ -55,19 +55,16 @@ const CustomMultiSelectComponent = ({
     );
   };
 
-  return !isLoading ? (
-    <div
-      className={twMerge(
-        `flex w-full flex-col justify-center gap-y-1`,
-        className
-      )}
-    >
-      {showLabel && (
-        <label htmlFor={inputId} className="text-sm font-[500] dark:text-white">
-          {placeholder}
-        </label>
-      )}
+  if (isLoading) return <InputSkeleton />;
 
+  return (
+    <FieldShell
+      htmlFor={inputId}
+      label={placeholder}
+      showLabel={showLabel}
+      error={error}
+      className={className}
+    >
       <MultiSelect
         inputId={inputId}
         aria-label={placeholder}
@@ -76,33 +73,30 @@ const CustomMultiSelectComponent = ({
         value={selectedItems}
         options={options}
         onChange={(e: MultiSelectChangeEvent) => {
-          if (onChange) {
-            // for custom cases: i.e conditional selecting
-            onChange(e.value);
-          } else setSelectedItems(name, e.value);
+          if (onChange) onChange(e.value);
+          else setSelectedItems(name, e.value);
         }}
         optionLabel="label"
         placeholder={placeholder}
         itemTemplate={itemTemplate}
         panelFooterTemplate={panelFooterTemplate}
         className={twMerge(
-          'custom-multiselect md:w-20rem m-0 min-h-10 w-full border dark:border-dark-600 dark:bg-dark-950 dark:text-white border-gray-300 p-0 align-middle text-sm focus:shadow-none focus:outline-none',
+          'ls-field custom-multiselect',
+          error && 'ls-field-invalid',
           multiSelectClassName
         )}
         panelClassName="custom-multiselect-panel"
         display="chip"
-        dropdownIcon={(options) => (
+        dropdownIcon={(opts) => (
           <FontAwesomeIcon
             icon={dropDownIcon ?? faChevronDown}
-            className={options.className}
+            className={opts.className}
           />
         )}
-        filter={true}
+        filter
         {...props}
       />
-    </div>
-  ) : (
-    <InputSkeleton />
+    </FieldShell>
   );
 };
 

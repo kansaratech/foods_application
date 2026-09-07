@@ -7,7 +7,7 @@ import { useApptheme } from "@/lib/context/global/theme.context";
 import EarningBottomBar from "@/lib/ui/screen-components/earnings/view/bottom-bar";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 
 export default function StackLayout() {
   // Hooks
@@ -15,19 +15,24 @@ export default function StackLayout() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { appTheme } = useApptheme();
-  const {top} = useSafeAreaInsets()
+  const { top } = useSafeAreaInsets();
 
   return (
     <>
-      <View style={{paddingTop: top+10, flex: 1, backgroundColor: appTheme.themeBackground}}>
+      <View
+        style={{
+          paddingTop: Platform.OS === "web" ? 0 : top + 10,
+          flex: 1,
+          backgroundColor: appTheme.themeBackground,
+        }}
+      >
         <Stack
           screenOptions={{
-            headerTitle:
-              pathname.startsWith("/earnings/earnings-detail") ?
-                t("Earnings Summary")
-              : pathname.startsWith("/earnings/earnings-order-details") ?
-                t("Deliveries")
-              : t("Earnings"),
+            headerTitle: pathname.startsWith("/earnings/earnings-detail")
+              ? t("Earnings Summary")
+              : pathname.startsWith("/earnings/earnings-order-details")
+                ? t("Deliveries")
+                : t("Earnings"),
 
             headerTitleAlign: "center",
             headerShadowVisible: false,
@@ -41,7 +46,10 @@ export default function StackLayout() {
         >
           <Stack.Screen
             name="index"
-            options={{ headerShown: true, headerTitle: t("Earnings") }}
+            options={{
+              headerShown: Platform.OS !== "web",
+              headerTitle: t("Earnings"),
+            }}
           />
           <Stack.Screen
             name="(routes)"

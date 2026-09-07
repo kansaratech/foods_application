@@ -202,7 +202,7 @@ export default function RestaurantsForm() {
 
       {lockedVendor && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-dark-600 dark:bg-dark-900">
-          <div className="grid h-11 w-11 place-items-center rounded-full bg-[#e8f0fc] font-bold text-[#1c5bc7]">
+          <div className="grid h-11 w-11 place-items-center rounded-full bg-primary-light font-bold text-primary">
             {(lockedVendor.name || lockedVendor.email || 'V')
               .split(' ')
               .map((part) => part[0])

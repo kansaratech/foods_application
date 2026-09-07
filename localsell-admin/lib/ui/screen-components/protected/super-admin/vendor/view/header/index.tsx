@@ -23,7 +23,7 @@ export default function VendorHeader() {
         </div>
 
         <TextIconClickable
-          className="rounded-lg border border-[#1c5bc7] bg-[#1c5bc7] px-4 text-white shadow-sm sm:w-auto dark:border-dark-600"
+          className="rounded-lg border border-primary bg-primary px-4 text-white shadow-sm sm:w-auto dark:border-dark-600"
           icon={faAdd}
           iconStyles={{ color: 'white' }}
           title={t('Add Vendor')}
