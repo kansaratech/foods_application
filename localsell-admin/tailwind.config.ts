@@ -29,20 +29,22 @@ const config = {
         none: 'none',
       },
       colors: {
-        /* Semantic — theme-aware, prefer these */
+        /* Semantic — theme-aware, prefer these.
+           `rgb(var(--x-rgb) / <alpha-value>)` so `bg-primary` and
+           `ring-primary/30` both work; the channel var flips per theme. */
         primary: {
-          DEFAULT: 'var(--primary-color)',
+          DEFAULT: 'rgb(var(--primary-rgb) / <alpha-value>)',
           contrast: 'var(--primary-color-text)',
           dark: 'var(--ls-blue-dark)',
-          light: 'var(--ls-blue-tint)',
+          light: 'var(--primary-light)',
           hover: 'var(--ls-blue-hover)',
         },
         brand: {
-          navy: 'var(--ls-navy)',
+          navy: 'rgb(var(--ls-navy-rgb) / <alpha-value>)',
           'navy-dark': 'var(--ls-navy-dark)',
-          blue: 'var(--ls-blue)',
+          blue: 'rgb(var(--primary-rgb) / <alpha-value>)',
           mist: 'var(--ls-mist)',
-          sky: 'var(--ls-sky)',
+          sky: 'rgb(var(--ls-sky-rgb) / <alpha-value>)',
         },
         surface: {
           DEFAULT: 'var(--app-bg)',

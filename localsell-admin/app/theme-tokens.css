@@ -27,6 +27,11 @@
   --ls-mist: #f4f7fb; /* surface tint            */
   --ls-sky: #3e93db; /* accent                  */
 
+  /* RGB channels — for Tailwind's `<alpha-value>` colours (bg-primary/30 etc.) */
+  --primary-rgb: 28 91 199;
+  --ls-navy-rgb: 22 41 63;
+  --ls-sky-rgb: 62 147 219;
+
   /* 2. PrimeReact semantic-token overrides (light) ------------------------- */
   --primary-color: var(--ls-blue);
   --primary-color-text: #ffffff;
@@ -64,6 +69,7 @@
      on dark surfaces (WCAG AA against --surface-ground). */
   --primary-color: #5b8def;
   --primary-color-text: #0b1220;
+  --primary-rgb: 91 141 239;
   --highlight-bg: rgba(91, 141, 239, 0.16);
   --highlight-text-color: rgba(255, 255, 255, 0.92);
   --focus-ring: 0 0 0 0.2rem rgba(91, 141, 239, 0.35);

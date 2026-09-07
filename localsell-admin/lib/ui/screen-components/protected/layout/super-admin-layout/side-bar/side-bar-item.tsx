@@ -98,7 +98,7 @@ export default function SidebarItem({
     ? 'bg-primary-color text-white hover:bg-primary-dark'
     : isParentHighlighted
       ? 'bg-primary-light text-primary-color font-semibold dark:bg-dark-600 dark:text-white'
-      : 'text-[#71717A] hover:bg-primary-light dark:text-white dark:hover:bg-dark-600';
+      : 'text-content-muted hover:bg-primary-light dark:text-white dark:hover:bg-dark-600';
 
   return (
     <div className={`mt-[0.4rem] flex flex-col`}>

@@ -249,7 +249,7 @@ export const RIDER_TABLE_COLUMNS = ({
               e.stopPropagation();
               router.push(`/general/riders/${rider._id}`);
             }}
-            className="text-sm font-medium text-[#1c5bc7] hover:underline"
+            className="text-sm font-medium text-primary hover:underline"
           >
             {t('View profile')}
           </button>

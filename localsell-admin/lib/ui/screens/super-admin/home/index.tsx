@@ -82,8 +82,8 @@ function MetricCard({
   onClick,
 }: any) {
   const tones: Record<string, string> = {
-    blue: 'bg-[#e8f0fc] text-[#1c5bc7]',
-    sky: 'bg-[#eaf4fc] text-[#3e93db]',
+    blue: 'bg-primary-light text-primary',
+    sky: 'bg-[#eaf4fc] text-brand-sky',
     green: 'bg-green-50 text-green-600',
     amber: 'bg-amber-50 text-amber-600',
   };
@@ -91,7 +91,7 @@ function MetricCard({
     <button
       type="button"
       onClick={onClick}
-      className={`${CARD} min-w-0 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#1c5bc7] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30`}
+      className={`${CARD} min-w-0 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/30`}
     >
       <div className="flex items-start justify-between gap-3">
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -109,7 +109,7 @@ function MetricCard({
       {progress !== undefined ? (
         <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-dark-600">
           <div
-            className="h-full rounded-full bg-[#1c5bc7]"
+            className="h-full rounded-full bg-primary"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
         </div>
@@ -462,7 +462,7 @@ export default function Home() {
             <button
               type="button"
               onClick={exportCsv}
-              className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#1c5bc7] hover:text-[#1c5bc7] dark:border-dark-600 dark:bg-dark-900 dark:text-white"
+              className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-dark-600 dark:bg-dark-900 dark:text-white"
             >
               <FontAwesomeIcon icon={faFileArrowDown} />
               Export CSV
@@ -477,9 +477,9 @@ export default function Home() {
                   type="button"
                   onClick={() => onPreset(p.value)}
                   aria-pressed={preset === p.value}
-                  className={`rounded-md px-4 py-2 font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30 ${
+                  className={`rounded-md px-4 py-2 font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                     preset === p.value
-                      ? 'bg-white text-[#1c5bc7] shadow-sm dark:bg-dark-900'
+                      ? 'bg-white text-primary shadow-sm dark:bg-dark-900'
                       : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-dark-600'
                   }`}
                 >
@@ -543,7 +543,7 @@ export default function Home() {
                     onClick={() => setChartMode(mode)}
                     className={`rounded px-3 py-1.5 font-semibold capitalize ${
                       chartMode === mode
-                        ? 'bg-[#e8f0fc] text-[#1c5bc7]'
+                        ? 'bg-primary-light text-primary'
                         : 'text-slate-500'
                     }`}
                   >
@@ -578,7 +578,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => router.push('/management/store-performance')}
-                className="text-xs font-semibold text-[#1c5bc7] hover:underline"
+                className="text-xs font-semibold text-primary hover:underline"
               >
                 View all →
               </button>
@@ -628,13 +628,13 @@ export default function Home() {
                   key={k.label}
                   type="button"
                   onClick={() => router.push(k.route)}
-                  className={`${CARD} p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#1c5bc7] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30`}
+                  className={`${CARD} p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/30`}
                 >
                   <div className="flex items-start justify-between">
                     <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                       {k.label}
                     </span>
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f0fc] text-[#1c5bc7]">
+                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">
                       <FontAwesomeIcon icon={k.icon} className="text-sm" />
                     </span>
                   </div>

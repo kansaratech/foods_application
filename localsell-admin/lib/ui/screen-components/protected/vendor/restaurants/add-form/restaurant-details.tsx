@@ -362,7 +362,7 @@ export default function RestaurantDetails({
                         />
                       </div>
                       <div>
-                        <label className="mb-[4px] text-[14px] font-medium text-[#09090B]">
+                        <label className="mb-[4px] text-[14px] font-medium text-content">
                           {t('Phone')}
                         </label>
                         <CustomPhoneTextField
@@ -378,7 +378,7 @@ export default function RestaurantDetails({
                           value={values.phoneNumber}
                           // value={values.phoneNumber?.toString().match(/\(\+(\d+)\)\s(.+)/)?.[2]}
                           type="text"
-                          className="rounded-[6px] border-[#D1D5DB]"
+                          className="rounded-[6px] border-surface-border"
                           style={{
                             borderColor: onErrorMessageMatcher(
                               'phoneNumber',

@@ -20,7 +20,7 @@ export default function DashboardSubHeader({
         </h2>
         <div className="flex items-center space-x-2">
           <span
-            className={`font-inter text-sm font-medium leading-5 ${!isStoreView ? 'text-black dark:text-white' : 'text-[#71717A]'}`}
+            className={`font-inter text-sm font-medium leading-5 ${!isStoreView ? 'text-black dark:text-white' : 'text-content-muted'}`}
           >
             {t('Graph View')}
           </span>
@@ -29,7 +29,7 @@ export default function DashboardSubHeader({
             onChange={handleViewChange}
           />
           <span
-            className={`font-inter text-sm font-medium leading-5 ${isStoreView ? 'text-black dark:text-white' : 'text-[#71717A]'}`}
+            className={`font-inter text-sm font-medium leading-5 ${isStoreView ? 'text-black dark:text-white' : 'text-content-muted'}`}
           >
             {t('Store View')}
           </span>

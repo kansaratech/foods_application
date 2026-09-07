@@ -164,7 +164,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   };
 
   return (
-    <div className="grid items-center rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-[#1c5bc7]/40 hover:shadow-md dark:border-dark-600 dark:bg-dark-950 dark:text-white lg:grid-cols-[1.35fr_1fr_1.25fr_auto]">
+    <div className="grid items-center rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-primary/40 hover:shadow-md dark:border-dark-600 dark:bg-dark-950 dark:text-white lg:grid-cols-[1.35fr_1fr_1.25fr_auto]">
       <div className="flex min-w-0 items-center p-4">
         {image ? (
           <Image
@@ -237,14 +237,14 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         <button
           type="button"
           onClick={handleEdit}
-          className="h-9 whitespace-nowrap rounded-md border border-gray-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30 dark:border-dark-600 dark:text-white dark:hover:bg-dark-900"
+          className="h-9 whitespace-nowrap rounded-md border border-gray-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-dark-600 dark:text-white dark:hover:bg-dark-900"
         >
           {t('Edit')}
         </button>
         <button
           type="button"
           onClick={handleOpenPortal}
-          className="h-9 whitespace-nowrap rounded-md px-3 text-sm font-semibold text-[#1c5bc7] transition hover:bg-[#e8f0fc] focus:outline-none focus:ring-2 focus:ring-[#1c5bc7]/30 dark:text-white"
+          className="h-9 whitespace-nowrap rounded-md px-3 text-sm font-semibold text-primary transition hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary/30 dark:text-white"
         >
           {t('Open Portal')}
         </button>

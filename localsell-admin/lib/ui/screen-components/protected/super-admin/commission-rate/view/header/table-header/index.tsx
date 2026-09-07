@@ -54,7 +54,7 @@ const CommissionRateHeader: React.FC<ICommissionRateHeaderProps> = ({
         <div className="flex w-full flex-row items-center gap-4 sm:w-auto sm:flex-col">
           <div className="sm:hidden">
             <TextIconClickable
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-dotted border-[#E4E4E7]"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-dotted border-surface-border"
               icon={faFilter}
               iconStyles={{ color: 'black' }}
               onClick={(e) => overlayPanelRef.current?.toggle(e)}
@@ -75,7 +75,7 @@ const CommissionRateHeader: React.FC<ICommissionRateHeaderProps> = ({
 
         <div className="hidden sm:block">
           <TextIconClickable
-            className="w-44 rounded border border-dotted dark:border-dark-600 border-[#E4E4E7] text-black dark:text-white"
+            className="w-44 rounded border border-dotted dark:border-dark-600 border-surface-border text-black dark:text-white"
             icon={faFilter}
             iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }}
             title={t('Filter by rate')}

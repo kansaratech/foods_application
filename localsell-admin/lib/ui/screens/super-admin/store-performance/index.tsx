@@ -124,7 +124,7 @@ export default function StorePerformanceScreen() {
           type="button"
           onClick={downloadCsv}
           disabled={!rows.length}
-          className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-[#1c5bc7] hover:text-[#1c5bc7] disabled:opacity-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
+          className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary disabled:opacity-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
         >
           <FontAwesomeIcon icon={faFileArrowDown} />
           {t('Download CSV')}

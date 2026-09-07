@@ -379,7 +379,7 @@ export default function VendorRegistrationScreen() {
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <nav className="mb-1 text-sm text-slate-500" aria-label="Breadcrumb">
-                    <Link href="/general/vendors" className="font-medium hover:text-[#1c5bc7] hover:underline">
+                    <Link href="/general/vendors" className="font-medium hover:text-primary hover:underline">
                       {t('Vendors')}
                     </Link>
                     <span className="mx-1.5">/</span>

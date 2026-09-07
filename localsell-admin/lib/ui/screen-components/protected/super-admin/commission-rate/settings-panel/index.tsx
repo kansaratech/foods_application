@@ -127,7 +127,7 @@ export default function CommissionSettingsPanel() {
           </label>
           <CustomButton
             type="button"
-            className="h-10 border border-[#1c5bc7] bg-[#1c5bc7] px-6 text-sm text-white"
+            className="h-10 border border-primary bg-primary px-6 text-sm text-white"
             label={t('Save')}
             loading={savingRates}
             onClick={saveRates}
@@ -165,7 +165,7 @@ export default function CommissionSettingsPanel() {
           </label>
           <CustomButton
             type="button"
-            className="h-10 border border-[#1c5bc7] bg-[#1c5bc7] px-6 text-sm text-white"
+            className="h-10 border border-primary bg-primary px-6 text-sm text-white"
             label={t('Save')}
             loading={savingEntity}
             onClick={saveEntity}
