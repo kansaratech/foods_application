@@ -65,7 +65,11 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     configuration: async () => {
       const config = await prisma.configuration.findFirst();
-      return config;
+      if (!config) return config;
+      // LocalSell is India-only: the currency is always INR / ₹ regardless of
+      // whatever legacy value ($ / USD / blank) sits in the row. Pin it here so
+      // no client can render the wrong symbol.
+      return { ...config, currency: 'INR', currencySymbol: '₹' };
     },
     fetchAllShopTypes: async () => {
       const data = await prisma.shopType.findMany();

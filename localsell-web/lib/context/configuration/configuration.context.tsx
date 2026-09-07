@@ -45,8 +45,9 @@ export const ConfigurationProvider = ({
   const SENTRY_DSN = configuration.webSentryUrl;
   const SKIP_EMAIL_VERIFICATION = configuration.skipEmailVerification;
   const SKIP_MOBILE_VERIFICATION = configuration.skipMobileVerification;
-  const CURRENCY = configuration.currency;
-  const CURRENCY_SYMBOL = configuration.currencySymbol;
+  // India-only — never render a foreign code/symbol or "INR"/"Rs"/"$" text.
+  const CURRENCY = "INR";
+  const CURRENCY_SYMBOL = "₹";
   const DELIVERY_RATE = configuration.deliveryRate;
   const COST_TYPE = configuration.costType;
   const TEST_OTP = configuration.testOtp;

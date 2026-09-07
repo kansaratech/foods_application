@@ -233,23 +233,19 @@ function Register(props) {
                         <ActivityIndicator size='small' color={currentTheme.white} />
                         :
                         <>
-                          <CountryPicker
-                            countryCode={countryCode}
-                            onSelect={(country) => onCountrySelect(country)}
-                            theme={themeContext.ThemeValue === 'Dark' ? DARK_THEME : undefined}
-                            countryCodes={['IN']}
-                            withAlphaFilter={false}
-                            withFilter={false}
-                            flatListProps={{
-                            ListEmptyComponent: (
-                              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-                                <TextDefault H4 textColor={currentTheme.newFontcolor}>
-                                  {t('noResults') || 'No Results Found'}
-                                </TextDefault>
-                              </View>
-                            )
-                          }}
-                          />
+                          {/* India-only: flag is shown but the picker is locked. */}
+                          <View pointerEvents="none">
+                            <CountryPicker
+                              countryCode={countryCode}
+                              onSelect={(country) => onCountrySelect(country)}
+                              theme={themeContext.ThemeValue === 'Dark' ? DARK_THEME : undefined}
+                              countryCodes={['IN']}
+                              withAlphaFilter={false}
+                              withFilter={false}
+                              withCountryNameButton={false}
+                              withCallingCode={false}
+                            />
+                          </View>
                           <TextDefault
                             textColor={currentTheme.newFontcolor}
                             style={{ marginTop: Platform.OS === 'android' ? 7 : 10 }}

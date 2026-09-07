@@ -20,8 +20,8 @@ export const ConfigurationContext = React.createContext<
 >({
   _id: "",
   riderAppSentryUrl: "",
-  currency: "",
-  currencySymbol: "",
+  currency: "INR",
+  currencySymbol: "₹",
 });
 
 export const ConfigurationProvider: React.FC<IConfigurationProviderProps> = ({
@@ -46,8 +46,8 @@ export const ConfigurationProvider: React.FC<IConfigurationProviderProps> = ({
           ? {
               _id: "",
               riderAppSentryUrl: "",
-              currency: "",
-              currencySymbol: "",
+              currency: "INR",
+              currencySymbol: "₹",
             }
           : data?.configuration;
 

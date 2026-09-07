@@ -61,7 +61,7 @@ export default function CustomNumberTextField({
           className={`${classes.inputNumber} z-0 h-11 w-full border border-inherit bg-white px-10 text-center focus:shadow-none focus:outline-none ${className}`}
           name={name}
           value={value}
-          prefix="$ "
+          prefix="₹ "
           useGrouping={false}
           onChange={(e: { value: number | null }) => {
             setFieldValue(name, e.value);

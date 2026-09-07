@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "cross-env NODE_OPTIONS='--inspect' next dev",
+    "dev:preview": "next dev -p 3007",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

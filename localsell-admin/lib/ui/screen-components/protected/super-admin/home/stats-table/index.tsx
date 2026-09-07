@@ -56,13 +56,13 @@ export default function StatesTable() {
         loading={loading}
         title={t('Orders')}
         data={dashboardOrdersByType ?? []}
-        amountConfig={{ format: 'number', currency: CURRENCY_CODE ?? 'USD' }}
+        amountConfig={{ format: 'number', currency: CURRENCY_CODE }}
       />
       <DashboardStatsTable
         loading={salesLoading}
         title={t('Sales')}
         data={dashboardSalesByType ?? []}
-        amountConfig={{ format: 'currency', currency: CURRENCY_CODE ?? 'USD' }}
+        amountConfig={{ format: 'currency', currency: CURRENCY_CODE }}
       />
     </div>
   );

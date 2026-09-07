@@ -1,17 +1,11 @@
 import { useEffect, useState } from 'react'
-import * as Localization from 'expo-localization'
 import countryCallingCodes from '../screens/PhoneNumber/countryCodes'
 
+// LocalSell operates in India only — the phone country is always IN (+91),
+// regardless of the device locale. (Kept as a function so the rest of the hook
+// is untouched; flip this back to locale detection if the product expands.)
 function getDeviceRegionCode() {
-  try {
-    const locales =
-      typeof Localization.getLocales === 'function'
-        ? Localization.getLocales()
-        : []
-    return locales?.[0]?.regionCode || Localization.region || 'IN'
-  } catch {
-    return 'IN'
-  }
+  return 'IN'
 }
 
 function buildCountryFromRegion(code) {
@@ -43,25 +37,10 @@ export const useCountryFromIP = () => {
   const [trigger, setTrigger] = useState(0)
 
   const detectCountry = () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const locales =
-        typeof Localization.getLocales === 'function'
-          ? Localization.getLocales()
-          : []
-      const code = locales?.[0]?.regionCode || Localization.region || null
-
-      if (code) {
-        setCurrentCountry(code)
-        setCountry(buildCountryFromRegion(code))
-      }
-    } catch (err) {
-      console.error('Error determining country from device locale:', err)
-      setError('Failed to determine country from device locale.')
-    } finally {
-      setIsLoading(false)
-    }
+    // India-only — always IN, never read the device locale.
+    setCurrentCountry('IN')
+    setCountry(buildCountryFromRegion('IN'))
+    setIsLoading(false)
   }
 
   useEffect(() => {

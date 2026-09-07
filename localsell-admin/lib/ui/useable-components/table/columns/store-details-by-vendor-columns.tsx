@@ -1,5 +1,6 @@
 // Interfaces and Types
 import { IVendorStoreDetails } from '@/lib/utils/interfaces';
+import { formatCurrency } from '@/lib/utils/methods';
 import { useTranslations } from 'next-intl';
 
 export const VENDOR_STORE_DETAILS_COLUMN = () => {
@@ -16,7 +17,7 @@ export const VENDOR_STORE_DETAILS_COLUMN = () => {
     {
       headerName: t('Total Sales'),
       propertyName: 'totalSales',
-      body: (store: IVendorStoreDetails) => `$${store.totalSales.toFixed(2)}`,
+      body: (store: IVendorStoreDetails) => formatCurrency(store.totalSales, true),
     },
     {
       headerName: t('Pickup Orders'),

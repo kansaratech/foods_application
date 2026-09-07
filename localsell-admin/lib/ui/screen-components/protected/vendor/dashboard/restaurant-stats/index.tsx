@@ -83,7 +83,7 @@ export default function RestaurantStats({
         icon={faShop}
         route=""
         loading={loading}
-        amountConfig={{ format: 'currency', currency: CURRENCY_CODE ?? 'USD' }}
+        amountConfig={{ format: 'currency', currency: CURRENCY_CODE }}
       />
 
       <StatsCard
