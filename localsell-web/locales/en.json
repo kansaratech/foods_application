@@ -464,6 +464,8 @@
   "email_associated_with_another_provider_message": "The email is associated with another provider",
   "whats_your_email_label": "What's your email",
   "well_check_if_you_have_an_account_message": "We'll check if you have an account",
+  "no_account_found_use_signup_message": "No account found for this email. Use the sign-up button below to create one.",
+  "no_account_found_create_or_google_message": "No account found for that email. Please create one or use Google sign-in.",
   "welcome_label": "Welcome",
   "sign_up_or_log_in_to_continue_message": "Sign up or log in to continue",
   "sign_in_with_google_label": "Sign In With Google",

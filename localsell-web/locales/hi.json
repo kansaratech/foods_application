@@ -454,6 +454,8 @@
   "email_associated_with_another_provider_message": "ईमेल किसी अन्य प्रदाता से जुड़ा हुआ है",
   "whats_your_email_label": "आपका ईमेल क्या है",
   "well_check_if_you_have_an_account_message": "हम जांचेंगे कि क्या आपके पास खाता है",
+  "no_account_found_use_signup_message": "इस ईमेल के लिए कोई खाता नहीं मिला। नीचे साइन-अप बटन से नया खाता बनाएं।",
+  "no_account_found_create_or_google_message": "इस ईमेल के लिए कोई खाता नहीं मिला। कृपया नया खाता बनाएं या Google साइन-इन का उपयोग करें।",
   "welcome_label": "स्वागत",
   "sign_up_or_log_in_to_continue_message": "जारी रखने के लिए साइन अप या लॉगिन करें",
   "sign_in_with_google_label": "गूगल के साथ साइन इन करें",

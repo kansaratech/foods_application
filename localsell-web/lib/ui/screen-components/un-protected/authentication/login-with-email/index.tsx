@@ -71,7 +71,7 @@ export default function LoginWithEmail({
     showToast({
       type: "info",
       title: t("sign_up_label"),
-      message: "No account found for that email. Please create one or use Google sign-in.",
+      message: t("no_account_found_create_or_google_message"),
     });
   };
 
@@ -106,18 +106,16 @@ export default function LoginWithEmail({
         </div>
 
         {/* Validation message */}
-        <div className="h-[20px]">
+        <div className="min-h-[20px]">
           {!isValid && (
             <p className="text-red-500 text-sm">
               {t("please_enter_valid_email_address_message")}
             </p>
           )}
-          {!isValid || accountNotFound ? null : null}
-          {accountNotFound && !isValid && null}
-          {accountNotFound && (
-            <div className="text-sm text-amber-600 dark:text-amber-400">
-              No account found for this email. Use the sign-up button below to create one.
-            </div>
+          {accountNotFound && isValid && (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              {t("no_account_found_use_signup_message")}
+            </p>
           )}
         </div>
 
