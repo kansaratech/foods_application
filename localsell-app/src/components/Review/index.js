@@ -13,6 +13,7 @@ import { useApolloClient, useMutation } from '@apollo/client'
 import { reviewOrder } from '../../apollo/mutations'
 import { useTranslation } from 'react-i18next'
 import CachedImage from '../CachedImage'
+import { FlashMessage } from '../../ui/FlashMessage/FlashMessage'
 
 const SCREEN_HEIGHT = Dimensions.get('screen').height
 const BASE_MODAL_HEIGHT = Math.min(Math.floor(SCREEN_HEIGHT * 0.38), 320)
@@ -24,55 +25,89 @@ const REVIEWORDER = gql`
   ${reviewOrder}
 `
 
-function Review({ onOverlayPress, onSubmitted, theme, orderId, rating }, ref) {
-
+function Review({ onOverlayPress, onSubmitted, theme, orderId, rating: initialRating }, ref) {
   const { t } = useTranslation()
 
-  const ratingRef = useRef()
   const contentRef = useRef(null)
   const [description, setDescription] = useState('')
-  const [mutate] = useMutation(REVIEWORDER, { variables: { order: orderId, description, rating: ratingRef.current }, onCompleted, onError })
- 
-  function onCompleted() {
-    setDescription('')
-    ref?.current?.close()
-    onSubmitted?.()
-  }
-  function onError(error) {
-    console.log(JSON.stringify(error))
-  }
-  const client = useApolloClient()
-  const [showSection, setShowSection] = useState(false)
-  const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState(initialRating || 0)
+  const [showSection, setShowSection] = useState((initialRating || 0) > 0)
+  const [loading, setLoading] = useState(false)
   const [order, setOrder] = useState()
+
+  const [mutate] = useMutation(REVIEWORDER, { onCompleted, onError })
+
+  // The modal is mounted once and reused for every order. Whenever it is
+  // targeted at a different order (or opened from a different tapped star),
+  // reset the local form state so it never shows the previous order's rating
+  // or review text.
+  useEffect(() => {
+    setRating(initialRating || 0)
+    setShowSection((initialRating || 0) > 0)
+    setDescription('')
+  }, [orderId, initialRating])
+
+  const client = useApolloClient()
+
   const isFeedbackVisible = showSection || rating > 0
-  const onSelectRating = (rating) => {
-    if (!showSection) { setShowSection(true) }
-    ratingRef.current = rating
+
+  const onSelectRating = (value) => {
+    setRating(value)
+    setShowSection(true)
   }
+
   const fetchOrder = async() => {
     const result = await client.query({ query: ORDER, variables: { id: orderId } })
     setOrder(result?.data?.order)
   }
+
   useEffect(() => {
     if (!orderId) return
     fetchOrder()
   }, [orderId])
 
-  const onSubmit = async () => {
-    if (loading) return; 
-    setLoading(true); 
-  
+  function onCompleted() {
+    setDescription('')
+    setRating(0)
+    setShowSection(false)
+    ref?.current?.close()
+    onSubmitted?.()
+  }
+
+  function onError(error) {
+    console.log(JSON.stringify(error))
+    const message =
+      error?.graphQLErrors?.[0]?.message ||
+      error?.networkError?.result?.errors?.[0]?.message ||
+      error?.message ||
+      t('errorOccured')
+    FlashMessage({ message })
+  }
+
+  // Just dismiss the modal (X / overlay) without treating it as a submission.
+  const handleClose = () => {
+    ref?.current?.close()
+    onOverlayPress?.()
+  }
+
+  const onSubmit = async() => {
+    if (loading) return
+    if (!(rating > 0)) {
+      FlashMessage({ message: t('addStarRating') })
+      return
+    }
+    setLoading(true)
     try {
       await mutate({
-        variables: { order: orderId, description, rating: ratingRef.current }
-      });
+        variables: { order: orderId, description, rating }
+      })
     } catch (error) {
-      console.error("Error submitting review:", error);
+      console.error('Error submitting review:', error)
     } finally {
-      setLoading(false); 
+      setLoading(false)
     }
-  };
+  }
+
   return (
     <Modalize
       snapPoint={SNAP_HEIGHT}
@@ -100,7 +135,7 @@ function Review({ onOverlayPress, onSubmitted, theme, orderId, rating }, ref) {
             <TextDefault bolder H3 textColor={theme.gray900}>
               {t('howWasOrder')}
             </TextDefault>
-            <TouchableOpacity onPress={onCompleted}>
+            <TouchableOpacity onPress={handleClose}>
               <CrossCirleIcon stroke={theme.newIconColor}/>
             </TouchableOpacity>
           </View>
@@ -133,12 +168,12 @@ function Review({ onOverlayPress, onSubmitted, theme, orderId, rating }, ref) {
               </View>
             </View>
             <View>
-              <CachedImage source={order?.restaurant?.image ? { uri: order?.restaurant?.image }: require('../../assets/images/food_placeholder.png') } style={styles.image}/>
+              <CachedImage source={order?.restaurant?.image ? { uri: order?.restaurant?.image } : require('../../assets/images/food_placeholder.png') } style={styles.image}/>
             </View>
           </View>
 
           <View style={styles.starRow}>
-            <StarRating numberOfStars={5} onSelect={onSelectRating} defaultRating={rating} theme={theme} />
+            <StarRating numberOfStars={5} onSelect={onSelectRating} value={rating} theme={theme} />
           </View>
 
           {isFeedbackVisible && (
@@ -181,21 +216,13 @@ function Review({ onOverlayPress, onSubmitted, theme, orderId, rating }, ref) {
   )
 }
 
-const StarRating = ({ numberOfStars = 5, onSelect, defaultRating=0, theme }) => {
+const StarRating = ({ numberOfStars = 5, onSelect, value = 0, theme }) => {
   const stars = Array.from({ length: numberOfStars }, (_, index) => index + 1)
-  const [selected, setSelected] = useState(defaultRating)
-  useEffect(()=>{
-    if(defaultRating) onSelect(defaultRating)
-  },[])
-  const onPress = index => {
-    onSelect(index)
-    setSelected(index)
-  }
   return (
     <View style={styles.starContainer(theme)}>
-      {stars.map(index => <TouchableWithoutFeedback key={`star-${index}`} onPress={() => onPress(index)}>
+      {stars.map(index => <TouchableWithoutFeedback key={`star-${index}`} onPress={() => onSelect(index)}>
         <View style={{ flex: 1 }}>
-          <StarIcon isFilled={index <= selected}/>
+          <StarIcon isFilled={index <= value}/>
         </View>
       </TouchableWithoutFeedback>)}
     </View>

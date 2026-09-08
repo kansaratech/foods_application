@@ -381,6 +381,7 @@ export const en = {
   howWasMealP: 'Was it nice or bad,Lets talk about it',
   RateYourOrder: 'Rate Your Order',
   yourExperience: 'Tell about your Experience',
+  addStarRating: 'Please add a star rating first',
   selectItems: 'Select Items',
   dontHaveAnyOrderYet:
     "You don't have any past order yet. Try one of our awesome restaurants and place your first order!",

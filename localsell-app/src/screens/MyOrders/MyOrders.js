@@ -16,6 +16,7 @@ import OrdersContext from '../../context/Orders'
 import { HeaderBackButton } from '@react-navigation/elements'
 import { useTranslation } from 'react-i18next'
 import ReviewModal from '../../components/Review'
+import { FlashMessage } from '../../ui/FlashMessage/FlashMessage'
 
 import useNetworkStatus from '../../utils/useNetworkStatus'
 import ErrorView from '../../components/ErrorView/ErrorView'
@@ -102,8 +103,11 @@ function MyOrders(props) {
     openReviewModal()
   }
 
+  // Stay on the Orders list after a review is submitted: the past-order card
+  // updates in place (Apollo writes the new rating into the normalized cache),
+  // so navigating away would only hide the change from the user.
   const handleReviewSubmitted = () => {
-    props?.navigation?.navigate('Discovery')
+    FlashMessage({ message: t('thankYou') })
   }
 
   const { isConnected: connect, setIsConnected: setConnect } = useNetworkStatus()
