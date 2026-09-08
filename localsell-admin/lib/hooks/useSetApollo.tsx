@@ -107,7 +107,10 @@ function hasExpiredAccessToken(error: unknown): boolean {
 
 function hasInvalidAccessToken(error: unknown): boolean {
   return (
-    hasAuthError(error, ['INVALID_TOKEN']) ||
+    // INVALID_TOKEN: signature/tokenVersion is dead — refresh can't help.
+    // UNAUTHENTICATED: the request reached the API with no token at all while
+    // the app still believed it was signed in — treat as a lost session.
+    hasAuthError(error, ['INVALID_TOKEN', 'UNAUTHENTICATED']) ||
     getGraphQLErrors(error).some(
       (graphQLError) =>
         (graphQLError.message ?? '').trim().toLowerCase() === 'invalid token'
