@@ -156,32 +156,47 @@ localsell-rider/google-services.json         localsell-rider/GoogleService-Info.
 - [ ] **F1** — Fill this in and paste it back:
 
 ```
-APPLE_TEAM_ID                  =
-MAPS_KEY_ANDROID               =
-MAPS_KEY_IOS                   =
-GOOGLE_WEB_CLIENT_ID           =
-GOOGLE_IOS_CLIENT_ID           =
-GOOGLE_IOS_REVERSED_CLIENT_ID  =
-ASC_APP_ID_CUSTOMER            =
-ASC_APP_ID_STORE               =
-ASC_APP_ID_RIDER               =
-FIREBASE_PROJECT_NUMBER        =
+APPLE_TEAM_ID                  = 4P8YMA54XH                                                              ✅
+APNS_KEY_ID                    = XN97C422B2   (AuthKey_XN97C422B2.p8 — vault only)                       ✅
+FIREBASE_PROJECT_NUMBER        = 399972178830                                                            ✅
+FIREBASE_PROJECT_ID            = localsell-bf57a                                                         ✅
+ASC_APP_ID_CUSTOMER            = 6809771171                                                              ✅
+ASC_APP_ID_STORE               = 6809771443                                                              ✅
+ASC_APP_ID_RIDER              = 6809771948                                                              ✅
+MAPS_KEY_ANDROID               = AIzaSyDItviVS9XVLpmFLa1X5CISRB6XGBRtdf8   (API-restricted; app-restr Ph3) ✅
+MAPS_KEY_IOS                   = AIzaSyAnD7kHqs0JACULJHL8C5V7P8vUGYXochs   (API + bundle-id restricted)   ✅
+GOOGLE_WEB_CLIENT_ID           = 399972178830-boo20gq9bp65tj3p7uc5jsopklj5khvp.apps.googleusercontent.com ✅
+GOOGLE_WEB_CLIENT_SECRET       = GOCSPX-… (vault only — API id-token verify, Phase 8)                     ✅
+GOOGLE_IOS_CLIENT_ID           = 399972178830-hrdsfr2hfiuoogmfol6fffkpd0b4r63f.apps.googleusercontent.com ✅
+GOOGLE_IOS_REVERSED_CLIENT_ID  = com.googleusercontent.apps.399972178830-hrdsfr2hfiuoogmfol6fffkpd0b4r63f ✅
+GOOGLE_ANDROID_CLIENT_ID       =   ⬜ Phase 3 (needs release keystore SHA-1)
 ```
 
-- [ ] **F2** — Confirm the 6 Firebase files are saved to the paths in Block C.
-      (Commit them, or tell me they're in place and I'll add them.)
+**Phase 2 status:**
 
-### Then Claude finishes Phase 2 (one pass)
+| Block | Status |
+|---|---|
+| A — Apple identifiers (App Group + 4 App IDs) + APNs key | ✅ done |
+| B — 3 App Store Connect app records | ✅ done |
+| C1–C6, C8 — 6 Firebase apps + configs in repo + project number | ✅ done |
+| C7 — upload `.p8` to Firebase Cloud Messaging (×3 iOS apps) | ✅ done |
+| D1–D6 — Maps keys ×2, OAuth consent, Web + iOS OAuth clients | ✅ done |
+| D7 — Android OAuth client | ⬜ Phase 3 (release SHA-1) |
+| **E — Play Console: 3 app shells** | ⬜ **YOU** — <https://play.google.com/console> |
 
-- writes `.env.production` in all 3 apps from F1
-- replaces `REPLACE_WITH_LOCALSELL_IOS_OAUTH_REVERSED` in `localsell-app/app.config.js`
-- replaces `REPLACE_WITH_LOCALSELL_ASC_APP_ID` in `localsell-app/src/components/Update/ForceUpdate.js`
-- `npx expo config --type prebuild` re-verify on all 3
-- commit `chore(apps): wire LocalSell services (Phase 2)`
-- Phase 3 kicks off (JDK 17 + Android SDK, 3 release keystores, first
-  `gradlew bundleRelease` per app) — and its SHA-1/SHA-256 go back into
-  Firebase (C1–C3), the Maps Android key (D2 restriction), and a new Android
-  OAuth client (D7).
+**Repo pass done (uncommitted):**
+- 6 Firebase config files replaced (`localsell-{app,store,rider}/google-services.json`
+  + `/android/app/google-services.json`, `.../GoogleService-Info.plist`)
+- `.env.production` written in all 3 apps (git-ignored)
+- `localsell-app/app.config.js` — real reversed iOS OAuth client id
+- `localsell-app/src/components/Update/ForceUpdate.js` — real App Store id `6809771171`
+- `npx expo config --type prebuild` re-verified clean on all 3 (with `.env.production` sourced)
+- next: commit `chore(apps): wire LocalSell services (Phase 2)`
+
+**Phase 3** then: JDK 17 + Android SDK, 3 release keystores, first
+`gradlew bundleRelease` per app — its SHA-1/SHA-256 go back into Firebase
+(C1–C3), the Maps Android key (D2 app-restriction), and a new Android OAuth
+client (D7).
 
 ---
 

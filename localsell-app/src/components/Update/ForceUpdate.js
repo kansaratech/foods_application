@@ -75,11 +75,9 @@ const ForceUpdate = () => {
 
   const handleUpdate = async () => {
     try {
-      // TODO(localsell): set the real App Store id once the App Store Connect app
-      // record exists — see APP_BUILD_PLAN.md §3.
       let storeUrl =
         Platform.OS === 'ios'
-          ? 'https://apps.apple.com/app/idREPLACE_WITH_LOCALSELL_ASC_APP_ID'
+          ? 'https://apps.apple.com/app/id6809771171'
           : 'https://play.google.com/store/apps/details?id=in.localsell.customer'
 
       await Linking.openURL(storeUrl)

@@ -14,10 +14,12 @@ module.exports = () => {
 
   const fallbackUrlTypes = [
     {
-      // TODO(localsell): real reversed iOS OAuth client id from the LocalSell
-      // Google Cloud project — see APP_BUILD_PLAN.md §3.
+      // Reversed iOS OAuth client id (Google Cloud project localsell, client
+      // "LocalSell Customer (iOS)"). `.env.production` overrides via
+      // EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID; this keeps prebuild working
+      // without env.
       CFBundleURLSchemes: [
-        'com.googleusercontent.apps.REPLACE_WITH_LOCALSELL_IOS_OAUTH_REVERSED'
+        'com.googleusercontent.apps.399972178830-hrdsfr2hfiuoogmfol6fffkpd0b4r63f'
       ]
     }
   ]

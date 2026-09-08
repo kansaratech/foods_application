@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "505610605704",
-    "project_id": "enatega-b7cd2",
-    "storage_bucket": "enatega-b7cd2.firebasestorage.app"
+    "project_number": "399972178830",
+    "project_id": "localsell-bf57a",
+    "storage_bucket": "localsell-bf57a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:505610605704:android:afcc7d7f2999c6cae6bb3d",
+        "mobilesdk_app_id": "1:399972178830:android:a5efb3e5627b87d208e2df",
         "android_client_info": {
-          "package_name": "com.enatega.multivendor"
+          "package_name": "in.localsell.customer"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDh11TdrC7Ux0kOo7AkipQNrwh3kUPpEzU"
+          "current_key": "AIzaSyCk_SytmbV1nCui3x0xu-SLyQfsn1Q-PYY"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:505610605704:android:813774e02c36eba1e6bb3d",
+        "mobilesdk_app_id": "1:399972178830:android:30e75b906fd5dbcb08e2df",
         "android_client_info": {
           "package_name": "in.localsell.store"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDh11TdrC7Ux0kOo7AkipQNrwh3kUPpEzU"
+          "current_key": "AIzaSyCk_SytmbV1nCui3x0xu-SLyQfsn1Q-PYY"
         }
       ],
       "services": {

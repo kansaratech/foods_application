@@ -161,13 +161,24 @@ All identifiers moved to `in.localsell.*`. Placeholder markers
 
 ---
 
-## 3. Phase 2 — wire the new services — ▶ IN PROGRESS
+## 3. Phase 2 — wire the new services — ▶ NEARLY DONE (2026-09-08)
 
 **Console step-by-step + the exact handoff list is in
-[`APP_CONSOLE_SETUP.md`](APP_CONSOLE_SETUP.md).** The summary below stays here
+[`APP_CONSOLE_SETUP.md`](APP_CONSOLE_SETUP.md); live status + collected values in
+[`PHASE2_CHECKLIST.md`](PHASE2_CHECKLIST.md).** The summary below stays here
 for the overview; do the clicking from that runbook.
 
 Real credentials from Phase 0 into the renamed repo.
+
+**Done:** 5 Apple identifiers + APNs key (`XN97C422B2`), Team ID `4P8YMA54XH`,
+3 ASC apps (customer `6809771171` / store `6809771443` / rider `6809771948`),
+Firebase project `localsell-bf57a` (#`399972178830`) with 6 app registrations,
+all 6 config files replaced in the repo, 2 Maps keys, OAuth consent + Web
+(`…boo20gq9…`) + iOS (`…hrdsfr2h…`) clients, `.env.production` ×3 written,
+`app.config.js` + `ForceUpdate.js` de-placeholdered, all 3 `expo config`
+re-verified. **Left:** upload the `.p8` in Firebase Cloud Messaging (×3 iOS
+apps); create the 3 Play Console app shells. Android OAuth client + all SHA-1
+restrictions are Phase 3.
 
 ### Firebase
 
