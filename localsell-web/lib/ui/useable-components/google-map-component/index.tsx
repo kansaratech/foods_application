@@ -54,9 +54,19 @@ const GoogleMapComponent = ({
   };
 
   // Callback when map is loaded
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMapInstance(map);
-  }, []);
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      setMapInstance(map);
+      // The map often mounts inside a dialog that is still animating in, so its
+      // container starts at 0×0 and Google renders a grey box. Nudge it once the
+      // dialog has settled.
+      setTimeout(() => {
+        window.google?.maps.event.trigger(map, "resize");
+        map.setCenter(center);
+      }, 250);
+    },
+    [center]
+  );
 
   // Cleanup when map is unmounted
   const onUnmount = useCallback(() => {
@@ -107,10 +117,10 @@ const GoogleMapComponent = ({
 
   return (
     <div className="map-container" style={{ position: "relative" }}>
-      {/* Google Map Component */}
-      {/* light mode map*/}
+      {/* One map, styled per theme. (Previously two maps were mounted with one
+          permanently `display:none` — a map created in a hidden container never
+          paints, which showed up as a blank map on mobile / in dark mode.) */}
       <GoogleMap
-        mapContainerClassName="block dark:hidden"
         mapContainerStyle={mapContainerStyle}
         center={center}
         zoom={zoom}
@@ -122,40 +132,17 @@ const GoogleMapComponent = ({
           streetViewControl: false,
           fullscreenControl: false,
           cameraControl: false,
-          styles: [
-            {
-              featureType: "all",
-              elementType: "all",
-              stylers: [
-                { saturation: -30 }, // Slight desaturation to match the grayscale look
-              ],
-            },
-          ],
-        }}
-      >
-        {/* Marker at the center position */}
-        <Marker position={center} />
-        {/* Circle with specified radius around the center */}
-        <Circle center={center} radius={circleRadius} options={circleOptions} />
-      </GoogleMap>
-
-      {/* dark mode Map */}
-
-      <GoogleMap
-        mapContainerClassName=" hidden dark:block"
-        mapContainerStyle={mapContainerStyle}
-        center={center}
-        zoom={zoom}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-        options={{
-          zoomControl: false, // Disable default zoom controls
-          mapTypeControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-          cameraControl: false,
-          styles: theme === "dark" ? darkMapStyle : null,
           disableDefaultUI: true,
+          styles:
+            theme === "dark"
+              ? darkMapStyle
+              : [
+                  {
+                    featureType: "all",
+                    elementType: "all",
+                    stylers: [{ saturation: -30 }],
+                  },
+                ],
         }}
       >
         {/* Marker at the center position */}

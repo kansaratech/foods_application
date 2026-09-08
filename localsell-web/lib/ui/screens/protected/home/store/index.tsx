@@ -2,13 +2,25 @@
 
 import useNearByRestaurantsPreview from "@/lib/hooks/useNearByRestaurantsPreview";
 import useGetCuisines from "@/lib/hooks/useGetCuisines";
+import useServiceability from "@/lib/hooks/useServiceability";
+import { useUserAddress } from "@/lib/context/address/address.context";
 import GenericListingComponent from "@/lib/ui/screen-components/protected/home/GenericListingComponent";
+import { AreaUnavailable } from "@/lib/ui/screen-components/protected/home";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 export default function StoreScreen() {
   const t = useTranslations();
   const limit = 10;
+
+  const { userAddress } = useUserAddress();
+  const {
+    hasLocation,
+    loading: serviceabilityLoading,
+    serviceable,
+    nearestArea,
+    nearestDistanceKm,
+  } = useServiceability();
 
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<any[]>([]);
@@ -70,7 +82,19 @@ export default function StoreScreen() {
   }, [fetchMore, hasMore, loading, loadMore]);
 
 
-  return ( 
+  // The visitor picked a location no active store delivers to — show the
+  // "not available yet" screen instead of an empty "No item found" list.
+  if (hasLocation && !serviceabilityLoading && serviceable === false) {
+    return (
+      <AreaUnavailable
+        areaLabel={userAddress?.deliveryAddress}
+        nearestArea={nearestArea}
+        nearestDistanceKm={nearestDistanceKm}
+      />
+    );
+  }
+
+  return (
     <GenericListingComponent
       queryData={queryData}
       headingTitle= {t('StoresPage.headingTitle')}

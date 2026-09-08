@@ -29,7 +29,6 @@ import {
 } from "@/lib/utils/assets/svg";
 
 // Components
-import CustomButton from "../button";
 import CustomLoader from "../custom-progress-indicator";
 import CustomDropdownComponent from "../custom-dropdown";
 
@@ -103,6 +102,9 @@ export default function UserAddressComponent(
   const [search, setSearch] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>("");
   const [isDragged, setIsDragged] = useState(false);
+  // set when the user taps "Current location" so we can show the resolved
+  // address in the panel instead of closing the dialog straight away.
+  const [pickedCurrentLocation, setPickedCurrentLocation] = useState(false);
   const [options, setOptions] = useState<IPlaceSelectedOption[]>([]);
   const [selectedPlaceObject, setSelectedPlaceObject] =
     useState<IPlaceSelectedOption | null>(null);
@@ -354,53 +356,60 @@ export default function UserAddressComponent(
     mutate({ variables: { addressInput } });
   };
 
-  // API Handlers
-  function onCompleted({ createAddress, editAddress }) {
-    const address_response: IUserAddress = (
-      createAddress || editAddress
-    )?.addresses.find((a: IUserAddress) => a.selected);
-
-    setUserAddress({
-      _id: address_response?._id,
-      label: selectedLocationType,
-      deliveryAddress: address_response.deliveryAddress,
-
-      location: {
-        coordinates: [
-          +(address_response.location?.coordinates[0] || "0"),
-          +(address_response.location?.coordinates[1] || "0"),
-        ],
-      },
-    });
-    setModifyingId(address_response?._id);
-    changeUserSelectedAddress({
-      variables: { id: address_response?._id },
-      onCompleted: () => {
-        const new_address = {
-          _id: address_response?._id,
-          label: selectedLocationType,
-          deliveryAddress: address_response.deliveryAddress,
-
-          location: {
-            coordinates: [
-              +(address_response.location?.coordinates[0] || "0"),
-              +(address_response.location?.coordinates[1] || "0"),
-            ] as [number, number],
-          },
-        };
-        setUserAddress(new_address);
-        onUseLocalStorage("delete", USER_CURRENT_LOCATION_LS_KEY);
-        setModifyingId("");
-        onHide();
-      },
-    });
+  // Reset the form panels and close the dialog. Called on save, cancel and
+  // after a successful address selection so the modal never gets stuck open.
+  const resetAndClose = () => {
+    setModifyingId("");
     setIndex([0, 0]);
+    setSelectedLocationType("House");
+    setInputValue("");
+    setSelectedCity(null);
+    setIsDragged(false);
+    setPickedCurrentLocation(false);
     onHide();
+  };
+
+  // API Handlers
+  function onCompleted(data: any) {
+    const addresses: IUserAddress[] =
+      (data?.createAddress || data?.editAddress)?.addresses ?? [];
+    // the address we just saved: the one flagged selected, else the newest
+    // (freshly created addresses are appended to the list)
+    const address_response: IUserAddress | undefined =
+      addresses.find((a) => a.selected) ?? addresses[addresses.length - 1];
+
     showToast({
       title: t("Address_Saved_toast_title"),
       type: "success",
       message: t("Your_address_has_been_saved_successfully"),
     });
+
+    if (!address_response?._id) {
+      // nothing usable came back — still close so the user isn't trapped
+      resetAndClose();
+      return;
+    }
+
+    const new_address = {
+      _id: address_response._id,
+      label: selectedLocationType,
+      deliveryAddress: address_response.deliveryAddress,
+      location: {
+        coordinates: [
+          +(address_response.location?.coordinates?.[0] || "0"),
+          +(address_response.location?.coordinates?.[1] || "0"),
+        ] as [number, number],
+      },
+    };
+    setUserAddress(new_address);
+    onUseLocalStorage("delete", USER_CURRENT_LOCATION_LS_KEY);
+
+    // Mark it selected in the background; close the modal immediately either way.
+    changeUserSelectedAddress({
+      variables: { id: address_response._id },
+      onCompleted: () => setUserAddress(new_address),
+    });
+    resetAndClose();
   }
 
   function onError() {
@@ -433,9 +442,10 @@ export default function UserAddressComponent(
 
       <button
         className="w-[90%] h-fit bg-primary-color mb-2 text-white py-2 space-x-2 rtl:space-x-reverse  rounded-full text-base lg:text-[14px]"
+        disabled={isLocationFetching}
         onClick={() => {
+          setPickedCurrentLocation(true);
           getCurrentLocation(onSetUserLocation);
-          onHide();
         }}
       >
         <FontAwesomeIcon
@@ -445,106 +455,128 @@ export default function UserAddressComponent(
         <span>{t("LoginForSavedAddresses.currentlocation")}</span>
       </button>
 
+      {pickedCurrentLocation && (
+        <div className="w-[90%] rounded-xl border border-primary-color bg-primary-light dark:bg-gray-800 p-3">
+          {isLocationFetching ? (
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+              {t("LoginForSavedAddresses.currentlocation")}…
+            </p>
+          ) : userAddress?.deliveryAddress ? (
+            <>
+              <div className="flex items-start gap-x-2">
+                <FontAwesomeIcon icon={faMapMarker} className="mt-1 text-primary-color" />
+                <div className="flex flex-col">
+                  <span className="font-inter font-medium text-sm text-secondary-color">
+                    {t("LoginForSavedAddresses.currentlocation")}
+                  </span>
+                  <span className="font-inter text-xs text-gray-500 dark:text-gray-300">
+                    {userAddress.deliveryAddress}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-3 flex gap-x-2">
+                <button
+                  className="flex-1 h-fit bg-primary-color text-white py-2 rounded-full text-sm"
+                  onClick={() => {
+                    setPickedCurrentLocation(false);
+                    onHide();
+                  }}
+                >
+                  {t("confirm")}
+                </button>
+                <button
+                  className="flex-1 h-fit bg-transparent text-secondary-color border border-primary-color py-2 rounded-full text-sm"
+                  onClick={() => {
+                    // carry the resolved address into the "add address" form
+                    setInputValue(userAddress?.deliveryAddress || "");
+                    setPickedCurrentLocation(false);
+                    paginate(1);
+                  }}
+                >
+                  {t("Save_address")}
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {t("something_went_wrong_please_try_again")}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="w-full flex flex-col items-center">
         {loadingProfile ? (
           <div className="w-full flex items-center justify-center m-4">
             <CustomLoader />
           </div>
         ) : (
-          profile?.addresses.map((address, index) => (
-            <div
-              key={index}
-              className="w-full mb-4 flex items-center justify-between"
-            >
-              <div className="w-full flex items-center gap-x-2">
-                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-full">
-                  {address?.label === ADDRESS_TYPES.OFFICE && (
-                    <OfficeSvg
-                      height={18}
-                      darkColor={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : "#ffffff"
-                      }
-                      color={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : undefined
-                      }
-                    />
-                  )}
-                  {address?.label === ADDRESS_TYPES.HOUSE && (
-                    <HomeSvg
-                      height={18}
-                      darkColor={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : "#ffffff"
-                      }
-                      color={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : undefined
-                      }
-                    />
-                  )}
-                  {address?.label === ADDRESS_TYPES.APARTMENT && (
-                    <AppartmentSvg
-                      height={18}
-                      darkColor={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : "#ffffff"
-                      }
-                      color={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : undefined
-                      }
-                    />
-                  )}
-                  {address?.label === ADDRESS_TYPES.OTHER && (
-                    <OtherSvg
-                      height={18}
-                      darkColor={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : "#ffffff"
-                      }
-                      color={
-                        address.selected && !hasCurrentLocation
-                          ? "var(--primary-color)"
-                          : undefined
-                      }
-                    />
-                  )}
+          profile?.addresses.map((address, index) => {
+            const isActive = !!address.selected && !hasCurrentLocation;
+            const isBusy = modifiyingId === address._id && loading;
+            const iconColor = isActive ? "var(--primary-color)" : undefined;
+            const iconDarkColor = isActive ? "var(--primary-color)" : "#ffffff";
+            return (
+              <button
+                type="button"
+                key={address._id || index}
+                onClick={() => {
+                  if (!isActive) onHandleSelectAddress(address);
+                }}
+                aria-pressed={isActive}
+                aria-label={t("choose_Address_label") + " " + address.label}
+                className={`w-full mb-3 flex items-center justify-between gap-x-2 rounded-xl border p-2 text-left transition-colors ${
+                  isActive
+                    ? "border-primary-color bg-primary-light dark:bg-gray-800"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
+                }`}
+              >
+                <div className="w-full flex items-center gap-x-2">
+                  <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-full">
+                    {address?.label === ADDRESS_TYPES.OFFICE && (
+                      <OfficeSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                    )}
+                    {address?.label === ADDRESS_TYPES.HOUSE && (
+                      <HomeSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                    )}
+                    {address?.label === ADDRESS_TYPES.APARTMENT && (
+                      <AppartmentSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                    )}
+                    {address?.label === ADDRESS_TYPES.OTHER && (
+                      <OtherSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                    )}
+                  </div>
+                  <div className="w-full flex flex-col gap-y-[2px]">
+                    <span
+                      className={`font-inter font-medium text-sm leading-5 tracking-normal ${isActive ? "text-secondary-color" : "text-gray-500"}`}
+                    >
+                      {address.label}
+                    </span>
+                    <span
+                      className={`font-inter font-normal text-xs leading-4 tracking-normal ${isActive ? "text-secondary-color" : "text-gray-400"}`}
+                    >
+                      {address.deliveryAddress}
+                    </span>
+                  </div>
                 </div>
-                <div className="w-full flex flex-col gap-y-[2px]">
-                  <span
-                    className={`font-inter font-medium text-sm leading-5 tracking-normal ${address.selected && !hasCurrentLocation ? "text-secondary-color" : "text-gray-500"}`}
-                  >
-                    {address.label}
-                  </span>
-                  <span
-                    className={`font-inter font-normal text-xs leading-4 tracking-normal ${address.selected && !hasCurrentLocation ? "text-secondary-color" : "text-gray-400"}`}
-                  >
-                    {address.deliveryAddress}
-                  </span>
-                </div>
-              </div>
-              {(!address.selected || hasCurrentLocation) && (
-                <div>
-                  <CustomButton
-                    label={t("choose_Address_label")}
-                    rounded
-                    loading={modifiyingId === address._id && loading}
-                    className="border p-2 pl-4 pr-4 border-gray-300 text-secondary-color font-medium"
-                    onClick={() => onHandleSelectAddress(address)}
-                  />
-                </div>
-              )}
-            </div>
-          ))
+                <span
+                  aria-hidden="true"
+                  className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+                    isActive
+                      ? "border-primary-color"
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}
+                >
+                  {isBusy ? (
+                    <FontAwesomeIcon icon={faSpinner} spin className="text-[10px] text-primary-color" />
+                  ) : isActive ? (
+                    <span className="h-2.5 w-2.5 rounded-full bg-primary-color" />
+                  ) : null}
+                </span>
+              </button>
+            );
+          })
         )}
 
         <button
@@ -1003,6 +1035,7 @@ export default function UserAddressComponent(
       visible={visible}
       onHide={() => {
         setIndex([0, 0]);
+        setPickedCurrentLocation(false);
         onHide();
       }}
       className={`w-[90%] lg:w-1/3 bg-white m-4  `}

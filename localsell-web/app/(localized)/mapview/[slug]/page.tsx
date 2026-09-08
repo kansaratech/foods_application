@@ -90,7 +90,7 @@ const MapView: FC<MapViewPageProps> = ({ params }) => {
                         </div>
                     </div>
 
-                    <div className="flex-[0.65] xl:flex-[0.75] h-screen overflow-y-auto hidden md:flex">
+                    <div className="flex-[0.65] xl:flex-[0.75] h-screen overflow-y-auto">
                         <Map
                             apiKey={GOOGLE_MAPS_KEY}
                             data={enhancedData}
