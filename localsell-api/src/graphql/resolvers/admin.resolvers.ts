@@ -5,7 +5,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../services/auth.service';
-import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
+import { forbiddenError, invalidTokenError, notFoundError, tokenExpiredError, userInputError } from '../../utils/errors';
 import { normalizeIndianPhone } from '../../utils/phone';
 import { recordAudit } from '../../utils/audit';
 import { purgeRestaurant } from './restaurant.resolvers';
@@ -94,6 +94,11 @@ function generateInvitePassword(): string {
 export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     ownerSession: async (_parent, _args, context) => {
+      // A present-but-stale token must report *why* so the client's error link
+      // can refresh (expired) or clear the session (invalid) on boot, instead of
+      // silently treating it as "logged out".
+      if (context.authError === 'expired') throw tokenExpiredError();
+      if (context.authError === 'invalid') throw invalidTokenError();
       if (!context.user || !OWNER_ROLES.includes(context.user.userType as (typeof OWNER_ROLES)[number])) {
         return null;
       }
@@ -222,6 +227,11 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!payload) throw userInputError('Invalid or expired refresh token');
       const user = await prisma.user.findUnique({ where: { id: payload.userId } });
       if (!user) throw userInputError('User not found');
+      // A password change bumps tokenVersion to kill every existing session — the
+      // refresh token must not be a loophole that keeps minting access tokens.
+      if (user.tokenVersion !== payload.tokenVersion) {
+        throw userInputError('Invalid or expired refresh token');
+      }
       return ownerAuthPayload(user);
     },
 

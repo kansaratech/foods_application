@@ -1,9 +1,16 @@
 import { User, UserType } from '@prisma/client';
 import { GraphQLContext } from '../context';
-import { authenticationError, forbiddenError } from '../utils/errors';
+import {
+  authenticationError,
+  forbiddenError,
+  invalidTokenError,
+  tokenExpiredError,
+} from '../utils/errors';
 
 export function requireAuth(context: GraphQLContext): User {
   if (!context.user) {
+    if (context.authError === 'expired') throw tokenExpiredError();
+    if (context.authError === 'invalid') throw invalidTokenError();
     throw authenticationError();
   }
   return context.user;

@@ -32,11 +32,22 @@ export function signRefreshToken(payload: TokenPayload): { token: string; expire
   return { token, expiresAt };
 }
 
-export function verifyAccessToken(token: string): TokenPayload | null {
+export type AccessTokenResult =
+  | { ok: true; payload: TokenPayload }
+  | { ok: false; reason: 'expired' | 'invalid' };
+
+export function verifyAccessToken(token: string): AccessTokenResult {
   try {
-    return jwt.verify(token, env.jwtSecret) as TokenPayload;
-  } catch {
-    return null;
+    const payload = jwt.verify(token, env.jwtSecret) as TokenPayload;
+    return { ok: true, payload };
+  } catch (error) {
+    // A well-formed token whose `exp` has passed is recoverable (the client can
+    // re-login or refresh); anything else (bad signature, malformed, wrong
+    // audience) is not. The distinct codes let each frontend react correctly.
+    if (error instanceof jwt.TokenExpiredError) {
+      return { ok: false, reason: 'expired' };
+    }
+    return { ok: false, reason: 'invalid' };
   }
 }
 
