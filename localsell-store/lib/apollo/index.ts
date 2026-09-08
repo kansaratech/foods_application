@@ -21,6 +21,7 @@ import { DefinitionNode, FragmentDefinitionNode } from "graphql";
 import { Subscription } from "zen-observable-ts";
 import { STORE_TOKEN } from "../utils/constants";
 import PublicAccessTokenService from "../services/public-access-token.service";
+import { isJwtExpired } from "../utils/methods/jwt";
 
 let isAuthRedirecting = false;
 
@@ -58,7 +59,11 @@ const setupApollo = () => {
       lazy: true,
       timeout: 30000,
       connectionParams: async () => {
-        const token = await SecureStore.getItemAsync(STORE_TOKEN);
+        let token = await SecureStore.getItemAsync(STORE_TOKEN);
+        if (token && isJwtExpired(token)) {
+          void handleInvalidSession();
+          token = null;
+        }
         const nonce = PublicAccessTokenService.getNonce();
         let publicToken: string | null = null;
         try {
@@ -79,7 +84,11 @@ const setupApollo = () => {
   const request = async (operation: Operation) => {
     const skipPublicAuth =
       operation.getContext().headers?.["x-skip-public-auth"];
-    const token = await SecureStore.getItemAsync(STORE_TOKEN);
+    let token = await SecureStore.getItemAsync(STORE_TOKEN);
+    if (token && isJwtExpired(token)) {
+      void handleInvalidSession();
+      token = null;
+    }
     const nonce = PublicAccessTokenService.getNonce();
 
     const headers: Record<string, string> = {
