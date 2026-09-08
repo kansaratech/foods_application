@@ -79,6 +79,7 @@ export const RIDER_PROFILE = gql`
       accountNumber
       assigned
       available
+      approvalStatus
       _id
       zone {
         _id

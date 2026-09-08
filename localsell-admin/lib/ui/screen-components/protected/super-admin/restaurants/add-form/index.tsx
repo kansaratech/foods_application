@@ -32,6 +32,7 @@ import RestaurantLocation from './restaurant-location';
 import VendorDetails from './vendor-details';
 import RestaurantTiming from './restaurant-timing';
 import StepperHeader from '@/lib/ui/useable-components/stepper-header';
+import ReauthGate from '@/lib/ui/useable-components/reauth-gate';
 import { useTranslations } from 'next-intl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
@@ -134,6 +135,11 @@ export default function RestaurantsForm() {
 
   const exitWizard = () => router.push(resolvedVendorId ? '/general/vendors' : '/general/stores');
 
+  // Editing an existing store is a sensitive change — make the admin re-enter
+  // their password once before the edit wizard becomes usable.
+  const [reauthed, setReauthed] = useState(false);
+  const needsReauth = isEditMode && !reauthed;
+
   // Handlers
   const onHandleStepChange = (order: number) => {
     // order 0 is reached two ways: "Back" from the first visible step, or
@@ -223,7 +229,10 @@ export default function RestaurantsForm() {
           <StepperHeader steps={steps} current={currentStepVisual} />
         </div>
 
-        <div ref={stepperRef} className="p-4 sm:p-6 md:p-8">
+        <div
+          ref={stepperRef}
+          className={`p-4 sm:p-6 md:p-8 ${needsReauth ? 'pointer-events-none select-none opacity-40' : ''}`}
+        >
           <Stepper linear headerPosition="bottom" activeStep={activeIndex}>
             <StepperPanel header="Vendor">
               <VendorDetails
@@ -247,6 +256,14 @@ export default function RestaurantsForm() {
           </Stepper>
         </div>
       </div>
+
+      <ReauthGate
+        open={needsReauth}
+        title={t('Confirm your password')}
+        description={t('For security, re-enter your password to edit this store.')}
+        onVerified={() => setReauthed(true)}
+        onCancel={exitWizard}
+      />
 
       {showDiscardConfirm && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">

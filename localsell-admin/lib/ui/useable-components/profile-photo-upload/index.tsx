@@ -83,7 +83,7 @@ export default function ProfilePhotoUpload({
       <CustomButton
         type="button"
         className="mt-3 h-9 w-full border border-gray-300 bg-white px-4 text-sm text-slate-700 dark:border-dark-600 dark:bg-dark-950 dark:text-white"
-        label={value ? t('Replace photo') : t('Upload photo')}
+        label={t('Upload photo')}
         loading={loading}
         onClick={() => inputRef.current?.click()}
       />

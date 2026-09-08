@@ -14,6 +14,7 @@ import {
 
 // Hooks
 import { useApptheme } from "@/lib/context/global/theme.context";
+import { useUserContext } from "@/lib/context/global/user.context";
 import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,6 +27,7 @@ const RootLayout = () => {
   const { t } = useTranslation();
   const { appTheme } = useApptheme();
   const { token, isAuthReady } = useContext(AuthContext);
+  const { dataProfile, loadingProfile } = useUserContext();
 
   useEffect(() => {
     if (pathName.startsWith("/wallet/success")) {
@@ -39,6 +41,14 @@ const RootLayout = () => {
 
   if (!token) {
     return <Redirect href="/login" />;
+  }
+
+  // A rider who isn't approved yet (or was rejected) can't use the app — the
+  // API refuses to let them go online or take orders anyway. Wait for the
+  // profile to load so we don't bounce an approved rider on a slow network.
+  const approval = dataProfile?.approvalStatus;
+  if (!loadingProfile && approval && approval !== "APPROVED") {
+    return <Redirect href="/pending-approval" />;
   }
 
   return (

@@ -105,7 +105,7 @@ export default function DocumentUploadCard({
               onClick={() => inputRef.current?.click()}
               className="text-xs font-medium text-primary underline"
             >
-              {t('Replace')}
+              {t('Upload')}
             </button>
             <button type="button" onClick={onRemove} className="text-xs font-medium text-slate-400 underline">
               {t('Remove')}

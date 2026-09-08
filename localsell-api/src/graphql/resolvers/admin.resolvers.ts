@@ -3,7 +3,7 @@ import { randomBytes } from 'crypto';
 import { User } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
-import { requireRole } from '../../middleware/auth';
+import { requireAuth, requireRole } from '../../middleware/auth';
 import { comparePassword, hashPassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../services/auth.service';
 import { forbiddenError, invalidTokenError, notFoundError, tokenExpiredError, userInputError } from '../../utils/errors';
 import { normalizeIndianPhone } from '../../utils/phone';
@@ -205,6 +205,14 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
   },
 
   Mutation: {
+    // Re-authenticate the current user for a sensitive action (e.g. editing a
+    // store). Returns true only when the supplied password matches.
+    verifyMyPassword: async (_parent, args: { password: string }, context) => {
+      const user = requireAuth(context);
+      if (!user.password) return false;
+      return comparePassword(args.password ?? '', user.password);
+    },
+
     markWebNotificationsAsRead: async (_parent, _args, context) => {
       const user = requireRole(context, ['ADMIN', 'STAFF', 'VENDOR']);
       await prisma.webNotification.updateMany({ where: { userId: user.id, read: false }, data: { read: true } });
@@ -318,6 +326,9 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const businessTypeId = await resolveBusinessTypeId(input.businessType);
       const gstRegistered = input.isGstRegistered ?? false;
+      const phone = normalizeIndianPhone(input.phoneNumber);
+      // Friendly conflict message instead of a raw `User_phone_key` Prisma error.
+      await assertPhoneFree(phone, input._id);
 
       const data = {
         email,
@@ -325,7 +336,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         image: input.image,
         firstName: input.firstName,
         lastName: input.lastName,
-        phone: input.phoneNumber,
+        phone,
         businessName: input.businessName,
         businessTypeId,
         isGstRegistered: gstRegistered,

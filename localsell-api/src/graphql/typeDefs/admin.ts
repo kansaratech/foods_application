@@ -146,6 +146,8 @@ export const adminTypeDefs = /* GraphQL */ `
   extend type Mutation {
     ownerLogin(email: String!, password: String!): OwnerAuthPayload!
     refreshToken(refreshToken: String!, userType: String!): OwnerAuthPayload!
+    "Re-check the signed-in user's password to authorise a sensitive change."
+    verifyMyPassword(password: String!): Boolean!
 
     markWebNotificationsAsRead: [WebNotification!]!
 

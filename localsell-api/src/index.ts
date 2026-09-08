@@ -17,6 +17,7 @@ import { typeDefs } from './graphql/typeDefs';
 import { resolvers } from './graphql/resolvers';
 import { buildHttpContext, buildWsContext, GraphQLContext } from './context';
 import { idAwareDefaultFieldResolver } from './utils/defaultFieldResolver';
+import { formatError } from './utils/formatError';
 import { startSchedulers } from './scheduler';
 
 // WebSocket sub-protocols. The frontends in this repo are split across both:
@@ -80,6 +81,7 @@ async function main() {
 
   const apolloServer = new ApolloServer<GraphQLContext>({
     schema,
+    formatError,
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       {

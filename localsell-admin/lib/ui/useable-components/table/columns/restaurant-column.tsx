@@ -134,9 +134,11 @@ export const RESTAURANT_TABLE_COLUMNS = ({
             <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
               {restaurant.name}
             </p>
-            <p className="max-w-[13rem] truncate text-[11px] text-slate-400">
-              ID: {restaurant.unique_restaurant_id || restaurant._id}
-            </p>
+            {restaurant.shopType && (
+              <p className="max-w-[13rem] truncate text-[11px] text-slate-400">
+                {restaurant.shopType}
+              </p>
+            )}
           </div>
         </div>
       ),

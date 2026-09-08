@@ -231,7 +231,8 @@ export const RIDER_TABLE_COLUMNS = ({
       headerName: t('Approval'),
       propertyName: 'approvalStatus',
       body: (rider: IRiderResponse) => {
-        const s = rider.approvalStatus || 'APPROVED';
+        // Unknown / missing approval is "pending", never a silent "approved".
+        const s = rider.approvalStatus || 'PENDING';
         const cls: Record<string, string> = {
           APPROVED: 'bg-green-100 text-green-700',
           PENDING: 'bg-amber-100 text-amber-700',

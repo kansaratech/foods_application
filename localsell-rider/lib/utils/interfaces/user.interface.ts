@@ -50,6 +50,7 @@ export interface IRiderProfile {
   _id: string;
   accountNumber: string | null;
   available: boolean;
+  approvalStatus?: "PENDING" | "APPROVED" | "REJECTED" | null;
   currentWalletAmount: number;
   email: string | null;
   name: string;
