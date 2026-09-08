@@ -2,12 +2,18 @@
 'use client';
 
 // Components
+import { usePathname } from 'next/navigation';
 import AppTopbar from '@/lib/ui/screen-components/unprotected/layout/app-bar';
 
 // Interface & Types
 import { IProvider } from '@/lib/utils/interfaces';
 
 const Layout = ({ children }: IProvider) => {
+  const pathname = usePathname();
+  if (pathname?.replace(/\/$/, '').endsWith('/authentication/login')) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="layout-main">
       <div className="layout-top-container">

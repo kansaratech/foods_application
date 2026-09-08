@@ -1,0 +1,363 @@
+.page {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 44.4% 55.6%;
+  font-family: Inter, Arial, sans-serif;
+  color: #101b43;
+  background: #eff8ff;
+}
+.brandPanel {
+  position: relative;
+  overflow: hidden;
+  padding: 32px 8.2%;
+  background: radial-gradient(ellipse at 25% 45%, #0a3261, #06254b);
+  color: #f8faff;
+  display: flex;
+  flex-direction: column;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 34px;
+  font-weight: 750;
+  letter-spacing: -1.5px;
+}
+.brand > i {
+  color: #0085ff;
+  font-size: 40px;
+}
+.eyebrow {
+  color: #9dc7f4;
+  letter-spacing: 3.5px;
+  font-size: 15px;
+  margin-top: 8px;
+}
+.intro {
+  position: relative;
+  z-index: 1;
+  margin-top: 70px;
+}
+.intro h1 {
+  font-size: clamp(30px, 3.25vw, 46px);
+  line-height: 1.08;
+  letter-spacing: -0.6px;
+  font-weight: 750;
+  margin: 0 0 17px;
+}
+.intro > p {
+  color: #adcaed;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+}
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 35px 0 65px;
+  display: grid;
+  gap: 28px;
+}
+.features li {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 15px;
+}
+.features i {
+  font-size: 30px;
+  color: #a9cdef;
+  width: 32px;
+}
+.help {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: auto;
+  font-size: 12px;
+}
+.help > i {
+  font-size: 23px;
+  color: #a9cdef;
+  margin-right: 9px;
+}
+.page button {
+  cursor: pointer;
+  font-family: inherit;
+}
+.help button {
+  color: #00a1ff;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.network {
+  position: absolute;
+  right: 2%;
+  top: 0;
+  height: 100%;
+  width: 42%;
+  color: #86b8eb;
+  pointer-events: none;
+}
+.network svg {
+  width: 100%;
+  height: 100%;
+  fill: #0b72d8;
+}
+.network path {
+  fill: none;
+  stroke: #0d64ae;
+  stroke-width: 0.8;
+}
+.network > div {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12px;
+}
+.network i {
+  display: grid;
+  place-items: center;
+  width: 55px;
+  height: 55px;
+  border: 1px solid #0874c6;
+  border-radius: 13px;
+  background: #082c54e8;
+  font-size: 28px;
+}
+.orders {
+  top: 10%;
+  right: 31%;
+}
+.stores {
+  top: 28%;
+  right: 8%;
+}
+.riders {
+  top: 57%;
+  right: 29%;
+}
+.analytics {
+  top: 78%;
+  right: 35%;
+}
+.formPanel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 70px 32px 22px;
+  background: radial-gradient(ellipse at center, #e4f3ff 0%, #f0f9ff 85%);
+}
+.card {
+  background: #ffffffed;
+  width: 100%;
+  max-width: 426px;
+  padding: 25px 27px 30px;
+  border-radius: 10px;
+  box-shadow: 0 7px 25px #174c8810;
+}
+.shield {
+  display: grid;
+  place-items: center;
+  width: 75px;
+  height: 74px;
+  margin: 0 auto 14px;
+  background: #deefff;
+  color: #0753f4;
+  border-radius: 17px;
+  font-size: 39px;
+}
+.card h2 {
+  text-align: center;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  margin: 0 0 6px;
+}
+.subtitle {
+  text-align: center;
+  color: #536c9f;
+  font-size: 14px;
+  margin: 0 0 26px;
+}
+.form label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+.inputWrap {
+  display: flex;
+  position: relative;
+  align-items: center;
+}
+.inputWrap > i {
+  position: absolute;
+  left: 16px;
+  color: #536ea5;
+  pointer-events: none;
+}
+.inputWrap input {
+  width: 100%;
+  height: 43px;
+  border: 1px solid #d4dfef;
+  border-radius: 6px;
+  padding: 0 44px 0 48px;
+  background: #fff;
+  color: #101b43;
+  font-size: 13px;
+}
+.inputWrap input::placeholder {
+  color: #7187b4;
+}
+.page :focus-visible {
+  outline: 3px solid #73b9ff;
+  outline-offset: 3px;
+}
+.inputWrap input[aria-invalid='true'] {
+  border-color: #c53030;
+}
+.passwordLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 20px;
+}
+.passwordLabel button,
+.footer button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #0067ff;
+  font-size: 13px;
+}
+.reveal {
+  position: absolute;
+  right: 4px;
+  height: 36px;
+  width: 36px;
+  border: 0;
+  background: transparent;
+  color: #506ba2;
+}
+.submit {
+  width: 100%;
+  height: 46px;
+  background: #0069f4;
+  border: 0;
+  border-radius: 6px;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 28px;
+}
+.submit:hover {
+  background: #005cda;
+}
+.submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.security {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  color: #536ea5;
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 22px 0 0;
+}
+.security i {
+  font-size: 15px;
+}
+.footer {
+  text-align: center;
+  margin-top: 31px;
+  color: #617aab;
+  font-size: 11px;
+}
+.footer p {
+  margin: 9px 0 0;
+}
+.error {
+  font-size: 12px;
+  color: #b42318;
+  margin: 5px 0 0;
+}
+.support {
+  color: #395b86;
+  background: #eef7ff;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 16px;
+}
+@media (min-width: 1500px) {
+  .brandPanel {
+    padding-left: 10%;
+  }
+  .intro {
+    margin-top: 100px;
+  }
+}
+@media (max-width: 1050px) {
+  .network {
+    opacity: 0.35;
+    right: -8%;
+  }
+  .intro h1 {
+    font-size: 34px;
+  }
+  .features li {
+    gap: 14px;
+    font-size: 13px;
+  }
+  .desktopBreak {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+  .brandPanel {
+    padding: 24px;
+  }
+  .brand {
+    font-size: 29px;
+  }
+  .eyebrow {
+    font-size: 11px;
+  }
+  .intro,
+  .network,
+  .help {
+    display: none;
+  }
+  .formPanel {
+    padding: 32px 20px 24px;
+  }
+  .card {
+    padding: 25px 22px;
+  }
+  .subtitle {
+    line-height: 1.5;
+  }
+  .security {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .submit {
+    transition: background 0.15s;
+  }
+}
