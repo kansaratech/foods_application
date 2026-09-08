@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FaApple } from "react-icons/fa";
-import { SiGoogleplay } from "react-icons/si";
+import { useTranslations } from "next-intl";
 import { FiArrowUpRight, FiMapPin } from "react-icons/fi";
+
+import InstallAppButton from "@/lib/ui/pwa/InstallAppButton";
 
 const footerGroups = [
   {
@@ -37,6 +38,7 @@ const footerGroups = [
 
 const AppFooter = () => {
   const pathname = usePathname();
+  const t = useTranslations();
   const needsMobileNavSpace =
     pathname?.endsWith("/restaurants") ||
     pathname?.endsWith("/discovery") ||
@@ -60,15 +62,9 @@ const AppFooter = () => {
               </Link>
             </div>
 
-            <div className="flex flex-wrap gap-2.5">
-              <a href="https://apps.apple.com/pk/app/enatega-multivendor/id1526488093" target="_blank" rel="noreferrer" className="flex items-center gap-2.5 rounded-xl border border-white/20 bg-white/[0.08] px-3.5 py-2.5 backdrop-blur-sm transition hover:bg-white/15">
-                <FaApple aria-hidden="true" className="h-6 w-6" />
-                <span><span className="block text-[9px] leading-none text-white/55">Download on the</span><span className="mt-1 block text-xs font-semibold leading-none">App Store</span></span>
-              </a>
-              <a href="https://play.google.com/store/apps/details?id=com.enatega.multivendor" target="_blank" rel="noreferrer" className="flex items-center gap-2.5 rounded-xl border border-white/20 bg-white/[0.08] px-3.5 py-2.5 backdrop-blur-sm transition hover:bg-white/15">
-                <SiGoogleplay aria-hidden="true" className="h-5 w-5 text-[#8fbdf0]" />
-                <span><span className="block text-[9px] leading-none text-white/55">Get it on</span><span className="mt-1 block text-xs font-semibold leading-none">Google Play</span></span>
-              </a>
+            <div className="flex flex-col gap-2.5">
+              <InstallAppButton variant="footer" />
+              <p className="text-[11px] leading-none text-white/40">{t("pwa.footerCaption")}</p>
             </div>
           </div>
         </section>

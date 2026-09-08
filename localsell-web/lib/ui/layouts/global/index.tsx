@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import AppHeader from "@/lib/ui/screen-components/un-protected/layout/app-header";
 import AppFooter from "@/lib/ui/screen-components/un-protected/layout/app-footer";
+import InstallPrompt from "@/lib/ui/pwa/InstallPrompt";
 
 // Interface & Types
 import { IProvider } from "@/lib/utils/interfaces";
@@ -54,6 +55,7 @@ const AppLayout = ({ children }: IProvider) => {
         </div>
       </div>
       <AppFooter />
+      <InstallPrompt />
       <AuthModal
         handleModalToggle={handleModalToggle}
         isAuthModalVisible={isAuthModalVisible}

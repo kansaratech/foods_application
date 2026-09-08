@@ -6,8 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@apollo/client";
 
+import { useTranslations } from "next-intl";
+
 import useLocation from "@/lib/hooks/useLocation";
+import usePwaInstall from "@/lib/hooks/usePwaInstall";
 import useSetUserCurrentLocation from "@/lib/hooks/useSetUserCurrentLocation";
+import InstallAppButton from "@/lib/ui/pwa/InstallAppButton";
 import { ACTIVE_RESTAURANT_COUNT } from "@/lib/api/graphql/queries/restaurants";
 import { MARKETPLACE_LOCATION } from "@/lib/utils/constants";
 import { useUserAddress } from "@/lib/context/address/address.context";
@@ -21,7 +25,9 @@ const TABS = [
 
 export default function Start() {
   const router = useRouter();
+  const t = useTranslations();
   const [area, setArea] = useState("");
+  const { isInstallable } = usePwaInstall();
   const { getCurrentLocation } = useLocation();
   const { onSetUserLocation } = useSetUserCurrentLocation();
   const { userAddress } = useUserAddress();
@@ -121,6 +127,15 @@ export default function Start() {
               </Link>
             ))}
           </div>
+
+          {isInstallable && (
+            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <InstallAppButton variant="ghost" hideWhenUnavailable />
+              <span className="text-xs text-slate-500 dark:text-gray-400">
+                {t("pwa.heroHint")}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Right — orbit */}
