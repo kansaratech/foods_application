@@ -96,9 +96,15 @@ export const serviceabilityResolvers: IResolvers<unknown, GraphQLContext> = {
     joinWaitlist: async (_parent, args: JoinWaitlistArgs) => {
       const { email, phone, latitude, longitude, areaLabel, source } = args.input;
       const cleanEmail = email?.trim() || null;
-      const cleanPhone = phone?.trim() || null;
+      const cleanPhone = phone?.trim().replace(/[\s-]/g, '') || null;
       if (!cleanEmail && !cleanPhone) {
         throw userInputError('An email or phone number is required to join the waitlist.');
+      }
+      if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(cleanEmail)) {
+        throw userInputError('Please provide a valid email address.');
+      }
+      if (cleanPhone && !/^(?:\+?91)?[6-9]\d{9}$/.test(cleanPhone)) {
+        throw userInputError('Please provide a valid 10-digit mobile number.');
       }
 
       // De-dupe: same contact + roughly the same spot in the last 30 days is a no-op.

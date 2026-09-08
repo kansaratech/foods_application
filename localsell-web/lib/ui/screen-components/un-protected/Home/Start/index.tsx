@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,9 +8,8 @@ import { useQuery } from "@apollo/client";
 
 import { useTranslations } from "next-intl";
 
-import useLocation from "@/lib/hooks/useLocation";
+import useLocationSearch from "@/lib/hooks/useLocationSearch";
 import usePwaInstall from "@/lib/hooks/usePwaInstall";
-import useSetUserCurrentLocation from "@/lib/hooks/useSetUserCurrentLocation";
 import InstallAppButton from "@/lib/ui/pwa/InstallAppButton";
 import { ACTIVE_RESTAURANT_COUNT } from "@/lib/api/graphql/queries/restaurants";
 import { MARKETPLACE_LOCATION } from "@/lib/utils/constants";
@@ -28,10 +27,9 @@ export default function Start() {
   const t = useTranslations();
   const [area, setArea] = useState("");
   const { isInstallable } = usePwaInstall();
-  const { getCurrentLocation } = useLocation();
-  const { onSetUserLocation } = useSetUserCurrentLocation();
+  const { detectCurrentLocation, locating, error: locationError } =
+    useLocationSearch();
   const { userAddress } = useUserAddress();
-  const hasRequestedLocation = useRef(false);
   const userLongitude = Number(userAddress?.location?.coordinates[0]);
   const userLatitude = Number(userAddress?.location?.coordinates[1]);
   const hasUserLocation = Number.isFinite(userLatitude) && Number.isFinite(userLongitude);
@@ -46,18 +44,20 @@ export default function Start() {
   });
   const storeCount: number | undefined = data?.activeRestaurantCount;
 
-  useEffect(() => {
-    if (hasRequestedLocation.current) return;
-    hasRequestedLocation.current = true;
-    getCurrentLocation(onSetUserLocation);
-  }, [getCurrentLocation, onSetUserLocation]);
+  // The app header already asks for the browser location once on first visit —
+  // don't fire a second prompt (and a second re-render) from here.
 
-  const useCurrentLocation = () => {
-    getCurrentLocation(onSetUserLocation);
-    router.push("/discovery");
+  const useCurrentLocation = async () => {
+    const ok = await detectCurrentLocation();
+    if (ok) router.push("/discovery");
   };
 
-  const showStores = () => router.push("/discovery");
+  // "Browse stores" — take the typed area to search, otherwise straight to the
+  // store list. Either way we land on the ordering flow, never a location page.
+  const showStores = () => {
+    const query = area.trim();
+    router.push(query ? `/search/${encodeURIComponent(query)}` : "/discovery");
+  };
 
   return (
     <section className="overflow-hidden bg-white dark:bg-gray-900">
@@ -99,9 +99,10 @@ export default function Start() {
             <button
               type="button"
               onClick={useCurrentLocation}
-              className="shrink-0 px-2 text-sm font-bold text-[#16293f] transition hover:text-[#1c5bc7] dark:text-blue-300"
+              disabled={locating}
+              className="shrink-0 px-2 text-sm font-bold text-[#16293f] transition hover:text-[#1c5bc7] disabled:opacity-60 dark:text-blue-300"
             >
-              Current location
+              {locating ? "Locating…" : "Current location"}
             </button>
             <button
               type="submit"
@@ -110,6 +111,11 @@ export default function Start() {
               Browse stores <span aria-hidden="true">→</span>
             </button>
           </form>
+          {locationError && (
+            <p className="mt-2 text-sm text-amber-700 dark:text-amber-500">
+              {locationError}
+            </p>
+          )}
 
           <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2 border-b border-slate-200 pb-1 text-sm font-bold dark:border-gray-700">
             {TABS.map((tab, i) => (

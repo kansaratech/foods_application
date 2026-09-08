@@ -1080,18 +1080,18 @@ export default function OrderCheckoutScreen() {
             </h2>
 
             {/* <!-- Delivery Details --> */}
-            <div className="bg-white dark:bg-gray-800 px-4 pt-4 pb-2 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
+            <div className="bg-white dark:bg-gray-800 px-4 pt-4 pb-3 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <div className="flex items-start">
                   {deliveryType === "Pickup" ? (
                     <FontAwesomeIcon
                       icon={faStore}
-                      className="mr-2 rtl:ml-2 text-gray-900 dark:text-gray-100"
+                      className="mr-2 mt-0.5 rtl:ml-2 text-gray-900 dark:text-gray-100"
                     />
                   ) : (
                     <FontAwesomeIcon
                       icon={faBicycle}
-                      className="mr-2 rtl:ml-2 text-gray-900 dark:text-gray-100"
+                      className="mr-2 mt-0.5 rtl:ml-2 text-gray-900 dark:text-gray-100"
                     />
                   )}
 
@@ -1105,11 +1105,29 @@ export default function OrderCheckoutScreen() {
                     <span className="font-normal">
                       {t("in_10_20_min_label")}{" "}
                     </span>
-                    <span className="font-semibold">
-                      {userAddress?.deliveryAddress}
-                    </span>
+                    {deliveryType !== "Pickup" && (
+                      <span className="font-semibold">
+                        {userAddress?.deliveryAddress || (
+                          <span className="font-normal italic text-gray-500 dark:text-gray-400">
+                            {t("checkout_no_address_selected")}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </p>
                 </div>
+
+                {deliveryType !== "Pickup" && (
+                  <button
+                    type="button"
+                    onClick={() => setIsUserAddressModalOpen(true)}
+                    className="shrink-0 rounded-full border border-primary-color px-3 py-1 text-xs font-semibold text-primary-color transition hover:bg-primary-color/5"
+                  >
+                    {userAddress?.deliveryAddress
+                      ? t("checkout_change_address")
+                      : t("checkout_add_address")}
+                  </button>
+                )}
               </div>
             </div>
 

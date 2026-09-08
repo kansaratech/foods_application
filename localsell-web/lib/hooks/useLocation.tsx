@@ -33,6 +33,21 @@ export default function useLocation() {
   }, [SERVER_URL]);
 
   const getCurrentLocation = useCallback((callback?: LocationCallback): void => {
+    // Geolocation is only exposed on secure origins and in browsers that
+    // implement it — bail with a clear reason instead of throwing.
+    if (
+      typeof navigator === "undefined" ||
+      !navigator.geolocation ||
+      (typeof window !== "undefined" && !window.isSecureContext)
+    ) {
+      callback?.(
+        typeof window !== "undefined" && !window.isSecureContext
+          ? "Location is only available on secure (https) pages. Please search for your address instead."
+          : "This browser can't share your location. Please search for your address instead.",
+      );
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -56,7 +71,13 @@ export default function useLocation() {
         }
       },
       (error) => {
-        callback && callback(error.message);
+        const message =
+          error.code === error.PERMISSION_DENIED
+            ? "Location permission is blocked. Allow it in your browser's site settings, or search for your address."
+            : error.code === error.TIMEOUT
+              ? "Getting your location took too long. Try again, or search for your address."
+              : "Couldn't determine your location. Please search for your address instead.";
+        callback && callback(message);
       },
       {
         enableHighAccuracy: true,

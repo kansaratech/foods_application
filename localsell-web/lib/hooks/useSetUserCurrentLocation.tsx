@@ -22,83 +22,79 @@ export default function useSetUserCurrentLocation() {
 
   const onSetUserLocation: LocationNameSpace.LocationCallback = async (
     error,
-    currrent_location
+    current_location,
   ) => {
+    setIsLocationFetching(true);
     try {
-      setIsLocationFetching(true);
-      if (error) {
-        setIsLocationFetching(false);
-        showToast({
-          type: "info",
-          title: "Ensure Current location for delivery",
-          message: ``,
-        });
-        return;
-      }
-      if (!currrent_location) {
-        setIsLocationFetching(false);
-        showToast({
-          type: "info",
-          title: "Ensure Current location for delivery",
-          message: `ABCCCC`,
-        });
-        return;
-      }
-
-      // Fetch the address using the geocoding hook
-      const { formattedAddress } = await getAddress(
-        currrent_location.latitude,
-        currrent_location.longitude
-      );
-
-      let address = formattedAddress || "Unknown Address";
-
-      // if (address.length > 21) {
-      //   address = address.substring(0, 21) + "...";
-      // }
-
+      // Browser refused / couldn't provide a position — surface the real reason.
       if (error) {
         showToast({
           type: "error",
-          title: "Current Location",
-          message: `Error fetching current location - ${error}`,
+          title: "Current location",
+          message:
+            typeof error === "string"
+              ? error
+              : "Couldn't get your current location. Please search for your address instead.",
         });
-        // navigation.navigate("SelectLocation");
-        setIsLocationFetching(false);
-      } else {
-        setIsLocationFetching(false);
-        onUseLocalStorage(
-          "save",
-          USER_CURRENT_LOCATION_LS_KEY,
-          JSON.stringify({
-            label: "Home",
-            location: {
-              coordinates: [
-                currrent_location.longitude,
-                currrent_location.latitude,
-              ],
-            },
-            _id: "",
-
-            deliveryAddress: address,
-          })
-        );
-        setUserAddress({
-          label: "Home",
-          location: {
-            coordinates: [
-              currrent_location.longitude,
-              currrent_location.latitude,
-            ],
-          },
-          _id: "",
-
-          deliveryAddress: address,
-        });
+        return;
       }
+
+      if (!current_location) {
+        showToast({
+          type: "error",
+          title: "Current location",
+          message:
+            "Couldn't get your current location. Please search for your address instead.",
+        });
+        return;
+      }
+
+      // Reverse-geocode for a readable label; coordinates are still usable if
+      // that lookup fails.
+      let address = current_location.deliveryAddress || "";
+      try {
+        const { formattedAddress } = await getAddress(
+          current_location.latitude,
+          current_location.longitude,
+        );
+        if (formattedAddress) address = formattedAddress;
+      } catch {
+        /* keep whatever label we already have */
+      }
+      if (!address) {
+        address = `${current_location.latitude.toFixed(
+          4,
+        )}, ${current_location.longitude.toFixed(4)}`;
+      }
+
+      const resolved = {
+        label: "Home",
+        _id: "",
+        deliveryAddress: address,
+        location: {
+          coordinates: [
+            current_location.longitude,
+            current_location.latitude,
+          ] as [number, number],
+        },
+      };
+
+      onUseLocalStorage(
+        "save",
+        USER_CURRENT_LOCATION_LS_KEY,
+        JSON.stringify(resolved),
+      );
+      setUserAddress(resolved);
     } catch (fetchError) {
+      console.error("Error resolving current location", fetchError);
+      showToast({
+        type: "error",
+        title: "Current location",
+        message:
+          "Something went wrong getting your location. Please search for your address instead.",
+      });
+    } finally {
       setIsLocationFetching(false);
-      console.error("Error fetching address using Google Maps API");
     }
   };
 

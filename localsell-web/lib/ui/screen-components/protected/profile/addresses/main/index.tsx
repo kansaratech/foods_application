@@ -23,6 +23,7 @@ import { IUserAddress } from "@/lib/utils/interfaces";
 import { GET_USER_PROFILE } from "@/lib/api/graphql";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 export default function AddressesMain() {
   // states
@@ -153,7 +154,7 @@ export default function AddressesMain() {
         ))}
         {!addresses.length && <EmptyAddress />}
 
-        <div className="flex justify-center mt-16">
+        <div className="flex flex-col items-center gap-4 mt-16">
           <CustomIconButton
             title={t('Add_new_address_title')}
             iconColor="black"
@@ -164,6 +165,14 @@ export default function AddressesMain() {
               setIsUserAddressModalOpen(true);
             }}
           />
+          {addresses.length > 0 && (
+            <Link
+              href="/discovery"
+              className="rounded-full border border-primary-color px-6 py-2 text-sm font-semibold text-primary-color transition hover:bg-primary-color/5"
+            >
+              {t("start_ordering_label")}
+            </Link>
+          )}
         </div>
       </div>
 

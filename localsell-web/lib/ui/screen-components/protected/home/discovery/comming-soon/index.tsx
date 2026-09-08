@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { JOIN_WAITLIST } from "@/lib/api/graphql/mutations";
 import { OPEN_LOCATION_PICKER_EVENT } from "@/lib/utils/constants";
 import { useUserAddress } from "@/lib/context/address/address.context";
+import { isValidEmail } from "@/lib/utils/methods/validation";
 
 interface IAreaUnavailableProps {
   areaLabel?: string | null;
@@ -16,7 +17,8 @@ interface IAreaUnavailableProps {
 
 const MAROON = "#16293f";
 const ORANGE = "#1c5bc7";
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// 10-digit Indian mobile, optionally with the +91 / 91 prefix.
+const INDIAN_MOBILE_RE = /^(?:\+?91)?[6-9]\d{9}$/;
 
 export default function AreaUnavailable({
   areaLabel,
@@ -37,7 +39,8 @@ export default function AreaUnavailable({
 
   const latitude = Number(userAddress?.location?.coordinates?.[1]);
   const longitude = Number(userAddress?.location?.coordinates?.[0]);
-  const emailValid = EMAIL_RE.test(email.trim());
+  const emailValid = isValidEmail(email);
+  const phoneValid = INDIAN_MOBILE_RE.test(phone.replace(/[\s-]/g, ""));
 
   const place =
     areaLabel?.trim() ||
@@ -56,12 +59,12 @@ export default function AreaUnavailable({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
-    if (!emailValid || loading) return;
+    if (!emailValid || !phoneValid || loading) return;
     joinWaitlist({
       variables: {
         input: {
           email: email.trim(),
-          phone: phone.trim() || null,
+          phone: phone.replace(/[\s-]/g, ""),
           latitude,
           longitude,
           areaLabel: place,
@@ -175,14 +178,22 @@ export default function AreaUnavailable({
                 )}
                 <input
                   type="tel"
+                  inputMode="numeric"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  onBlur={() => setTouched(true)}
                   placeholder={t("area_na_phone")}
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[#16293f] dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                  aria-invalid={touched && !phoneValid}
                 />
+                {touched && !phoneValid && (
+                  <span className="-mt-1 text-xs font-medium text-red-600">
+                    {t("area_na_phone_invalid")}
+                  </span>
+                )}
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !emailValid || !phoneValid}
                   className="mt-1 rounded-xl px-5 py-3 text-sm font-bold text-white transition hover:brightness-95 disabled:opacity-60"
                   style={{ background: ORANGE }}
                 >
