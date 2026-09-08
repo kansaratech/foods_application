@@ -27,6 +27,7 @@ import { getSecureItem, removeSecureItem } from "../services/secure-storage";
 import { IRestaurantLocation } from "../utils/interfaces";
 import { calculateDistance } from "../utils/methods/custom-functions";
 import PublicAccessTokenService from "../services/public-access-token.service";
+import { isJwtExpired } from "../utils/methods/jwt";
 
 let isAuthRedirecting = false;
 
@@ -136,7 +137,11 @@ const setupApollo = () => {
       reconnect: true,
       lazy: true,
       connectionParams: async () => {
-        const token = await getSecureItem(RIDER_TOKEN);
+        let token = await getSecureItem(RIDER_TOKEN);
+        if (token && isJwtExpired(token)) {
+          void handleInvalidSession();
+          token = null;
+        }
         const nonce = PublicAccessTokenService.getNonce();
         let publicToken: string | null = null;
 
@@ -166,7 +171,13 @@ const setupApollo = () => {
   const request = async (operation: Operation) => {
     const skipPublicAuth =
       operation.getContext().headers?.["x-skip-public-auth"];
-    const token = await getSecureItem(RIDER_TOKEN);
+    let token = await getSecureItem(RIDER_TOKEN);
+    // Don't even send a token we can already see is expired — bounce to login now
+    // rather than after a failed "Accept order" tap.
+    if (token && isJwtExpired(token)) {
+      void handleInvalidSession();
+      token = null;
+    }
     const nonce = PublicAccessTokenService.getNonce();
 
     // Get platform-specific information for fingerprinting
@@ -229,38 +240,19 @@ const setupApollo = () => {
       }
     } catch { /* ignore */ }
 
-    const hasInvalidSession = (graphQLErrors || []).some(
-      (graphQLError) =>
-        graphQLError?.extensions?.code === "TOKEN_EXPIRED" ||
-        graphQLError?.extensions?.code === "INVALID_TOKEN",
-    );
+    const hasInvalidSession =
+      (graphQLErrors || []).some((graphQLError) =>
+        ["TOKEN_EXPIRED", "INVALID_TOKEN", "UNAUTHENTICATED"].includes(
+          (graphQLError?.extensions?.code as string) ?? "",
+        ),
+      ) ||
+      (networkError &&
+        "statusCode" in networkError &&
+        networkError.statusCode === 401);
 
     if (hasInvalidSession) {
       void handleInvalidSession();
       return;
-    }
-
-    if (graphQLErrors) {
-      graphQLErrors.forEach(({ message }) => {
-        // IMPORTANT: Only remove user token for actual user auth failures
-        // Do NOT remove token for public auth failures (bop-auth related)
-        const isPublicAuthError =
-          message.toLowerCase().includes("fingerprint mismatch") ||
-          message.toLowerCase().includes("token expired") ||
-          message.toLowerCase().includes("invalid token") ||
-          message.toLowerCase().includes("token missing");
-
-        // Only remove rider token if it's a user auth error (not public auth error)
-        if (
-          !isPublicAuthError &&
-          (message.toLowerCase().includes("unauthenticate") ||
-           message.toLowerCase().includes("unauthorize"))
-        ) {
-          removeSecureItem(RIDER_TOKEN)
-            .then(() => {})
-            .catch(() => {});
-        }
-      });
     }
     if (networkError && __DEV__) {
       console.warn("Network error while processing GraphQL request");
