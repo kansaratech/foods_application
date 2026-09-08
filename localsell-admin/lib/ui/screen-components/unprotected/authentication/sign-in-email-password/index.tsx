@@ -263,7 +263,7 @@ export default function LoginEmailPasswordMain() {
                   type="submit"
                   disabled={loading || isSubmitting}
                 >
-                  {loading || isSubmitting ? 'Signing in?' : 'Sign in securely'}
+                  {loading || isSubmitting ? 'Signing in…' : 'Sign in securely'}
                 </button>
               </Form>
             )}
@@ -271,7 +271,7 @@ export default function LoginEmailPasswordMain() {
           {helpOpen && (
             <p className={styles.support} role="status">
               For account access or a password reset, contact your
-              organisation?s platform administrator.
+              organisation&rsquo;s platform administrator.
             </p>
           )}
           <p className={styles.security}>
@@ -283,7 +283,7 @@ export default function LoginEmailPasswordMain() {
           <button type="button" onClick={() => setHelpOpen(!helpOpen)}>
             Contact Support
           </button>
-          <p>? {new Date().getFullYear()} Localsell</p>
+          <p>&copy; {new Date().getFullYear()} Localsell</p>
         </footer>
       </section>
     </main>

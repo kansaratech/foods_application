@@ -8,7 +8,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { GoogleMap, Polygon, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Marker, Polygon, Polyline } from '@react-google-maps/api';
 import parse from 'autosuggest-highlight/parse';
 import { throttle } from '@/lib/utils/methods';
 
@@ -123,6 +123,25 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
     }
   };
 
+  // Reverse-geocode a dropped/dragged pin so the address field reflects it.
+  const reverseGeocodePoint = (point: { lat: number; lng: number }) => {
+    if (!window.google) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ location: point }, (results) => {
+      if (results && results[0]) {
+        setInputValue(results[0].formatted_address);
+        setSearch('');
+      }
+    });
+  };
+
+  const setPointFromMap = (point: { lat: number; lng: number }) => {
+    setPath([point]);
+    setCenter(point);
+    setLastSelectedLocation(point);
+    reverseGeocodePoint(point);
+  };
+
   const onHandlerAutoCompleteSelectionChange = (
     event: AutoCompleteSelectEvent
   ) => {
@@ -175,8 +194,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
       setPath((current) => [...current, nextPoint]);
       return;
     }
-    setPath([nextPoint]);
-    setCenter(nextPoint);
+    setPointFromMap(nextPoint);
   };
 
   const onSetCenterAndPolygon = () => {
@@ -447,6 +465,19 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
               
               
             >
+              {deliveryZoneType === 'point' && path.length >= 1 && (
+                <Marker
+                  position={path[0]}
+                  draggable
+                  onDragEnd={(e) => {
+                    if (!e.latLng) return;
+                    setPointFromMap({
+                      lat: e.latLng.lat(),
+                      lng: e.latLng.lng(),
+                    });
+                  }}
+                />
+              )}
               {isDrawing && path.length > 1 && (
                 <Polyline
                   path={path}

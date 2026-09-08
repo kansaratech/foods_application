@@ -227,7 +227,7 @@ export default function ZoneAddForm({
                       <div className="p-4 sm:p-6">
                         <div className="mb-3">
                           <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('Service area')}</h2>
-                          <p className="mt-1 text-sm text-slate-500">{t('Drag the polygon points on the map to fine-tune the boundary')}</p>
+                          <p className="mt-1 text-sm text-slate-500">{t('Search an address, click the map to drop a pin, or drag the polygon points to fine-tune the boundary')}</p>
                         </div>
                         {isLoaded && (
                           <CustomGoogleMapsLocationZoneBounds
