@@ -3,6 +3,7 @@
 import { RESET_PASSWORD_WITH_TOKEN } from "@/lib/api/graphql";
 import CustomButton from "@/lib/ui/useable-components/button";
 import CustomPasswordTextField from "@/lib/ui/useable-components/password-input-field";
+import { isStrongPassword } from "@/lib/utils/methods/validation";
 import { useMutation } from "@apollo/client";
 import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,8 +32,8 @@ export default function ResetPasswordPage() {
   }, [email, token, router]);
 
   const handleSubmit = async () => {
-    if (!password || password.length < 6) {
-      setErrorMessage(t("please_enter_valid_password_message"));
+    if (!isStrongPassword(password)) {
+      setErrorMessage(t("password_not_strong_enough_message"));
       return;
     }
 

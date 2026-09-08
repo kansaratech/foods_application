@@ -6,10 +6,11 @@ const PhoneNumberInput = () => {
   return (
     <div>
       <PhoneInput
-      // LocalSell is India-only for now.
+      // LocalSell is India-only — lock the country and the +91 dial code.
       country={"in"}
       onlyCountries={["in"]}
       countryCodeEditable={false}
+      disableDropdown={true}
       value={field.value}
       onChange={(value) => helpers.setValue(value)}
       inputProps={{

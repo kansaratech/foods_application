@@ -14,6 +14,9 @@ import useToast from "@/lib/hooks/useToast";
 import useUser from "@/lib/hooks/useUser";
 import { useTranslations } from "next-intl";
 
+// Validation
+import { isValidEmail } from "@/lib/utils/methods/validation";
+
 export default function SaveEmailAddress({
   handleChangePanel,
 }: ISaveEmailAddressProps) {
@@ -26,16 +29,17 @@ export default function SaveEmailAddress({
   // Handlers
   const handleSubmit = async () => {
     try {
-      if (!user?.email) {
+      const email = (user?.email ?? "").trim();
+      if (!isValidEmail(email)) {
         showToast({
           type: "error",
           title: t("Error"),
-          message: t("please_enter_valid_email_address_message "),
+          message: t("please_enter_valid_email_address_message"),
         });
         return;
       }
       if (!profile?.emailIsVerified) {
-        await sendOtpToEmailAddress(user?.email);
+        await sendOtpToEmailAddress(email);
         handleChangePanel(3);
         return;
       } else{

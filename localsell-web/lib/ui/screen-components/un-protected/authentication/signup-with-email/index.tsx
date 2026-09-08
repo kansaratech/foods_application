@@ -24,6 +24,9 @@ import { ApolloError } from "@apollo/client";
 import { useEffect, useState } from "react";
 import useUser from "@/lib/hooks/useUser";
 
+// Validation
+import { isValidEmail, isStrongPassword } from "@/lib/utils/methods/validation";
+
 export default function SignUpWithEmail({
   handleChangePanel,
   formData,
@@ -44,7 +47,8 @@ export default function SignUpWithEmail({
     checkEmailExists,
   } = useAuth();
   const { showToast } = useToast();
-  const { SKIP_EMAIL_VERIFICATION, SKIP_MOBILE_VERIFICATION } = useConfig();
+  const { SKIP_EMAIL_VERIFICATION, SKIP_MOBILE_VERIFICATION, IS_GOOGLE_LOGIN_ENABLED } =
+    useConfig();
   const [isValid, setIsValid] = useState(true);
   const [showPhoneConflictModal, setShowPhoneConflictModal] = useState(false);
   const { fetchProfile } = useUser();
@@ -53,12 +57,8 @@ export default function SignUpWithEmail({
     fetchProfile();
   }, []);
 
-  // Validation
-  const validatePassword = (password: string) => {
-    const strongPasswordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$/;
-    return strongPasswordRegex.test(password);
-  };
+  // Validation — shared rules so web + partner forms agree.
+  const validatePassword = (password: string) => isStrongPassword(password);
 
   // Handlers
   const handleSubmit = async (isPhoneExists = false) => {
@@ -87,10 +87,10 @@ export default function SignUpWithEmail({
         return;
       }
       // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      setIsValid(emailRegex.test(formData.email || ""));
+      const emailIsValid = isValidEmail(formData.email);
+      setIsValid(emailIsValid);
 
-      if (!emailRegex.test(formData.email || "")) {
+      if (!emailIsValid) {
         showToast({
           type: "error",
           title: t("create_user_label"),
@@ -188,7 +188,9 @@ export default function SignUpWithEmail({
         type: "error",
         title: t("register_label"),
         message:
+          error?.graphQLErrors?.[0]?.message ||
           error?.cause?.message ||
+          error?.message ||
           t("an_error_occurred_while_registering_message"),
       });
     } finally {
@@ -255,14 +257,16 @@ export default function SignUpWithEmail({
           placeholder={t("password_label")}
           onChange={(e) => handleFormChange("password", e.target.value)}
         />
-        <button
-          type="button"
-          onClick={() => handleChangePanel(0)}
-          className="flex items-center justify-center gap-2 rounded-full py-2 px-4 text-sm font-medium mt-2 dark:bg-gray-500 dark:text-gray-300 dark:hover:bg-gray-600 text-gray-700 hover:bg-gray-100 transition-colors duration-200 w-full md:w-auto self-center"
-        >
-          <FcGoogle className="text-lg" />
-          {t("continue_with_google_instead_label")}
-        </button>
+        {IS_GOOGLE_LOGIN_ENABLED && (
+          <button
+            type="button"
+            onClick={() => handleChangePanel(0)}
+            className="flex items-center justify-center gap-2 rounded-full py-2 px-4 text-sm font-medium mt-2 dark:bg-gray-500 dark:text-gray-300 dark:hover:bg-gray-600 text-gray-700 hover:bg-gray-100 transition-colors duration-200 w-full md:w-auto self-center"
+          >
+            <FcGoogle className="text-lg" />
+            {t("continue_with_google_instead_label")}
+          </button>
+        )}
       </div>
       <CustomButton
         label={t("continue_label")}

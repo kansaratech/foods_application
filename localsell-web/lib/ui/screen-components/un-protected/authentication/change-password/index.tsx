@@ -10,6 +10,9 @@ import { useTranslations } from "next-intl";
 // Interfaces
 import { IEnterPasswordProps } from "@/lib/utils/interfaces";
 
+// Validation
+import { isStrongPassword } from "@/lib/utils/methods/validation";
+
 export default function ChangePassword({
   handleFormChange,
   setFormData,
@@ -22,11 +25,11 @@ export default function ChangePassword({
   const { showToast } = useToast();
   // Handlers
   const handleSubmit = async () => {
-    if (!formData?.password || formData?.password?.length < 6) {
+    if (!isStrongPassword(formData?.password)) {
       return showToast({
         type: "error",
         title: t("update_phone_name_update_error_title"),
-        message: t("please_enter_valid_password_message"),
+        message: t("password_not_strong_enough_message"),
       });
     }
     try {

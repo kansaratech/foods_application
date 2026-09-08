@@ -34,6 +34,9 @@ export const ConfigurationProvider = ({
   )
     ? configuration.webClientID
     : "not_found";
+  // Gate the "Sign in with Google" UI on a real client id so we never show a
+  // button that can only fail with "social login is not configured".
+  const IS_GOOGLE_LOGIN_ENABLED = GOOGLE_CLIENT_ID !== "not_found";
   const STRIPE_PUBLIC_KEY = configuration.publishableKey;
   const PAYPAL_KEY = configuration.clientId;
   const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -65,6 +68,7 @@ export const ConfigurationProvider = ({
     <ConfigurationContext.Provider
       value={{
         GOOGLE_CLIENT_ID,
+        IS_GOOGLE_LOGIN_ENABLED,
         STRIPE_PUBLIC_KEY,
         PAYPAL_KEY,
         GOOGLE_MAPS_KEY,

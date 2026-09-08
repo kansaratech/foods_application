@@ -89,6 +89,14 @@ export default function EmailVerification({
       isPhoneExists: formData?.isPhoneExists || false,
     });
 
+    // The email OTP was correct, but account creation itself failed —
+    // handleCreateUser has already shown the specific reason. Stay on this
+    // step instead of falsely reporting success and closing the modal.
+    if (!userData?.userId) {
+      setIsRegistering(false);
+      return;
+    }
+
     setStoredOtp("");
     setEmailOtp("");
 

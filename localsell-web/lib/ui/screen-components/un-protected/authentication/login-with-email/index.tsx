@@ -10,10 +10,14 @@ import EmailIcon from "@/public/assets/images/svgs/email";
 
 // Hooks
 import { useAuth } from "@/lib/context/auth/auth.context";
+import { useConfig } from "@/lib/context/configuration/configuration.context";
 import useToast from "@/lib/hooks/useToast";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { FiMail } from "react-icons/fi";
+
+// Validation
+import { isValidEmail } from "@/lib/utils/methods/validation";
 
 //Import Googlr Icons from react-icons colored
 
@@ -27,12 +31,12 @@ export default function LoginWithEmail({
   // Hooks
   const t = useTranslations();
   const { setUser, checkEmailExists, isLoading } = useAuth();
+  const { IS_GOOGLE_LOGIN_ENABLED } = useConfig();
   const { showToast } = useToast();
 
   // Inside component
   const [isValid, setIsValid] = useState(true);
   const [accountNotFound, setAccountNotFound] = useState(false);
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleChange = (email: string) => {
     handleFormChange("email", email);
@@ -40,12 +44,12 @@ export default function LoginWithEmail({
     setAccountNotFound(false);
 
     // Real-time email validation
-    setIsValid(emailRegex.test(email));
+    setIsValid(isValidEmail(email));
   };
   // Handlers
   const handleSubmit = async () => {
     const email = formData?.email ?? "";
-    const valid = emailRegex.test(email);
+    const valid = isValidEmail(email);
     setIsValid(valid);
 
     if (!email || !valid) {
@@ -129,15 +133,17 @@ export default function LoginWithEmail({
           </button>
         )}
 
-        {/* Continue with Google */}
-        <button
-          type="button"
-          onClick={() => handleChangePanel(0)}
-          className="flex items-center justify-center gap-2 rounded-full py-2 px-4 text-sm font-medium dark:bg-gray-500 dark:text-gray-200 dark:hover:bg-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200 w-full md:w-auto self-center"
-        >
-          <FcGoogle className="text-lg" />
-          {t("continue_with_google_instead_label")}
-        </button>
+        {/* Continue with Google — only when Google login is configured */}
+        {IS_GOOGLE_LOGIN_ENABLED && (
+          <button
+            type="button"
+            onClick={() => handleChangePanel(0)}
+            className="flex items-center justify-center gap-2 rounded-full py-2 px-4 text-sm font-medium dark:bg-gray-500 dark:text-gray-200 dark:hover:bg-gray-400 text-gray-700 hover:bg-gray-100 transition-colors duration-200 w-full md:w-auto self-center"
+          >
+            <FcGoogle className="text-lg" />
+            {t("continue_with_google_instead_label")}
+          </button>
+        )}
       </div>
 
       {/* Submit Email */}

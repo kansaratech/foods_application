@@ -361,11 +361,17 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       const error = err as ApolloError;
       console.error("An error occured while creating the user", error);
+      // Surface the real reason (bad email, weak password, phone/email already
+      // taken, server-side rule) instead of always blaming the phone number.
       showToast({
         type: "error",
         title: t("create_user_label"),
-        message: t("phone_number_already_associated_with_different_account"),
-        duration: 3000
+        message:
+          error?.graphQLErrors?.[0]?.message ||
+          error?.cause?.message ||
+          error?.message ||
+          t("could_not_create_account_generic_message"),
+        duration: 4000,
       });
       return {} as ICreateUserData;
     } finally {

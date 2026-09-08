@@ -3,12 +3,15 @@
 import { useAuth } from "@/lib/context/auth/auth.context";
 import CustomButton from "@/lib/ui/useable-components/button";
 import CustomTextField from "@/lib/ui/useable-components/input-field";
+import useToast from "@/lib/hooks/useToast";
+import { isValidEmail } from "@/lib/utils/methods/validation";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations();
+  const { showToast } = useToast();
   const searchParams = useSearchParams();
   const { handleForgotPassword, isLoading } = useAuth();
   const [email, setEmail] = useState(searchParams.get("email") || "");
@@ -21,8 +24,15 @@ export default function ForgotPasswordPage() {
   }, [searchParams, t]);
 
   const handleSubmit = async () => {
-    if (!email.trim()) return;
-    await handleForgotPassword(email);
+    if (!isValidEmail(email)) {
+      showToast({
+        type: "error",
+        title: t("error"),
+        message: t("please_enter_valid_email_address_message"),
+      });
+      return;
+    }
+    await handleForgotPassword(email.trim());
     setSubmitted(true);
   };
 

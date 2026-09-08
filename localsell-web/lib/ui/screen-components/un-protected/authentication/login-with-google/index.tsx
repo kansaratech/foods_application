@@ -1,5 +1,6 @@
 // Components
 import { useAuth } from "@/lib/context/auth/auth.context";
+import { useConfig } from "@/lib/context/configuration/configuration.context";
 import CustomButton from "@/lib/ui/useable-components/button";
 import Divider from "@/lib/ui/useable-components/custom-divider";
 import CustomIconButton from "@/lib/ui/useable-components/custom-icon-button";
@@ -23,6 +24,7 @@ export default function LoginWithGoogle({
   // Hooks
   const t = useTranslations();
   const { isLoading } = useAuth();
+  const { IS_GOOGLE_LOGIN_ENABLED } = useConfig();
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center px-2 py-6 md:px-8 dark:text-white dark:bg-gray-900">
@@ -38,23 +40,27 @@ export default function LoginWithGoogle({
         </p>
       </div>
 
-      {/* Google Login */}
-      <div className="w-full max-w-sm mb-4">
-        <CustomIconButton
-          loading={isLoading}
-          SvgIcon={GoogleLogo}
-          classNames="hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:border-gray-500 w-full"
-          title={t("sign_in_with_google_label")}
-          handleClick={googleLogin}
-        />
-      </div>
+      {/* Google Login — only when a Google client id is configured */}
+      {IS_GOOGLE_LOGIN_ENABLED && (
+        <>
+          <div className="w-full max-w-sm mb-4">
+            <CustomIconButton
+              loading={isLoading}
+              SvgIcon={GoogleLogo}
+              classNames="hover:bg-gray-100 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:border-gray-500 w-full"
+              title={t("sign_in_with_google_label")}
+              handleClick={googleLogin}
+            />
+          </div>
 
-      {/* Divider */}
-      <div className="flex items-center justify-center w-full max-w-sm mb-4">
-        <Divider color="border-gray-200 dark:border-gray-600" />
-        <span className="mx-2 text-sm text-gray-500 dark:text-gray-300">{t("or_label")}</span>
-        <Divider color="border-gray-200 dark:border-gray-600" />
-      </div>
+          {/* Divider */}
+          <div className="flex items-center justify-center w-full max-w-sm mb-4">
+            <Divider color="border-gray-200 dark:border-gray-600" />
+            <span className="mx-2 text-sm text-gray-500 dark:text-gray-300">{t("or_label")}</span>
+            <Divider color="border-gray-200 dark:border-gray-600" />
+          </div>
+        </>
+      )}
 
       {/* Login Button */}
       <div className="w-full max-w-sm mb-4">
