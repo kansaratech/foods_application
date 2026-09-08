@@ -161,7 +161,11 @@ All identifiers moved to `in.localsell.*`. Placeholder markers
 
 ---
 
-## 3. Phase 2 — wire the new services
+## 3. Phase 2 — wire the new services — ▶ IN PROGRESS
+
+**Console step-by-step + the exact handoff list is in
+[`APP_CONSOLE_SETUP.md`](APP_CONSOLE_SETUP.md).** The summary below stays here
+for the overview; do the clicking from that runbook.
 
 Real credentials from Phase 0 into the renamed repo.
 
