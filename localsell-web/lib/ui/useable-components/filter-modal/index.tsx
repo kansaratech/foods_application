@@ -89,7 +89,7 @@ export default function FilterModal({
                 onClick={() => toggleCuisineSelection(item.name)}
                 className={`px-3 py-1 rounded-full text-sm border ${
                   isSelected
-                    ? "bg-primary-color border-primary-color text-gray-900 dark:text-gray-900"
+                    ? "bg-primary-color border-primary-color text-white dark:text-white"
                     : "border-gray-500 dark:border-gray-600"
                 }`}
               >
@@ -110,7 +110,7 @@ export default function FilterModal({
                 onClick={() => toggleRatingSelection(item.name)}
                 className={`px-3 py-1 rounded-full text-sm border gap-1 flex justify-end items-center text-center ${
                   isSelected
-                    ? "bg-primary-color border-primary-color text-gray-900 dark:text-gray-900"
+                    ? "bg-primary-color border-primary-color text-white dark:text-white"
                     : "border-gray-500 dark:border-gray-600"
                 }`}
               >
@@ -132,7 +132,7 @@ export default function FilterModal({
                 onClick={() => handleSortBy(item.name)}
                 className={`px-3 py-1 rounded-full text-sm border ${
                   isSelected
-                    ? "bg-primary-color border-primary-color text-gray-900 dark:text-gray-900"
+                    ? "bg-primary-color border-primary-color text-white dark:text-white"
                     : "border-gray-500 dark:border-gray-600"
                 }`}
               >
@@ -145,7 +145,7 @@ export default function FilterModal({
   
         <Button
           onClick={handleFilterApply}
-          className="w-full py-3 px-2 bg-primary-color rounded-full justify-center items-center text-center text-gray-700 dark:text-gray-900"
+          className="w-full py-3 px-2 bg-primary-color rounded-full justify-center items-center text-center text-white dark:text-white"
         >
           {t("apply_buttons")}
         </Button>

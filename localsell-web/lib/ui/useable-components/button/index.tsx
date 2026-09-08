@@ -19,7 +19,9 @@ export default function CustomButton({
     <Button
       loading={loading}
       disabled={loading}
-      className={twMerge("shadow-none text-sm", className)}
+      // `text-white` is the default so a primary (blue) button is always
+      // readable; any explicit `text-*` in `className` overrides it via twMerge.
+      className={twMerge("shadow-none text-sm text-white", className)}
       // className={`${classes['btn-custom']} ${className}`}
       label={label}
       type={type}

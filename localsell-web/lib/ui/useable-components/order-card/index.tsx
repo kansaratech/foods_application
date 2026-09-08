@@ -316,8 +316,8 @@ const OrderCard: FC<IOrderCardProps> = ({
                   ? t("track_order_button_label")
                   : t("select_item_to_reorder")
               }
-              iconColor="black"
-              classNames="bg-primary-color  w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
+              iconColor="white"
+              classNames="bg-primary-color text-white w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
               handleClick={
                 type === "active"
                   ? () => handleTrackOrder(order)
@@ -483,7 +483,7 @@ const OrderCard: FC<IOrderCardProps> = ({
                 {t("cancel_label")}
               </button>
               <button
-                className="px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-[#4bb126] text-white w-full sm:w-auto disabled:opacity-50 transition"
+                className="px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-primary-hover text-white w-full sm:w-auto disabled:opacity-50 transition"
                 disabled={selectedItems.length === 0}
                 onClick={
                   handleConfirmReorder
@@ -527,7 +527,7 @@ const OrderCard: FC<IOrderCardProps> = ({
               Cancel
             </button>
             <button
-              className="px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-[#4bb126] text-white w-full sm:w-auto transition"
+              className="px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-primary-hover text-white w-full sm:w-auto transition"
               onClick={handleClearCartAndReorder}
             >
               Clear Cart & Reorder

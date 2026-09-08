@@ -62,7 +62,7 @@ export default function ChangePassword({
       <CustomButton
         label={t("continue_label")}
         loading={isLoading}
-        className={`bg-primary-color flex items-center justify-center gap-x-4 px-3 rounded-full border border-gray-300 p-3 m-auto w-72`}
+        className={`bg-primary-color text-white font-medium flex items-center justify-center gap-x-4 px-3 rounded-full border border-primary-color p-3 m-auto w-72`}
         onClick={handleSubmit}
       />
     </div>

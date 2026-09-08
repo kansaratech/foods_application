@@ -134,7 +134,7 @@ export default function EnterPassword({
             <CustomButton
               label={t("continue_label")}
               loading={isLoading}
-              className="bg-primary-color w-full rounded-full border border-gray-300 p-3"
+              className="bg-primary-color text-white font-medium w-full rounded-full border border-primary-color p-3"
               onClick={handleSubmit}
             />
 

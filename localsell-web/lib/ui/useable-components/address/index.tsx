@@ -432,7 +432,7 @@ export default function UserAddressComponent(
       </div>
 
       <button
-        className="w-[90%] h-fit bg-primary-color mb-2 text-gray-900 py-2 space-x-2 rtl:space-x-reverse  rounded-full text-base lg:text-[14px]"
+        className="w-[90%] h-fit bg-primary-color mb-2 text-white py-2 space-x-2 rtl:space-x-reverse  rounded-full text-base lg:text-[14px]"
         onClick={() => {
           getCurrentLocation(onSetUserLocation);
           onHide();
@@ -548,14 +548,14 @@ export default function UserAddressComponent(
         )}
 
         <button
-          className="w-[90%] h-fit bg-primary-color text-gray-900 py-2 rounded-full text-base lg:text-[14px]"
+          className="w-[90%] h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px]"
           onClick={() => paginate(1)}
         >
           <FontAwesomeIcon icon={faPlus} />{" "}
           <span> {t("add_new_address_button")}</span>
         </button>
         <button
-          className={` ${confirmYourAddress ? "block" : "hidden"} w-[90%] h-fit bg-primary-color text-gray-900 py-2 rounded-full text-base lg:text-[14px] mt-4`}
+          className={` ${confirmYourAddress ? "block" : "hidden"} w-[90%] h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px] mt-4`}
           onClick={() => onHide()}
         >
           <span> {t("confirm")}</span>
@@ -737,7 +737,7 @@ export default function UserAddressComponent(
           </button>
           <button
             disabled={!isDragged && !selectedCity}
-            className={`w-full h-fit  ${!isDragged && !selectedCity ? "bg-primary-light dark:bg-gray-700" : "bg-primary-color"} text-gray-900 py-2 rounded-full text-base lg:text-[14px]`}
+            className={`w-full h-fit  ${!isDragged && !selectedCity ? "bg-primary-light dark:bg-gray-700 text-gray-900 dark:text-white" : "bg-primary-color text-white"} py-2 rounded-full text-base lg:text-[14px]`}
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (
@@ -933,7 +933,7 @@ export default function UserAddressComponent(
             <span>{t("cancel_address")}</span>
           </button>
           <button
-            className="w-full h-fit bg-primary-color text-gray-900 py-2 rounded-full text-base lg:text-[14px]"
+            className="w-full h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px]"
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (

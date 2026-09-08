@@ -26,7 +26,7 @@ export default function LoginPage() {
           setActivePanel(1);
           setIsAuthModalVisible(true);
         }}
-        className="mt-6 rounded-full bg-primary-color p-3"
+        className="mt-6 rounded-full bg-primary-color text-white font-medium p-3"
       />
     </div>
   );

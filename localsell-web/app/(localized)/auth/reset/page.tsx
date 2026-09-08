@@ -95,7 +95,7 @@ export default function ResetPasswordPage() {
         label={t("continue_label")}
         loading={loading}
         onClick={handleSubmit}
-        className="mt-6 rounded-full bg-primary-color p-3"
+        className="mt-6 rounded-full bg-primary-color text-white font-medium p-3"
       />
     </div>
   );

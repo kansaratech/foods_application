@@ -1350,7 +1350,7 @@ export default function OrderCheckoutScreen() {
                       disabled={couponLoading}
                     />
                     <button
-                      className="bg-primary-color rtl:mr-2 sm:mt-0 mt-2 sm:w-fit w-full h-10 px-8 space-x-2 font-medium text-gray-900 dark:text-gray-900  tracking-normal font-inter text-sm sm:text-base md:text-[12px] lg:text-[14px] rounded-full
+                      className="bg-primary-color rtl:mr-2 sm:mt-0 mt-2 sm:w-fit w-full h-10 px-8 space-x-2 font-medium text-white dark:text-white  tracking-normal font-inter text-sm sm:text-base md:text-[12px] lg:text-[14px] rounded-full
                       disabled:opacity-60 disabled:cursor-not-allowed"
                       onClick={onApplyCoupon}
                       disabled={cart.length === 0}
@@ -1473,7 +1473,7 @@ export default function OrderCheckoutScreen() {
               </div>
 
               <button
-                className="bg-primary-color text-gray-900 dark:text-gray-900 w-full py-2 rounded-full font-semibold text-xs lg:text-[16px] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="bg-primary-color text-white dark:text-white w-full py-2 rounded-full font-semibold text-xs lg:text-[16px] disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={onPlaceOrder}
                 disabled={cart.length === 0 || loadingOrderMutation}
               >
@@ -1588,7 +1588,7 @@ export default function OrderCheckoutScreen() {
               </div>
 
               <button
-                className="bg-primary-color text-gray-900 dark:text-white w-full py-2 rounded-full text-xs lg:text-[12px]"
+                className="bg-primary-color text-white dark:text-white w-full py-2 rounded-full text-xs lg:text-[12px]"
                 onClick={onPlaceOrder}
                 disabled={cart.length === 0 || loadingOrderMutation}
               >
@@ -1694,7 +1694,7 @@ export default function OrderCheckoutScreen() {
                         </span>
                       </div>
                       <button
-                        className="bg-primary-color text-gray-900 w-full py-2 rounded-full text-sm"
+                        className="bg-primary-color text-white w-full py-2 rounded-full text-sm"
                         onClick={onPlaceOrder}
                       >
                         {loadingOrderMutation ?

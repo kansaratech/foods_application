@@ -506,13 +506,13 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
 
           {/* Add to Order Button - Takes Remaining 80% */}
           <button
-            className={`${isFormValid() ? "bg-primary-color" : "bg-gray-300"} text-black px-4 py-2 text-[500] font-[14px] rounded-full flex flex-col md:flex-row items-center justify-between flex-[0.8]`}
+            className={`${isFormValid() ? "bg-primary-color text-white" : "bg-gray-300 text-gray-700"} px-4 py-2 text-[500] font-[14px] rounded-full flex flex-col md:flex-row items-center justify-between flex-[0.8]`}
             onClick={handleAddToCart}
             disabled={!isFormValid()}
             type="button"
           >
             {t("add_to_order")}
-            <span className="ml-2 text-gray-900 text-[500] font-[14px]">
+            <span className="ml-2 text-[500] font-[14px]">
               {CURRENCY_SYMBOL}
               {calculateTotalPrice()}
             </span>

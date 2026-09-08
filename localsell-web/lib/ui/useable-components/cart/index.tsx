@@ -106,7 +106,7 @@ export default function Cart({ onClose }: CartProps) {
 
               router.push("/discovery", { scroll: true });
             }}
-            className="bg-primary-color text-black px-6 py-2 rounded-full font-medium"
+            className="bg-primary-color text-white px-6 py-2 rounded-full font-medium"
             type="button"
           >
             {t("browse_restaurant")}
@@ -382,7 +382,7 @@ export default function Cart({ onClose }: CartProps) {
         {/* Fixed Checkout Button */}
         <div className="p-4 flex flex-col justify-center items-center border-t bg-white dark:bg-gray-800 ">
           <button
-            className="flex justify-between items-center w-full bg-primary-color text-black rounded-full px-4 py-3"
+            className="flex justify-between items-center w-full bg-primary-color text-white rounded-full px-4 py-3"
             onClick={() => {
               router.push("/order/checkout");
               if (onClose) onClose();
@@ -393,11 +393,11 @@ export default function Cart({ onClose }: CartProps) {
               <span className="bg-black text-primary-color rounded-full w-6 h-6 flex items-center justify-center mr-2 rtl:ml-2 text-sm font-medium">
                 {cartCount}
               </span>
-              <span className="text-black text-base font-medium">
+              <span className="text-white text-base font-medium">
                 {t("go_to_checkout_label")}
               </span>
             </div>
-            <span className="text-black text-base font-medium">
+            <span className="text-white text-base font-medium">
               {formattedSubtotal}
             </span>
           </button>

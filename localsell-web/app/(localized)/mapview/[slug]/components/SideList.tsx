@@ -179,7 +179,7 @@ const SideList: React.FC<SideListProps> = ({ data, onHover }) => {
                     router.push(getRedirectUrl(selectedItem));
                   }, 100);
                 }}
-                className="w-1/2 bg-primary-color text-black dark:text-black rounded-md min-h-10"
+                className="w-1/2 bg-primary-color text-white dark:text-white rounded-md min-h-10"
               >
                 See Menu
               </button>
