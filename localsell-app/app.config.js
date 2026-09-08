@@ -1,10 +1,10 @@
 module.exports = () => {
-  // Google Maps key. Restrict it by Android app signature + iOS bundle id and by
-  // API in the Google Cloud console — Maps SDK keys always ship inside the app
-  // binary, so a literal fallback here is safe and guarantees the native
-  // AndroidManifest / Info.plist always gets a key even when .env is absent
-  // (e.g. on EAS Build servers).
-  const DEFAULT_GOOGLE_MAPS_KEY = 'AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q'
+  // Google Maps key. Maps SDK keys always ship inside the app binary, so restrict
+  // the LocalSell key by Android package + signing SHA-1 and by iOS bundle id in
+  // the Google Cloud console. Local release builds inject the real key via
+  // `.env.production` (see APP_BUILD_PLAN.md §3); the placeholder below only keeps
+  // `expo prebuild` from failing when no env is present.
+  const DEFAULT_GOOGLE_MAPS_KEY = 'REPLACE_WITH_LOCALSELL_MAPS_KEY'
   const iosGoogleMapsApiKey =
     process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS || DEFAULT_GOOGLE_MAPS_KEY
   const androidGoogleMapsApiKey =
@@ -14,8 +14,10 @@ module.exports = () => {
 
   const fallbackUrlTypes = [
     {
+      // TODO(localsell): real reversed iOS OAuth client id from the LocalSell
+      // Google Cloud project — see APP_BUILD_PLAN.md §3.
       CFBundleURLSchemes: [
-        'com.googleusercontent.apps.650001300965-dkji7jutv8gc5m4n7cdg3nft87sauhn7'
+        'com.googleusercontent.apps.REPLACE_WITH_LOCALSELL_IOS_OAUTH_REVERSED'
       ]
     }
   ]
@@ -29,16 +31,16 @@ module.exports = () => {
     : fallbackUrlTypes
   const urlTypes = [
     ...googleUrlTypes,
-    { CFBundleURLSchemes: ['enategamultivendor'] }
+    { CFBundleURLSchemes: ['localsell'] }
   ]
 
   return {
     name: 'LocalSell',
-    scheme: 'enategamultivendor',
-    version: '1.1.31',
+    scheme: 'localsell',
+    version: '1.0.0',
     description:
       'LocalSell — order from the shops and restaurants around you. Shop Local. Find More.',
-    slug: 'enategamultivendor',
+    slug: 'localsell-customer',
     androidStatusBar: {
       backgroundColor: '#16293f'
     },
@@ -55,7 +57,7 @@ module.exports = () => {
         'com.apple.developer.networking.wifi-info': true,
         'com.apple.developer.usernotifications.time-sensitive': true,
         'com.apple.security.application-groups': [
-          'group.com.enatega.multivendor.shared'
+          'group.in.localsell.customer.shared'
         ],
         // Use the production APNs gateway for production builds so push
         // notifications are not silently rejected on App Store devices (SEC-013).
@@ -64,7 +66,7 @@ module.exports = () => {
       },
       supportsTablet: true,
       userInterfaceStyle: 'automatic',
-      bundleIdentifier: 'com.enatega.multivendor',
+      bundleIdentifier: 'in.localsell.customer',
       icon: './assets/icon.png',
       googleServicesFile: './GoogleService-Info.plist',
       infoPlist: {
@@ -81,7 +83,8 @@ module.exports = () => {
         ...(iosGoogleMapsApiKey ? { googleMapsApiKey: iosGoogleMapsApiKey } : {})
       },
       usesAppleSignIn: true,
-      appleTeamId: 'GDFK7MVY6P'
+      // TODO(localsell): LocalSell Apple Developer Team ID — see APP_BUILD_PLAN.md §3.
+      appleTeamId: process.env.APPLE_TEAM_ID || 'REPLACE_WITH_LOCALSELL_APPLE_TEAM_ID'
     },
     notification: {
       iosDisplayInForeground: true,
@@ -91,8 +94,8 @@ module.exports = () => {
       androidCollapsedTitle: 'LocalSell'
     },
     android: {
-      versionCode: 131,
-      package: 'com.enatega.multivendor',
+      versionCode: 1,
+      package: 'in.localsell.customer',
       userInterfaceStyle: 'automatic',
       // Disable ADB/cloud backups so the AsyncStorage DB (JWT) can't be pulled
       // off a connected device without root (SEC-002).
@@ -200,20 +203,19 @@ module.exports = () => {
     ],
     extra: {
       liveActivity: {
-        appGroupId: 'group.com.enatega.multivendor.shared',
-        appScheme: 'enategamultivendor',
+        appGroupId: 'group.in.localsell.customer.shared',
+        appScheme: 'localsell',
         brandName: 'LocalSell',
         primaryColor: '#1c5bc7',
         accentColor: '#FFA921',
+        // Internal Xcode asset-catalog names (targets/widget/Assets.xcassets) —
+        // not identifiers; renaming is a separate brand-asset task.
         logoResourceName: 'enatega_logo',
         riderResourceName: 'enatega_rider'
-      },
-      eas: {
-        projectId: 'c21fa0cc-d748-44d7-a561-6e2c5255f6a2'
       }
     },
     runtimeVersion: {
-      policy: 'sdkVersion'
+      policy: 'appVersion'
     }
   }
 }

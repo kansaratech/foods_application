@@ -9,7 +9,7 @@ private let muted = Color(red: 0.43, green: 0.44, blue: 0.47)
 
 private func trackingURL(orderId: String, courierChat: Bool = false) -> URL? {
   var components = URLComponents()
-  components.scheme = "enategamultivendor"
+  components.scheme = "localsell"
   components.host = "order-tracking"
   components.queryItems = [URLQueryItem(name: "id", value: orderId)]
   if courierChat {
@@ -23,7 +23,7 @@ private func riderCallURL(phone: String) -> URL? {
   guard !trimmedPhone.isEmpty else { return nil }
 
   var components = URLComponents()
-  components.scheme = "enategamultivendor"
+  components.scheme = "localsell"
   components.host = "call-rider"
   components.queryItems = [URLQueryItem(name: "phone", value: trimmedPhone)]
   return components.url

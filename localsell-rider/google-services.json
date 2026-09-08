@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:505610605704:android:90e0cdf17437edd5e6bb3d",
         "android_client_info": {
-          "package_name": "com.enatega.multirider"
+          "package_name": "in.localsell.rider"
         }
       },
       "oauth_client": [],

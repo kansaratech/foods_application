@@ -72,6 +72,9 @@ google-service-account*.json
 .env.development.local
 .env.staging.local
 .env.production.local
+.env.production
+.env.staging
+!.env.production.example
 *.swp
 *.swm
 *.swn

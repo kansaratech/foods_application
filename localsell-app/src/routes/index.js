@@ -69,9 +69,9 @@ const Tab = createBottomTabNavigator()
 const linking = {
   prefixes: [
     Linking.createURL('/'),
-    'enategamultivendor://',
-    'https://multivendor.enatega.com',
-    'https://www.multivendor.enatega.com'
+    'localsell://',
+    'https://localsell.in',
+    'https://www.localsell.in'
   ],
   config: {
     screens: {

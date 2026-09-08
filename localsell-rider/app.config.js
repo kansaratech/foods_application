@@ -1,9 +1,9 @@
-// Google Maps key. Restrict it by Android app signature + iOS bundle id and by
-// API in the Google Cloud console — Maps SDK keys always ship inside the app
-// binary, so a literal fallback here is safe and guarantees the native
-// AndroidManifest / Info.plist always gets a key even when .env is absent
-// (e.g. on EAS Build servers).
-const DEFAULT_GOOGLE_MAPS_KEY = 'AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q'
+// Google Maps key. Maps SDK keys always ship inside the app binary, so restrict
+// the LocalSell key by Android package + signing SHA-1 and by iOS bundle id in
+// the Google Cloud console. Local release builds inject the real key via
+// `.env.production` (see APP_BUILD_PLAN.md §3); the placeholder below only keeps
+// `expo prebuild` from failing when no env is present.
+const DEFAULT_GOOGLE_MAPS_KEY = 'REPLACE_WITH_LOCALSELL_MAPS_KEY'
 const iosGoogleMapsApiKey =
   process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS ||
   process.env.IOS_GOOGLE_MAPS_API_KEY ||
@@ -20,12 +20,12 @@ module.exports = {
     name: 'LocalSell Rider',
     description:
       'LocalSell Rider — the delivery partner app for LocalSell. Shop Local. Find More.',
-    version: '1.1.87',
-    slug: 'food-delivery-rider-multivendor',
+    version: '1.0.0',
+    slug: 'localsell-rider',
     orientation: 'portrait',
     icon: './lib/assets/images/icon.png',
     assetBundlePatterns: ['lib/assets/**/*'],
-    scheme: 'com.enatega.multirider',
+    scheme: 'localsell-rider',
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     plugins: [
@@ -69,7 +69,7 @@ module.exports = {
     },
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.enatega.multirider',
+      bundleIdentifier: 'in.localsell.rider',
       config: {
         ...(iosGoogleMapsApiKey ? { googleMapsApiKey: iosGoogleMapsApiKey } : {})
       },
@@ -82,7 +82,7 @@ module.exports = {
       }
     },
     android: {
-      versionCode: 87,
+      versionCode: 1,
       googleServicesFile: './google-services.json',
       permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
       config: {
@@ -90,17 +90,11 @@ module.exports = {
           ...(androidGoogleMapsApiKey ? { apiKey: androidGoogleMapsApiKey } : {})
         }
       },
-      package: 'com.enatega.multirider',
+      package: 'in.localsell.rider',
       icon: './lib/assets/images/appIcon.png',
       adaptiveIcon: {
         foregroundImage: './lib/assets/images/appIcon.png',
         backgroundColor: '#FFFFFF'
-      }
-    },
-    owner: 'kkansara21',
-    extra: {
-      eas: {
-        projectId: 'b7634414-d235-4610-8dad-13ff2bca9b2d'
       }
     },
     experiments: {

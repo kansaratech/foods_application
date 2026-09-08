@@ -5,12 +5,12 @@ module.exports = config => ({
   type: "widget",
   icon: '../../assets/icon.png',
   name: "orderActivity",
-  bundleIdentifier: "com.enatega.multivendor.orderActivity",
+  bundleIdentifier: "in.localsell.customer.orderActivity",
   deploymentTarget: "16.2",
 
   entitlements: {
     "com.apple.security.application-groups": [
-      "group.com.enatega.multivendor.shared"
+      "group.in.localsell.customer.shared"
     ],
   },
 

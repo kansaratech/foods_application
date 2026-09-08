@@ -1,15 +1,15 @@
 {
   "expo": {
     "name": "LocalSell Store",
-    "slug": "enatega-multivendor-restaurant",
+    "slug": "localsell-store",
     "description": "LocalSell — restaurant/store partner app. Shop Local. Find More.",
-    "version": "1.0.83",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./lib/assets/images/icon.png",
     "assetBundlePatterns": [
       "**/*"
     ],
-    "scheme": "enatega-store",
+    "scheme": "localsell-store",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -40,7 +40,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "multivendor.enatega.restaurant",
+      "bundleIdentifier": "in.localsell.store",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "$(PRODUCT_NAME) uses your location for features like finding orders nearby and tracking customer orders!",
         "UIBackgroundModes": [
@@ -54,7 +54,7 @@
       }
     },
     "android": {
-      "versionCode": 83,
+      "versionCode": 1,
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.BLUETOOTH",
@@ -65,7 +65,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
-      "package": "multivendor.enatega.restaurant",
+      "package": "in.localsell.store",
       "adaptiveIcon": {
         "foregroundImage": "./lib/assets/images/appIcon.png",
         "backgroundColor": "#FFFFFF"
@@ -80,11 +80,7 @@
       "favicon": "./lib/assets/images/favicon.png"
     },
     "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "489af486-4452-4bd0-9600-fddb2462bf1f"
-      }
-    },
-    "owner": "kkansara21"
+      "router": {}
+    }
   }
 }

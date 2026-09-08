@@ -46,8 +46,8 @@ const { ActivityController } = NativeModules
 const ANDROID_SESSION_KEY = 'enatega-live-activity-session-v2'
 const RETRY_DELAYS_MS = [750, 2000, 5000]
 const defaultConfiguration = {
-  appGroupId: 'group.com.enatega.multivendor.shared',
-  appScheme: 'enategamultivendor',
+  appGroupId: 'group.in.localsell.customer.shared',
+  appScheme: 'localsell',
   brandName: 'LocalSell',
   primaryColor: '#1c5bc7',
   accentColor: '#FFA921',

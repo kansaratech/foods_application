@@ -75,10 +75,12 @@ const ForceUpdate = () => {
 
   const handleUpdate = async () => {
     try {
+      // TODO(localsell): set the real App Store id once the App Store Connect app
+      // record exists — see APP_BUILD_PLAN.md §3.
       let storeUrl =
         Platform.OS === 'ios'
-          ? 'https://apps.apple.com/pk/app/enatega-multivendor/id1526488093'
-          : 'https://play.google.com/store/apps/details?id=com.enatega.multivendor&pli=1'
+          ? 'https://apps.apple.com/app/idREPLACE_WITH_LOCALSELL_ASC_APP_ID'
+          : 'https://play.google.com/store/apps/details?id=in.localsell.customer'
 
       await Linking.openURL(storeUrl)
     } catch (err) {

@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:505610605704:android:afcc7d7f2999c6cae6bb3d",
         "android_client_info": {
-          "package_name": "com.enatega.multivendor"
+          "package_name": "in.localsell.customer"
         }
       },
       "oauth_client": [],
