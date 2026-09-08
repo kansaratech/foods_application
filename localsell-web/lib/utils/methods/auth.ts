@@ -70,7 +70,11 @@ export function hasValidAuthToken(): boolean {
   if (typeof window === "undefined") return false;
 
   const token = localStorage.getItem(AUTH_KEYS.TOKEN);
-  return Boolean(token);
+  if (!token) return false;
+
+  // A token string that's already past its expiry is not a valid session —
+  // treating it as one is what leaves the UI "logged in" but every request 401ing.
+  return !isTokenExpired(getTokenExpiration());
 }
 
 

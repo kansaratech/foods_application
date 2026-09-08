@@ -32,6 +32,7 @@ function handleInvalidSession(): void {
   if (typeof window === "undefined" || isAuthRedirecting) return;
   isAuthRedirecting = true;
   invalidateClientSession();
+  window.dispatchEvent(new Event("localsell:logout"));
   window.location.assign("/auth/login");
 }
 
@@ -76,6 +77,36 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
   wsClientRef.current = wsClient;
   const wsLink = new WebSocketLink(wsClient);
 
+  // Codes the API raises when the customer's own JWT can no longer be honoured.
+  // FORBIDDEN is deliberately excluded — that's "wrong role for this action",
+  // not "your session is dead", and must not trigger a logout.
+  const INVALID_SESSION_CODES = new Set([
+    "UNAUTHENTICATED",
+    "TOKEN_EXPIRED",
+    "INVALID_TOKEN",
+  ]);
+
+  const isUnauthorized = (error: unknown): boolean => {
+    const err = error as {
+      graphQLErrors?: Array<{ extensions?: { code?: string } }>;
+      networkError?: { statusCode?: number; response?: { status?: number } };
+      statusCode?: number;
+    } | null;
+    const graphQLErrors = err?.graphQLErrors ?? [];
+    if (
+      graphQLErrors.some((graphQLError) =>
+        INVALID_SESSION_CODES.has(graphQLError.extensions?.code ?? ""),
+      )
+    ) {
+      return true;
+    }
+    const status =
+      err?.networkError?.statusCode ??
+      err?.networkError?.response?.status ??
+      err?.statusCode;
+    return status === 401;
+  };
+
   const errorLink = new ApolloLink(
     (operation, forward) =>
       new Observable((observer) => {
@@ -86,14 +117,7 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
             next: observer.next.bind(observer),
             complete: observer.complete.bind(observer),
             error: (error) => {
-              const graphQLErrors = error?.graphQLErrors ?? [];
-              const hasInvalidSession = graphQLErrors.some(
-                (graphQLError: { extensions?: { code?: string } }) =>
-                  graphQLError.extensions?.code === "TOKEN_EXPIRED" ||
-                  graphQLError.extensions?.code === "INVALID_TOKEN",
-              );
-
-              if (hasInvalidSession) {
+              if (isUnauthorized(error)) {
                 handleInvalidSession();
               }
 

@@ -580,6 +580,19 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setAuthToken("");
   }, []);
 
+  // Any logout path (UserContext.logout, the errorLink's session-expired
+  // redirect, another tab) fires "localsell:logout" — drop the token here too so
+  // `authToken`-derived UI (e.g. the header's logged-in menu) can't get stuck on.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLogout = () => {
+      setUser(null);
+      setAuthToken("");
+    };
+    window.addEventListener("localsell:logout", onLogout);
+    return () => window.removeEventListener("localsell:logout", onLogout);
+  }, []);
+
   useEffect(() => {
     if (typeof user?.token !== "undefined" && !!user?.token) {
       onUseLocalStorage("save", "userToken", user.token);

@@ -401,7 +401,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
       setCart([]);
       setRestaurant(null);
       setToken(null);
-      await client.resetStore();
+      // Tell every other auth-aware context (AuthProvider's `authToken`) to drop
+      // its state too, so no single logout entry point can leave a half-logged-in
+      // header behind.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("localsell:logout"));
+      }
+      // clearStore, NOT resetStore: resetStore refetches every active query
+      // immediately — with the token already gone that's a burst of guaranteed
+      // 401s that trips the "session expired" redirect mid-logout.
+      await client.clearStore();
     } catch (error) {
       console.log("error on logout", error);
     }
@@ -494,18 +503,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
 
   const addQuantity = useCallback(async (key: string, quantity: number = 1) => {
     setCart((prevCart) => {
-      const updatedCart = [...prevCart];
-      const cartIndex = updatedCart.findIndex((c) => c.key === key);
+      const cartIndex = prevCart.findIndex((c) => c.key === key);
+      if (cartIndex === -1) return prevCart;
 
-      if (cartIndex !== -1) {
-        // Important: Set the exact new quantity instead of adding to prevent potential double-increments
-        updatedCart[cartIndex].quantity =
-          updatedCart[cartIndex].quantity + quantity;
+      // Replace the item object (don't mutate it in place) so memoised cart rows
+      // keyed on item identity actually re-render when the quantity changes.
+      const updatedCart = prevCart.map((item, index) =>
+        index === cartIndex
+          ? { ...item, quantity: item.quantity + quantity }
+          : item,
+      );
 
-        // Save to local storage
-        if (typeof window !== "undefined") {
-          localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-        }
+      if (typeof window !== "undefined") {
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
       }
 
       return updatedCart;
@@ -541,13 +551,14 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
 
   const removeQuantity = useCallback(async (key: string) => {
     setCart((prevCart) => {
-      const updatedCart = [...prevCart];
-      const cartIndex = updatedCart.findIndex((c) => c.key === key);
+      const cartIndex = prevCart.findIndex((c) => c.key === key);
 
       if (cartIndex === -1) return prevCart;
 
-      // Important: Ensure we're only decreasing by exactly 1
-      updatedCart[cartIndex].quantity = updatedCart[cartIndex].quantity - 1;
+      // Replace, don't mutate — see addQuantity.
+      const updatedCart = prevCart.map((item, index) =>
+        index === cartIndex ? { ...item, quantity: item.quantity - 1 } : item,
+      );
       const items = updatedCart.filter((c) => c.quantity > 0);
 
       // Update localStorage
@@ -690,9 +701,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
 
         const currentItem = updatedCart[cartIndex];
         const currentQuantity = currentItem.quantity;
-        console.log(
-          `[UserContext] Current quantity for ${key}: ${currentQuantity}`
-        );
 
         // For decrement
         if (safeChange < 0) {
