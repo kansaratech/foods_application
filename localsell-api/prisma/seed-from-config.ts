@@ -52,6 +52,8 @@ type StoreSeed = {
   slug: string;
   tagline?: string;
   area?: string;
+  /** shopType slug (e.g. "restaurant", "grocery"). Defaults to "restaurant". */
+  shopType?: string;
   image?: string;
   cuisines?: string[];
   deliveryTime?: number;
@@ -258,6 +260,8 @@ async function main() {
   }
   const restaurantShopTypeId =
     shopTypeBySlug.get('restaurant') ?? Array.from(shopTypeBySlug.values())[0];
+  const shopTypeIdFor = (slug?: string) =>
+    (slug && shopTypeBySlug.get(slug)) || restaurantShopTypeId;
   console.log(`  · ${cfg.shopTypes.length} shop types`);
 
   const zoneByTitle = new Map<string, string>();
@@ -274,11 +278,15 @@ async function main() {
   console.log(`  · ${cfg.zones.length} delivery zones`);
 
   const cuisineIdByName = new Map<string, string>();
-  const getCuisineId = async (name: string) => {
+  const getCuisineId = async (name: string, shopTypeSlug?: string) => {
     const key = name.toLowerCase();
     if (cuisineIdByName.has(key)) return cuisineIdByName.get(key)!;
     const row = await prisma.cuisine.create({
-      data: { name, description: name, shopTypeId: restaurantShopTypeId },
+      data: {
+        name,
+        description: name,
+        shopTypeId: shopTypeIdFor(shopTypeSlug),
+      },
     });
     cuisineIdByName.set(key, row.id);
     return row.id;
@@ -384,7 +392,8 @@ async function main() {
     for (const s of vendor.stores) {
       const { lat, lng } = scatter(storeIndex++, spreadKm);
       const cuisineIds: string[] = [];
-      for (const cName of s.cuisines ?? []) cuisineIds.push(await getCuisineId(cName));
+      for (const cName of s.cuisines ?? [])
+        cuisineIds.push(await getCuisineId(cName, s.shopType));
 
       const restaurant = await prisma.restaurant.create({
         data: {
@@ -408,7 +417,7 @@ async function main() {
           commissionRate: s.commissionRate ?? Number(cfg.configuration.defaultCommissionRate ?? 20),
           latitude: lat,
           longitude: lng,
-          shopTypeId: restaurantShopTypeId,
+          shopTypeId: shopTypeIdFor(s.shopType),
           isActive: true,
           isAvailable: true,
           approvalStatus: 'APPROVED',

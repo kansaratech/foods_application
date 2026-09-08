@@ -64,26 +64,8 @@ export default function RestaurantsScreen() {
     }
   }, [page, hasMore, fetchMore, loading]);
 
-  // ✅ Scroll listener (your tested one)
-  useEffect(() => {
-    if (!fetchMore || !hasMore) return;
-
-    const handleScroll = () => {
-      const scrollTop = document.body.scrollTop;
-      const clientHeight = document.body.clientHeight;
-      const scrollHeight = document.body.scrollHeight;
- 
-      const bottom = scrollTop + clientHeight >= scrollHeight - 300;
-
-      if (bottom && !loading) {
-       
-        loadMore();
-      }
-    };
-
-    document.body.addEventListener("scroll", handleScroll);
-    return () => document.body.removeEventListener("scroll", handleScroll);
-  }, [fetchMore, hasMore, loading, loadMore]);
+  // Pagination is driven by a viewport sentinel inside MainSection (see
+  // onLoadMore below) — reliable regardless of which element actually scrolls.
 
   // The visitor picked a location no active store delivers to — show the
   // "not available yet" screen instead of an empty "No item found" list.
@@ -108,7 +90,8 @@ export default function RestaurantsScreen() {
       loading={loading}
       cuisinesloading={cuisinesloading}
       error={!!error}
-      hasMore={hasMore} // ✅ pass down so MainSection can show "No more"
+      hasMore={hasMore}
+      onLoadMore={loadMore}
     />
   );
 }

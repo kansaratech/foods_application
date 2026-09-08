@@ -182,4 +182,5 @@ export interface IMainSectionProps {
   error: boolean;
   search?: boolean
   hasMore?: boolean
+  onLoadMore?: () => void
 }

@@ -20,7 +20,7 @@ const footerGroups = [
   {
     title: "Explore",
     links: [
-      { label: "Restaurants", href: "/discovery" },
+      { label: "Restaurants", href: "/restaurants" },
       { label: "Grocery stores", href: "/store" },
       { label: "Your orders", href: "/profile/order-history" },
     ],

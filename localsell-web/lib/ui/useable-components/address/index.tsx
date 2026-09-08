@@ -84,6 +84,10 @@ const autocompleteService: {
   current: google.maps.places.AutocompleteService | null;
 } = { current: null };
 
+// Pull a 6-digit Indian PIN code out of a formatted address string.
+const extractPincode = (address?: string | null) =>
+  address?.match(/\b[1-9]\d{5}\b/)?.[0] ?? "";
+
 export default function UserAddressComponent(
   props: IUserAddressComponentProps
 ) {
@@ -102,6 +106,10 @@ export default function UserAddressComponent(
   const [search, setSearch] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>("");
   const [isDragged, setIsDragged] = useState(false);
+  // Structured address fields — pincode is required for exact delivery.
+  const [areaLine, setAreaLine] = useState<string>("");
+  const [stateName, setStateName] = useState<string>("Rajasthan");
+  const [pincode, setPincode] = useState<string>("");
   // set when the user taps "Current location" so we can show the resolved
   // address in the panel instead of closing the dialog straight away.
   const [pickedCurrentLocation, setPickedCurrentLocation] = useState(false);
@@ -167,6 +175,7 @@ export default function UserAddressComponent(
       cities_dropdown?.find((city) => city.label === editAddress?.details) ||
         null
     );
+    setPincode(extractPincode(editAddress?.deliveryAddress));
     paginate(1);
   };
 
@@ -239,6 +248,23 @@ export default function UserAddressComponent(
             });
 
             setInputValue(selectedOption.description);
+            setIsDragged(true);
+
+            // Auto-fill PIN / state from the place's address components.
+            const comps = results[0].address_components || [];
+            const pin = comps.find((c) => c.types.includes("postal_code"))
+              ?.long_name;
+            const region = comps.find((c) =>
+              c.types.includes("administrative_area_level_1"),
+            )?.long_name;
+            if (pin) setPincode(pin);
+            else {
+              const guess = extractPincode(
+                results[0].formatted_address || selectedOption.description,
+              );
+              if (guess) setPincode(guess);
+            }
+            if (region) setStateName(region);
           }
         }
       );
@@ -268,6 +294,8 @@ export default function UserAddressComponent(
     }
 
     setInputValue(formattedAddress);
+    const foundPin = extractPincode(formattedAddress);
+    if (foundPin) setPincode(foundPin);
     //set isDragged to true to enable save_address button
     setIsDragged(true);
     // setIsDragged(true); // to enable save_address button
@@ -340,12 +368,37 @@ export default function UserAddressComponent(
     OTHER: "Other",
   } as const;
 
+  const isPincodeValid = /^[1-9]\d{5}$/.test(pincode.trim());
+
   const onHandleCreateAddress = () => {
+    if (!isPincodeValid) {
+      showToast({
+        type: "error",
+        title: t("missing_pincode_title"),
+        message: t("pincode_required_message"),
+      });
+      return;
+    }
+
+    // Compose a single delivery-address line from the structured fields so the
+    // courier has the exact spot (schema stores one string + city in details).
+    const composed = [
+      areaLine.trim(),
+      inputValue.trim() || selectedCity?.label,
+      selectedCity?.label && !inputValue.includes(String(selectedCity?.label))
+        ? selectedCity?.label
+        : "",
+      stateName.trim(),
+      pincode.trim(),
+    ]
+      .filter(Boolean)
+      .join(", ");
+
     const addressInput = {
       ...(editAddress?._id ? { _id: editAddress?._id } : {}),
       longitude: `${userAddress?.location?.coordinates[0]}`,
       latitude: `${userAddress?.location?.coordinates[1]}`,
-      deliveryAddress: userAddress?.deliveryAddress || "",
+      deliveryAddress: composed || userAddress?.deliveryAddress || "",
       details: selectedCity?.label,
       label: selectedLocationType,
     };
@@ -366,6 +419,9 @@ export default function UserAddressComponent(
     setSelectedCity(null);
     setIsDragged(false);
     setPickedCurrentLocation(false);
+    setAreaLine("");
+    setStateName("Rajasthan");
+    setPincode("");
     onHide();
   };
 
@@ -596,6 +652,12 @@ export default function UserAddressComponent(
     </div>
   );
 
+  // Pin position for the add-address map — the marker is "dropped" as soon as a
+  // city or a searched area resolves to real coordinates.
+  const addPinLng = Number(userAddress?.location?.coordinates?.[0]) || 0;
+  const addPinLat = Number(userAddress?.location?.coordinates?.[1]) || 0;
+  const addHasPin = addPinLat !== 0 && addPinLng !== 0;
+
   const ADD_ADDRESS = (
     <div className="w-full space-y-2">
       {/* Header */}
@@ -617,23 +679,25 @@ export default function UserAddressComponent(
               height: "35vh",
             }}
             center={{
-              lat: Number(userAddress?.location?.coordinates[1]) || 0,
-              lng: Number(userAddress?.location?.coordinates[0]) || 0,
+              lat: addPinLat || 0,
+              lng: addPinLng || 0,
             }}
-            zoom={13}
+            zoom={addHasPin ? 15 : 12}
             onClick={onClickGoogleMaps}
           >
-            {userAddress?.location?.coordinates && (
+            {addHasPin && (
               <Marker
-                position={{
-                  lat: Number(userAddress?.location?.coordinates[1]) || 0,
-                  lng: Number(userAddress?.location?.coordinates[0]) || 0,
-                }}
+                position={{ lat: addPinLat, lng: addPinLng }}
                 draggable
                 onDragEnd={onCenterDraggedHandler}
               />
             )}
           </GoogleMap>
+          {!addHasPin && (
+            <p className="mt-1 text-[11px] text-gray-400">
+              {t("select_city_to_drop_pin")}
+            </p>
+          )}
         </div>
       )}
 
@@ -654,6 +718,8 @@ export default function UserAddressComponent(
               );
 
               setInputValue(formattedAddress);
+              const foundPin = extractPincode(formattedAddress);
+              if (foundPin) setPincode(foundPin);
 
               setUserAddress({
                 _id: "",
@@ -714,6 +780,43 @@ export default function UserAddressComponent(
               );
             }}
           />
+
+          {/* Structured address fields — pincode is required for exact delivery */}
+          <input
+            type="text"
+            value={areaLine}
+            onChange={(e) => setAreaLine(e.target.value)}
+            placeholder={t("area_locality_placeholder")}
+            className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={stateName}
+              onChange={(e) => setStateName(e.target.value)}
+              placeholder={t("state_placeholder")}
+              className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            />
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={pincode}
+              onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+              placeholder={t("pincode_placeholder")}
+              aria-invalid={pincode.length > 0 && !isPincodeValid}
+              className={`h-11 w-full rounded border px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white ${
+                pincode.length > 0 && !isPincodeValid
+                  ? "border-red-500"
+                  : "border-gray-300 dark:border-gray-600"
+              }`}
+            />
+          </div>
+          {pincode.length > 0 && !isPincodeValid && (
+            <span className="text-xs text-red-500">
+              {t("pincode_required_message")}
+            </span>
+          )}
         </div>
 
         <div className="w-full">
@@ -768,8 +871,8 @@ export default function UserAddressComponent(
             <span>{t("cancel_address")}</span>
           </button>
           <button
-            disabled={!isDragged && !selectedCity}
-            className={`w-full h-fit  ${!isDragged && !selectedCity ? "bg-primary-light dark:bg-gray-700 text-gray-900 dark:text-white" : "bg-primary-color text-white"} py-2 rounded-full text-base lg:text-[14px]`}
+            disabled={(!isDragged && !selectedCity) || !isPincodeValid}
+            className={`w-full h-fit  ${(!isDragged && !selectedCity) || !isPincodeValid ? "bg-primary-light dark:bg-gray-700 text-gray-900 dark:text-white" : "bg-primary-color text-white"} py-2 rounded-full text-base lg:text-[14px]`}
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (

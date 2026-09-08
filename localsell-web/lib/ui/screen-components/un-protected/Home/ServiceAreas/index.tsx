@@ -1,9 +1,9 @@
 "use client";
 
 import { gql, useQuery } from "@apollo/client";
-import { GoogleMap, Polygon } from "@react-google-maps/api";
+import { GoogleMap, Marker, Polygon } from "@react-google-maps/api";
 import Link from "next/link";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 
 import { GoogleMapsContext } from "@/lib/context/global/google-maps.context";
 import { MARKETPLACE_LOCATION } from "@/lib/utils/constants";
@@ -67,6 +67,7 @@ export default function ServiceAreas() {
   const { data, loading, error, refetch } = useQuery(GET_SERVICE_AREAS, {
     fetchPolicy: "cache-and-network",
   });
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
   const zones: ServiceArea[] = useMemo(() => {
     const home = {
@@ -86,6 +87,8 @@ export default function ServiceAreas() {
         zone.isActive !== false && toPath(zone).length > 2,
     );
   }, [data]);
+  const selectedZone = zones.find((z) => z._id === selectedZoneId) ?? null;
+  const selectedPin = selectedZone ? zoneCentroid(selectedZone) : null;
   const allPoints = zones.flatMap(toPath);
   const center = allPoints.length
     ? {
@@ -154,8 +157,8 @@ export default function ServiceAreas() {
         <div className="h-[420px] bg-slate-100">
           {isLoaded ? (
             <GoogleMap
-              center={center}
-              zoom={11}
+              center={selectedPin ?? center}
+              zoom={selectedPin ? 13 : 11}
               mapContainerStyle={{ width: "100%", height: "100%" }}
               options={{
                 streetViewControl: false,
@@ -175,13 +178,14 @@ export default function ServiceAreas() {
                   paths={toPath(zone)}
                   options={{
                     fillColor: index % 2 === 0 ? "#1c5bc7" : "#16293f",
-                    fillOpacity: 0.2,
+                    fillOpacity: zone._id === selectedZoneId ? 0.38 : 0.2,
                     strokeColor: index % 2 === 0 ? "#1a52b4" : "#16293f",
                     strokeOpacity: 0.9,
-                    strokeWeight: 2,
+                    strokeWeight: zone._id === selectedZoneId ? 3 : 2,
                   }}
                 />
               ))}
+              {selectedPin && <Marker position={selectedPin} />}
             </GoogleMap>
           ) : (
             <div className="flex h-full items-center justify-center text-sm font-semibold text-slate-500">
@@ -199,7 +203,14 @@ export default function ServiceAreas() {
               <Link
                 key={zone._id}
                 href="/discovery"
-                className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4 transition hover:border-[#1c5bc7] hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                onMouseEnter={() => setSelectedZoneId(zone._id)}
+                onFocus={() => setSelectedZoneId(zone._id)}
+                aria-current={zone._id === selectedZoneId ? "true" : undefined}
+                className={`flex items-center gap-4 rounded-2xl border p-4 transition hover:border-[#1c5bc7] hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-gray-800 ${
+                  zone._id === selectedZoneId
+                    ? "border-[#1c5bc7] bg-blue-50 dark:bg-gray-800"
+                    : "border-slate-200"
+                }`}
               >
                 <span
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg font-black text-white"

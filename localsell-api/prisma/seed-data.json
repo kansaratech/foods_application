@@ -140,7 +140,15 @@
     "ghewar": "https://images.unsplash.com/photo-1666181593796-3e7c1e02b2b0?auto=format&fit=crop&w=800&q=70",
     "besan": "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?auto=format&fit=crop&w=800&q=70",
     "bhujia": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=70",
-    "mixBox": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70"
+    "mixBox": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70",
+    "groceryShop": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=70",
+    "atta": "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=800&q=70",
+    "rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=70",
+    "milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=70",
+    "oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=70",
+    "vegetables": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=70",
+    "eggs": "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=70",
+    "snacks": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=800&q=70"
   },
 
   "addonGroups": {
@@ -804,6 +812,173 @@
                   "image": "mixBox",
                   "combo": { "worth": 900 },
                   "price": 780
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Deogarh Daily Mart Owner",
+      "email": "deogarh-daily-mart-owner@localsell.in",
+      "password": "Vendor@123",
+      "stores": [
+        {
+          "name": "Deogarh Daily Mart",
+          "slug": "deogarh-daily-mart",
+          "tagline": "Everyday groceries, staples & fresh produce — delivered",
+          "area": "Sadar Bazaar",
+          "shopType": "grocery",
+          "image": "groceryShop",
+          "cuisines": ["Grocery", "Staples"],
+          "deliveryTime": 35,
+          "minOrder": 199,
+          "salesTax": 0,
+          "commissionRate": 12,
+          "rating": 4.3,
+          "deliveryProvider": "PLATFORM",
+          "hours": { "open": "07", "close": "22" },
+          "storeLogin": { "username": "deogarh-daily-mart@store.localsell.in", "password": "Store@123" },
+          "deliveryAgents": [
+            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
+            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+          ],
+          "categories": [
+            {
+              "title": "Atta, Rice & Dal",
+              "foods": [
+                {
+                  "title": "Whole Wheat Atta",
+                  "desc": "Chakki-fresh whole wheat flour",
+                  "image": "atta",
+                  "variations": [
+                    { "title": "5 kg", "price": 245 },
+                    { "title": "10 kg", "price": 470 }
+                  ]
+                },
+                {
+                  "title": "Sona Masoori Rice",
+                  "desc": "Lightweight everyday raw rice",
+                  "image": "rice",
+                  "variations": [
+                    { "title": "5 kg", "price": 360 },
+                    { "title": "25 kg bag", "price": 1690 }
+                  ]
+                },
+                {
+                  "title": "Toor Dal (Arhar)",
+                  "desc": "Polished split pigeon peas",
+                  "image": "atta",
+                  "variations": [
+                    { "title": "500 g", "price": 95 },
+                    { "title": "1 kg", "price": 180 }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Dairy & Eggs",
+              "foods": [
+                {
+                  "title": "Toned Milk Pouch",
+                  "desc": "Fresh daily toned milk, 500 ml",
+                  "image": "milk",
+                  "price": 30
+                },
+                {
+                  "title": "Paneer Block",
+                  "desc": "Fresh malai paneer, 200 g",
+                  "image": "milk",
+                  "price": 95
+                },
+                {
+                  "title": "Farm Eggs (6 pc)",
+                  "desc": "Grade-A white eggs",
+                  "image": "eggs",
+                  "price": 48
+                }
+              ]
+            },
+            {
+              "title": "Oil, Masala & Sugar",
+              "foods": [
+                {
+                  "title": "Refined Sunflower Oil",
+                  "desc": "Light everyday cooking oil",
+                  "image": "oil",
+                  "variations": [
+                    { "title": "1 L pouch", "price": 135 },
+                    { "title": "5 L can", "price": 640 }
+                  ]
+                },
+                {
+                  "title": "Sugar",
+                  "desc": "Fine-grain refined sugar",
+                  "image": "atta",
+                  "variations": [
+                    { "title": "1 kg", "price": 48 },
+                    { "title": "5 kg", "price": 230 }
+                  ]
+                },
+                {
+                  "title": "Iodised Salt",
+                  "desc": "1 kg pack",
+                  "image": "atta",
+                  "price": 28
+                }
+              ]
+            },
+            {
+              "title": "Fresh Produce",
+              "foods": [
+                {
+                  "title": "Onion",
+                  "desc": "Loose, sorted",
+                  "image": "vegetables",
+                  "variations": [
+                    { "title": "1 kg", "price": 40 },
+                    { "title": "3 kg", "price": 110 }
+                  ]
+                },
+                {
+                  "title": "Potato",
+                  "desc": "Loose, sorted",
+                  "image": "vegetables",
+                  "variations": [
+                    { "title": "1 kg", "price": 35 },
+                    { "title": "3 kg", "price": 95 }
+                  ]
+                },
+                {
+                  "title": "Tomato",
+                  "desc": "Farm fresh",
+                  "image": "vegetables",
+                  "price": 45
+                }
+              ]
+            },
+            {
+              "title": "Snacks & Beverages",
+              "foods": [
+                {
+                  "title": "Potato Chips (Classic Salted)",
+                  "desc": "Family pack",
+                  "image": "snacks",
+                  "price": 40
+                },
+                {
+                  "title": "Marie Biscuits",
+                  "desc": "Tea-time biscuits, 250 g",
+                  "image": "snacks",
+                  "price": 35
+                },
+                {
+                  "title": "Cola (750 ml)",
+                  "desc": "Chilled soft drink",
+                  "image": "coldDrink",
+                  "price": 45
                 }
               ]
             }

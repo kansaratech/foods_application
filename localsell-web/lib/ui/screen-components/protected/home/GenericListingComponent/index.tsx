@@ -21,6 +21,7 @@ interface GenericListingProps {
   cuisinesloading: boolean;
   error: boolean;
   hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export default function GenericListingComponent({
@@ -33,8 +34,9 @@ export default function GenericListingComponent({
   cuisinesloading,
   error,
   hasMore,
+  onLoadMore,
   queryData
-  
+
 }: GenericListingProps) {
   const [cuisineData, setcuisineData] = useState<ICuisinesData[]>([]);
   const [restaurantData, setrestaurantData] = useState<IRestaurant[]>([]);
@@ -146,6 +148,7 @@ export default function GenericListingComponent({
         loading={loading}
         error={error}
         hasMore={hasMore} // ✅ pass down for infinite scroll message
+        onLoadMore={onLoadMore}
       />
       <FilterModal
         visible={showDialog}

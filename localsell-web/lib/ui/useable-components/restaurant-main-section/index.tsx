@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Card from "@/lib/ui/useable-components/card";
 import SliderSkeleton from "@/lib/ui/useable-components/custom-skeletons/slider.loading.skeleton";
 import { IMainSectionProps } from "@/lib/utils/interfaces";
@@ -18,12 +18,28 @@ function MainSection({
   loading,
   search,
   hasMore,
-  queryData
-  // onLoadMore, // 🔹 added callback from parent
+  queryData,
+  onLoadMore,
 }: IMainSectionProps ) {
   const router = useRouter();
   const t = useTranslations();
   const { isSearchFocused, setIsSearchFocused, filter } = useSearchUI();
+
+  // Infinite scroll via a viewport sentinel — robust no matter which ancestor
+  // element actually scrolls (the home layout scrolls an inner div, not window).
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasMore || !onLoadMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !loading) onLoadMore();
+      },
+      { rootMargin: "400px" },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, onLoadMore, loading, data?.length]);
 
   const [isModalOpen, setIsModalOpen] = useState({ value: false, id: "" });
   const handleUpdateIsModalOpen = useCallback(
@@ -35,12 +51,27 @@ function MainSection({
     [isModalOpen]
   );
 
-  if (error) {
-    return null;
-  }
-
   if (loading && (!data || data.length === 0)) {
     return <SliderSkeleton />;
+  }
+
+  // Don't blank the whole page on a fetch error — say what happened and let
+  // the user retry with a reload.
+  if (error && (!data || data.length === 0)) {
+    return (
+      <div className="mb-20 flex flex-col items-center gap-3 py-16 text-center text-gray-500 dark:text-gray-400">
+        <p className="text-base font-semibold text-gray-700 dark:text-gray-200">
+          {t("something_went_wrong")}
+        </p>
+        <button
+          type="button"
+          onClick={() => router.refresh()}
+          className="rounded-full border border-primary-color px-5 py-2 text-sm font-semibold text-primary-color transition hover:bg-primary-color/5"
+        >
+          {t("retry_button")}
+        </button>
+      </div>
+    );
   }
 
   const onSeeAllClick = () => {
@@ -120,16 +151,21 @@ function MainSection({
           </div>
           )}
 
-          {/* Fallback "Load More" button in case scroll listener misses
+          {/* Sentinel the IntersectionObserver watches to auto-load the next page */}
+          {hasMore && onLoadMore && <div ref={sentinelRef} aria-hidden className="h-1 w-full" />}
+
+          {/* Fallback "Load more" button if the observer never fires */}
           {hasMore && !loading && onLoadMore && (
             <div className="flex justify-center mt-6">
-              <CustomButton
-                label={t("load_more")}
+              <button
+                type="button"
                 onClick={onLoadMore}
-                className="px-6 py-2 bg-secondary-color hover:bg-primary-dark text-white rounded-lg"
-              />
+                className="rounded-full border border-primary-color px-6 py-2 text-sm font-semibold text-primary-color transition hover:bg-primary-color/5"
+              >
+                {t("load_more")}
+              </button>
             </div>
-          )} */}
+          )}
         </>
       ) : (
         <div className="text-center py-6 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
