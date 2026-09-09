@@ -74,7 +74,7 @@ export default function RestaurantStatesTable({
       <PaymentMethodStats
         loading={salesDetailsLoading}
         buckets={buckets}
-        currency={CURRENCY_CODE ?? 'USD'}
+        currency={CURRENCY_CODE}
       />
     </div>
   );

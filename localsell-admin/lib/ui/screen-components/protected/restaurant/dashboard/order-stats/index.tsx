@@ -111,7 +111,7 @@ export default function UserStats({
         icon={faCashRegister}
         route="/admin/store/orders"
         loading={loading}
-        amountConfig={{ format: 'currency', currency: CURRENCY_CODE ?? 'USD' }}
+        amountConfig={{ format: 'currency', currency: CURRENCY_CODE }}
       />
     </div>
   );

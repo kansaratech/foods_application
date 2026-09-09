@@ -38,7 +38,7 @@ export const useConfiguration = () => {
   const SKIP_EMAIL_VERIFICATION = configuration?.skipEmailVerification;
   const SKIP_MOBILE_VERIFICATION = configuration?.skipMobileVerification;
   const SKIP_WHATSAPP_OTP = configuration?.skipWhatsAppOTP;
-  const CURRENT_SYMBOL = configuration?.currencySymbol;
+  const CURRENT_SYMBOL = configuration?.currencySymbol || '₹';
   const EMAIL_NAME = configuration?.emailName;
   const EMAIL = configuration?.email;
   const PASSWORD = configuration?.password;
@@ -75,8 +75,10 @@ export const useConfiguration = () => {
   const APP_TEST_OTP = configuration?.testOtp;
   const ENABLE_CUSTOMER_DEMO_MODE = configuration?.enableCustomerDemoMode;
   const CUSTOMER_DEMO_ZONE_ID = configuration?.customerDemoZoneId;
-  const CURRENCY_CODE = configuration?.currency;
-  const CURRENCY_SYMBOL = configuration?.currency;
+  // India-only: never fall back to a foreign code/symbol, and never use the
+  // currency *code* where the *symbol* is meant (was rendering "INR298").
+  const CURRENCY_CODE = configuration?.currency || 'INR';
+  const CURRENCY_SYMBOL = configuration?.currencySymbol || '₹';
   const ISPAID_VERSION = configuration?.isPaidVersion;
 
   return {

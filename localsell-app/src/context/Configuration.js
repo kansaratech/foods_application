@@ -11,8 +11,8 @@ const GETCONFIGURATION = gql`
 // Module-level constant so the fallback keeps a stable reference across renders
 // instead of being recreated on every render (PERF-002).
 const FALLBACK_CONFIGURATION = {
-  currency: '',
-  currencySymbol: '',
+  currency: 'INR',
+  currencySymbol: '₹',
   deliveryRate: 10,
   costType: 'perKM',
   enableCustomerDemoMode: false,
@@ -36,6 +36,9 @@ export const ConfigurationProvider = props => {
           ? FALLBACK_CONFIGURATION
         : {
             ...data.configuration,
+            // India-only — pin the currency so no screen renders "$"/"INR".
+            currency: 'INR',
+            currencySymbol: '₹',
             isConfigurationLoaded: true
           },
     [loading, error, data?.configuration]

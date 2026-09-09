@@ -6,6 +6,7 @@ import { Rating } from 'primereact/rating';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faStarHalfAlt } from '@fortawesome/free-solid-svg-icons';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import { formatCurrency } from '@/lib/utils/methods';
 
 interface ITransactionDetailModalProps {
   visible: boolean;
@@ -42,7 +43,7 @@ const TransactionDetailModal: React.FC<ITransactionDetailModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-gray-600 dark:text-white">{t('Amount')}</p>
-              <p className="font-medium">{`${transaction?.amountCurrency} ${transaction.amountTransferred.toFixed(2)}`}</p>
+              <p className="font-medium">{formatCurrency(transaction.amountTransferred ?? 0, true)}</p>
             </div>
             <div>
               <p className="text-gray-600 dark:text-white">{t('Status')}</p>
@@ -138,7 +139,7 @@ const TransactionDetailModal: React.FC<ITransactionDetailModalProps> = ({
                   {t('Current Wallet Amount')}
                 </p>
                 <p className="font-medium">
-                  {CURRENT_SYMBOL || '$'}
+                  {CURRENT_SYMBOL}
                   {(transaction?.rider?.currentWalletAmount ?? 0).toFixed(2)}
                 </p>
               </div>
@@ -147,7 +148,7 @@ const TransactionDetailModal: React.FC<ITransactionDetailModalProps> = ({
                   {t('Total Earnings')}
                 </p>
                 <p className="font-medium">
-                  {CURRENT_SYMBOL || '$'}
+                  {CURRENT_SYMBOL}
                   {(transaction?.rider?.totalWalletAmount ?? 0).toFixed(2)}
                 </p>
               </div>

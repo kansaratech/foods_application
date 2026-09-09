@@ -43,9 +43,16 @@ export default function CustomPhoneTextField({
       {/* Themed through react-international-phone's own CSS custom properties
           instead of inline-overriding just the number input — that's what was
           making the country selector and the number box read as two
-          disconnected inputs (mismatched height/border/radius between them). */}
+          disconnected inputs (mismatched height/border/radius between them).
+
+          India-only: `forceDialCode` locks the "+91" prefix (non-deletable),
+          `hideDropdown` removes the country picker, `disableCountryGuess` stops
+          it switching country from typed digits. */}
       <PhoneInput
         defaultCountry={defaultCountry}
+        forceDialCode
+        hideDropdown
+        disableCountryGuess
         value={value ?? ''}
         onChange={handlePhoneInputChange}
         name={name}

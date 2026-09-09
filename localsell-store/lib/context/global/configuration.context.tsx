@@ -16,8 +16,8 @@ import { useLazyQueryQL } from "@/lib/hooks/useLazyQueryQL";
 
 export const ConfigurationContext = createContext<IConfiguration | undefined>({
   _id: "",
-  currency: "",
-  currencySymbol: "",
+  currency: "INR",
+  currencySymbol: "₹",
   restaurantAppSentryUrl: "",
 });
 
@@ -43,8 +43,8 @@ export const ConfigurationProvider: React.FC<IConfigurationProviderProps> = ({
         ? {
             _id: "",
             restaurantAppSentryUrl: "",
-            currency: "",
-            currencySymbol: "",
+            currency: "INR",
+            currencySymbol: "₹",
           }
         : data?.configuration;
 

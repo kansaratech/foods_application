@@ -211,7 +211,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
           <CarSVG width="24" height="24" />
           <span>
-            {CURRENT_SYMBOL || '$'} {deliveryRate}
+            {CURRENT_SYMBOL} {deliveryRate}
           </span>
         </div>
 
@@ -219,7 +219,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         <div className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
           <span>{t('Min Order')}</span>
           <span>
-            {CURRENT_SYMBOL || '$'}
+            {CURRENT_SYMBOL}
             {restaurant?.minimumOrder}
           </span>
         </div>

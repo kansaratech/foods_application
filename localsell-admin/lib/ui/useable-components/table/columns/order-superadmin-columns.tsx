@@ -1,7 +1,6 @@
 import { IExtendedOrder } from '@/lib/utils/interfaces';
-import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import { formatCurrency } from '@/lib/utils/methods';
 export const ORDER_SUPER_ADMIN_COLUMNS = () => {
-  const { CURRENCY_SYMBOL } = useConfiguration();
   return [
     {
       headerName: 'Order',
@@ -112,12 +111,7 @@ export const ORDER_SUPER_ADMIN_COLUMNS = () => {
       headerName: 'Total',
       propertyName: 'orderAmount',
       body: (row: IExtendedOrder) => (
-        <strong>
-          {CURRENCY_SYMBOL}
-          {Number(row.orderAmount ?? 0).toLocaleString(undefined, {
-            maximumFractionDigits: 2,
-          })}
-        </strong>
+        <strong>{formatCurrency(row.orderAmount ?? 0)}</strong>
       ),
     },
     {

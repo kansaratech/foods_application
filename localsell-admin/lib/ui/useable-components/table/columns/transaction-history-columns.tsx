@@ -1,6 +1,7 @@
 import { IActionMenuProps } from '@/lib/utils/interfaces/action-menu.interface';
 import { ITransactionHistory } from '@/lib/utils/interfaces';
 import ActionMenu from '@/lib/ui/useable-components/action-menu';
+import { formatCurrency } from '@/lib/utils/methods';
 import { useTranslations } from 'next-intl';
 
 export const TRANSACTION_HISTORY_COLUMNS = ({
@@ -42,7 +43,7 @@ export const TRANSACTION_HISTORY_COLUMNS = ({
       headerName: t('Amount'),
       propertyName: 'amount',
       body: (transaction: ITransactionHistory) =>
-        `${transaction.amountCurrency} ${transaction.amountTransferred?.toFixed(2)}`,
+        formatCurrency(transaction.amountTransferred ?? 0, true),
     },
     {
       headerName: t('Created At'),

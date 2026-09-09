@@ -43,12 +43,15 @@ export default function StatsCard({
         )}
       </div>
       <div className="mt-2 text-3xl font-bold leading-none text-gray-900 dark:text-white">
-        {currencySymbol ? currencySymbol : ''}
-        {amountConfig
-          ? amountConfig?.format === 'currency'
-            ? formatNumberWithCurrency(total, amountConfig.currency)
-            : formatNumber(total)
-          : total}
+        {amountConfig?.format === 'currency' ? (
+          // formatNumberWithCurrency already includes ₹ — don't double-prefix.
+          formatNumberWithCurrency(total)
+        ) : (
+          <>
+            {currencySymbol ?? ''}
+            {amountConfig ? formatNumber(total) : total}
+          </>
+        )}
       </div>
       {description && (
         <div className="mt-2 text-xs text-gray-400">{description}</div>
