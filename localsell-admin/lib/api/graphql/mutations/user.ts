@@ -32,6 +32,22 @@ export const CHANGE_MY_PASSWORD = gql`
   }
 `;
 
+export const FORGOT_PASSWORD = gql`
+  mutation ForgotPassword($email: String, $phone: String) {
+    forgotPassword(email: $email, phone: $phone) {
+      result
+    }
+  }
+`;
+
+export const RESET_PASSWORD = gql`
+  mutation ResetPassword($password: String!, $email: String, $phone: String, $otp: String) {
+    resetPassword(password: $password, email: $email, phone: $phone, otp: $otp) {
+      result
+    }
+  }
+`;
+
 export const RESET_USER_SESSION = gql`
   mutation resetUserSession($userId: ID!) {
     resetUserSession(userId: $userId) {

@@ -34,6 +34,7 @@ import { ILoginInitialValues } from "@/lib/utils/interfaces";
 import { CustomContinueButton } from "../../useable-components";
 import { Href, router } from "expo-router";
 import { ROUTES } from "@/lib/utils/constants";
+import ForgotPasswordModal from "./forgot-password-modal";
 
 const initial: ILoginInitialValues = {
   username: "rider1",
@@ -44,6 +45,7 @@ const LoginScreen = () => {
   // States
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [initialValues, setInitialValues] = useState(initial);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   // Hooks
   const { appTheme } = useApptheme();
@@ -207,6 +209,18 @@ const LoginScreen = () => {
                   />
 
                   <TouchableOpacity
+                    onPress={() => setForgotOpen(true)}
+                    className="mt-3"
+                  >
+                    <Text
+                      className="text-center text-sm font-semibold"
+                      style={{ color: appTheme.primary }}
+                    >
+                      {t("Forgot password?")}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
                     onPress={() => router.push(ROUTES.register as Href)}
                     className="mt-4"
                   >
@@ -223,6 +237,11 @@ const LoginScreen = () => {
           </Formik>
         </ScrollView>
       </SafeAreaView>
+
+      <ForgotPasswordModal
+        visible={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+      />
     </KeyboardAvoidingView>
   );
 };

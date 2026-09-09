@@ -14,12 +14,15 @@ import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/lib/hooks/useUser';
 import { DEFAULT_ROUTES } from '@/lib/utils/constants/routes';
 import styles from './login.module.css';
+import ForgotPasswordPanel from './forgot-password-panel';
 
 const initialValues: ISignInForm = { email: '', password: '' };
 
 export default function LoginEmailPasswordMain() {
   const [showPassword, setShowPassword] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [view, setView] = useState<'signin' | 'forgot'>('signin');
+  const [typedEmail, setTypedEmail] = useState('');
 
   // Context
   const { showToast } = useContext(ToastContext);
@@ -98,8 +101,12 @@ export default function LoginEmailPasswordMain() {
     <main className={styles.page}>
       <aside className={styles.brandPanel}>
         <div className={styles.brand}>
-          <i className="pi pi-map-marker" aria-hidden="true" />
-          localsell
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/brand/localsell-logo-inverse.png"
+            alt="LocalSell"
+            draggable={false}
+          />
         </div>
         <div className={styles.eyebrow}>ADMIN CONSOLE</div>
         <div className={styles.intro}>
@@ -168,6 +175,16 @@ export default function LoginEmailPasswordMain() {
         </div>
       </aside>
       <section className={styles.formPanel} aria-label="Administrator login">
+        {view === 'forgot' ? (
+          <ForgotPasswordPanel
+            initialEmail={typedEmail}
+            onBackToSignIn={() => setView('signin')}
+            onResetComplete={(email) => {
+              setTypedEmail(email);
+              setView('signin');
+            }}
+          />
+        ) : (
         <div className={styles.card}>
           <div className={styles.shield}>
             <i className="pi pi-shield" aria-hidden="true" />
@@ -201,7 +218,10 @@ export default function LoginEmailPasswordMain() {
                     autoComplete="username"
                     placeholder="Enter your work email"
                     value={values.email}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      handleChange(e);
+                      setTypedEmail(e.target.value);
+                    }}
                     onBlur={handleBlur}
                     aria-invalid={!!(touched.email && errors.email)}
                     aria-describedby={
@@ -216,7 +236,7 @@ export default function LoginEmailPasswordMain() {
                 )}
                 <div className={styles.passwordLabel}>
                   <label htmlFor="admin-password">Password</label>
-                  <button type="button" onClick={() => setHelpOpen(!helpOpen)}>
+                  <button type="button" onClick={() => setView('forgot')}>
                     Forgot password?
                   </button>
                 </div>
@@ -279,6 +299,7 @@ export default function LoginEmailPasswordMain() {
             Authorised administrators only. Login activity may be monitored.
           </p>
         </div>
+        )}
         <footer className={styles.footer}>
           <button type="button" onClick={() => setHelpOpen(!helpOpen)}>
             Contact Support

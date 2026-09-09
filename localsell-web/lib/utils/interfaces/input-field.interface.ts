@@ -24,6 +24,8 @@ interface IIconProperties {
 // Fields
 export interface ITextFieldProps extends IGlobalTextFieldProps {
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  autoComplete?: HTMLInputAutoCompleteAttribute | "off";
   error?: string;
   disabled?: boolean;
 }
@@ -61,6 +63,7 @@ export interface IPasswordTextFieldProps
   feedback?: boolean;
   iconProperties?: Omit<IIconProperties, "icon"> & { icon?: IconDefinition };
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export interface ICustomRadiusInputFieldComponentProps

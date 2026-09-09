@@ -103,6 +103,13 @@ export default function LoginWithEmail({
             type="text"
             placeholder="example@domain.com"
             onChange={(e) => handleChange(e.target.value)}
+            // Enter submits, like any login form (#49).
+            onKeyDown={(e: React.KeyboardEvent) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
             className={`pl-10 w-full py-2 px-3 rounded-md border ${
               isValid ? "border-gray-300" : "border-red-500"
             } focus:outline-none focus:ring-2 focus:ring-primary-color dark:bg-gray-900 dark:border-gray-700 dark:text-gray-300`}

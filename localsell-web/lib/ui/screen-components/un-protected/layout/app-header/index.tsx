@@ -238,9 +238,11 @@ export default function AppHeader() {
   const toggleLocale = () => {
     const next = isHindi ? "en" : "hi";
     startTransition(() => {
-      (setUserLocale as unknown as (l: string) => Promise<void>)(next).then(() =>
-        router.refresh(),
-      );
+      (setUserLocale as unknown as (l: string) => Promise<void>)(next).then(() => {
+        // Full reload so every part of the page picks up the new locale (#48).
+        if (typeof window !== "undefined") window.location.reload();
+        else router.refresh();
+      });
     });
   };
 

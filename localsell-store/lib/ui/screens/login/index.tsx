@@ -21,6 +21,7 @@ import { ILoginInitialValues } from "@/lib/utils/interfaces";
 import { useTranslation } from "react-i18next";
 import { CustomContinueButton } from "../../useable-components";
 import { IMAGES } from "@/lib/assets/images";
+import ForgotPasswordModal from "./forgot-password-modal";
 
 const initial: ILoginInitialValues = {
   username: "dgh-shrinath-mishthan-bhandar@store.padharo",
@@ -29,6 +30,8 @@ const initial: ILoginInitialValues = {
 
 const LoginScreen = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [typedUsername, setTypedUsername] = useState("");
   const { width } = useWindowDimensions();
   const isDesktop = width >= 900;
   const { appTheme } = useApptheme();
@@ -167,7 +170,10 @@ const LoginScreen = () => {
                             autoCorrect={false}
                             keyboardType="email-address"
                             value={values.username}
-                            onChangeText={handleChange("username")}
+                            onChangeText={(text) => {
+                              handleChange("username")(text);
+                              setTypedUsername(text);
+                            }}
                             onBlur={handleBlur("username")}
                           />
                         </View>
@@ -219,6 +225,18 @@ const LoginScreen = () => {
                             {errors.password}
                           </Text>
                         )}
+                        <TouchableOpacity
+                          accessibilityRole="button"
+                          onPress={() => setForgotOpen(true)}
+                          className="self-end mt-2"
+                        >
+                          <Text
+                            className="text-sm font-semibold"
+                            style={{ color: appTheme.primary }}
+                          >
+                            {t("Forgot password?")}
+                          </Text>
+                        </TouchableOpacity>
                       </View>
 
                       <CustomContinueButton
@@ -243,6 +261,12 @@ const LoginScreen = () => {
           </View>
         </ScrollView>
       </SafeAreaView>
+
+      <ForgotPasswordModal
+        visible={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        initialEmail={typedUsername.includes("@") ? typedUsername.trim() : ""}
+      />
     </KeyboardAvoidingView>
   );
 };

@@ -1,5 +1,5 @@
 import * as Yup from "yup";
-import { isValidEmail, isStrongPassword } from "@/lib/utils/methods/validation";
+import { isValidEmail } from "@/lib/utils/methods/validation";
 
 const emailValidationSchema = (t: (key: string) => string) =>
   Yup.object({
@@ -14,14 +14,6 @@ const emailValidationSchema = (t: (key: string) => string) =>
       // Shared rule with the customer site — rejects "x@com" / "x@gmailcom".
       .test("valid-email", t("emailInvalid"), (value) => isValidEmail(value))
       .required(t("emailRequired")),
-    password: Yup.string()
-      .test("strong-password", t("passwordMin"), (value) =>
-        isStrongPassword(value),
-      )
-      .required(t("passwordRequired")),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password")], t("confirmPasswordMismatch"))
-      .required(t("confirmPasswordRequired")),
     termsAccepted: Yup.boolean().oneOf([true], t("termsRequired")),
   });
 

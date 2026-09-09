@@ -104,12 +104,24 @@ export default function EnterPassword({
               showLabel={false}
               name="password"
               placeholder={t("password")}
+              // This is an existing account signing in — tell the browser so it
+              // offers the saved password, not "suggest a strong password", and
+              // drop the strength meter (the account already has a password) (#46).
+              autoComplete="current-password"
+              feedback={false}
               onChange={(e) => handleFormChange("password", e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
             />
 
             <div className="flex justify-end w-full">
-              <span
-                onClick={async () => {
+              <button
+                type="button"
+                onClick={() => {
                   if (!formData?.email) {
                     showToast({
                       type: "error",
@@ -124,7 +136,7 @@ export default function EnterPassword({
                 className="text-primary-color hover:underline text-sm font-medium cursor-pointer"
               >
                 {t("forgot_password_label")}
-              </span>
+              </button>
             </div>
 
             <CustomButton

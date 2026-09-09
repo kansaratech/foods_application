@@ -1,3 +1,4 @@
+import type { FocusEvent } from 'react';
 import { IPasswordTextFieldProps } from '@/lib/utils/interfaces';
 import { Password } from 'primereact/password';
 import { twMerge } from 'tailwind-merge';
@@ -17,6 +18,22 @@ export default function CustomPasswordTextField({
   ...props
 }: IPasswordTextFieldProps & { name?: string; error?: string }) {
   const t = useTranslations();
+
+  // Trim trailing whitespace on blur, but only when it actually changes the
+  // value, and re-emit a change event that still carries `name`/`id` — the old
+  // `{...e.target}` spread dropped those, so Formik couldn't map the change back
+  // to the field and password/confirm-password drifted out of sync (#60).
+  const handleBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const trimmed = e.target.value.trim();
+    if (trimmed !== e.target.value && props.onChange) {
+      props.onChange({
+        ...e,
+        target: Object.assign(e.target, { name: name ?? e.target.name, value: trimmed }),
+        currentTarget: e.currentTarget,
+      } as unknown as React.ChangeEvent<HTMLInputElement>);
+    }
+    props.onBlur?.(e);
+  };
 
   return (
     <FieldShell
@@ -44,12 +61,7 @@ export default function CustomPasswordTextField({
         footer={feedback ? <PasswordFeedback /> : null}
         aria-invalid={!!error}
         {...props}
-        onBlur={(e) => {
-          props.onChange?.({
-            ...e,
-            target: { ...e.target, value: e.target.value.trim() },
-          });
-        }}
+        onBlur={handleBlur}
       />
     </FieldShell>
   );

@@ -18,14 +18,10 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 34px;
-  font-weight: 750;
-  letter-spacing: -1.5px;
 }
-.brand > i {
-  color: #0085ff;
-  font-size: 40px;
+.brand img {
+  height: 42px;
+  width: auto;
 }
 .eyebrow {
   color: #9dc7f4;
@@ -332,8 +328,8 @@
   .brandPanel {
     padding: 24px;
   }
-  .brand {
-    font-size: 29px;
+  .brand img {
+    height: 34px;
   }
   .eyebrow {
     font-size: 11px;

@@ -169,7 +169,11 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
   function onLocaleChange(value: string) {
     const locale = value as TLocale;
     startTransition(() => {
-      setUserLocale(locale);
+      Promise.resolve(setUserLocale(locale)).then(() => {
+        // Reload so the whole page re-renders in the new language (#48) —
+        // without this the cookie changed but nothing updated.
+        if (typeof window !== "undefined") window.location.reload();
+      });
     });
   }
 

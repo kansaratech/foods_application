@@ -5,7 +5,6 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 
 // Components from primeReact
 import { InputText } from "primereact/inputtext";
-import { Password } from "primereact/password";
 import { Checkbox } from "primereact/checkbox";
 import { Button } from "primereact/button";
 
@@ -41,8 +40,6 @@ const initialValues: VendorFormValues = {
   lastName: "",
   phoneNumber: "",
   email: "",
-  password: "",
-  confirmPassword: "",
   termsAccepted: false,
 };
 
@@ -152,6 +149,9 @@ const EmailForm: React.FC<formProps> = ({
           initialValues={initialValues}
           validationSchema={emailValidationSchema(t)}
           onSubmit={handleSubmit}
+          // A brand-new partner application never carries over data from a
+          // previous visitor / the signed-in admin (#50).
+          enableReinitialize
         >
           {({ values, setFieldValue, isSubmitting }) => (
             <Form className="grid gap-5">
@@ -206,6 +206,10 @@ const EmailForm: React.FC<formProps> = ({
                     <InputText
                       placeholder={t("email_address_placeholder")}
                       {...field}
+                      // This is a partner application, not a sign-in — stop the
+                      // browser autofilling the signed-in admin's saved
+                      // email/password into it (#50).
+                      autoComplete="off"
                       className={`mt-1 ${fieldClass}`}
                     />
                   )}
@@ -226,54 +230,6 @@ const EmailForm: React.FC<formProps> = ({
                 </div>
                 <ErrorMessage
                   name="phoneNumber"
-                  component="small"
-                  className="p-error text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-gray-300">
-                  {t("password_label")}
-                </label>
-                <Field name="password">
-                  {({ field }: any) => (
-                    <Password
-                      {...field}
-                      inputClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                      panelClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                      placeholder={t("password")}
-                      toggleMask
-                      className={`mt-1 ${fieldClass}`}
-                      feedback={false}
-                    />
-                  )}
-                </Field>
-                <ErrorMessage
-                  name="password"
-                  component="small"
-                  className="p-error text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-600 dark:text-gray-300">
-                  {t("confirm_password_label")}
-                </label>
-                <Field name="confirmPassword">
-                  {({ field }: any) => (
-                    <Password
-                      placeholder={t("confirm_password_label")}
-                      inputClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                      panelClassName="bg-white text-black dark:bg-gray-700 dark:text-white"
-                      {...field}
-                      toggleMask
-                      className={`mt-1 ${fieldClass}`}
-                      feedback={false}
-                    />
-                  )}
-                </Field>
-                <ErrorMessage
-                  name="confirmPassword"
                   component="small"
                   className="p-error text-xs"
                 />

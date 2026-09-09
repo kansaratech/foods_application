@@ -65,7 +65,16 @@ export default function LoginWithPhone({
         </p>
       </div>
 
-      <div className="flex flex-col gap-y-2 mt-6 w-full">
+      <div
+        className="flex flex-col gap-y-2 mt-6 w-full"
+        onKeyDown={(e) => {
+          // Enter anywhere in the phone field sends the code (#49).
+          if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
+      >
         <CustomPhoneTextField
           value={phone}
           showLabel={false}

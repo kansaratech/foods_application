@@ -38,7 +38,13 @@ export default function LandingHeader() {
       // setUserLocale is a server action; the union type in the local .d.ts is
       // stale (the app ships 18+ locales), so widen through unknown.
       (setUserLocale as unknown as (l: string) => Promise<void>)(next).then(
-        () => router.refresh(),
+        () => {
+          // A soft router.refresh() only re-rendered the part of the tree that
+          // re-read the cookie — the rest of the page stayed in the old
+          // language (#48). A full reload re-reads NEXT_LOCALE everywhere.
+          if (typeof window !== "undefined") window.location.reload();
+          else router.refresh();
+        },
       );
     });
   };

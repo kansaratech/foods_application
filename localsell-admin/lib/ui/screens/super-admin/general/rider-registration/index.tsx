@@ -38,6 +38,7 @@ import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field'
 import ProfilePhotoUpload from '@/lib/ui/useable-components/profile-photo-upload';
 import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
 import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
+import ReauthGate from '@/lib/ui/useable-components/reauth-gate';
 
 // Utilities, constants, interfaces
 import { VEHICLE_TYPE } from '@/lib/utils/constants';
@@ -119,6 +120,12 @@ export default function RiderRegistrationScreen() {
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+
+  // Editing an existing rider is a sensitive change — make the admin re-enter
+  // their own password once before the form becomes usable (#44), same as the
+  // store edit wizard.
+  const [reauthed, setReauthed] = useState(false);
+  const needsReauth = isEditMode && !reauthed;
 
   const buildRiderInput = (values: IRiderForm) => ({
     _id: values._id || undefined,
@@ -293,7 +300,11 @@ export default function RiderRegistrationScreen() {
                 </div>
               </div>
 
-              <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-dark-600 dark:bg-dark-950">
+              <div
+                className={`w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-dark-600 dark:bg-dark-950 ${
+                  needsReauth ? 'pointer-events-none select-none opacity-40' : ''
+                }`}
+              >
                 <Form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -641,6 +652,14 @@ export default function RiderRegistrationScreen() {
                   </div>
                 </Form>
               </div>
+
+              <ReauthGate
+                open={needsReauth}
+                title={t('Confirm your password')}
+                description={t('For security, re-enter your password to edit this rider.')}
+                onVerified={() => setReauthed(true)}
+                onCancel={() => router.push('/general/riders')}
+              />
 
               <CustomDialog
                 visible={showDiscardConfirm}

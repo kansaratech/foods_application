@@ -106,6 +106,11 @@ export default function PhoneOtp({
             onChange={(e) => setDigit(i, e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Backspace" && !digits[i] && i > 0) inputs.current[i - 1]?.focus();
+              // Enter on the last digit confirms, like any OTP form (#49).
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit();
+              }
             }}
             className="w-12 h-14 md:w-14 md:h-16 text-xl text-center border border-gray-300 dark:border-gray-700 dark:bg-gray-800 rounded-lg focus:outline-none focus:border-primary-color focus:ring-2 focus:ring-primary-color/20"
           />
