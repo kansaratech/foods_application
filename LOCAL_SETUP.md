@@ -199,30 +199,25 @@ nvm use
 npm install
 ```
 
-Create `localsell-api/.env` (it's git-ignored, so you won't get it from the
-clone):
+Create `localsell-api/.env` from the committed template (the real `.env` is
+git-ignored, so you won't get it from the clone):
 
-```dotenv
-DATABASE_URL="mysql://root:root@localhost:3306/localsell"
-
-PORT=4000
-JWT_SECRET="<run: openssl rand -hex 32>"
-JWT_EXPIRES_IN="30d"
-REFRESH_TOKEN_SECRET="<run: openssl rand -hex 32>"
-REFRESH_TOKEN_EXPIRES_IN="90d"
-
-# dev only — never "*" on a server
-CORS_ORIGIN="*"
-
-UPLOAD_DIR="uploads"
-PUBLIC_UPLOAD_URL="http://localhost:4000/uploads"
-
-# optional: Gmail app password for outgoing email
-SMTP_PASSWORD=""
+```bash
+cp .env.example .env
 ```
 
-(`openssl` is available in Git Bash on Windows. Any random string works for a
-local dev secret.)
+Then edit `.env`:
+
+- **`DATABASE_URL`** — match whichever MySQL option you picked in step 1
+  (the template defaults to the Docker `root:root` / `localsell` combo).
+- **`JWT_SECRET`** / **`REFRESH_TOKEN_SECRET`** — any random string for local
+  dev. `openssl rand -hex 32` (openssl ships with Git Bash on Windows).
+- **`SMTP_PASSWORD`** — leave blank unless you need to send real email locally;
+  then get the Gmail app password from the team lead (password manager / DM,
+  never committed). Blank = OTP/reset emails print to the API console, which is
+  fine for most dev.
+
+Every variable is documented inline in `.env.example`.
 
 Create the schema and load demo data:
 

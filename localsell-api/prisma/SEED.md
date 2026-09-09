@@ -25,6 +25,10 @@ If `SMTP_PASSWORD` is unset, the seed keeps whatever `emailPassword` was already
 on the Configuration row. The seed prints `email ready` / `email NOT configured`.
 Default: Gmail (`smtp.gmail.com:465` SSL, `localsell.dgh@gmail.com`).
 
+New machine: `cp localsell-api/.env.example localsell-api/.env`, then paste the
+Gmail app password (get it from the team lead — it is not in git) into
+`SMTP_PASSWORD`. Leave it blank to run without outgoing email.
+
 > ⚠️ **Never run `npm run seed` (or `db:deploy -- --demo`) against a live
 > production database.** It is a full reset.
 
