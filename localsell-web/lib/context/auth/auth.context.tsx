@@ -382,6 +382,72 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [fetchProfile] = useLazyQuery(GET_USER_PROFILE, {
     fetchPolicy: "cache-and-network",
   });
+
+  // Passwordless mobile-number login: the API verifies the OTP, signs the user
+  // in (creating a customer account if the number is new) and returns a token.
+  // Doesn't run the email-centric `onLoginCompleted` routing — a phone user is
+  // already fully signed in.
+  const [mutatePhoneLogin] = useMutation<ILoginProfileResponse, IUserLoginArguments>(LOGIN);
+
+  // Finish a signed-in session: close the modal and land the customer in-app.
+  const finishAuthedSession = useCallback(() => {
+    setActivePanel(0);
+    setIsAuthModalVisible(false);
+    setRefetchProfileData(true);
+    if (typeof window !== "undefined" && window.location.pathname === "/") {
+      router.push("/discovery");
+    }
+  }, [router]);
+
+  const handlePhoneLogin = useCallback(
+    async (
+      phone: string,
+      otp: string,
+    ): Promise<{ ok: boolean; isNewUser?: boolean; hasName?: boolean }> => {
+      try {
+        setIsLoading(true);
+        const res = await mutatePhoneLogin({ variables: { type: "phone", phone, otp } });
+        const login = res.data?.login;
+        if (!login?.token) throw new Error("login_failed");
+        setUser(login);
+        setAuthTokens({
+          userId: login.userId,
+          token: login.token,
+          tokenExpiration: login.tokenExpiration,
+          userType: "USER",
+        });
+        setAuthToken(login.token);
+        await fetchProfile();
+        const hasName = Boolean(login.name && login.name.trim());
+        // A brand-new account with no name → caller sends them to the
+        // "your name" step; everyone else is done here.
+        if (!login.isNewUser || hasName) {
+          showToast({
+            type: "success",
+            title: t("login_success"),
+            message: t("login_success_message"),
+          });
+          finishAuthedSession();
+        }
+        return { ok: true, isNewUser: Boolean(login.isNewUser), hasName };
+      } catch (err) {
+        const error = err as ApolloError;
+        showToast({
+          type: "error",
+          title: t("login_error"),
+          message:
+            error?.graphQLErrors?.[0]?.message ||
+            error?.message ||
+            t("invalid_otp"),
+        });
+        return { ok: false };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [mutatePhoneLogin, fetchProfile, finishAuthedSession, showToast, t],
+  );
+
   // GQL Handlers
   async function onLoginCompleted(data: ILoginProfileResponse) {
     try {
@@ -625,6 +691,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setOtp,
       sendOtpToEmailAddress,
       sendOtpToPhoneNumber,
+      handlePhoneLogin,
+      finishAuthedSession,
       handleForgotPassword,
       handleCreateUser,
       setIsLoading,
@@ -651,6 +719,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setOtp,
       sendOtpToEmailAddress,
       sendOtpToPhoneNumber,
+      handlePhoneLogin,
+      finishAuthedSession,
       handleForgotPassword,
       handleCreateUser,
       setIsLoading,

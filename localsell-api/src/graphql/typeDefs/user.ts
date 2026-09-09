@@ -86,7 +86,7 @@ export const userTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    login(email: String, password: String, type: String!, appleId: String, idToken: String, name: String, notificationToken: String): AuthPayload!
+    login(email: String, password: String, type: String!, appleId: String, idToken: String, name: String, notificationToken: String, phone: String, otp: String): AuthPayload!
     createUser(userInput: UserInput!): AuthPayload!
     updateUser(updateUserInput: UpdateUserInput!): User!
     emailExist(email: String!): Boolean!
@@ -94,8 +94,8 @@ export const userTypeDefs = /* GraphQL */ `
     sendOtpToEmail(email: String!): Result!
     sendOtpToPhoneNumber(phone: String!): Result!
     verifyOtp(otp: String!, email: String, phone: String): Result!
-    forgotPassword(email: String!): Result!
-    resetPassword(password: String!, email: String!, otp: String!): Result!
+    forgotPassword(email: String, phone: String): Result!
+    resetPassword(password: String!, email: String, phone: String, otp: String): Result!
     changePassword(oldPassword: String!, newPassword: String!): Boolean!
     Deactivate(isActive: Boolean!, email: String!): DeactivateResult!
     pushToken(token: String): PushTokenResult!

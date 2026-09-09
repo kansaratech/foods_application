@@ -21,4 +21,15 @@ export const env = {
   corsOrigin: process.env.CORS_ORIGIN ?? '*',
   uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR ?? 'uploads'),
   publicUploadUrl: process.env.PUBLIC_UPLOAD_URL ?? 'http://localhost:4000/uploads',
+
+  // WhatsApp Cloud API — the permanent System User token. Seeded into
+  // Configuration.whatsappAccessToken (see prisma/seed-from-config.ts); also read
+  // directly here as a runtime fallback so a server can rotate the token via env
+  // alone. Non-secret IDs (phone number ID, WABA ID) live on the Configuration row.
+  whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN ?? '',
+  // Webhook: the string entered as "Verify token" in Meta's webhook config, and
+  // the app secret (Meta App → Settings → Basic) used to check X-Hub-Signature-256.
+  // Signature verification is skipped when the secret is unset.
+  whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN ?? 'localsell-whatsapp',
+  whatsappAppSecret: process.env.WHATSAPP_APP_SECRET ?? '',
 };

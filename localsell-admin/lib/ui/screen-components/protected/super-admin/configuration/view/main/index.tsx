@@ -8,6 +8,7 @@ import CurrencyAddForm from '../../add-form/currency';
 import DeliveryRateAddForm from '../../add-form/delivery-rate';
 import GoogleApiAddForm from '../../add-form/google-api';
 import VerificationAddForm from '../../add-form/verification';
+import WhatsAppAddForm from '../../add-form/whatsapp';
 import AppConfigAddForm from '../../add-form/app-config';
 import AppVersionAddForm from '../../add-form/app-versions';
 
@@ -33,6 +34,9 @@ const ConfigMain = () => {
       <DeliveryRateAddForm />
       <GoogleApiAddForm />
       <VerificationAddForm />
+      <div className="configuration-wide">
+        <WhatsAppAddForm />
+      </div>
       <div className="configuration-wide">
         <AppConfigAddForm />
       </div>

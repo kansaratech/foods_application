@@ -40,9 +40,24 @@ export default function LoginWithGoogle({
         </p>
       </div>
 
-      {/* Google Login — only when a Google client id is configured */}
+      {/* Mobile number — the primary (and only headline) way in. Sign-up and
+          login are the same OTP flow. */}
+      <div className="w-full max-w-sm mb-4">
+        <CustomButton
+          label={t("continue_with_mobile_number_label") ?? "Continue with mobile number"}
+          className="bg-primary-color hover:bg-primary-hover text-white dark:text-gray-100 w-full py-3 rounded-full border border-primary-color dark:border-gray-600 flex justify-center items-center"
+          onClick={() => handleChangePanel(10)}
+        />
+      </div>
+
+      {/* Google — optional alternative, only when configured */}
       {IS_GOOGLE_LOGIN_ENABLED && (
         <>
+          <div className="flex items-center justify-center w-full max-w-sm mb-4">
+            <Divider color="border-gray-200 dark:border-gray-600" />
+            <span className="mx-2 text-sm text-gray-500 dark:text-gray-300">{t("or_label")}</span>
+            <Divider color="border-gray-200 dark:border-gray-600" />
+          </div>
           <div className="w-full max-w-sm mb-4">
             <CustomIconButton
               loading={isLoading}
@@ -52,33 +67,17 @@ export default function LoginWithGoogle({
               handleClick={googleLogin}
             />
           </div>
-
-          {/* Divider */}
-          <div className="flex items-center justify-center w-full max-w-sm mb-4">
-            <Divider color="border-gray-200 dark:border-gray-600" />
-            <span className="mx-2 text-sm text-gray-500 dark:text-gray-300">{t("or_label")}</span>
-            <Divider color="border-gray-200 dark:border-gray-600" />
-          </div>
         </>
       )}
 
-      {/* Login Button */}
-      <div className="w-full max-w-sm mb-4">
-        <CustomButton
-          label={t("login")}
-          className="bg-primary-color hover:bg-primary-hover text-white dark:text-gray-100 w-full py-3 rounded-full border border-primary-color dark:border-gray-600 flex justify-center items-center"
-          onClick={() => handleChangePanel(1)}
-        />
-      </div>
-
-      {/* Sign Up Button */}
-      <div className="w-full max-w-sm mb-4">
-        <CustomButton
-          label={t("sign_up_label")}
-          className="bg-white dark:bg-gray-700 hover:bg-gray-100 dark:text-white w-full py-3 rounded-full border border-gray-300 dark:border-gray-600 flex justify-center items-center text-black"
-          onClick={() => handleChangePanel(2)}
-        />
-      </div>
+      {/* Legacy email accounts — kept reachable but not headline */}
+      <button
+        type="button"
+        onClick={() => handleChangePanel(1)}
+        className="mb-4 text-sm font-medium text-gray-500 hover:text-primary-color hover:underline dark:text-gray-400"
+      >
+        {t("sign_in_with_email_label") ?? "Sign in with an email account"}
+      </button>
 
       {/* Terms and Privacy */}
       <p className="text-center text-xs text-gray-500 max-w-sm px-2 dark:text-gray-300 ">

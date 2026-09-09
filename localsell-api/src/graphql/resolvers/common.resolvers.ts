@@ -6,6 +6,7 @@ import { requireRole } from '../../middleware/auth';
 import { GraphQLContext } from '../../context';
 import { notFoundError } from '../../utils/errors';
 import { recordAudit } from '../../utils/audit';
+import { syncWhatsappTemplates as runWhatsappTemplateSync } from '../../services/whatsapp-admin';
 
 // All 17 "save X configuration" mutations write into this one singleton row.
 // `data` should only contain the keys that mutation actually owns - callers
@@ -88,6 +89,33 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
       ]);
       const totalPages = Math.max(1, Math.ceil(total / limit));
       return { data, total, page, pageSize: limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 };
+    },
+    whatsappTemplates: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      return prisma.whatsappTemplate.findMany({ orderBy: { key: 'asc' } });
+    },
+    whatsappUsageStats: async (_parent, args: { days?: number }, context) => {
+      requireRole(context, ['ADMIN']);
+      const days = Math.min(Math.max(args.days ?? 30, 1), 365);
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const logs = await prisma.whatsappMessageLog.findMany({
+        where: { createdAt: { gte: since } },
+        select: { userType: true, purpose: true, channel: true, status: true, toPhone: true },
+      });
+      const key = (l: { userType: string | null; purpose: string; channel: string; status: string }) =>
+        `${l.userType ?? 'UNKNOWN'}|${l.purpose}|${l.channel}|${l.status}`;
+      const buckets = new Map<string, number>();
+      for (const l of logs) buckets.set(key(l), (buckets.get(key(l)) ?? 0) + 1);
+      const rows = [...buckets.entries()].map(([k, count]) => {
+        const [userType, purpose, channel, status] = k.split('|');
+        return { userType, purpose, channel, status, count };
+      });
+      return {
+        days,
+        total: logs.length,
+        uniqueRecipients: new Set(logs.map((l) => l.toPhone)).size,
+        rows: rows.sort((a, b) => b.count - a.count),
+      };
     },
     cuisines: async () => prisma.cuisine.findMany(),
     cuisinesPaginated: async (
@@ -310,6 +338,54 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
         ...(args.configurationInput.twilioAuthToken ? { twilioAuthToken: args.configurationInput.twilioAuthToken } : {}),
       }),
 
+    saveWhatsAppConfiguration: (
+      _parent,
+      args: {
+        configurationInput: {
+          whatsappCloudEnabled?: boolean;
+          whatsappPhoneNumberId?: string;
+          whatsappWabaId?: string;
+          whatsappApiVersion?: string;
+          whatsappOtpTemplate?: string;
+          whatsappOtpLang?: string;
+          whatsappAccessToken?: string;
+        };
+      },
+      context,
+    ) =>
+      saveConfiguration(context, {
+        whatsappCloudEnabled: args.configurationInput.whatsappCloudEnabled,
+        whatsappPhoneNumberId: args.configurationInput.whatsappPhoneNumberId,
+        whatsappWabaId: args.configurationInput.whatsappWabaId,
+        whatsappApiVersion: args.configurationInput.whatsappApiVersion,
+        whatsappOtpTemplate: args.configurationInput.whatsappOtpTemplate,
+        whatsappOtpLang: args.configurationInput.whatsappOtpLang,
+        // Only overwrite the token when a non-empty value is submitted.
+        ...(args.configurationInput.whatsappAccessToken
+          ? { whatsappAccessToken: args.configurationInput.whatsappAccessToken }
+          : {}),
+      }),
+
+    syncWhatsappTemplates: async (_parent, _args, context) => {
+      requireRole(context, ['ADMIN']);
+      const result = await runWhatsappTemplateSync();
+      await recordAudit(context, { action: 'config.whatsapp.templateSync', summary: result.message });
+      return result;
+    },
+
+    setWhatsappTemplateActive: async (_parent, args: { key: string; isActive: boolean }, context) => {
+      requireRole(context, ['ADMIN']);
+      const row = await prisma.whatsappTemplate.update({
+        where: { key: args.key },
+        data: { isActive: args.isActive },
+      });
+      await recordAudit(context, {
+        action: 'config.whatsapp.templateToggle',
+        summary: `WhatsApp template ${args.key} ${args.isActive ? 'enabled' : 'disabled'}`,
+      });
+      return row;
+    },
+
     saveVerificationsToggle: (
       _parent,
       args: { configurationInput: { skipEmailVerification?: boolean; skipMobileVerification?: boolean; skipWhatsAppOTP?: boolean } },
@@ -341,6 +417,13 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
     clientId: (parent: { paypalClientId?: string | null }) => parent.paypalClientId ?? null,
     sandbox: (parent: { paypalSandbox?: boolean }) => parent.paypalSandbox ?? null,
     publishableKey: (parent: { stripePublishableKey?: string | null }) => parent.stripePublishableKey ?? null,
+    // Never expose the token itself — just whether one is stored (env or DB).
+    whatsappAccessTokenSet: (parent: { whatsappAccessToken?: string | null }) =>
+      Boolean(process.env.WHATSAPP_ACCESS_TOKEN || parent.whatsappAccessToken),
+  },
+  WhatsappTemplate: {
+    _id: (parent: { id: string }) => parent.id,
+    lastSyncedAt: (parent: { lastSyncedAt?: Date | null }) => parent.lastSyncedAt?.toISOString() ?? null,
   },
   ShopType: {
     _id: (parent: ShopType) => parent.id,

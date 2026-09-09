@@ -55,6 +55,7 @@ export interface IUserLoginArguments {
   idToken?: string;
   password?: string;
   phone?: string;
+  otp?: string;
   type?: string;
   name?: string;
   notificationToken?: string;
@@ -81,6 +82,11 @@ export interface IAuthContextProps {
   setOtp: Dispatch<SetStateAction<string | null>>;
   sendOtpToEmailAddress: { (email: string, type?: string): Promise<void> };
   sendOtpToPhoneNumber: { (phone: string): Promise<void> };
+  handlePhoneLogin: (
+    phone: string,
+    otp: string,
+  ) => Promise<{ ok: boolean; isNewUser?: boolean; hasName?: boolean }>;
+  finishAuthedSession: () => void;
   handleForgotPassword: (email: string) => Promise<void>;
   handleCreateUser: (user: ICreateUserArguments) => Promise<ICreateUserData>;
   isRegistering: boolean;

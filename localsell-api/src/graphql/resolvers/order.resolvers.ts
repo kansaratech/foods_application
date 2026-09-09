@@ -4,6 +4,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../services/order.service';
+import { notifyOrderEvent } from '../../services/order-notify';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
@@ -175,6 +176,7 @@ async function finalizeDelivery(
   }
 
   await publishOrderUpdate(updated);
+  if (!alreadyDelivered) notifyOrderEvent(updated.id, 'DELIVERED');
   return updated;
 }
 
@@ -227,6 +229,8 @@ async function applyOrderStatusUpdate(
   });
 
   await publishOrderUpdate(updated);
+  if (status === 'PICKED' && order.orderStatus !== 'PICKED') notifyOrderEvent(updated.id, 'OUT_FOR_DELIVERY');
+  if (status === 'CANCELLED' && order.orderStatus !== 'CANCELLED') notifyOrderEvent(updated.id, 'CANCELLED');
   return updated;
 }
 
@@ -657,6 +661,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       await prisma.webNotification.create({
         data: { userId: restaurant.ownerId, body: `New order #${order.orderId} received`, navigateTo: '/orders' },
       });
+      notifyOrderEvent(order.id, 'PLACED');
       return order;
     },
 
@@ -773,6 +778,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       });
       await publishOrderUpdate(updated);
       await publishRiderAssigned(updated);
+      notifyOrderEvent(updated.id, 'RIDER_ASSIGNED');
       return updated;
     },
 
@@ -795,6 +801,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       });
       await publishOrderUpdate(updated);
       await publishRiderAssigned(updated);
+      notifyOrderEvent(updated.id, 'RIDER_ASSIGNED');
       return updated;
     },
 
@@ -824,6 +831,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         },
       });
       await publishOrderUpdate(updated);
+      if (order.orderStatus !== 'ACCEPTED') notifyOrderEvent(updated.id, 'CONFIRMED');
       return updated;
     },
 
@@ -877,6 +885,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         data: { orderStatus: 'CANCELLED', status: 'CANCELLED', cancelledAt: new Date(), reason: args.reason },
       });
       await publishOrderUpdate(updated);
+      if (order.orderStatus !== 'CANCELLED') notifyOrderEvent(updated.id, 'CANCELLED');
       return updated;
     },
 

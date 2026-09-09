@@ -22,6 +22,13 @@ export const GET_CONFIGURATION = gql`
       twilioEnabled
       skipWhatsAppOTP
       twilioWhatsAppNumber
+      whatsappCloudEnabled
+      whatsappPhoneNumberId
+      whatsappWabaId
+      whatsappApiVersion
+      whatsappOtpTemplate
+      whatsappOtpLang
+      whatsappAccessTokenSet
       formEmail
       sendGridEnabled
       sendGridEmail
@@ -64,6 +71,38 @@ export const GET_CONFIGURATION = gql`
       riderCashLimit
       defaultLatitude
       defaultLongitude
+    }
+  }
+`;
+
+export const GET_WHATSAPP_TEMPLATES = gql`
+  query getWhatsappTemplates {
+    whatsappTemplates {
+      _id
+      key
+      metaName
+      language
+      category
+      status
+      isActive
+      lastSyncedAt
+    }
+  }
+`;
+
+export const GET_WHATSAPP_USAGE_STATS = gql`
+  query getWhatsappUsageStats($days: Int) {
+    whatsappUsageStats(days: $days) {
+      days
+      total
+      uniqueRecipients
+      rows {
+        userType
+        purpose
+        channel
+        status
+        count
+      }
     }
   }
 `;

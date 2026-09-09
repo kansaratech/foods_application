@@ -49,6 +49,14 @@ export const commonTypeDefs = /* GraphQL */ `
     twilioEnabled: Boolean
     twilioWhatsAppNumber: String
 
+    whatsappCloudEnabled: Boolean
+    whatsappPhoneNumberId: String
+    whatsappWabaId: String
+    whatsappApiVersion: String
+    whatsappOtpTemplate: String
+    whatsappOtpLang: String
+    whatsappAccessTokenSet: Boolean
+
     dashboardSentryUrl: String
     webSentryUrl: String
     apiSentryUrl: String
@@ -210,9 +218,54 @@ export const commonTypeDefs = /* GraphQL */ `
     skipWhatsAppOTP: Boolean
   }
 
+  input WhatsAppConfigurationInput {
+    whatsappCloudEnabled: Boolean
+    whatsappPhoneNumberId: String
+    whatsappWabaId: String
+    whatsappApiVersion: String
+    whatsappOtpTemplate: String
+    whatsappOtpLang: String
+    whatsappAccessToken: String
+  }
+
   input CurrencyConfigurationInput {
     currency: String
     currencySymbol: String
+  }
+
+  type WhatsappTemplate {
+    _id: ID!
+    key: String!
+    metaName: String!
+    language: String!
+    category: String!
+    status: String!
+    bodyText: String
+    buttonType: String
+    isActive: Boolean!
+    lastSyncedAt: String
+  }
+
+  type WhatsappTemplateSyncResult {
+    ok: Boolean!
+    message: String!
+    updated: Int!
+    templates: [WhatsappTemplate!]!
+  }
+
+  type WhatsappUsageRow {
+    userType: String
+    purpose: String
+    channel: String
+    status: String
+    count: Int!
+  }
+
+  type WhatsappUsageStats {
+    days: Int!
+    total: Int!
+    uniqueRecipients: Int!
+    rows: [WhatsappUsageRow!]!
   }
 
   type ShopType {
@@ -292,6 +345,8 @@ export const commonTypeDefs = /* GraphQL */ `
     fetchShopTypes(filter: FetchShopTypeFilter, pagination: PaginationInput): ShopTypeFetchPaginated!
     cuisines: [Cuisine!]!
     cuisinesPaginated(page: Int, limit: Int, search: String, shopType: String): CuisinePaginated!
+    whatsappTemplates: [WhatsappTemplate!]!
+    whatsappUsageStats(days: Int): WhatsappUsageStats!
   }
 
   type Mutation {
@@ -318,6 +373,9 @@ export const commonTypeDefs = /* GraphQL */ `
     savePaypalConfiguration(configurationInput: PaypalConfigurationInput!): Configuration!
     saveStripeConfiguration(configurationInput: StripeConfigurationInput!): Configuration!
     saveTwilioConfiguration(configurationInput: TwilioConfigurationInput!): Configuration!
+    saveWhatsAppConfiguration(configurationInput: WhatsAppConfigurationInput!): Configuration!
+    syncWhatsappTemplates: WhatsappTemplateSyncResult!
+    setWhatsappTemplateActive(key: String!, isActive: Boolean!): WhatsappTemplate!
     saveVerificationsToggle(configurationInput: VerificationConfigurationInput!): Configuration!
     saveCurrencyConfiguration(configurationInput: CurrencyConfigurationInput!): Configuration!
     saveCommissionConfiguration(configurationInput: CommissionConfigurationInput!): Configuration!

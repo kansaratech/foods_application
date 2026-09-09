@@ -11,10 +11,39 @@ import {
 } from '../../services/auth.service';
 import { userInputError } from '../../utils/errors';
 import { recordAudit } from '../../utils/audit';
-import { sendEmail, sendPhoneMessage } from '../../utils/notifications';
+import { sendEmail } from '../../utils/notifications';
+import {
+  assertPhoneRecentlyVerified,
+  canonicalPhone,
+  consumePhoneVerification,
+  findUserByPhone,
+  issuePhoneOtp,
+  verifyPhoneOtp,
+} from '../../services/phone-auth.service';
 
 function favouriteList(user: User): string[] {
   return Array.isArray(user.favouriteRestaurantIds) ? (user.favouriteRestaurantIds as string[]) : [];
+}
+
+function buildAuthPayload(user: User, isNewUser: boolean) {
+  const { token, expiresAt } = signAccessToken({
+    userId: user.id,
+    userType: user.userType,
+    tokenVersion: user.tokenVersion,
+  });
+  return {
+    userId: user.id,
+    token,
+    tokenExpiration: expiresAt,
+    isActive: user.isActive,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    emailIsVerified: user.emailIsVerified,
+    phoneIsVerified: user.phoneIsVerified,
+    picture: user.image,
+    isNewUser,
+  };
 }
 
 interface UserInputArgs {
@@ -36,6 +65,8 @@ interface LoginArgs {
   idToken?: string;
   name?: string;
   notificationToken?: string;
+  phone?: string;
+  otp?: string;
 }
 
 interface AddressInputArgs {
@@ -84,6 +115,48 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         };
       }
 
+      // Phone login: passwordless (phone + OTP) or phone + password. Verified
+      // customers sign in; an unknown number becomes a new CUSTOMER account.
+      if (args.type === 'phone') {
+        if (!args.phone) throw userInputError('Mobile number is required');
+        const existing = await findUserByPhone(args.phone);
+
+        if (args.otp) {
+          await verifyPhoneOtp(args.phone, args.otp);
+        } else if (args.password) {
+          if (!existing?.password || !(await comparePassword(args.password, existing.password))) {
+            throw userInputError('Invalid mobile number or password');
+          }
+        } else {
+          throw userInputError('Enter the code sent to your phone');
+        }
+
+        let user = existing;
+        let isNewUser = false;
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              phone: canonicalPhone(args.phone),
+              name: args.name,
+              phoneIsVerified: true,
+              notificationToken: args.notificationToken,
+              userType: 'CUSTOMER',
+            },
+          });
+          isNewUser = true;
+        } else if (!user.phoneIsVerified || args.notificationToken) {
+          user = await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              phoneIsVerified: true,
+              ...(args.notificationToken ? { notificationToken: args.notificationToken } : {}),
+            },
+          });
+        }
+        if (args.otp) await consumePhoneVerification(args.phone);
+        return buildAuthPayload(user, isNewUser);
+      }
+
       if (!['apple', 'google', 'facebook'].includes(args.type)) {
         throw userInputError('Unsupported login type');
       }
@@ -125,18 +198,31 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         const existing = await prisma.user.findUnique({ where: { email: input.email } });
         if (existing) throw userInputError('Email is already registered');
       }
-      // When the marketplace has verification turned off (no SMTP / WhatsApp /
-      // Firebase configured), new accounts are created already verified so the
-      // customer can sign in immediately.
+      if (input.phone && (await findUserByPhone(input.phone))) {
+        throw userInputError('This mobile number is already registered');
+      }
+
       const config = await prisma.configuration.findFirst();
       const emailIsVerified = config?.skipEmailVerification ? true : (input.emailIsVerified ?? false);
-      const phoneIsVerified = config?.skipMobileVerification ? true : false;
+
+      // Phone-first signup: unless mobile verification is switched off, the
+      // number must have been OTP-verified (issuePhoneOtp → verifyPhoneOtp) in
+      // the last half hour before the account can be created.
+      let phoneIsVerified = false;
+      if (input.phone) {
+        if (config?.skipMobileVerification) {
+          phoneIsVerified = true;
+        } else {
+          await assertPhoneRecentlyVerified(input.phone);
+          phoneIsVerified = true;
+        }
+      }
 
       const user = await prisma.user.create({
         data: {
           name: input.name,
           email: input.email,
-          phone: input.phone,
+          phone: input.phone ? canonicalPhone(input.phone) : undefined,
           password: input.password ? await hashPassword(input.password) : undefined,
           notificationToken: input.notificationToken,
           appleId: input.appleId,
@@ -144,20 +230,10 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
           phoneIsVerified,
         },
       });
-      const { token, expiresAt } = signAccessToken({ userId: user.id, userType: user.userType, tokenVersion: user.tokenVersion });
-      return {
-        userId: user.id,
-        token,
-        tokenExpiration: expiresAt,
-        isActive: user.isActive,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        emailIsVerified: user.emailIsVerified,
-        phoneIsVerified: user.phoneIsVerified,
-        picture: user.image,
-        isNewUser: true,
-      };
+      if (input.phone && phoneIsVerified && !config?.skipMobileVerification) {
+        await consumePhoneVerification(input.phone);
+      }
+      return buildAuthPayload(user, true);
     },
 
     updateUser: async (
@@ -182,8 +258,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
       return Boolean(user);
     },
     phoneExist: async (_parent, args: { phone: string }) => {
-      const user = await prisma.user.findUnique({ where: { phone: args.phone } });
-      return Boolean(user);
+      return Boolean(await findUserByPhone(args.phone));
     },
 
     sendOtpToEmail: async (_parent, args: { email: string }) => {
@@ -196,39 +271,44 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
       return { result: 'OTP sent' };
     },
     sendOtpToPhoneNumber: async (_parent, args: { phone: string }) => {
-      const otp = generateOtp();
-      await prisma.user.updateMany({
-        where: { phone: args.phone },
-        data: { otpCode: otp, otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) },
-      });
-      await sendPhoneMessage(args.phone, `Your verification code is ${otp}. It expires in 10 minutes.`);
+      await issuePhoneOtp(args.phone, 'SIGNUP');
       return { result: 'OTP sent' };
     },
     verifyOtp: async (_parent, args: { otp: string; email?: string; phone?: string }) => {
-      const where = args.email ? { email: args.email } : { phone: args.phone };
-      const user = await prisma.user.findFirst({ where: where as { email: string } | { phone: string } });
+      if (args.phone) {
+        await verifyPhoneOtp(args.phone, args.otp);
+        // If an account already uses this number, flip its verified flag now.
+        const user = await findUserByPhone(args.phone);
+        if (user && !user.phoneIsVerified) {
+          await prisma.user.update({ where: { id: user.id }, data: { phoneIsVerified: true } });
+        }
+        return { result: 'OTP verified' };
+      }
+
+      // Email OTP path (unchanged) — stored on the User row.
+      const user = await prisma.user.findFirst({ where: { email: args.email } });
       const config = await prisma.configuration.findFirst();
       const isTestOtp = config?.testOtp && config.testOtp === args.otp;
-
       if (!user) throw userInputError('User not found');
       if (!isTestOtp) {
         if (!user.otpCode || user.otpCode !== args.otp) throw userInputError('Invalid OTP');
         if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) throw userInputError('OTP has expired');
       }
-
       await prisma.user.update({
         where: { id: user.id },
-        data: {
-          otpCode: null,
-          otpExpiresAt: null,
-          emailIsVerified: args.email ? true : user.emailIsVerified,
-          phoneIsVerified: args.phone ? true : user.phoneIsVerified,
-        },
+        data: { otpCode: null, otpExpiresAt: null, emailIsVerified: true },
       });
       return { result: 'OTP verified' };
     },
 
-    forgotPassword: async (_parent, args: { email: string }) => {
+    forgotPassword: async (_parent, args: { email?: string; phone?: string }) => {
+      if (args.phone) {
+        const user = await findUserByPhone(args.phone);
+        if (!user) throw userInputError('No account found with that mobile number');
+        await issuePhoneOtp(args.phone, 'PASSWORD_RESET');
+        return { result: 'OTP sent' };
+      }
+      if (!args.email) throw userInputError('Enter your email or mobile number');
       const otp = generateOtp();
       const updated = await prisma.user.updateMany({
         where: { email: args.email },
@@ -238,13 +318,27 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
       await sendEmail(args.email, 'Password reset code', `Your password reset OTP is ${otp}. It expires in 10 minutes.`);
       return { result: 'OTP sent' };
     },
-    resetPassword: async (_parent, args: { password: string; email: string; otp: string }) => {
-      const user = await prisma.user.findUnique({ where: { email: args.email } });
+    resetPassword: async (_parent, args: { password: string; email?: string; phone?: string; otp?: string }) => {
+      if (!args.password || args.password.length < 8) {
+        throw userInputError('Password must be at least 8 characters');
+      }
+      if (args.phone) {
+        await verifyPhoneOtp(args.phone, args.otp ?? '');
+        const user = await findUserByPhone(args.phone);
+        if (!user) throw userInputError('No account found with that mobile number');
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { password: await hashPassword(args.password), phoneIsVerified: true, tokenVersion: { increment: 1 } },
+        });
+        await consumePhoneVerification(args.phone);
+        return { result: 'Password reset' };
+      }
+      const user = args.email ? await prisma.user.findUnique({ where: { email: args.email } }) : null;
       if (!user || !user.otpCode || user.otpCode !== args.otp) throw userInputError('Invalid OTP');
       if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) throw userInputError('OTP has expired');
       await prisma.user.update({
         where: { id: user.id },
-        data: { password: await hashPassword(args.password), otpCode: null, otpExpiresAt: null },
+        data: { password: await hashPassword(args.password), otpCode: null, otpExpiresAt: null, tokenVersion: { increment: 1 } },
       });
       return { result: 'Password reset' };
     },

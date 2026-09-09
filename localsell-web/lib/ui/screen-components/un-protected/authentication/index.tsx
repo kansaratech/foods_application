@@ -23,6 +23,9 @@ import EmailVerification from "./email-verification";
 import EnterPassword from "./enter-password";
 import LoginWithEmail from "./login-with-email";
 import LoginWithGoogle from "./login-with-google";
+import LoginWithPhone from "./login-with-phone";
+import PhoneOtp from "./phone-otp";
+import CompleteProfile from "./complete-profile";
 import PhoneVerification from "./phone-verification";
 import SaveEmailAddress from "./save-email-address";
 import SavePhoneNumber from "./save-phone-number";
@@ -389,6 +392,24 @@ export default function AuthModal({
             formData={formData}
             setFormData={setFormData}
           />
+        </StepperPanel>
+        <StepperPanel>
+          <LoginWithPhone
+            formData={formData}
+            handleFormChange={handleFormChange}
+            handleChangePanel={handleChangePanel}
+          />
+        </StepperPanel>
+        <StepperPanel>
+          <PhoneOtp
+            formData={formData}
+            phoneOtp={phoneOtp}
+            setPhoneOtp={setPhoneOtp}
+            handleChangePanel={handleChangePanel}
+          />
+        </StepperPanel>
+        <StepperPanel>
+          <CompleteProfile />
         </StepperPanel>
       </Stepper>
     </Dialog>

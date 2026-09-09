@@ -199,6 +199,51 @@ export const SAVE_TWILIO_CONFIGURATION = gql`
   }
 `;
 
+export const SAVE_WHATSAPP_CONFIGURATION = gql`
+  mutation SAVE_WHATSAPP_CONFIGURATION(
+    $configurationInput: WhatsAppConfigurationInput!
+  ) {
+    saveWhatsAppConfiguration(configurationInput: $configurationInput) {
+      _id
+      whatsappCloudEnabled
+      whatsappPhoneNumberId
+      whatsappWabaId
+      whatsappApiVersion
+      whatsappOtpTemplate
+      whatsappOtpLang
+      whatsappAccessTokenSet
+    }
+  }
+`;
+
+export const SYNC_WHATSAPP_TEMPLATES = gql`
+  mutation SYNC_WHATSAPP_TEMPLATES {
+    syncWhatsappTemplates {
+      ok
+      message
+      updated
+      templates {
+        _id
+        key
+        metaName
+        language
+        category
+        status
+      }
+    }
+  }
+`;
+
+export const SET_WHATSAPP_TEMPLATE_ACTIVE = gql`
+  mutation SET_WHATSAPP_TEMPLATE_ACTIVE($key: String!, $isActive: Boolean!) {
+    setWhatsappTemplateActive(key: $key, isActive: $isActive) {
+      _id
+      key
+      isActive
+    }
+  }
+`;
+
 export const SAVE_VERIFICATION_CONFIGURATION = gql`
   mutation SAVE_VERIFICATIONS_TOGGLE(
     $configurationInput: VerificationConfigurationInput!

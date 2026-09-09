@@ -9,6 +9,8 @@ export const LOGIN = gql`
     $idToken: String
     $name: String
     $notificationToken: String
+    $phone: String
+    $otp: String
     ) {
       login(
       type: $type
@@ -18,6 +20,8 @@ export const LOGIN = gql`
       idToken: $idToken
       name: $name
       notificationToken: $notificationToken
+      phone: $phone
+      otp: $otp
       ) {
         userId
         token
@@ -61,15 +65,15 @@ export const SENT_OTP_TO_PHONE = gql`
   }
 `;
 export const FORGOT_PASSWORD = gql`
-  mutation ForgotPassword($email: String!) {
-    forgotPassword(email: $email) {
+  mutation ForgotPassword($email: String, $phone: String) {
+    forgotPassword(email: $email, phone: $phone) {
       result
     }
   }
 `;
 export const RESET_PASSWORD = gql`
-  mutation ResetPassword($password: String!, $email: String!) {
-    resetPassword(password: $password, email: $email) {
+  mutation ResetPassword($password: String!, $email: String, $phone: String, $otp: String) {
+    resetPassword(password: $password, email: $email, phone: $phone, otp: $otp) {
       result
     }
   }

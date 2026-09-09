@@ -144,6 +144,10 @@ const CONFIG_OPERATIONAL_KEYS = [
   // (SMTP_PASSWORD) or is kept from the existing row — never from the JSON.
   'enableEmail', 'email', 'emailName', 'smtpHost', 'smtpPort', 'smtpSecure',
   'smtpUser', 'formEmail',
+  // WhatsApp Cloud: JSON owns the non-secret IDs / template names; the access
+  // token comes from env (WHATSAPP_ACCESS_TOKEN) or is kept from the row.
+  'whatsappCloudEnabled', 'whatsappPhoneNumberId', 'whatsappWabaId',
+  'whatsappApiVersion', 'whatsappOtpTemplate', 'whatsappOtpLang',
 ];
 
 const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
@@ -197,7 +201,10 @@ async function wipeEverything(): Promise<Record<string, unknown> | null> {
     SELECT TABLE_NAME as name
     FROM information_schema.TABLES
     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'`;
-  const tables = rows.map((r) => r.name).filter((n) => n !== '_prisma_migrations');
+  // WhatsappTemplate is config, not data — the registry (incl. Meta-synced
+  // APPROVED status) is rebuilt/merged by seedWhatsappTemplates(), not wiped.
+  const KEEP = ['_prisma_migrations', 'WhatsappTemplate'];
+  const tables = rows.map((r) => r.name).filter((n) => !KEEP.includes(n));
 
   // One transaction, one connection: the FK-check toggle has to stay in scope
   // for every DELETE. DELETE (not TRUNCATE) so it's transactional — nothing is
@@ -235,6 +242,10 @@ async function seedConfiguration(preserved: Record<string, unknown> | null) {
   const smtpPass = process.env.SMTP_PASSWORD?.trim();
   if (smtpPass) fromJson.emailPassword = smtpPass;
 
+  // WhatsApp Cloud API token: same rule — env wins, else keep the row's value.
+  const waToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
+  if (waToken) fromJson.whatsappAccessToken = waToken;
+
   await prisma.configuration.create({ data: { ...kept, ...fromJson } as Prisma.ConfigurationCreateInput });
   const emailReady =
     !!(fromJson.enableEmail && fromJson.smtpHost && (fromJson.emailPassword || kept.emailPassword));
@@ -242,6 +253,27 @@ async function seedConfiguration(preserved: Record<string, unknown> | null) {
     `  · Configuration rebuilt${Object.keys(kept).length ? ` (kept ${Object.keys(kept).length} infra fields)` : ''}` +
       ` — email ${emailReady ? 'ready' : 'NOT configured (set SMTP_PASSWORD)'}`,
   );
+}
+
+/** Upsert the WhatsApp template registry from the code constant. Preserves the
+ *  Meta-synced `status` on rows that already exist; new rows start PENDING. */
+async function seedWhatsappTemplates() {
+  const { WA_TEMPLATES } = await import('../src/utils/whatsappTemplates');
+  for (const t of WA_TEMPLATES) {
+    await prisma.whatsappTemplate.upsert({
+      where: { key: t.key },
+      update: { metaName: t.metaName, language: t.language, category: t.category },
+      create: {
+        key: t.key,
+        metaName: t.metaName,
+        language: t.language,
+        category: t.category,
+        buttonType: t.hasOtpButton ? 'OTP' : 'NONE',
+        variableMap: t.bodyVars as Prisma.InputJsonValue,
+      },
+    });
+  }
+  console.log(`  · ${WA_TEMPLATES.length} WhatsApp templates (run syncWhatsappTemplates to pull Meta status)`);
 }
 
 async function main() {
@@ -252,6 +284,7 @@ async function main() {
 
   console.log('\n=== Platform ===');
   await seedConfiguration(preservedConfig);
+  await seedWhatsappTemplates();
 
   const shopTypeBySlug = new Map<string, string>();
   for (const st of cfg.shopTypes) {

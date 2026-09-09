@@ -436,6 +436,18 @@ model Configuration {
   twilioWhatsAppNumber String?
   twilioAuthToken      String? // secret, never returned over GraphQL
 
+  // WhatsApp Cloud API (Meta) — the launch channel for phone OTP + transactional
+  // messages. `whatsappAccessToken` is a permanent System User token; it is
+  // seeded from WHATSAPP_ACCESS_TOKEN (like SMTP_PASSWORD) and NEVER returned
+  // over GraphQL. Everything else here is non-secret and admin-editable.
+  whatsappCloudEnabled  Boolean @default(false)
+  whatsappPhoneNumberId String? // Meta "phone number ID" (the send target, not the display number)
+  whatsappWabaId        String? // WhatsApp Business Account ID (for template sync)
+  whatsappApiVersion    String  @default("v22.0")
+  whatsappAccessToken   String? // secret, never returned over GraphQL
+  whatsappOtpTemplate   String  @default("localsell_otp")
+  whatsappOtpLang       String  @default("en_US")
+
   // Sentry
   dashboardSentryUrl     String?
   webSentryUrl           String?
@@ -1039,4 +1051,67 @@ model OrderChatMessage {
 
   @@index([orderId])
   @@index([senderId])
+}
+
+// Pre-signup / passwordless phone verification. Decoupled from User so an OTP
+// can be issued for a phone number that has no account yet (signup) as well as
+// one that does (login, password reset). One live row per phone number.
+model PhoneVerification {
+  id         String    @id @default(cuid())
+  phone      String    @unique
+  code       String
+  purpose    String    @default("SIGNUP") // SIGNUP | LOGIN | PASSWORD_RESET | PHONE_CHANGE
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+// Registry of the Meta-approved WhatsApp templates the platform sends. Maps an
+// internal event `key` (e.g. "otp_verify") to the exact template `metaName` +
+// language registered in WhatsApp Manager, so events can be re-pointed at a new
+// template from the admin panel without a redeploy, and so the code still knows
+// what to send when Meta pauses/rejects one. `status` mirrors Meta's review
+// state (kept fresh by the template-status webhook / a manual sync).
+model WhatsappTemplate {
+  id            String    @id @default(cuid())
+  key           String    @unique
+  metaName      String
+  language      String    @default("en")
+  category      String    @default("AUTHENTICATION") // AUTHENTICATION | UTILITY | MARKETING
+  status        String    @default("PENDING") // PENDING | APPROVED | REJECTED | PAUSED | DISABLED
+  bodyText      String?   @db.Text // local copy of the body, for admin preview / audit
+  headerType    String? // NONE | TEXT | IMAGE | VIDEO | DOCUMENT
+  headerMediaId String? // default header media asset id, when the template has a media header
+  variableMap   Json? // ordered describe of {{1}},{{2}}… -> which runtime value fills it
+  buttonType    String? // NONE | OTP | URL | QUICK_REPLY
+  isActive      Boolean   @default(true)
+  lastSyncedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// One row per outbound phone message (WhatsApp Cloud, Twilio WhatsApp, or SMS).
+// Drives deliverability debugging, per-role usage/volume reporting ("how many
+// customers / vendors / riders got an OTP this month"), and the WhatsApp bill
+// estimate (Meta charges per conversation, by category).
+model WhatsappMessageLog {
+  id            String   @id @default(cuid())
+  toPhone       String
+  userId        String?
+  userType      String? // CUSTOMER | VENDOR | RIDER | ADMIN | STAFF — denormalised for reporting
+  channel       String   @default("WHATSAPP_CLOUD") // WHATSAPP_CLOUD | WHATSAPP_TWILIO | SMS | CONSOLE
+  purpose       String // OTP_SIGNUP | OTP_LOGIN | OTP_PHONE_CHANGE | PASSWORD_RESET | ORDER_UPDATE | ADMIN_BROADCAST
+  templateKey   String?
+  metaMessageId String?
+  status        String   @default("SENT") // QUEUED | SENT | DELIVERED | READ | FAILED | FALLBACK
+  errorCode     String?
+  errorDetail   String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([toPhone])
+  @@index([createdAt])
+  @@index([purpose])
 }

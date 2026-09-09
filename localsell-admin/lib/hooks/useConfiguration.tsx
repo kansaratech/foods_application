@@ -54,6 +54,13 @@ export const useConfiguration = () => {
   const TWILIO_PHONE_NUMBER = configuration?.twilioPhoneNumber;
   const TWILIO_WHATSAPP_NUMBER = configuration?.twilioWhatsAppNumber;
   const TWILIO_ENABLED = configuration?.twilioEnabled;
+  const WHATSAPP_CLOUD_ENABLED = configuration?.whatsappCloudEnabled;
+  const WHATSAPP_PHONE_NUMBER_ID = configuration?.whatsappPhoneNumberId;
+  const WHATSAPP_WABA_ID = configuration?.whatsappWabaId;
+  const WHATSAPP_API_VERSION = configuration?.whatsappApiVersion;
+  const WHATSAPP_OTP_TEMPLATE = configuration?.whatsappOtpTemplate;
+  const WHATSAPP_OTP_LANG = configuration?.whatsappOtpLang;
+  const WHATSAPP_ACCESS_TOKEN_SET = configuration?.whatsappAccessTokenSet;
   const DASHBOARD_SENTRY_URL = configuration?.dashboardSentryUrl;
   const WEB_SENTRY_URL = configuration?.webSentryUrl;
   const API_SENTRY_URL = configuration?.apiSentryUrl;
@@ -116,6 +123,14 @@ export const useConfiguration = () => {
     TWILIO_ENABLED,
     SKIP_WHATSAPP_OTP,
     TWILIO_WHATSAPP_NUMBER,
+    // WHATSAPP CLOUD (Meta)
+    WHATSAPP_CLOUD_ENABLED,
+    WHATSAPP_PHONE_NUMBER_ID,
+    WHATSAPP_WABA_ID,
+    WHATSAPP_API_VERSION,
+    WHATSAPP_OTP_TEMPLATE,
+    WHATSAPP_OTP_LANG,
+    WHATSAPP_ACCESS_TOKEN_SET,
 
     // SENTRY
     DASHBOARD_SENTRY_URL,

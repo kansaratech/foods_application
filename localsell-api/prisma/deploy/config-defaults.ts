@@ -42,12 +42,17 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
     emailName: process.env.SMTP_FROM_NAME || 'LocalSell',
   };
   const smtpPassword = process.env.SMTP_PASSWORD?.trim();
+  const whatsappToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
 
   const existing = await prisma.configuration.findFirst();
 
   if (!existing) {
     await prisma.configuration.create({
-      data: { ...defaults, ...(smtpPassword ? { enableEmail: true, emailPassword: smtpPassword } : {}) },
+      data: {
+        ...defaults,
+        ...(smtpPassword ? { enableEmail: true, emailPassword: smtpPassword } : {}),
+        ...(whatsappToken ? { whatsappAccessToken: whatsappToken } : {}),
+      },
     });
     console.log(
       `  · Configuration row created with launch defaults${smtpPassword ? ' (+ SMTP)' : ''}`,
@@ -80,6 +85,11 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
   if (existing.defaultLatitude == null) patch.defaultLatitude = defaults.defaultLatitude;
   if (existing.defaultLongitude == null) patch.defaultLongitude = defaults.defaultLongitude;
   if (!existing.platformLegalName) patch.platformLegalName = defaults.platformLegalName;
+
+  // WhatsApp Cloud API token from env — fill only when the row has none, never
+  // overwrite an admin-set token. Doesn't flip whatsappCloudEnabled (that's a
+  // deliberate switch once a Meta-approved template is live).
+  if (whatsappToken && !existing.whatsappAccessToken) patch.whatsappAccessToken = whatsappToken;
 
   if (Object.keys(patch).length === 0) {
     console.log('  · Configuration already complete — nothing to fill');

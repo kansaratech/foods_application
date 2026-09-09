@@ -30,6 +30,13 @@ export interface IConfiguration {
   twilioAuthToken?: string;
   twilioPhoneNumber?: string;
   twilioWhatsAppNumber?: string;
+  whatsappCloudEnabled?: boolean;
+  whatsappPhoneNumberId?: string;
+  whatsappWabaId?: string;
+  whatsappApiVersion?: string;
+  whatsappOtpTemplate?: string;
+  whatsappOtpLang?: string;
+  whatsappAccessTokenSet?: boolean;
   firebaseKey?: string;
   appId?: string;
   authDomain?: string;
