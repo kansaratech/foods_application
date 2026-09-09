@@ -14,6 +14,7 @@ Verify against a QA build — several fixes need a re-deploy and one needs a **D
 | `616e0373` | 05, 06, 08, 16, 25, 26 |
 | `d83d7cd8` | 11, 18, 19, 27, 28, 29, 31 |
 | `48094c1a` | 09, 09b, 10, 12, 13, 14, 15 |
+| `2f6c9c6e` | merge `fix/inr-currency-phone` — ₹/INR + +91 lockdown (22-24) across all apps |
 
 > ⚠️ **Re-seed required for #29** — `npm run seed` in `localsell-api` (this **wipes and
 > rebuilds every table**). A new grocery store ("Deogarh Daily Mart") was added to
@@ -126,8 +127,11 @@ Verify against a QA build — several fixes need a re-deploy and one needs a **D
 - `09` appeared twice — tracked as **09** (random id) and **09b** (Replace→Upload).
 
 ## Follow-ups / to verify in a QA build
-1. **Re-seed the API DB** so the grocery store (#29) exists.
+1. **Re-seed the API DB** so the grocery store (#29) exists — `cd localsell-api && npm run seed`.
 2. Re-deploy web + admin + API + rider app.
 3. Spot-check #07 (change-location opens the picker, not a redirect) and #31 (restaurants
    list populates when the tester's location is inside the Deogarh service radius).
-4. `fix/inr-currency-phone` still needs merging for the full ₹ / +91 lockdown.
+4. ~~`fix/inr-currency-phone` still needs merging~~ — **merged** (`2f6c9c6e`). The
+   customer app (`localsell-app`) is included; rebuild/export it too.
+5. `npm install` in `localsell-admin` is not required by the merge (no dependency
+   change survived — `dev:preview` was already present).
