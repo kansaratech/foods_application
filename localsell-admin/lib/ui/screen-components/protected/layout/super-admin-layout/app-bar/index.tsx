@@ -323,7 +323,7 @@ const AppTopbar = () => {
                         ? 'text-black dark:text-white'
                         : 'text-white bg-secondary-color'
                         } hover:bg-gray-300 dark:hover:bg-dark-600`}
-                      href={`${notification.navigateTo}`}
+                      href={notification.navigateTo || '/management/notifications'}
                       onClick={() => {
                         markAllAsRead();
                         setIsNtfnOpen(false);
@@ -331,7 +331,7 @@ const AppTopbar = () => {
                     >
                       <p>{notification.body}</p>
                       <p className="text-xs text-gray-400 ">
-                        {timeAgo(+notification.createdAt)}
+                        {timeAgo(notification.createdAt)}
                       </p>
                     </Link>
                   ))

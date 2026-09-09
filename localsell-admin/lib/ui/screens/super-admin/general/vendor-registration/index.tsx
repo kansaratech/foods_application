@@ -209,11 +209,18 @@ export default function VendorRegistrationScreen() {
     values: IVendorRegistrationForm,
     setFieldValue: FormikHelpers<IVendorRegistrationForm>['setFieldValue']
   ): Promise<string | null> => {
-    if (!values.email.trim()) {
+    // A draft has almost no validation (#52) — just don't save a blank form.
+    const hasSomething =
+      values.email.trim() ||
+      values.firstName.trim() ||
+      values.lastName.trim() ||
+      values.phoneNumber.trim() ||
+      values.businessName.trim();
+    if (!hasSomething) {
       showToast({
         type: 'error',
         title: t('Vendor Registration'),
-        message: t('Enter an email address first'),
+        message: t('Add at least a name, email or phone before saving a draft'),
         duration: 2500,
       });
       return null;

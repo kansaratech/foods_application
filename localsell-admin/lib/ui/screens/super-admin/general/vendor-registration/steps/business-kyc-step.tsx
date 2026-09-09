@@ -25,8 +25,16 @@ export default function BusinessKycStep({
 }) {
   const t = useTranslations();
   const { showToast } = useContext(ToastContext);
-  const { values, errors, touched, handleChange, handleBlur, setFieldValue, setFieldTouched } =
-    useFormikContext<IVendorRegistrationForm>();
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    setFieldValue,
+    setFieldTouched,
+    setFieldError,
+  } = useFormikContext<IVendorRegistrationForm>();
   const [upsertVendorDocument] = useMutation(UPSERT_VENDOR_DOCUMENT);
 
   const fieldError = (name: keyof IVendorRegistrationForm) =>
@@ -35,6 +43,9 @@ export default function BusinessKycStep({
   const onFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e);
     setFieldTouched(e.target.name, true, false);
+    // The wizard runs validation manually (validateOnChange is off), so a
+    // stale "Required" wouldn't clear on its own once the field is filled (#53).
+    if (e.target.value?.trim()) setFieldError(e.target.name, undefined);
   };
 
   const saveDocument = async (kind: 'PAN' | 'GST', fileUrl: string, field: 'panFileUrl' | 'gstCertFileUrl') => {
@@ -79,6 +90,8 @@ export default function BusinessKycStep({
             setSelectedItem={(key, item) => {
               setFieldValue(key, item);
               setFieldTouched(key, true, false);
+              // Clear the stale "Required" as soon as a type is picked (#53).
+              if (item) setFieldError(key, undefined);
             }}
             loading={businessTypesLoading}
             options={businessTypeOptions || []}

@@ -1,5 +1,13 @@
 import * as Yup from 'yup';
 import { IDropdownSelectItem } from '../interfaces';
+import { isValidEmail } from '../methods';
+
+// Stricter than Yup's `.email()` (which accepts `x@gmail`) — see #41.
+const emailRule = Yup.string()
+  .trim()
+  .test('valid-email', 'Enter a valid email address', (value) =>
+    isValidEmail(value)
+  );
 
 export const StaffSchema = Yup.object().shape({
   name: Yup.string()
@@ -7,7 +15,7 @@ export const StaffSchema = Yup.object().shape({
     .trim()
     .matches(/\S/, 'Name cannot be only spaces')
     .required('Required'),
-  email: Yup.string().email('Invalid email').required('Required'),
+  email: emailRule.required('Required'),
    password: Yup.string()
    .required('Required')
    .min(6, 'At least 6 characters')

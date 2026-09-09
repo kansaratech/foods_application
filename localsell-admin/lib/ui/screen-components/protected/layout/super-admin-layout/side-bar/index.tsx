@@ -1,7 +1,8 @@
 'use client';
 
 // Core
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Context
 import { LayoutContext } from '@/lib/context/global/layout.context';
@@ -58,6 +59,12 @@ export default function MakeSidebar() {
   // Contexts
   const { isSuperAdminSidebarVisible } =
     useContext<LayoutContextProps>(LayoutContext);
+
+  const pathname = usePathname();
+
+  // Accordion behaviour: only one menu group open at a time (#55). Seeded from
+  // whichever group owns the current route so a reload doesn't collapse it.
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
 
   const navBarItems: ISidebarMenuItem[] = [
     {
@@ -250,6 +257,22 @@ export default function MakeSidebar() {
     },
   ];
 
+  // Open the group that contains the active route on load / navigation.
+  const groupItems = navBarItems.filter((i) => i.isParent && i.subMenu);
+  useEffect(() => {
+    const active = groupItems.find(
+      (g) =>
+        !!g.subMenu?.some(
+          (s) => s.route && (pathname === s.route || pathname.startsWith(`${s.route}/`))
+        )
+    );
+    if (active) setOpenGroup(active.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const toggleGroup = (text: string) =>
+    setOpenGroup((prev) => (prev === text ? null : text));
+
   return (
     <>
       <SuperAdminSidebar>
@@ -260,6 +283,12 @@ export default function MakeSidebar() {
                 key={index}
                 expanded={isSuperAdminSidebarVisible}
                 {...item}
+                {...(item.isParent && item.subMenu
+                  ? {
+                      groupOpen: openGroup === item.text,
+                      onGroupToggle: () => toggleGroup(item.text),
+                    }
+                  : {})}
               />
             )
           )}

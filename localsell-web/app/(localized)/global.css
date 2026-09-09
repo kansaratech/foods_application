@@ -541,6 +541,7 @@ body {
 /* Password */
 .p-password > .p-icon-field {
   width: 100%;
+  position: relative;
 }
 .p-password-input {
   padding-left: 10px;
@@ -729,10 +730,20 @@ body {
   margin-right: -20px;
 }
 
-.icon-right .p-icon-field.p-icon-field-right svg {
-  /* margin-right: -90px; */
+/* Show/hide toggle sits INSIDE the field on the right (QA #38/#40). The old
+   `right: -35px` shoved the eye icon outside the input border. */
+.icon-right .p-icon-field.p-icon-field-right svg,
+.p-password.p-input-icon-right .p-icon-field-right svg,
+.p-password .p-password-show-icon,
+.p-password .p-password-hide-icon {
   position: absolute;
-  right: -35px;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.p-password .p-password-input {
+  padding-right: 2.25rem;
 }
 
 /* Data View */

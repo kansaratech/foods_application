@@ -76,6 +76,36 @@ input.ls-field {
   width: 100%;
 }
 
+/* --- password: the show / hide toggle sits inside the box on the right --- */
+.ls-field.p-password .p-icon-field {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.ls-field.p-password .p-password-input {
+  padding-right: 2.5rem;
+}
+.ls-field.p-password .p-input-icon,
+.ls-field.p-password .p-password-show-icon,
+.ls-field.p-password .p-password-hide-icon,
+.ls-field.p-password .p-icon-field-right > svg:last-of-type {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  left: auto;
+  margin: 0;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--text-color-secondary);
+  cursor: pointer;
+}
+.ls-field.p-password .p-input-icon svg,
+.ls-field.p-password .p-password-show-icon,
+.ls-field.p-password .p-password-hide-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
 /* trigger area (dropdown chevron / multiselect / calendar button) */
 .ls-field .p-dropdown-trigger,
 .ls-field .p-multiselect-trigger {

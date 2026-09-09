@@ -408,28 +408,19 @@ body {
   box-shadow: none;
 }
 
-/* Password */
+/* Password — box + toggle icon are fully specified in form-controls.css
+   (.ls-field.p-password …). Keep only the generic reset here. */
 .p-password > .p-icon-field {
   width: 100%;
 }
 
 .p-password-input {
-  padding-left: 10px;
   width: 100%;
   height: 100%;
   border: none;
   outline: none;
   box-shadow: none;
   border-radius: 0.5rem;
-}
-
-.p-password-input.p-inputtext.p-component.p-filled .p-input-icon svg {
-  margin-right: -20px;
-}
-
-.icon-right .p-icon-field.p-icon-field-right svg {
-  position: absolute;
-  right: -35px;
 }
 
 /* Menu */

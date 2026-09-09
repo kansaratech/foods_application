@@ -72,7 +72,7 @@ export const notificationResolvers: IResolvers<unknown, GraphQLContext> = {
       const admins = await prisma.user.findMany({ where: { userType: 'ADMIN' }, select: { id: true } });
       if (admins.length > 0) {
         await prisma.webNotification.createMany({
-          data: admins.map((a) => ({ userId: a.id, body: `${title}: ${body}`, navigateTo: '/general/notification' })),
+          data: admins.map((a) => ({ userId: a.id, body: `${title}: ${body}`, navigateTo: '/management/notifications' })),
         });
       }
       return true;

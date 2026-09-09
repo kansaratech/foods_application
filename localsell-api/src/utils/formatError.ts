@@ -6,7 +6,7 @@ import { GraphQLFormattedError } from 'graphql';
 const UNIQUE_FIELD_MESSAGES: Record<string, string> = {
   phone: 'This phone number is already registered to another account.',
   email: 'This email address is already registered to another account.',
-  username: 'That login email is already in use by another store.',
+  username: 'That username is already taken — please choose a different one.',
   slug: 'A store with a very similar name already exists — try a more distinct name.',
 };
 

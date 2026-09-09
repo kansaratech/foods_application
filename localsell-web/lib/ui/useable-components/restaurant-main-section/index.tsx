@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Card from "@/lib/ui/useable-components/card";
 import SliderSkeleton from "@/lib/ui/useable-components/custom-skeletons/slider.loading.skeleton";
 import { IMainSectionProps } from "@/lib/utils/interfaces";
@@ -40,6 +40,17 @@ function MainSection({
     observer.observe(node);
     return () => observer.disconnect();
   }, [hasMore, onLoadMore, loading, data?.length]);
+
+  // Guard against a paginated caller handing us the same row twice — duplicate
+  // React keys and a visually repeating list otherwise (QA #56/#57).
+  const uniqueData = useMemo(() => {
+    const seen = new Set<string>();
+    return (data ?? []).filter((item) => {
+      if (seen.has(item._id)) return false;
+      seen.add(item._id);
+      return true;
+    });
+  }, [data]);
 
   const [isModalOpen, setIsModalOpen] = useState({ value: false, id: "" });
   const handleUpdateIsModalOpen = useCallback(
@@ -103,7 +114,7 @@ function MainSection({
         )}
       </div>
         {/* if queryData.length not zero then show */}
-      {data?.length > 0 && queryData?.length !== 0 ? (
+      {uniqueData.length > 0 && queryData?.length !== 0 ? (
         <>
           <div
             className={`grid grid-cols-1 gap-2 mt-4 items-center ${
@@ -112,7 +123,7 @@ function MainSection({
                 : "md:grid-cols-2 lg:grid-cols-4"
             }`}
           >
-            {data.map((item) => (
+            {uniqueData.map((item) => (
               <Card
                 key={item._id}
                 item={item}

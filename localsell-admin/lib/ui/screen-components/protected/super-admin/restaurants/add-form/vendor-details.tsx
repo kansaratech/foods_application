@@ -199,13 +199,29 @@ export default function VendorDetails({
               {({
                 values,
                 errors,
+                touched,
+                submitCount,
                 handleChange,
                 handleSubmit,
                 isSubmitting,
                 setFieldValue,
               }) => {
+                const showErr = (field: keyof IRestauransVendorDetailsForm) =>
+                  (touched[field] || submitCount > 0) && errors[field] ? (
+                    <small className="ml-1 p-error">
+                      {String(errors[field])}
+                    </small>
+                  ) : null;
                 return (
                   <Form onSubmit={handleSubmit}>
+                    {submitCount > 0 && Object.keys(errors).length > 0 && (
+                      <div
+                        role="alert"
+                        className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+                      >
+                        {t('Please fix the highlighted fields to continue')}
+                      </div>
+                    )}
                     <div className="space-y-3">
                       <div className="flex flex-shrink-0 items-center justify-end">
                         <CustomInputSwitch
@@ -238,6 +254,11 @@ export default function VendorDetails({
                                 : '',
                             }}
                           />
+                          {(touched._id || submitCount > 0) && errors._id && (
+                            <small className="ml-1 p-error">
+                              {t('Please select a vendor')}
+                            </small>
+                          )}
                         </div>
                       ) : (
                         <div className="space-y-3">
@@ -261,7 +282,7 @@ export default function VendorDetails({
                                   : '',
                               }}
                             />
-                            
+                            {showErr('firstName')}
                           </div>
                           <div>
                           <CustomTextField
@@ -283,6 +304,7 @@ export default function VendorDetails({
                                   : '',
                               }}
                             />
+                            {showErr('lastName')}
                           </div>
                           <div>
                             <CustomIconTextField
@@ -308,6 +330,7 @@ export default function VendorDetails({
                                   : '',
                               }}
                             />
+                            {showErr('email')}
                           </div>
 
                           <div>
@@ -333,6 +356,7 @@ export default function VendorDetails({
                                   : '',
                               }}
                             />
+                            {showErr('phoneNumber')}
                           </div>
 
                           <div>
@@ -353,6 +377,7 @@ export default function VendorDetails({
                                   : '',
                               }}
                             />
+                            {showErr('password')}
                           </div>
 
                           <div>
@@ -374,6 +399,7 @@ export default function VendorDetails({
                                   : '',
                               }}
                             />
+                            {showErr('confirmPassword')}
                           </div>
 
                           <div>
@@ -384,7 +410,13 @@ export default function VendorDetails({
                           </div>
                         </div>
                       )}
-                      <div className="mt-4 flex justify-end">
+                      <div className="mt-4 flex items-center justify-between">
+                        <CustomButton
+                          className="h-10 w-fit border border-gray-300 bg-white px-8 text-slate-700 dark:border-dark-600 dark:bg-dark-950 dark:text-white"
+                          label={t('Back')}
+                          type="button"
+                          onClick={() => onStepChange(order - 1)}
+                        />
                         <CustomButton
                           className="h-10 w-fit border border-gray-300 dark:border-dark-600 bg-primary-color px-8 text-white"
                           label={t('Save & Next')}

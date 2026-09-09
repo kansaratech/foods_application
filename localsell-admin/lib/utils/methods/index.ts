@@ -1,5 +1,6 @@
 
 export * from './currency';
+export * from './validation';
 export * from './error';
 export * from './filter';
 export * from './global';

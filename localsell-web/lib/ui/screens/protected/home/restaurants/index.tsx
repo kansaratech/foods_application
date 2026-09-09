@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import useNearByRestaurantsPreview from "@/lib/hooks/useNearByRestaurantsPreview";
 import useGetCuisines from "@/lib/hooks/useGetCuisines";
 import useServiceability from "@/lib/hooks/useServiceability";
@@ -11,7 +10,6 @@ import { useTranslations } from "next-intl";
 
 export default function RestaurantsScreen() {
   const t = useTranslations();
-  const limit = 10;
 
   const { userAddress } = useUserAddress();
   const {
@@ -22,50 +20,17 @@ export default function RestaurantsScreen() {
     nearestDistanceKm,
   } = useServiceability();
 
-  const [page, setPage] = useState(1);
-  const [items, setItems] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-
-  const { loading, error, queryData, fetchMore } = useNearByRestaurantsPreview(
+  // `nearByRestaurants` returns the full serviceable list in one response — it
+  // takes no page/limit. The old fetchMore loop just re-requested the same list
+  // forever, appending duplicates (QA #57). Render what the query gives us.
+  const { loading, error, queryData } = useNearByRestaurantsPreview(
     true,
-    page,
-    limit,
-    "restaurant"
+    1,
+    0,
+    "restaurant",
   );
 
   const { loading: cuisinesloading, restaurantCuisinesData } = useGetCuisines();
-
-  // ✅ Initial load
-  useEffect(() => {
-    if (page === 1 && queryData?.length) {
-      setItems(queryData);
-    }
-  }, [queryData, page]);
-
-  // ✅ Load more
-  const loadMore = useCallback(async () => {
-    if (!hasMore || loading) return;
-
-    try {
-      const res = await fetchMore({
-        variables: { page: page + 1, limit, shopType: "restaurant" },
-      });
-
-      const newItems = res.data?.nearByRestaurants?.restaurants ?? [];
-
-      if (newItems.length > 0) {
-        setItems((prev) => [...prev, ...newItems]);
-        setPage((p) => p + 1);
-      } else {
-        setHasMore(false);
-      }
-    } catch (err) {
-      console.error("❌ Error fetching more:", err);
-    }
-  }, [page, hasMore, fetchMore, loading]);
-
-  // Pagination is driven by a viewport sentinel inside MainSection (see
-  // onLoadMore below) — reliable regardless of which element actually scrolls.
 
   // The visitor picked a location no active store delivers to — show the
   // "not available yet" screen instead of an empty "No item found" list.
@@ -81,17 +46,16 @@ export default function RestaurantsScreen() {
 
   return (
     <GenericListingComponent
-    queryData= {queryData}
+      queryData={queryData}
       headingTitle={t("RestaurantPage.headingTitle")}
       cuisineSectionTitle={t("RestaurantPage.cuisineSectionTitle")}
       mainSectionTitle={t("RestaurantPage.mainSectionTitle")}
-      mainData={items} // ✅ pass paginated items
+      mainData={queryData}
       cuisineDataFromHook={restaurantCuisinesData}
       loading={loading}
       cuisinesloading={cuisinesloading}
       error={!!error}
-      hasMore={hasMore}
-      onLoadMore={loadMore}
+      hasMore={false}
     />
   );
 }

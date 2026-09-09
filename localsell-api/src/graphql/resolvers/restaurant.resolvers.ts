@@ -424,8 +424,17 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
   Mutation: {
     restaurantLogin: async (_parent, args: { username: string; password: string; notificationToken?: string }) => {
-      const restaurant = await prisma.restaurant.findUnique({ where: { username: args.username } });
-      if (!restaurant?.password || !(await comparePassword(args.password, restaurant.password))) {
+      // `username` is only unique per owner now (#59), so one login email can
+      // resolve to several outlets. Match the one whose password checks out.
+      const candidates = await prisma.restaurant.findMany({ where: { username: args.username } });
+      let restaurant: (typeof candidates)[number] | undefined;
+      for (const candidate of candidates) {
+        if (candidate.password && (await comparePassword(args.password, candidate.password))) {
+          restaurant = candidate;
+          break;
+        }
+      }
+      if (!restaurant) {
         throw userInputError('Invalid username or password');
       }
       if (!restaurant.isActive) {
@@ -460,6 +469,24 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!owner) throw userInputError('Owner not found');
 
       const input = args.restaurant;
+
+      // One vendor may run several outlets under the same login email (#59) —
+      // each just needs its own password so `restaurantLogin` can tell them
+      // apart. Reject only a genuinely ambiguous duplicate (same owner + same
+      // username + same password).
+      if (input.username && input.password) {
+        const sameLogin = await prisma.restaurant.findMany({
+          where: { ownerId: owner.id, username: input.username },
+        });
+        for (const existing of sameLogin) {
+          if (existing.password && (await comparePassword(input.password, existing.password))) {
+            throw userInputError(
+              'This vendor already has an outlet with that login email and password. Give this outlet a different password.',
+            );
+          }
+        }
+      }
+
       const cuisineIds = await resolveCuisineIds(input.cuisines);
       const config = await prisma.configuration.findFirst();
       // A new store inherits the platform default commission unless the form

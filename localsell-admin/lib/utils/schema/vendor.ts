@@ -1,7 +1,14 @@
 import * as Yup from 'yup';
 // import { PasswordErrors } from '../constants';
 import { IDropdownSelectItem } from '../interfaces';
-import { isValidIndianMobile } from '../methods';
+import { isValidIndianMobile, isValidEmail } from '../methods';
+
+// Stricter than Yup's `.email()` (which accepts `x@gmail`) — see #41.
+const emailRule = Yup.string()
+  .trim()
+  .test('valid-email', 'Enter a valid email address', (value) =>
+    isValidEmail(value)
+  );
 
 // Standard 15-character GSTIN structure: 2-digit state code, 10-char PAN,
 // 1-digit entity code, 'Z' by convention, 1-char checksum.
@@ -36,10 +43,7 @@ export const vendorAccountStepSchema = Yup.object().shape({
     .max(50, 'At most 50 characters')
     .matches(/\S/, 'Last name cannot be only spaces')
     .required('Required'),
-  email: Yup.string()
-    .trim()
-    .email('Enter a valid email address')
-    .required('Required'),
+  email: emailRule.required('Required'),
   phoneNumber: Yup.string()
     .required('Required')
     .test(
@@ -137,7 +141,7 @@ export const VendorSchema = Yup.object().shape({
     .trim()
     .matches(/\S/, 'Last name cannot be only spaces')
     .required('Required'),
-  email: Yup.string().email('Invalid email').required('Required'),
+  email: emailRule.required('Required'),
   password: Yup.string()
     .required('Required')
     .min(6, 'At least 6 characters')
@@ -165,7 +169,7 @@ export const VendorSchemaForStoreForm = Yup.object().shape({
     .trim()
     .matches(/\S/, 'Name cannot be only spaces')
     .required('Required'),
-  email: Yup.string().email('Invalid email').required('Required'),
+  email: emailRule.required('Required'),
   password: Yup.string().required('Required'),
   confirmPassword: Yup.string()
     .nullable()
@@ -176,7 +180,7 @@ export const VendorSchemaForStoreForm = Yup.object().shape({
 
 export const VendorEditSchema = Yup.object().shape({
   name: Yup.string().trim().matches(/\S/, 'Name cannot be only spaces'),
-  email: Yup.string().email('Invalid email').required('Required'),
+  email: emailRule.required('Required'),
   // Password fields are optional here: this is a profile-edit form, not a
   // create-vendor form, so leaving them blank must not block saving other
   // changes (name/phone/etc). Only validate strength/match when the vendor
@@ -235,7 +239,7 @@ export const VendorSchemaOnStoreCreate = Yup.object().shape({
     .trim()
     .matches(/\S/, 'Last name cannot be only spaces')
     .required('Required'),
-  email: Yup.string().email('Invalid email').required('Required'),
+  email: emailRule.required('Required'),
   password: Yup.string()
     .required('Required')
     .min(6, 'At least 6 characters')
@@ -250,7 +254,9 @@ export const VendorSchemaOnStoreCreate = Yup.object().shape({
     .nullable()
     .oneOf([Yup.ref('password'), null], 'Password must match')
     .required('Required'),
- image: Yup.string().required('Image is required'),
+  // A profile photo is nice-to-have, not a blocker for opening a store — a
+  // silently-failing "Image is required" was why "Save & Next" looked dead (#39).
+  image: Yup.string().notRequired(),
   phoneNumber: Yup.string()
     .required('Required')
     .min(5, 'Minimum 5 Numbers are Required'),

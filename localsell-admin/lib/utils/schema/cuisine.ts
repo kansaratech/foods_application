@@ -7,7 +7,8 @@ export const CuisineFormSchema = Yup.object().shape({
     .matches(/\S/, 'name_cannot_be_only_spaces')
     .required('name_is_required'),
   description: Yup.string()
-    .max(40, 'you_have_reached_the_maximum_limit_of_1500_characters')
+    // Was capped at 40 chars but told the user "limit of 1500 characters" (#54).
+    .max(200, 'you_have_reached_the_maximum_limit')
     .trim()
     .matches(/\S/, 'description_cannot_be_only_spaces')
     .required('description_is_required'),

@@ -1,8 +1,23 @@
-export const timeAgo = (timestamp: number): string => {
-  if (isNaN(timestamp) || timestamp <= 0) {
+// Accepts an epoch (ms or seconds), an ISO string, or a Date. The web
+// notification feed passes an ISO string — `+isoString` was `NaN`, which
+// rendered as "Invalid date" (#51).
+export const timeAgo = (input: number | string | Date): string => {
+  let date: Date;
+
+  if (input instanceof Date) {
+    date = input;
+  } else if (typeof input === 'number') {
+    // Treat 10-digit values as seconds, 13-digit as milliseconds.
+    date = new Date(input < 1e12 ? input * 1000 : input);
+  } else if (typeof input === 'string' && input.trim()) {
+    const numeric = Number(input);
+    date = Number.isFinite(numeric)
+      ? new Date(numeric < 1e12 ? numeric * 1000 : numeric)
+      : new Date(input);
+  } else {
     return 'Invalid date';
   }
-  const date = new Date(timestamp);
+
   if (isNaN(date.getTime())) {
     return 'Invalid date';
   }
@@ -10,6 +25,7 @@ export const timeAgo = (timestamp: number): string => {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
+  if (seconds < 0) return 'just now';
   if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;

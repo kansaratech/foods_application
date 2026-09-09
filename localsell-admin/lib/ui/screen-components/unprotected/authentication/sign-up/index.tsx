@@ -19,6 +19,7 @@ import { Divider } from 'primereact/divider';
 
 // Methods
 import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { isValidEmail } from '@/lib/utils/methods/validation';
 
 // Contants
 import { PasswordErrors, SignUpErrors } from '@/lib/utils/constants';
@@ -40,7 +41,10 @@ export default function SignupMain() {
   const SignupSchema = Yup.object().shape({
     firstName: Yup.string().min(2).max(35).required('Required'),
     lastName: Yup.string().min(2).max(35).required('Required'),
-    email: Yup.string().email('Invalid email').required('Required'),
+    email: Yup.string()
+      .trim()
+      .test('valid-email', 'Invalid email', (value) => isValidEmail(value))
+      .required('Required'),
     password: Yup.string().required('Required'),
     confirmPassword: Yup.string()
       .nullable()

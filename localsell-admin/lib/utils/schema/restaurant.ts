@@ -1,5 +1,13 @@
 import * as Yup from 'yup';
 import { IDropdownSelectItem } from '../interfaces';
+import { isValidEmail } from '../methods';
+
+// Stricter than Yup's `.email()` (which accepts `x@gmail`) — see #41.
+const emailRule = Yup.string()
+  .trim()
+  .test('valid-email', 'Enter a valid email address', (value) =>
+    isValidEmail(value)
+  );
 
 // Blank is always allowed (edit screens use it to mean "leave unchanged");
 // once a value is typed it must be a real strong password and must match
@@ -19,7 +27,7 @@ export const makeRestaurantSchema = (requirePassword: boolean) =>
     .trim()
     .matches(/\S/, 'Name cannot be only spaces')
     .required('Required'),
-  username: Yup.string().email('Invalid email').required('Required'),
+  username: emailRule.required('Required'),
     address: Yup.string()
     .max(100, 'Maximum 100 characters allowed')
     .trim()

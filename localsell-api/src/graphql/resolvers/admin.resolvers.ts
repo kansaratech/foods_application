@@ -322,13 +322,22 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
     saveVendorDraft: async (_parent, args: { vendorInput: VendorInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       const input = args.vendorInput;
-      const email = input.email.trim().toLowerCase();
+      // Draft saves stay near-validation-free (#52): a blank email is fine
+      // (stored as null so multiple empty drafts don't collide on the unique
+      // index), it's filled in before the wizard finalizes.
+      const email = input.email?.trim().toLowerCase() || null;
 
       const businessTypeId = await resolveBusinessTypeId(input.businessType);
       const gstRegistered = input.isGstRegistered ?? false;
       const phone = normalizeIndianPhone(input.phoneNumber);
       // Friendly conflict message instead of a raw `User_phone_key` Prisma error.
       await assertPhoneFree(phone, input._id);
+
+      // The one thing a draft must have: something in it. An entirely blank
+      // "Save draft" shouldn't create a ghost vendor row.
+      if (!input._id && !email && !phone && !input.name?.trim() && !input.firstName?.trim() && !input.businessName?.trim()) {
+        throw userInputError('Add at least a name, email or phone before saving a draft.');
+      }
 
       const data = {
         email,
@@ -351,7 +360,7 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         return prisma.user.update({ where: { id: input._id }, data });
       }
 
-      const existingByEmail = await prisma.user.findUnique({ where: { email } });
+      const existingByEmail = email ? await prisma.user.findUnique({ where: { email } }) : null;
       if (existingByEmail) {
         if (existingByEmail.status !== 'DRAFT') throw userInputError('A vendor with this email already exists');
         return prisma.user.update({ where: { id: existingByEmail.id }, data });

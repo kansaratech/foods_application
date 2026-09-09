@@ -1,4 +1,10 @@
 import * as Yup from 'yup';
+import { isValidEmail } from '../methods';
+
+// Stricter than Yup's `.email()` (which accepts `x@gmail`) — see #41.
+const emailRule = Yup.string()
+  .trim()
+  .test('valid-email', 'Enter a valid email', (value) => isValidEmail(value));
 
 export const RiderSchema = Yup.object().shape({
   name: Yup.string()
@@ -6,7 +12,7 @@ export const RiderSchema = Yup.object().shape({
     .trim()
     .matches(/\S/, 'Name cannot be only spaces')
     .required('Required'),
-  email: Yup.string().email('Enter a valid email').required('Required'),
+  email: emailRule.required('Required'),
   username: Yup.string().min(2).max(35).required('Required'),
   // Only required when the admin turns off "Send account setup link" and
   // sets a password manually — mirrors the vendor registration form.

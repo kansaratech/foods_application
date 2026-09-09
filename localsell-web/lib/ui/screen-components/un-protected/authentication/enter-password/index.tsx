@@ -24,7 +24,6 @@ export default function EnterPassword({
     handleUserLogin,
     sendOtpToEmailAddress,
     sendOtpToPhoneNumber,
-    setIsAuthModalVisible,
     isLoading,
   } = useAuth();
   const { showToast } = useToast();
@@ -74,14 +73,11 @@ export default function EnterPassword({
           handleChangePanel(6);
         }
       } else {
+        // The success toast + modal close + redirect are owned by
+        // `onLoginCompleted` in auth.context — firing another one here showed
+        // the customer two "logged in" toasts (QA #47).
         handleChangePanel(0);
         setFormData({} as IAuthFormData);
-        setIsAuthModalVisible(false);
-        showToast({
-          type: "success",
-          title: t("Login"),
-          message: t("You have logged in successfully"),
-        });
       }
     }
   };

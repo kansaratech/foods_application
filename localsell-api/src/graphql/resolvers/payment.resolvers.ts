@@ -84,7 +84,7 @@ function withPaginationDefaults(pagination?: { pageSize?: number; pageNo?: numbe
 async function notifyAdminsOfWithdrawRequest(body: string) {
   const admins = await prisma.user.findMany({ where: { userType: 'ADMIN' }, select: { id: true } });
   if (admins.length === 0) return;
-  await prisma.webNotification.createMany({ data: admins.map((a) => ({ userId: a.id, body, navigateTo: '/finance/withdraw-requests' })) });
+  await prisma.webNotification.createMany({ data: admins.map((a) => ({ userId: a.id, body, navigateTo: '/wallet/withdraw-requests' })) });
 }
 
 // Earnings split: the platform keeps the commission (on the food subtotal, at

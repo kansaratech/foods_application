@@ -135,7 +135,10 @@ model Restaurant {
   logo                   String?
   address                String?   @db.Text
   phone                  String?
-  username               String?   @unique
+  // Store dashboard login. Not globally unique — one vendor can run several
+  // outlets under the same login email, each with its own password, and
+  // `restaurantLogin` matches on username + password (#59).
+  username               String?
   password               String?
   slug                   String    @unique
   orderPrefix            String?
@@ -182,8 +185,8 @@ model Restaurant {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  owner            User                @relation("RestaurantOwner", fields: [ownerId], references: [id])
-  shopType         ShopType?           @relation(fields: [shopTypeId], references: [id])
+  owner            User                 @relation("RestaurantOwner", fields: [ownerId], references: [id])
+  shopType         ShopType?            @relation(fields: [shopTypeId], references: [id])
   cuisines         RestaurantCuisine[]
   categories       Category[]
   addons           Addon[]
@@ -194,10 +197,11 @@ model Restaurant {
   transactions     Transaction[]
   documents        StoreDocument[]
   deliveryAgents   StoreDeliveryAgent[]
-  clonedFrom       Restaurant?         @relation("RestaurantClone", fields: [clonedFromId], references: [id])
-  clones           Restaurant[]        @relation("RestaurantClone")
+  clonedFrom       Restaurant?          @relation("RestaurantClone", fields: [clonedFromId], references: [id])
+  clones           Restaurant[]         @relation("RestaurantClone")
 
   @@index([ownerId])
+  @@index([ownerId, username])
   @@index([shopTypeId])
   @@index([clonedFromId])
 }
@@ -444,7 +448,7 @@ model Configuration {
   whatsappPhoneNumberId String? // Meta "phone number ID" (the send target, not the display number)
   whatsappWabaId        String? // WhatsApp Business Account ID (for template sync)
   whatsappApiVersion    String  @default("v22.0")
-  whatsappAccessToken   String? // secret, never returned over GraphQL
+  whatsappAccessToken   String? @db.Text // secret (Meta System User tokens are ~200+ chars), never returned over GraphQL
   whatsappOtpTemplate   String  @default("localsell_otp")
   whatsappOtpLang       String  @default("en_US")
 
@@ -695,55 +699,55 @@ model PayoutRunItem {
 }
 
 model Order {
-  id              String        @id @default(cuid())
-  orderId         String        @unique
-  userId          String
-  restaurantId    String
-  riderId         String?
-  addressId       String?
-  paymentMethod   String
-  paymentStatus   PaymentStatus @default(PENDING)
-  orderStatus     OrderStatus   @default(PENDING)
-  status          String        @default("ACTIVE")
-  paidAmount      Float         @default(0)
-  orderAmount     Float
-  deliveryCharges Float         @default(0)
-  tipping         Float         @default(0)
-  taxationAmount  Float         @default(0)
-  discountAmount  Float         @default(0)
-  instructions    String?       @db.Text
-  isPickedUp      Boolean       @default(false)
+  id                   String        @id @default(cuid())
+  orderId              String        @unique
+  userId               String
+  restaurantId         String
+  riderId              String?
+  addressId            String?
+  paymentMethod        String
+  paymentStatus        PaymentStatus @default(PENDING)
+  orderStatus          OrderStatus   @default(PENDING)
+  status               String        @default("ACTIVE")
+  paidAmount           Float         @default(0)
+  orderAmount          Float
+  deliveryCharges      Float         @default(0)
+  tipping              Float         @default(0)
+  taxationAmount       Float         @default(0)
+  discountAmount       Float         @default(0)
+  instructions         String?       @db.Text
+  isPickedUp           Boolean       @default(false)
   // How this order is fulfilled. Kept in sync with `isPickedUp`
   // (PICKUP ⇔ isPickedUp). SELF = the store's own delivery person;
   // PLATFORM = the LocalSell rider fleet.
-  deliveryMode         String   @default("PLATFORM") // PICKUP | SELF | PLATFORM
+  deliveryMode         String        @default("PLATFORM") // PICKUP | SELF | PLATFORM
   storeDeliveryAgentId String?
   // Proof of delivery. A 4-digit code shown to the customer while the order is
   // out for delivery; whoever delivers (LocalSell rider or the store's own
   // person) must enter it to close the order. Cleared once DELIVERED.
   deliveryOtp          String?
-  deliveryConfirmedBy  String?  // OTP | MANUAL
-  orderDate       DateTime      @default(now())
-  expectedTime    DateTime?
-  acceptedAt      DateTime?
-  pickedAt        DateTime?
-  deliveredAt     DateTime?
-  cancelledAt     DateTime?
-  assignedAt      DateTime?
-  reason          String?       @db.Text
-  isRinged        Boolean       @default(false)
-  preparationTime String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  deliveryConfirmedBy  String? // OTP | MANUAL
+  orderDate            DateTime      @default(now())
+  expectedTime         DateTime?
+  acceptedAt           DateTime?
+  pickedAt             DateTime?
+  deliveredAt          DateTime?
+  cancelledAt          DateTime?
+  assignedAt           DateTime?
+  reason               String?       @db.Text
+  isRinged             Boolean       @default(false)
+  preparationTime      String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
-  user         User               @relation("OrderCustomer", fields: [userId], references: [id])
-  rider        User?              @relation("OrderRider", fields: [riderId], references: [id])
-  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id])
-  address      Address?           @relation(fields: [addressId], references: [id])
+  user               User                @relation("OrderCustomer", fields: [userId], references: [id])
+  rider              User?               @relation("OrderRider", fields: [riderId], references: [id])
+  restaurant         Restaurant          @relation(fields: [restaurantId], references: [id])
+  address            Address?            @relation(fields: [addressId], references: [id])
   storeDeliveryAgent StoreDeliveryAgent? @relation(fields: [storeDeliveryAgentId], references: [id])
-  items        OrderItem[]
-  review       Review?
-  chatMessages OrderChatMessage[]
+  items              OrderItem[]
+  review             Review?
+  chatMessages       OrderChatMessage[]
 
   @@index([userId])
   @@index([restaurantId])

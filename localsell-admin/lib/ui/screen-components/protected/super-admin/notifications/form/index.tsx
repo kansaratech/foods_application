@@ -96,6 +96,8 @@ export default function NotificationForm({
                   showLabel={true}
                   placeholder={t('Title')}
                   type="text"
+                  maxLength={25}
+                  error={errors.title}
                   className={`${
                     onErrorMessageMatcher(
                       'title',
@@ -115,6 +117,8 @@ export default function NotificationForm({
                   label={t('Description')}
                   name="body"
                   placeholder={t('Add description here')}
+                  maxLength={1500}
+                  error={errors.body}
                   className={`${
                     onErrorMessageMatcher(
                       'body',

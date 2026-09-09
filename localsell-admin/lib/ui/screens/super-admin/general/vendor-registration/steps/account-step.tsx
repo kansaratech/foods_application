@@ -14,8 +14,16 @@ import { IVendorRegistrationForm } from '@/lib/utils/interfaces/forms';
 
 export default function AccountStep() {
   const t = useTranslations();
-  const { values, errors, touched, handleChange, handleBlur, setFieldValue, setFieldTouched } =
-    useFormikContext<IVendorRegistrationForm>();
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    setFieldValue,
+    setFieldTouched,
+    setFieldError,
+  } = useFormikContext<IVendorRegistrationForm>();
 
   const fieldError = (name: keyof IVendorRegistrationForm) =>
     touched[name] && errors[name] ? String(errors[name]) : undefined;
@@ -23,6 +31,9 @@ export default function AccountStep() {
   const onFieldChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleChange(e);
     setFieldTouched(e.target.name, true, false);
+    // Validation runs manually in this wizard, so clear a stale error as the
+    // field is corrected rather than waiting for the next Continue (#53).
+    if (e.target.value?.trim()) setFieldError(e.target.name, undefined);
   };
 
   return (
@@ -64,6 +75,7 @@ export default function AccountStep() {
               onChange={(e) => {
                 setFieldValue('email', e.target.value.toLowerCase());
                 setFieldTouched('email', true, false);
+                if (e.target.value.trim()) setFieldError('email', undefined);
               }}
               onBlur={handleBlur}
               error={fieldError('email')}
@@ -79,6 +91,7 @@ export default function AccountStep() {
               onChange={(val) => {
                 setFieldValue('phoneNumber', val);
                 setFieldTouched('phoneNumber', true, false);
+                if (val?.trim()) setFieldError('phoneNumber', undefined);
               }}
               error={fieldError('phoneNumber')}
             />

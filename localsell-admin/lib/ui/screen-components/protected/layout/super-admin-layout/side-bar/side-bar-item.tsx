@@ -54,10 +54,19 @@ export default function SidebarItem({
   isParent,
   isClickable,
   shouldOpenInNewTab, // <-- add this prop
-}: ISidebarMenuItem) {
+  groupOpen,
+  onGroupToggle,
+}: ISidebarMenuItem & {
+  groupOpen?: boolean;
+  onGroupToggle?: () => void;
+}) {
   // Hooks
   const pathname = usePathname();
   const router = useRouter();
+
+  // When the parent sidebar drives an accordion (one group open at a time,
+  // #55), this item's expanded state is controlled from above.
+  const isControlled = typeof onGroupToggle === 'function';
 
   // Is the current page this exact item, or (for a parent) one of its children?
   const selfActive = isRouteActive(pathname, route);
@@ -69,19 +78,30 @@ export default function SidebarItem({
 
   // States — a parent that owns the active route starts expanded so the user
   // can immediately see where they are (e.g. after a full page reload).
-  const [expandSubMenu, setExpandSubMenu] = useState(containsActiveRoute);
+  const [localExpand, setLocalExpand] = useState(containsActiveRoute);
+  const expandSubMenu = isControlled ? !!groupOpen && expanded : localExpand;
+  const setExpandSubMenu = (
+    next: boolean | ((curr: boolean) => boolean)
+  ) => {
+    if (isControlled) {
+      onGroupToggle?.();
+      return;
+    }
+    setLocalExpand(next as boolean | ((c: boolean) => boolean));
+  };
 
-  // Keep the group open whenever navigation lands inside it.
+  // Keep the group open whenever navigation lands inside it (uncontrolled only —
+  // the parent owns this when the accordion is controlled).
   useEffect(() => {
-    if (containsActiveRoute) setExpandSubMenu(true);
-  }, [containsActiveRoute]);
+    if (!isControlled && containsActiveRoute) setLocalExpand(true);
+  }, [containsActiveRoute, isControlled]);
 
   // Collapse sub-menus when the whole sidebar collapses.
   useEffect(() => {
-    if (!expanded) {
-      setExpandSubMenu(false);
+    if (!expanded && !isControlled) {
+      setLocalExpand(false);
     }
-  }, [expanded]);
+  }, [expanded, isControlled]);
 
   // Calculate the height of the sub-menu assuming each item is 40px tall
   const subMenuHeight = expandSubMenu
@@ -175,7 +195,8 @@ export default function SidebarItem({
         <div className="absolute bottom-0 left-6 top-0 w-px bg-gray-300 dark:bg-dark-600"></div>
 
         {(expandSubMenu ||
-          onUseLocalStorage('get', SELECTED_SIDEBAR_MENU) === text) &&
+          (!isControlled &&
+            onUseLocalStorage('get', SELECTED_SIDEBAR_MENU) === text)) &&
           subMenu?.map((item, index) => {
             const childActive = isRouteActive(pathname, item.route);
             return (

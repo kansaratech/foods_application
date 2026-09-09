@@ -7,11 +7,9 @@ import { useUserAddress } from "@/lib/context/address/address.context";
 import GenericListingComponent from "@/lib/ui/screen-components/protected/home/GenericListingComponent";
 import { AreaUnavailable } from "@/lib/ui/screen-components/protected/home";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
 
 export default function StoreScreen() {
   const t = useTranslations();
-  const limit = 10;
 
   const { userAddress } = useUserAddress();
   const {
@@ -22,46 +20,16 @@ export default function StoreScreen() {
     nearestDistanceKm,
   } = useServiceability();
 
-  const [page, setPage] = useState(1);
-  const [items, setItems] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-
-  
-  const { loading, error, queryData, fetchMore } = useNearByRestaurantsPreview(true, page, limit, "grocery");
-  const { loading:cuisinesloading, groceryCuisinesData } = useGetCuisines();
- 
-
-  // ✅ Initial load
-  useEffect(() => {
-    if (page === 1 && queryData?.length) {
-      setItems(queryData);
-    }
-  }, [queryData, page]);
-
-  // ✅ Load more
-  const loadMore = useCallback(async () => {
-    if (!hasMore || loading) return;
-
-    try {
-      const res = await fetchMore({
-        variables: { page: page + 1, limit, shopType: "grocery" },
-      });
-
-      const newItems = res.data?.nearByRestaurants?.restaurants ?? [];
-
-      if (newItems.length > 0) {
-        setItems((prev) => [...prev, ...newItems]);
-        setPage((p) => p + 1);
-      } else {
-        setHasMore(false);
-      }
-    } catch (err) {
-      console.error("❌ Error fetching more:", err);
-    }
-  }, [page, hasMore, fetchMore, loading]);
-
-  // Pagination is driven by a viewport sentinel inside MainSection (see
-  // onLoadMore below) — reliable regardless of which element actually scrolls.
+  // `nearByRestaurants` returns the full serviceable list in one response — it
+  // takes no page/limit. The old fetchMore loop just re-requested the same list
+  // forever, appending duplicates (QA #56). Render what the query gives us.
+  const { loading, error, queryData } = useNearByRestaurantsPreview(
+    true,
+    1,
+    0,
+    "grocery",
+  );
+  const { loading: cuisinesloading, groceryCuisinesData } = useGetCuisines();
 
   // The visitor picked a location no active store delivers to — show the
   // "not available yet" screen instead of an empty "No item found" list.
@@ -78,16 +46,15 @@ export default function StoreScreen() {
   return (
     <GenericListingComponent
       queryData={queryData}
-      headingTitle= {t('StoresPage.headingTitle')}
+      headingTitle={t('StoresPage.headingTitle')}
       cuisineSectionTitle={t('StoresPage.cuisineSectionTitle')}
       mainSectionTitle={t('StoresPage.mainSectionTitle')}
-      mainData={items} // ✅ pass paginated items
+      mainData={queryData}
       cuisineDataFromHook={groceryCuisinesData}
       loading={loading}
       cuisinesloading={cuisinesloading}
       error={!!error}
-      hasMore={hasMore}
-      onLoadMore={loadMore}
+      hasMore={false}
     />
   );
 }
