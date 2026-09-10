@@ -1,0 +1,1066 @@
+<title>LocalSell QA Test Plan</title>
+<meta name="description" content="End-to-end test pass for the LocalSell marketplace — every flow from platform setup to a delivered order." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+
+<style>
+  :root {
+    --ground: #f5f7f9;
+    --surface: #ffffff;
+    --surface-2: #eceff4;
+    --ink: #16293f;
+    --ink-soft: #55647a;
+    --ink-faint: #8b98a9;
+    --accent: #1c5bc7;
+    --accent-soft: #e6effb;
+    --line: #e1e6ee;
+    --pass: #1a7f52;
+    --pass-bg: #e5f4eb;
+    --fail: #c1352b;
+    --fail-bg: #fbeceb;
+    --na: #8f6412;
+    --na-bg: #f4eddd;
+    --shadow: 0 1px 2px rgba(22, 41, 63, .07), 0 10px 30px rgba(22, 41, 63, .05);
+    --radius: 10px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d1520;
+      --surface: #161f2c;
+      --surface-2: #1d2937;
+      --ink: #e7eef7;
+      --ink-soft: #a1b0c4;
+      --ink-faint: #6d7f97;
+      --accent: #6fa2ec;
+      --accent-soft: #1a2e4c;
+      --line: #283647;
+      --pass: #4dc389;
+      --pass-bg: #102c20;
+      --fail: #f2726a;
+      --fail-bg: #381917;
+      --na: #d8a442;
+      --na-bg: #372c14;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 30px rgba(0, 0, 0, .3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0d1520;
+    --surface: #161f2c;
+    --surface-2: #1d2937;
+    --ink: #e7eef7;
+    --ink-soft: #a1b0c4;
+    --ink-faint: #6d7f97;
+    --accent: #6fa2ec;
+    --accent-soft: #1a2e4c;
+    --line: #283647;
+    --pass: #4dc389;
+    --pass-bg: #102c20;
+    --fail: #f2726a;
+    --fail-bg: #381917;
+    --na: #d8a442;
+    --na-bg: #372c14;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 10px 30px rgba(0, 0, 0, .3);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--accent); }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .86em;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 20px 120px;
+  }
+
+  /* ---- top bar ---------------------------------------------------------- */
+  header.bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar-inner {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px 20px;
+    flex-wrap: wrap;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    font-weight: 600;
+  }
+  .brand .mark {
+    font-size: 17px;
+    letter-spacing: -.01em;
+    color: var(--accent);
+  }
+  .brand .sub {
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  .build-field {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .build-field label { text-transform: uppercase; letter-spacing: .1em; font-size: 10.5px; }
+  .build-field input {
+    font: inherit;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    background: var(--surface-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    width: 150px;
+  }
+
+  .bar-progress {
+    flex: 1 1 220px;
+    min-width: 160px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .track {
+    flex: 1;
+    height: 7px;
+    border-radius: 99px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .track > span {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--pass)));
+    transition: width .35s ease;
+  }
+  .bar-count {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar-actions { display: flex; gap: 8px; }
+  button.ghost {
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 6px 11px;
+    cursor: pointer;
+  }
+  button.ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
+  button.ghost:focus-visible,
+  a:focus-visible,
+  .res button:focus-visible,
+  .s-head button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---- hero / intro ---------------------------------------------------- */
+  .intro {
+    padding: 46px 0 30px;
+    max-width: 720px;
+  }
+  .intro h1 {
+    font-family: "IBM Plex Serif", Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(28px, 4.4vw, 40px);
+    line-height: 1.12;
+    letter-spacing: -.015em;
+    text-wrap: balance;
+    margin: 0 0 14px;
+  }
+  .intro p {
+    font-family: "IBM Plex Serif", Georgia, serif;
+    font-size: 16.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    margin: 0 0 12px;
+  }
+  .intro .lede { color: var(--ink); }
+
+  /* ---- reference panels ---------------------------------------------- */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 26px 0 10px;
+  }
+  @media (max-width: 780px) { .panels { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel h2 {
+    margin: 0;
+    padding: 13px 16px;
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .panel table { width: 100%; border-collapse: collapse; }
+  .panel td {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    font-size: 13px;
+  }
+  .panel tr:last-child td { border-bottom: 0; }
+  .panel td:first-child { color: var(--ink-soft); white-space: nowrap; width: 1%; padding-right: 18px; }
+  .panel td.mono { font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+
+  .note-band {
+    margin: 18px 0 8px;
+    padding: 13px 16px;
+    background: var(--accent-soft);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--line));
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+  .note-band strong { color: var(--accent); }
+  .note-band ul { margin: 8px 0 0; padding-left: 20px; }
+  .note-band li { margin: 3px 0; }
+
+  /* ---- layout with sticky index ------------------------------------ */
+  .body-grid {
+    display: grid;
+    grid-template-columns: 210px 1fr;
+    gap: 34px;
+    margin-top: 40px;
+    align-items: start;
+  }
+  @media (max-width: 940px) { .body-grid { grid-template-columns: 1fr; } .index { display: none; } }
+
+  nav.index {
+    position: sticky;
+    top: 88px;
+    font-size: 12.5px;
+  }
+  nav.index ol { list-style: none; margin: 0; padding: 0; }
+  nav.index li { margin: 0; }
+  nav.index a {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+  }
+  nav.index a:hover { background: var(--surface-2); color: var(--ink); }
+  nav.index .tally {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- suites ----------------------------------------------------- */
+  section.suite {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 18px;
+    overflow: hidden;
+    scroll-margin-top: 92px;
+  }
+  .s-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .s-head .num {
+    flex-shrink: 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin-top: 1px;
+  }
+  .s-head .titles { flex: 1; min-width: 0; }
+  .s-head h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -.005em;
+  }
+  .s-head .goal { margin: 3px 0 0; font-size: 13px; color: var(--ink-soft); }
+  .s-head .chip {
+    flex-shrink: 0;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border-radius: 99px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+  }
+  .s-head .caret {
+    flex-shrink: 0;
+    color: var(--ink-faint);
+    transition: transform .2s ease;
+    margin-top: 3px;
+  }
+  .suite.collapsed .caret { transform: rotate(-90deg); }
+  .suite.collapsed .s-body { display: none; }
+
+  .s-body { border-top: 1px solid var(--line); overflow-x: auto; }
+  .steps { min-width: 640px; }
+  @media (max-width: 700px) {
+    .steps .c-do, .steps .c-exp { width: auto; }
+    .s-head .goal { display: none; }
+  }
+  .pre {
+    padding: 12px 18px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .pre b { color: var(--ink); font-weight: 600; }
+
+  .steps { width: 100%; border-collapse: collapse; }
+  .steps th {
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .steps td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    font-size: 13.5px;
+  }
+  .steps tr:last-child td { border-bottom: 0; }
+  .steps tr.done-pass { background: color-mix(in srgb, var(--pass-bg) 55%, transparent); }
+  .steps tr.done-fail { background: color-mix(in srgb, var(--fail-bg) 60%, transparent); }
+
+  .steps .c-id { width: 1%; white-space: nowrap; font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-faint); padding-top: 13px; }
+  .steps .c-do { width: 42%; }
+  .steps .c-exp { width: 42%; color: var(--ink-soft); }
+  .steps .c-exp strong { color: var(--ink); font-weight: 500; }
+  .steps .c-res { width: 1%; white-space: nowrap; }
+
+  .steps .c-do .ref {
+    display: inline-block;
+    margin-left: 6px;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 4px;
+    padding: 1px 5px;
+    vertical-align: 1px;
+  }
+
+  .res { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .res button {
+    font: inherit;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    font-weight: 500;
+    width: 30px;
+    height: 28px;
+    border: 0;
+    background: var(--surface);
+    color: var(--ink-faint);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .res button + button { border-left: 1px solid var(--line); }
+  .res button:hover { background: var(--surface-2); }
+  .res button[aria-pressed="true"][data-v="pass"] { background: var(--pass); color: #fff; }
+  .res button[aria-pressed="true"][data-v="fail"] { background: var(--fail); color: #fff; }
+  .res button[aria-pressed="true"][data-v="na"]   { background: var(--na); color: #fff; }
+
+  .note-row td { padding: 0 14px 12px; border-bottom: 1px solid var(--line); }
+  .note-row textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 12.5px;
+    background: var(--surface-2);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 7px 9px;
+    resize: vertical;
+    min-height: 34px;
+  }
+  .note-row textarea::placeholder { color: var(--ink-faint); }
+
+  footer.foot {
+    max-width: 1180px;
+    margin: 46px auto 0;
+    padding: 22px 20px 0;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--ground);
+    font-size: 13px;
+    padding: 9px 16px;
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---- print ----------------------------------------------------- */
+  @media print {
+    header.bar, nav.index, .bar-actions, .caret, .note-band { display: none !important; }
+    body { background: #fff; color: #000; font-size: 10.5px; }
+    .body-grid { grid-template-columns: 1fr; gap: 0; margin-top: 12px; }
+    .suite, .panel { box-shadow: none; border: 1px solid #bbb; break-inside: avoid; }
+    .suite { margin-bottom: 10px; }
+    .suite.collapsed .s-body { display: block !important; }
+    .s-head { cursor: default; }
+    .res { border-color: #999; }
+    .res button { color: #666; }
+    .res button[aria-pressed="true"] { color: #000; font-weight: 700; }
+    .res button[aria-pressed="true"][data-v="pass"] { background: #ddd; }
+    .res button[aria-pressed="true"][data-v="fail"] { background: #bbb; }
+    .steps tr.done-pass, .steps tr.done-fail { background: transparent; }
+    .intro { padding: 6px 0; }
+    a { color: #000; text-decoration: none; }
+  }
+</style>
+
+<header class="bar">
+  <div class="bar-inner">
+    <div class="brand"><span class="mark">LocalSell</span><span class="sub">QA Test Plan</span></div>
+    <div class="build-field">
+      <label for="build">Build / date</label>
+      <input id="build" placeholder="e.g. 799a0f0b" />
+    </div>
+    <div class="bar-progress">
+      <div class="track"><span id="bar-fill"></span></div>
+      <div class="bar-count" id="bar-count">0 / 0</div>
+    </div>
+    <div class="bar-actions">
+      <button class="ghost" id="btn-report">Copy report</button>
+      <button class="ghost" id="btn-print">Print / PDF</button>
+      <button class="ghost" id="btn-reset">Reset run</button>
+      <button class="ghost" id="btn-theme" aria-label="Toggle theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="intro">
+    <h1>One full pass, from an empty marketplace to a delivered order.</h1>
+    <p class="lede">This is the acceptance script for LocalSell — the customer site, the admin console, the store app and the rider app. Work the suites <strong>in order</strong>: each one leans on data the last one created (a vendor before a store, a store before a menu, a menu before an order).</p>
+    <p>Mark every step <span class="mono">P</span> pass, <span class="mono">F</span> fail or <span class="mono">–</span> not-applicable. Your marks and notes are saved in this browser automatically. When you finish, hit <strong>Copy report</strong> and paste it into the bug tracker.</p>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <h2>Environments</h2>
+      <table>
+        <tr><td>Customer web</td><td class="mono">localsell.in</td></tr>
+        <tr><td>Admin console</td><td class="mono">admin.localsell.in</td></tr>
+        <tr><td>Store app</td><td class="mono">store.localsell.in</td></tr>
+        <tr><td>Rider app</td><td class="mono">rider.localsell.in</td></tr>
+        <tr><td>API</td><td class="mono">api.localsell.in/graphql</td></tr>
+        <tr><td>Market area</td><td>Deogarh, Rajsamand, Rajasthan · 313331 · centre 25.534, 73.899 · ~1.5&nbsp;km store spread</td></tr>
+        <tr><td>Money</td><td>₹ / INR · COD only · platform commission 20% / monthly</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h2>Seed logins</h2>
+      <table>
+        <tr><td>Super admin</td><td class="mono">admin@localsell.in · Admin@123</td></tr>
+        <tr><td>Vendor</td><td class="mono">hot-pizza-corner-owner@localsell.in · Vendor@123</td></tr>
+        <tr><td>Store app</td><td class="mono">hot-pizza-corner@store.localsell.in · Store@123</td></tr>
+        <tr><td>Customer</td><td class="mono">customer@localsell.in · Customer@123</td></tr>
+        <tr><td>Rider</td><td class="mono">rider1 · Rider@123</td></tr>
+        <tr><td>Seed stores</td><td>Hot Pizza Corner, Devshree Kitchen, Deogarh Mahal Rasoi, Shrinath Sweets &amp; Namkeen (restaurants); Deogarh Daily Mart (grocery)</td></tr>
+        <tr><td>Zone</td><td>Deogarh Town · riders <span class="mono">rider1</span>, <span class="mono">rider2</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="note-band">
+    <strong>Golden rules</strong>
+    <ul>
+      <li>One tester per browser profile — the run is saved locally, it does not sync between people.</li>
+      <li>A <span class="mono">FAIL</span> needs a note: what you did, what you expected, what actually happened, and a screenshot in the tracker.</li>
+      <li>WhatsApp OTP and order messages only fire when <b>Configuration → WhatsApp → Enabled</b> is on. With it off, the OTP is written to the API log — check with the team, or use the <span class="mono">testOtp</span> value in Configuration on a staging box.</li>
+      <li>Don't run <span class="mono">npm&nbsp;run&nbsp;seed</span> against a box that already has real vendors or orders — it wipes every data table.</li>
+      <li>The <span class="mono">S#</span> refs point at a matching item in <span class="mono">QA_PUNCHLIST.md</span> (1–37) or <span class="mono">QA_PUNCHLIST_ROUND2.md</span> (38–60).</li>
+    </ul>
+  </div>
+
+  <div class="body-grid">
+    <nav class="index" aria-label="Suites"><ol id="index-list"></ol></nav>
+    <main id="suites"></main>
+  </div>
+
+</div>
+
+<footer class="foot">
+  <span>LocalSell acceptance script · work suites top to bottom</span>
+  <span id="foot-count">0 checks</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   Test content. Each suite: id, num, title, goal, pre (preconditions),
+   steps: [id, do, expect, ref?]
+   ================================================================ */
+const SUITES = [
+  {
+    id: "s0", num: "S0", title: "Post-deploy smoke test", collapsed: false,
+    goal: "5 minutes, every deploy, before anyone tests anything else.",
+    pre: "Run right after SERVER-DEPLOY.sh finishes. If any step here fails, stop and tell the team — the build is broken.",
+    steps: [
+      ["S0.1", "Open api.localsell.in/health", "Returns <strong>{\"status\":\"ok\"}</strong>"],
+      ["S0.2", "Open localsell.in", "Landing page renders — logo, search, store sections, no error page"],
+      ["S0.3", "Open localsell.in/discovery, then /restaurants, then /store", "Each loads a list (or an \"area not serviceable\" screen) — <strong>not</strong> \"This page couldn't load\"", "#61"],
+      ["S0.4", "Open admin.localsell.in and sign in as super admin", "Dashboard loads; sidebar shows General / Management / Wallet"],
+      ["S0.5", "Open store.localsell.in and rider.localsell.in", "Both show their login screen"],
+      ["S0.6", "Admin → Management → Orders", "Table renders (may be empty), no crash"],
+      ["S0.7", "Admin → Configuration", "Loads; scroll down — the <strong>WhatsApp (Meta Cloud API)</strong> card is present below Verification"],
+    ],
+  },
+
+  {
+    id: "s1", num: "S1", title: "Platform configuration", collapsed: true,
+    goal: "Admin sets up the catalogue building blocks a store needs.",
+    pre: "Signed in as super admin at admin.localsell.in.",
+    steps: [
+      ["S1.1", "Configuration → check Currency", "Shows <strong>₹ / INR</strong> everywhere — never \"INR298\" style text", "#22"],
+      ["S1.2", "Configuration → Commission / billing", "Default rate 20%, cycle Monthly"],
+      ["S1.3", "Configuration → the store-location map (open any store → General → Location)", "Map opens on <strong>Deogarh</strong>, not Australia; address search returns predictions"],
+      ["S1.4", "Configuration → WhatsApp → press \"Sync from Meta\"", "Template table fills — the 8 <span class=\"mono\">localsell_*</span> rows, ideally all <strong>APPROVED</strong>. Needs the access token + WABA ID set first"],
+      ["S1.5", "Configuration → WhatsApp → \"WhatsApp message log\" → Show", "Panel opens: filter dropdowns (window / status / purpose / channel), a table, a pager"],
+      ["S1.6", "Management → Product Type → Add Product Type. Fill only Name, leave Description + Image blank, press Add", "Button responds; <strong>visible \"required\" errors</strong> appear on the blank fields — not a dead button", "#62"],
+      ["S1.7", "Fill Name + Description + Shop Category + upload an image, press Add", "Saves; new row appears in the list. Description over the old 40-char cap is now accepted (up to 200)", "#54"],
+      ["S1.8", "Management → Shop Type → add a shop type, then edit it", "Both save"],
+      ["S1.9", "Management → Zone → Add Zone → drop a pin / draw the polygon on the map → Save", "Pin drops where you click; polygon saves; zone lists", "#37"],
+      ["S1.10", "Management → Banners → create a banner, set a schedule + placement", "Saves; shows in the list with its window"],
+      ["S1.11", "Management → Coupons → create a % coupon with an active date window", "Saves; visible as active"],
+      ["S1.12", "Switch the admin language picker between options", "Only <strong>English</strong> and <strong>हिंदी</strong> are offered", "#language"],
+    ],
+  },
+
+  {
+    id: "s2", num: "S2", title: "Vendor onboarding — admin wizard", collapsed: true,
+    goal: "Register a new vendor through the 4-step wizard, including a mid-way draft save.",
+    pre: "Admin → General → Vendors → \"Register new vendor\".",
+    steps: [
+      ["S2.1", "Step Account: type an email like <span class=\"mono\">test@gmail</span> (no TLD) and try to continue", "Rejected — \"Enter a valid email address\". <span class=\"mono\">test@gmail.com</span> is accepted", "#41"],
+      ["S2.2", "Fill first name, last name, a valid email, phone (10-digit, +91 is fixed), then either tick \"send setup link\" or type a strong password + confirm", "Phone dropdown is locked to +91; password needs 8+ with upper/lower/digit/symbol", "#20"],
+      ["S2.3", "Before finishing, press \"Save draft\"", "Toast \"Draft saved\"; vendor shows in the list as a draft. An almost-empty form still saves — only a completely blank one is blocked", "#52"],
+      ["S2.4", "Leave the wizard, reopen the draft vendor", "Every field you entered is still there"],
+      ["S2.5", "Step Business &amp; KYC: leave \"Business type\" empty, press Continue, then pick a type from the dropdown", "The \"Required\" error under Business type <strong>clears the moment you pick one</strong>", "#53"],
+      ["S2.6", "Turn on \"GST registered\", enter a 15-char GSTIN, upload a PAN card image", "GSTIN validates format; PAN upload shows a thumbnail; \"Upload\" (not \"Replace\") on the card", "#09b"],
+      ["S2.7", "Step Payout: enter bank holder / account / IFSC / bank name (or skip)", "IFSC validates once an account number is entered; skipping entirely is allowed"],
+      ["S2.8", "Step Review → \"Create vendor\"", "Success toast; if \"send setup link\" was on, a second \"invitation sent\" toast"],
+      ["S2.9", "General → Vendors list", "New vendor is there, status <strong>Active</strong>"],
+    ],
+  },
+
+  {
+    id: "s3", num: "S3", title: "Store creation — admin wizard", collapsed: true,
+    goal: "Add a store under a vendor, then a second outlet on the same login email.",
+    pre: "Admin → General → Stores → \"Add Store\" (or open a vendor → Stores tab → Add).",
+    steps: [
+      ["S3.1", "Step Vendor: without selecting a vendor, press \"Save &amp; Next\"", "A red field error <strong>and</strong> a summary banner appear — the button is not silently dead", "#39"],
+      ["S3.2", "On the Vendor step, look for a \"Back\" button", "\"Back\" is present (leaves the wizard from the first step)", "#58"],
+      ["S3.3", "Toggle \"Add Vendor\" on, fill the inline vendor form but skip the photo, press \"Save &amp; Next\"", "Saves and advances — <strong>the photo is not required</strong>; any real errors (email, password match) show inline", "#39"],
+      ["S3.4", "Step Basic details: name, login email, password + confirm (mismatch on purpose first), phone, address, delivery time, min order, service charge, shop category, cuisines, upload logo + cover", "Mismatched passwords → clear \"must match\" error; logo is required, cover optional"],
+      ["S3.5", "Every password field on this step", "The show/hide eye icon sits <strong>inside</strong> the input box, not floating off its right edge", "#38"],
+      ["S3.6", "Step Location &amp; delivery: pick a city / search an area", "A map pin drops as soon as the area resolves; set the delivery radius (km) and provider (Platform / Self / Both)", "#18"],
+      ["S3.7", "Step Timings &amp; review: set the week's open/close hours → \"Create store\"", "Success; the store appears in the Stores list"],
+      ["S3.8", "Open the new store in the list", "Approval status is <strong>Approved</strong> — an admin-created store goes live immediately", "#42"],
+      ["S3.9", "Add a <strong>second</strong> store for the same vendor, same login email, a <strong>different</strong> password", "Both stores save — the vendor now runs two outlets on one email", "#59"],
+      ["S3.10", "Try a third store, same vendor, same email <strong>and</strong> same password as an existing one", "Blocked with a clear message about picking a different password", "#59"],
+    ],
+  },
+
+  {
+    id: "s4", num: "S4", title: "Public partner sign-up", collapsed: true,
+    goal: "A restaurant or rider applies from the marketing site; the admin sees the lead.",
+    pre: "Open localsell.in in a normal browser tab (fine to be signed in as the customer).",
+    steps: [
+      ["S4.1", "Footer or hero → \"List your restaurant\" / \"Partner with us\"", "The partner landing + application form loads"],
+      ["S4.2", "Look at the form fields", "First name, last name, email, phone, terms — <strong>no password / confirm-password fields</strong>", "#50"],
+      ["S4.3", "If you're signed in as an admin/customer, check the email field", "It is <strong>blank</strong> — the browser does not autofill your saved credentials", "#50"],
+      ["S4.4", "Enter <span class=\"mono\">x@gmail</span> in the email field", "Rejected as invalid", "#41"],
+      ["S4.5", "Fill valid details, accept terms, press Register (or Enter key)", "Success toast; you're returned to the home page. Enter submits the form", "#49"],
+      ["S4.6", "Switch to admin → the bell / notifications", "A new item: <strong>\"New Restaurant partner application: …\"</strong> with a real relative time (\"2m ago\"), <strong>not</strong> \"Invalid date\"", "#51"],
+      ["S4.7", "Click that notification", "Lands on <span class=\"mono\">/management/notifications</span> — <strong>not</strong> a 404", "#51"],
+    ],
+  },
+
+  {
+    id: "s5", num: "S5", title: "Store approval &amp; documents", collapsed: true,
+    goal: "Admin moves a store through the approval + document-review workflow.",
+    pre: "Admin → Management → Store Documents, and Admin → a store's profile.",
+    steps: [
+      ["S5.1", "Have a store upload a compliance doc (or add one via the store app), then open Management → Store Documents", "The doc shows as <strong>PENDING</strong> in the review queue"],
+      ["S5.2", "Open the doc → Verify (or Reject with a note)", "Status flips to Verified / Rejected; the note is saved"],
+      ["S5.3", "Open a store → set approval to <strong>SUSPENDED</strong>", "Store is deactivated and disappears from the customer restaurant/store lists"],
+      ["S5.4", "Set it back to <strong>APPROVED</strong>", "Store returns to the customer lists"],
+      ["S5.5", "Stores list → filter by approval status", "Filter narrows the table to that status"],
+    ],
+  },
+
+  {
+    id: "s6", num: "S6", title: "Store app — menu &amp; setup", collapsed: true,
+    goal: "The store owner builds a menu and configures delivery.",
+    pre: "store.localsell.in → sign in as hot-pizza-corner@store.localsell.in / Store@123.",
+    steps: [
+      ["S6.1", "On the login screen, tap \"Forgot password?\"", "A reset flow opens — enter email → get a code → set a new password. (Code prints to the API log when SMTP is off)", "#43"],
+      ["S6.2", "Product management → Category → add a category", "Category is created and listed"],
+      ["S6.3", "Product management → Food → add a product: name, price, image, description, category", "Saves; appears under its category"],
+      ["S6.4", "Add a variation and an add-on group to that product; mark one add-on group \"required\"", "Required group forces minimum quantity ≥ 1"],
+      ["S6.5", "Create a combo product: turn on \"is combo\", add combo items, set a compare-at price", "Combo saves; shows the \"you save\" difference"],
+      ["S6.6", "Toggle a food, then a single variation, out of stock", "Both flags persist and show as out of stock"],
+      ["S6.7", "Menu → \"Clone menu\" into another store", "Every item copies into the target store"],
+      ["S6.8", "Home → Delivery Settings → set provider (Platform / Self / Both); add a delivery staff member (name + phone)", "Settings + staff save; Delivery Reports screen opens"],
+      ["S6.9", "Toggle the store open / closed", "State changes; a closed store shows as unavailable to customers"],
+    ],
+  },
+
+  {
+    id: "s7", num: "S7", title: "Customer sign-up &amp; address", collapsed: true,
+    goal: "A brand-new customer creates an account and sets a delivery address in Deogarh.",
+    pre: "localsell.in in a fresh incognito window. Have a real phone that can receive WhatsApp.",
+    steps: [
+      ["S7.1", "Open the auth modal → \"Continue with mobile number\"", "Phone panel opens; +91 is fixed; entering a number and pressing Enter sends the code", "#49"],
+      ["S7.2", "Receive the WhatsApp OTP, type it in", "4 boxes; Enter on the last one confirms; wrong code shows an error", "#49"],
+      ["S7.3", "New number with no name → the \"your name\" step", "Asks for a name once, then you're signed in and landed in the app"],
+      ["S7.4", "Sign out. Reopen the modal → \"Sign in with an email account\" → enter an email → password", "Email path still works as a fallback"],
+      ["S7.5", "On the password step, watch the browser", "<strong>No \"use a suggested strong password\" popup</strong>, no strength meter — this is an existing account", "#46"],
+      ["S7.6", "Complete an email+password sign-in", "Exactly <strong>one</strong> \"logged in\" toast", "#47"],
+      ["S7.7", "Profile → Addresses → \"Add address\" → search or drop a pin near Deogarh", "Pin drops; Area / City / State / Pincode auto-fill from the map", "#27"],
+      ["S7.8", "Clear the pincode, try to save", "Blocked — a 6-digit PIN is required", "#27"],
+      ["S7.9", "Save the address", "The \"Add address\" modal closes on its own; the new address is selectable via a radio button", "#34 #35"],
+      ["S7.10", "Back on profile / addresses with an address saved", "A \"Start ordering\" call-to-action is shown and routes into the order flow", "#06"],
+    ],
+  },
+
+  {
+    id: "s8", num: "S8", title: "Serviceability &amp; waitlist", collapsed: true,
+    goal: "In-area addresses see stores; out-of-area addresses hit the waitlist.",
+    pre: "Signed in as the customer, editing the delivery address.",
+    steps: [
+      ["S8.1", "Set the delivery address inside Deogarh town", "Restaurants and grocery stores show normally"],
+      ["S8.2", "Set the address to somewhere far (another city)", "An <strong>\"not available in your area yet\"</strong> screen shows, with the nearest serviced area + distance", "#31"],
+      ["S8.3", "On that screen, submit the \"notify me\" / join-waitlist form", "A valid 10-digit mobile is required before it accepts", "#05"],
+      ["S8.4", "Admin → Management → Waitlist", "The entry you just submitted is listed"],
+    ],
+  },
+
+  {
+    id: "s9", num: "S9", title: "Browse &amp; place an order", collapsed: true,
+    goal: "Customer finds a store, builds a cart, applies a coupon, checks out COD.",
+    pre: "Signed in as the customer with an in-area Deogarh address.",
+    steps: [
+      ["S9.1", "Footer → \"Restaurants\", \"Grocery stores\", \"Start ordering\"", "Each link loads its page — none dead-ends", "#61 #28"],
+      ["S9.2", "Open /restaurants and scroll to the bottom", "Each store shows <strong>once</strong> — the list does not repeat the same store forever", "#57"],
+      ["S9.3", "Open /store (grocery) and scroll to the bottom", "Same — <strong>no infinite repeat</strong> of the one grocery store", "#56"],
+      ["S9.4", "Toggle the language English → हिंदी on any browse page", "The <strong>whole page</strong> switches language, not just one widget", "#48"],
+      ["S9.5", "Use search and the category / shop-type pages", "Results load; \"See all\" opens the full list"],
+      ["S9.6", "Open a store with a combo → view the combo card", "Shows the contents, \"you save ₹X\", and a \"frequently bought together\" strip in the cart"],
+      ["S9.7", "Add an item that has a required add-on group, without choosing one", "Blocked until you pick from the required group"],
+      ["S9.8", "Apply the % coupon you created in S1.11", "Discount applies to the cart total"],
+      ["S9.9", "Checkout → the delivery block", "Shows the address with a \"Change\" / \"Add delivery address\" option", "#16"],
+      ["S9.10", "Choose COD → \"Place order\"", "Order is placed; you land on an order confirmation with an order number"],
+      ["S9.11", "Open the order → tracking screen", "Status shows; the <strong>4-digit delivery code</strong> is visible on the order screen"],
+    ],
+  },
+
+  {
+    id: "s10", num: "S10", title: "Order lifecycle &amp; delivery", collapsed: true,
+    goal: "Drive one order from placed to delivered across store, rider and customer.",
+    pre: "The order from S9 exists. Have the store app and rider app open.",
+    steps: [
+      ["S10.1", "Store app → the new order → set a prep time → Accept", "Order moves to Confirmed / preparing; customer's status updates"],
+      ["S10.2", "Assign a rider — Admin → Dispatch, or the store app's dispatch", "Rider is attached to the order"],
+      ["S10.3", "Rider app → the assigned order → mark Picked", "Order → out for delivery; customer sees it"],
+      ["S10.4", "Rider app → try to mark <strong>Delivered</strong> without the code", "Blocked — the customer's 4-digit code is required", "#delivery-otp"],
+      ["S10.5", "Enter the customer's 4-digit code → confirm delivery", "Order → Delivered"],
+      ["S10.6", "Customer → the completed order → rate the store and the rider", "Ratings save"],
+      ["S10.7", "If WhatsApp is enabled: check the customer's phone across the flow", "A message at placed / confirmed / out-for-delivery / delivered; the vendor got one at placed; the rider at assignment"],
+      ["S10.8", "Admin → Configuration → WhatsApp → message log", "The sends from S10.7 appear — recipient, purpose, template, status. Delivery status advances SENT → DELIVERED"],
+    ],
+  },
+
+  {
+    id: "s11", num: "S11", title: "Rider onboarding &amp; cash", collapsed: true,
+    goal: "Register a rider, approve them, and check COD cash reconciliation.",
+    pre: "Admin → General → Riders → \"Register new rider\", plus the rider app.",
+    steps: [
+      ["S11.1", "Fill the rider form: name, email (try <span class=\"mono\">x@gmail</span> → rejected), username, phone, zone, vehicle type, employment type, password or setup link", "Email is strictly validated", "#41"],
+      ["S11.2", "Create the rider, then open the Riders list", "New rider status is <strong>Pending</strong> — not \"Approved\" by default", "#15"],
+      ["S11.3", "Open the rider → Edit", "A <strong>\"Confirm your password\"</strong> prompt appears before the edit form is usable", "#44"],
+      ["S11.4", "In the edit form, the password field", "Eye icon inside the box; typing a password and re-typing the <strong>same</strong> value in confirm does <strong>not</strong> raise a false \"incorrect / must match\" error", "#45 #60"],
+      ["S11.5", "Approve the rider. Meanwhile have that rider logged into the rider app on the \"pending\" screen", "Within ~15 seconds the rider app moves itself off the pending screen — no manual reload", "#14"],
+      ["S11.6", "Rider app → go online → receive a dispatch (from S10)", "Dispatch arrives; rider can accept"],
+      ["S11.7", "After a COD delivery: Rider app → \"My Cash\"", "Shows COD held, the ₹3000 cash limit, and net available"],
+      ["S11.8", "With held cash over the limit, try to accept another COD order", "Blocked with a \"deposit cash first\" message"],
+      ["S11.9", "Rider self-deposit / Admin records a remittance", "Held balance clears to ₹0"],
+    ],
+  },
+
+  {
+    id: "s12", num: "S12", title: "Finance &amp; commission", collapsed: true,
+    goal: "Verify commission billing, payouts and the reconciliation reports.",
+    pre: "Admin → Management, after at least one delivered COD order (S10).",
+    steps: [
+      ["S12.1", "Management → Commission Bills → current period", "The delivered order shows as a line item at 20%"],
+      ["S12.2", "Close the current commission period, then run the close again", "First run creates the bill(s); the second run creates <strong>0</strong> — it's idempotent"],
+      ["S12.3", "Open a commission bill", "It has a printable invoice with an invoice number (e.g. <span class=\"mono\">PDR-INV-…</span>)"],
+      ["S12.4", "Management → Rider Cash", "Outstanding COD cash per rider; record a remittance → the balance clears"],
+      ["S12.5", "Management → Finance → create a payout run", "Payees are snapshotted with amounts; mark one item paid; download the CSV; complete the run"],
+      ["S12.6", "Management → Finance Report", "Order volume, commission earned, COD held — numbers are consistent with the orders placed"],
+      ["S12.7", "Management → Reconciliation Report", "All checks report <strong>OK</strong>"],
+      ["S12.8", "Management → Finance → Wallet adjustments → credit a store wallet ₹50", "Store wallet goes up ₹50; the adjustment shows in the ledger"],
+      ["S12.9", "Sign in as a vendor → sidebar", "A <strong>Commission</strong> / performance section is visible and scoped to that vendor's own stores only"],
+    ],
+  },
+
+  {
+    id: "s13", num: "S13", title: "Auth &amp; security — cross-app", collapsed: true,
+    goal: "Spot-check the security behaviour that isn't tied to one flow.",
+    pre: "Access to all four apps.",
+    steps: [
+      ["S13.1", "\"Forgot password\" on: admin login, store login, rider (native) login, customer web", "Each opens a working email/OTP reset — not just a \"contact support\" message", "#43"],
+      ["S13.2", "Admin → edit a store", "A \"Confirm your password\" gate appears before the edit wizard is usable", "#12"],
+      ["S13.3", "Any create/reset form: enter a weak password (e.g. <span class=\"mono\">abc123</span>)", "Rejected — needs 8+ chars with upper, lower, digit and symbol", "#20"],
+      ["S13.4", "Any email field across the apps: <span class=\"mono\">x@gmail</span>, <span class=\"mono\">x@gmailcom</span>, <span class=\"mono\">x@a.b</span>", "All rejected; <span class=\"mono\">x@gmail.com</span> accepted", "#41 #01"],
+      ["S13.5", "Any phone field", "Locked to +91, 10 digits, no country dropdown", "#22 #23"],
+      ["S13.6", "\"Sign in with Google\" buttons", "Hidden entirely unless a real Google client ID is configured", "#21"],
+      ["S13.7", "Language picker in each app", "Only English + हिंदी", "#language"],
+      ["S13.8", "Tab through a form and press Enter on the last field", "The form submits — buttons are keyboard-reachable", "#49"],
+    ],
+  },
+
+  {
+    id: "s14", num: "S14", title: "Regression re-verify — round 2 (38–60)", collapsed: true,
+    goal: "Fast re-check of the round-2 punch list. Most are covered above; this is the checklist view.",
+    pre: "Cross-reference QA_PUNCHLIST_ROUND2.md. #42 = working as designed (admin-created stores auto-approve).",
+    steps: [
+      ["#38 #40", "Password eye icon position (admin add-vendor / add-store / login)", "Icon inside the field"],
+      ["#39", "Store wizard \"Save &amp; Next\" on the vendor step with blanks", "Errors + banner show; photo optional"],
+      ["#41", "Email validation across admin forms", "<span class=\"mono\">x@gmail</span> rejected"],
+      ["#43", "Forgot password — admin / store / rider", "Real reset flow. <strong>Note:</strong> rider <em>web</em> variant still shows a help dialog — known gap"],
+      ["#44", "Edit Rider", "Confirm-password gate first"],
+      ["#45", "Edit Rider password field", "Eye icon inside"],
+      ["#46", "Web login password step", "No suggest-password popup / strength meter"],
+      ["#47", "Web email+password login", "One success toast"],
+      ["#48", "Web language switch", "Whole page switches"],
+      ["#49", "Enter key on web auth panels + partner form", "Submits"],
+      ["#50", "Partner form", "No password fields; no credential autofill"],
+      ["#51", "Notification date + link", "Real time; click → /management/notifications, no 404"],
+      ["#52", "Vendor \"Save draft\"", "Near-blank draft saves; fully blank is blocked"],
+      ["#53", "\"Business type\" required error", "Clears on selection"],
+      ["#54", "Product Type / cuisine description limit", "200 chars, correct message"],
+      ["#55", "Admin sidebar groups", "Only one open at a time"],
+      ["#56 #57", "Web grocery + restaurant lists", "No infinite store repeat"],
+      ["#58", "Store wizard vendor step", "Back button present"],
+      ["#59", "Two outlets, one vendor, same email", "Both save (different passwords)"],
+      ["#60", "Re-entering the matching password (admin)", "No false \"incorrect\" error"],
+      ["#61", "Footer \"Start ordering\" / \"Restaurants\" / \"Grocery stores\"", "All load — re-verify after this build"],
+      ["#62", "\"Add Product Type\" button with blank fields", "Responds + shows validation errors"],
+    ],
+  },
+];
+
+/* ================================================================ */
+const KEY = "localsell-qa-run-v1";
+const state = load();
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || { build: "", marks: {}, notes: {} }; }
+  catch { return { build: "", marks: {}, notes: {} }; }
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+const suitesEl = document.getElementById("suites");
+const indexEl = document.getElementById("index-list");
+const VALS = [["pass", "P"], ["fail", "F"], ["na", "–"]];
+
+SUITES.forEach((suite) => {
+  const sec = document.createElement("section");
+  sec.className = "suite" + (suite.collapsed ? " collapsed" : "");
+  sec.id = suite.id;
+
+  const head = document.createElement("div");
+  head.className = "s-head";
+  head.setAttribute("role", "button");
+  head.setAttribute("tabindex", "0");
+  head.innerHTML = `
+    <span class="num">${suite.num}</span>
+    <div class="titles">
+      <h3>${suite.title}</h3>
+      <p class="goal">${suite.goal}</p>
+    </div>
+    <span class="chip" data-chip="${suite.id}">—</span>
+    <span class="caret" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span>`;
+  const toggle = () => sec.classList.toggle("collapsed");
+  head.addEventListener("click", toggle);
+  head.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  sec.appendChild(head);
+
+  const bodyWrap = document.createElement("div");
+  bodyWrap.className = "s-body";
+  bodyWrap.innerHTML = `<div class="pre"><b>Set-up:</b> ${suite.pre}</div>`;
+
+  const table = document.createElement("table");
+  table.className = "steps";
+  table.innerHTML = `<thead><tr>
+    <th class="c-id">Ref</th><th class="c-do">Do this</th><th class="c-exp">Expect</th><th class="c-res">Result</th>
+  </tr></thead>`;
+  const tb = document.createElement("tbody");
+
+  suite.steps.forEach(([sid, doTxt, expTxt, ref]) => {
+    const mkKey = suite.id + "::" + sid;
+    const tr = document.createElement("tr");
+    tr.dataset.k = mkKey;
+    tr.innerHTML = `
+      <td class="c-id">${sid}</td>
+      <td class="c-do">${doTxt}${ref ? ` <span class="ref">${ref}</span>` : ""}</td>
+      <td class="c-exp">${expTxt}</td>
+      <td class="c-res"></td>`;
+    const resCell = tr.querySelector(".c-res");
+    const group = document.createElement("div");
+    group.className = "res";
+    VALS.forEach(([v, label]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.v = v;
+      b.textContent = label;
+      b.setAttribute("aria-label", { pass: "Pass", fail: "Fail", na: "Not applicable" }[v]);
+      b.setAttribute("aria-pressed", String(state.marks[mkKey] === v));
+      b.addEventListener("click", () => {
+        state.marks[mkKey] = state.marks[mkKey] === v ? undefined : v;
+        if (state.marks[mkKey] === undefined) delete state.marks[mkKey];
+        save();
+        paintRow(tr, mkKey);
+        refresh();
+      });
+      group.appendChild(b);
+    });
+    resCell.appendChild(group);
+    tb.appendChild(tr);
+
+    const noteTr = document.createElement("tr");
+    noteTr.className = "note-row";
+    noteTr.dataset.k = mkKey;
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    const ta = document.createElement("textarea");
+    ta.rows = 1;
+    ta.placeholder = "Note (required on a FAIL) — what you did, expected vs actual…";
+    ta.value = state.notes[mkKey] || "";
+    ta.addEventListener("input", () => {
+      state.notes[mkKey] = ta.value;
+      if (!ta.value) delete state.notes[mkKey];
+      save();
+    });
+    td.appendChild(ta);
+    noteTr.appendChild(td);
+    tb.appendChild(noteTr);
+
+    paintRow(tr, mkKey);
+  });
+
+  table.appendChild(tb);
+  bodyWrap.appendChild(table);
+  sec.appendChild(bodyWrap);
+  suitesEl.appendChild(sec);
+
+  const li = document.createElement("li");
+  li.innerHTML = `<a href="#${suite.id}"><span>${suite.num} · ${suite.title}</span><span class="tally" data-tally="${suite.id}"></span></a>`;
+  indexEl.appendChild(li);
+});
+
+function paintRow(tr, k) {
+  const v = state.marks[k];
+  tr.classList.toggle("done-pass", v === "pass");
+  tr.classList.toggle("done-fail", v === "fail");
+  tr.querySelectorAll(".res button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+}
+
+function suiteStats(suite) {
+  let p = 0, f = 0, n = 0;
+  suite.steps.forEach(([sid]) => {
+    const v = state.marks[suite.id + "::" + sid];
+    if (v === "pass") p++; else if (v === "fail") f++; else if (v === "na") n++;
+  });
+  return { p, f, n, total: suite.steps.length, done: p + f + n };
+}
+
+function refresh() {
+  let P = 0, F = 0, N = 0, T = 0;
+  SUITES.forEach((s) => {
+    const st = suiteStats(s);
+    P += st.p; F += st.f; N += st.n; T += st.total;
+    const chip = document.querySelector(`[data-chip="${s.id}"]`);
+    const tally = document.querySelector(`[data-tally="${s.id}"]`);
+    const txt = st.done === 0 ? `0/${st.total}` : `${st.p}✓${st.f ? " " + st.f + "✕" : ""} · ${st.done}/${st.total}`;
+    if (chip) { chip.textContent = txt; chip.style.color = st.f ? "var(--fail)" : (st.done === st.total ? "var(--pass)" : "var(--ink-soft)"); }
+    if (tally) { tally.textContent = st.done === st.total ? "✓" : `${st.done}/${st.total}`; tally.style.color = st.f ? "var(--fail)" : ""; }
+  });
+  const done = P + F + N;
+  document.getElementById("bar-fill").style.width = T ? (done / T * 100) + "%" : "0%";
+  document.getElementById("bar-count").textContent = `${done} / ${T}` + (F ? `  ·  ${F} failed` : "");
+  document.getElementById("foot-count").textContent = `${T} checks · ${P} pass · ${F} fail · ${N} n/a`;
+}
+
+/* build field */
+const buildInput = document.getElementById("build");
+buildInput.value = state.build || "";
+buildInput.addEventListener("input", () => { state.build = buildInput.value; save(); });
+
+/* actions */
+const toast = (m) => {
+  const t = document.getElementById("toast");
+  t.textContent = m; t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 1900);
+};
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+  if (!confirm("Clear every mark and note for this run?")) return;
+  state.marks = {}; state.notes = {}; save();
+  document.querySelectorAll(".steps tbody tr[data-k]").forEach((tr) => { if (!tr.classList.contains("note-row")) paintRow(tr, tr.dataset.k); });
+  document.querySelectorAll(".note-row textarea").forEach((ta) => (ta.value = ""));
+  refresh(); toast("Run cleared");
+});
+
+document.getElementById("btn-print").addEventListener("click", () => window.print());
+
+document.getElementById("btn-report").addEventListener("click", () => {
+  const lines = [];
+  lines.push(`LocalSell QA — ${state.build ? "build " + state.build + " — " : ""}${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
+  let P = 0, F = 0, N = 0, T = 0;
+  SUITES.forEach((s) => {
+    const st = suiteStats(s);
+    P += st.p; F += st.f; N += st.n; T += st.total;
+  });
+  lines.push(`Overall: ${P} pass / ${F} fail / ${N} n-a  of ${T}  (${T - P - F - N} not run)`);
+  lines.push("");
+  SUITES.forEach((s) => {
+    const st = suiteStats(s);
+    lines.push(`${s.num} ${s.title} — ${st.p} pass, ${st.f} fail, ${st.n} n/a  [${st.done}/${st.total}]`);
+    s.steps.forEach(([sid, doTxt]) => {
+      const k = s.id + "::" + sid;
+      const v = state.marks[k];
+      const note = state.notes[k];
+      if (v === "fail" || (note && note.trim())) {
+        const plain = doTxt.replace(/<[^>]+>/g, "");
+        lines.push(`   ${v === "fail" ? "FAIL" : v === "pass" ? "pass" : v === "na" ? "n/a " : "?   "} ${sid} — ${plain}${note ? "  ::  " + note.trim() : ""}`);
+      }
+    });
+  });
+  const text = lines.join("\n");
+  navigator.clipboard.writeText(text).then(() => toast("Report copied to clipboard"), () => {
+    prompt("Copy the report:", text);
+  });
+});
+
+/* theme toggle */
+const themeBtn = document.getElementById("btn-theme");
+themeBtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : cur === "light" ? "dark" : (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("localsell-qa-theme", next); } catch (e) {}
+});
+try {
+  const t = localStorage.getItem("localsell-qa-theme");
+  if (t) document.documentElement.setAttribute("data-theme", t);
+} catch (e) {}
+
+refresh();
+</script>
