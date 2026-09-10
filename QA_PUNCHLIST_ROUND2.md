@@ -35,15 +35,56 @@ Decisions taken with the user (2026-09-09):
 | 56 | grocery list no longer loops the same store | web `store` screen + `MainSection` de-dupe | ✅ |
 | 57 | same fix for the restaurant list | web `restaurants` screen | ✅ |
 | 58 | Back button on the wizard's vendor step | admin `vendor-details.tsx` | ✅ |
-| 59 | one vendor → multiple outlets on the same login email | Prisma schema + migration + `restaurantLogin` + `createRestaurant` guard | ✅ |
+| 59 | one vendor → multiple outlets on the same login email | Prisma schema (`@unique` → plain `@@index`) + `restaurantLogin` (match on username+password) + `createRestaurant` guard | ✅ |
 | 60 | re-entering the matching password no longer trips "Incorrect" | admin `CustomPasswordTextField` blur handler kept `name`/`id` and only fires on real change | ✅ |
 
 ## Follow-ups
 - **#43 rider web** (`localsell-rider/.../login/index.web.tsx`) — its "Forgot password?" still opens the
   contact-support `<dialog>`. The native rider screen has the real reset flow; the web
   variant needs the same wired into its DOM dialog.
-- **DB migration** — `localsell-api`: `npx prisma migrate deploy` (or `migrate dev`) for
-  `20260909120000_restaurant_username_unique_per_owner` before this ships.
+- **DB schema (#59)** — this repo has no migration workflow; it uses `prisma db push`.
+  Run `cd localsell-api && npm run db:deploy` on QA/prod so the `Restaurant.username`
+  unique constraint is dropped. (Local dev DB is already synced.)
 - Re-deploy web + admin + API; rebuild/export store + rider.
 - Existing bad `WebNotification.navigateTo` rows (`/general/notification`) stay 404 until
   re-seeded or manually fixed — only new notifications get the corrected link.
+
+## How to run + verify locally
+
+**One-time:** MySQL 8 up, then `cd localsell-api && cp .env.example .env` (edit
+`DATABASE_URL`), `npm i && npm run db:deploy -- --demo` (schema + seed).
+
+**Each app** (`nvm use && npm i` first time):
+
+| App | Start | URL |
+|---|---|---|
+| API | `cd localsell-api && npm run dev` | :4000 |
+| Web | `cd localsell-web && npm run dev` | :3000 |
+| Admin | `cd localsell-admin && npm run dev:preview` | :3007 |
+| Store | `cd localsell-store && npx expo start` → `w` | web preview |
+| Rider | `cd localsell-rider && npx expo start` → `w` | web preview |
+
+Point web/admin `.env.local` `NEXT_PUBLIC_SERVER_URL` at `http://localhost:4000/`.
+
+**Smoke test API wiring:** `cd localsell-api && npm run verify` (needs `npm run dev`
+running in another terminal) — should print `PASS` lines, exits non-zero on failure.
+
+**Per-issue click-through:** see the "verify" column notes below.
+- #56/#57 — web `/store` and `/restaurants`: scroll to the bottom, the one store must
+  appear once and not repeat.
+- #55 — admin: expand "General", then "Management" — the first must collapse.
+- #38/#40/#45 — admin add-vendor / add-store / edit-rider: the eye toggle sits inside
+  the input box, not floating to its right.
+- #39 — admin add-store, "Add Vendor" on, click "Save & Next" with fields blank:
+  red errors + a banner appear (used to do nothing).
+- #47 — web: sign in with email+password → exactly one success toast.
+- #48 — web landing page: toggle EN/हिंदी — the whole page switches, not just one widget.
+- #43 — admin login "Forgot password?", store login "Forgot password?", rider (native)
+  login "Forgot password?": each opens a real email/OTP reset (blank `SMTP_PASSWORD`
+  prints the OTP to the API console).
+- #51 — submit the web "List your restaurant" form → admin bell shows the item with a
+  real "Xm ago" time, and clicking it lands on `/management/notifications`.
+- #59 — admin: create two stores under the same vendor with the same login email +
+  different passwords → both save; log into each from the store app.
+- #60 — admin add-vendor: type a password, tab to Confirm, type the same value → no
+  "passwords must match" / "Incorrect password" error.
