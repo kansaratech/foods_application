@@ -106,3 +106,45 @@ export const GET_WHATSAPP_USAGE_STATS = gql`
     }
   }
 `;
+
+export const GET_WHATSAPP_MESSAGE_LOGS = gql`
+  query getWhatsappMessageLogs(
+    $page: Int
+    $limit: Int
+    $days: Int
+    $status: String
+    $purpose: String
+    $channel: String
+    $search: String
+  ) {
+    whatsappMessageLogs(
+      page: $page
+      limit: $limit
+      days: $days
+      status: $status
+      purpose: $purpose
+      channel: $channel
+      search: $search
+    ) {
+      logs {
+        _id
+        createdAt
+        toPhone
+        userType
+        channel
+        purpose
+        templateKey
+        metaMessageId
+        status
+        errorCode
+        errorDetail
+      }
+      totalCount
+      currentPage
+      totalPages
+      purposes
+      statuses
+      channels
+    }
+  }
+`;

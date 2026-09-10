@@ -192,6 +192,12 @@ template approval/pause events update the `WhatsappTemplate` table automatically
 OTP template name/language, access-token field (blank = keep current), a live template-status table
 with a **Sync from Meta** button, and a 30-day usage summary.
 
+Below that, a collapsible **"WhatsApp message log"** (click *Show*) — the full per-message list from
+`WhatsappMessageLog`, filterable by window (24h / 7d / 30d / 90d), status, purpose and channel, plus a
+phone / template / wamid search, paginated 20 per page. Backed by the `whatsappMessageLogs` query
+(ADMIN only). Each row shows when, recipient, role, purpose, template, channel, status badge, and the
+Meta message id or the failure reason.
+
 ## Phone-first auth (API ready, app UI pending)
 
 Backend done and tested: `login(type:"phone", phone, otp)` (passwordless) or `+ password`;

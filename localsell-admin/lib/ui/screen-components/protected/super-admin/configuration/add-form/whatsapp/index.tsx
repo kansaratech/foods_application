@@ -8,6 +8,7 @@ import ConfigCard from '../../view/card';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomPasswordTextField from '@/lib/ui/useable-components/password-input-field';
 import CustomButton from '@/lib/ui/useable-components/button';
+import WhatsAppMessageLog from './message-log';
 
 import useToast from '@/lib/hooks/useToast';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
@@ -277,6 +278,8 @@ const WhatsAppAddForm = () => {
           )}
         </div>
       </div>
+
+      <WhatsAppMessageLog />
     </div>
   );
 };

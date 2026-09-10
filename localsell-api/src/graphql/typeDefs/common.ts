@@ -268,6 +268,31 @@ export const commonTypeDefs = /* GraphQL */ `
     rows: [WhatsappUsageRow!]!
   }
 
+  type WhatsappMessageLogRow {
+    _id: ID!
+    createdAt: String!
+    toPhone: String!
+    userType: String
+    channel: String!
+    purpose: String!
+    templateKey: String
+    metaMessageId: String
+    status: String!
+    errorCode: String
+    errorDetail: String
+  }
+
+  type WhatsappMessageLogsResult {
+    logs: [WhatsappMessageLogRow!]!
+    totalCount: Int!
+    currentPage: Int!
+    totalPages: Int!
+    "Distinct values present in the current filter set, for building the filter dropdowns."
+    purposes: [String!]!
+    statuses: [String!]!
+    channels: [String!]!
+  }
+
   type ShopType {
     _id: ID!
     name: String!
@@ -347,6 +372,15 @@ export const commonTypeDefs = /* GraphQL */ `
     cuisinesPaginated(page: Int, limit: Int, search: String, shopType: String): CuisinePaginated!
     whatsappTemplates: [WhatsappTemplate!]!
     whatsappUsageStats(days: Int): WhatsappUsageStats!
+    whatsappMessageLogs(
+      page: Int
+      limit: Int
+      days: Int
+      status: String
+      purpose: String
+      channel: String
+      search: String
+    ): WhatsappMessageLogsResult!
   }
 
   type Mutation {

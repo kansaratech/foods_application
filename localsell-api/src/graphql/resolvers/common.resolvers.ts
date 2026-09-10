@@ -117,6 +117,68 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
         rows: rows.sort((a, b) => b.count - a.count),
       };
     },
+    whatsappMessageLogs: async (
+      _parent,
+      args: {
+        page?: number;
+        limit?: number;
+        days?: number;
+        status?: string;
+        purpose?: string;
+        channel?: string;
+        search?: string;
+      },
+      context,
+    ) => {
+      requireRole(context, ['ADMIN']);
+      const page = args.page && args.page > 0 ? args.page : 1;
+      const limit = Math.min(Math.max(args.limit ?? 20, 1), 100);
+      const days = Math.min(Math.max(args.days ?? 30, 1), 365);
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+      const search = args.search?.trim();
+
+      const where: Prisma.WhatsappMessageLogWhereInput = {
+        createdAt: { gte: since },
+        ...(args.status ? { status: args.status } : {}),
+        ...(args.purpose ? { purpose: args.purpose } : {}),
+        ...(args.channel ? { channel: args.channel } : {}),
+        ...(search
+          ? {
+              OR: [
+                { toPhone: { contains: search } },
+                { templateKey: { contains: search } },
+                { metaMessageId: { contains: search } },
+                { errorDetail: { contains: search } },
+              ],
+            }
+          : {}),
+      };
+
+      const [rows, totalCount, purposeGroups, statusGroups, channelGroups] = await Promise.all([
+        prisma.whatsappMessageLog.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+        prisma.whatsappMessageLog.count({ where }),
+        // Facet lists come from the whole time window (not the current filter) so
+        // the dropdowns stay stable as you filter.
+        prisma.whatsappMessageLog.groupBy({ by: ['purpose'], where: { createdAt: { gte: since } } }),
+        prisma.whatsappMessageLog.groupBy({ by: ['status'], where: { createdAt: { gte: since } } }),
+        prisma.whatsappMessageLog.groupBy({ by: ['channel'], where: { createdAt: { gte: since } } }),
+      ]);
+
+      return {
+        logs: rows,
+        totalCount,
+        currentPage: page,
+        totalPages: Math.max(1, Math.ceil(totalCount / limit)),
+        purposes: purposeGroups.map((g) => g.purpose).sort(),
+        statuses: statusGroups.map((g) => g.status).sort(),
+        channels: channelGroups.map((g) => g.channel).sort(),
+      };
+    },
     cuisines: async () => prisma.cuisine.findMany(),
     cuisinesPaginated: async (
       _parent,
@@ -424,6 +486,10 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
   WhatsappTemplate: {
     _id: (parent: { id: string }) => parent.id,
     lastSyncedAt: (parent: { lastSyncedAt?: Date | null }) => parent.lastSyncedAt?.toISOString() ?? null,
+  },
+  WhatsappMessageLogRow: {
+    _id: (parent: { id: string }) => parent.id,
+    createdAt: (parent: { createdAt: Date }) => parent.createdAt.toISOString(),
   },
   ShopType: {
     _id: (parent: ShopType) => parent.id,
