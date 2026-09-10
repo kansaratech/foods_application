@@ -27,6 +27,9 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
     // GST number / address deliberately not defaulted — an admin fills the
     // real ones in via Finance -> Vendor settlements -> Invoice billing entity.
     platformLegalName: process.env.PLATFORM_LEGAL_NAME || 'Maekotech Solutions LLP',
+    // LocalSell owns this fork — the upstream Enatega "paid version" gate on the
+    // admin Configuration screen is not applicable.
+    isPaidVersion: true,
     // COD-only launch, no SMTP/WhatsApp wired — users are born verified.
     skipEmailVerification: true,
     skipMobileVerification: true,
@@ -85,6 +88,7 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
   if (existing.defaultLatitude == null) patch.defaultLatitude = defaults.defaultLatitude;
   if (existing.defaultLongitude == null) patch.defaultLongitude = defaults.defaultLongitude;
   if (!existing.platformLegalName) patch.platformLegalName = defaults.platformLegalName;
+  if (!existing.isPaidVersion) patch.isPaidVersion = true;
 
   // WhatsApp Cloud API token from env — fill only when the row has none, never
   // overwrite an admin-set token. Doesn't flip whatsappCloudEnabled (that's a

@@ -152,8 +152,14 @@ docker compose $E exec -T api node -e '
     .then(d=>{const m=(d.errors&&d.errors[0]&&d.errors[0].message)||"";
       // field exists if the error is anything OTHER than a "Cannot query field" schema error
       console.log((/Cannot query field/.test(m) ? "  MISSING " : "  OK   ") + n);});
-  Promise.all(["commissionPeriodPreview","riderCashOutstanding","platformFinanceReport","payoutRuns","reconciliationReport","walletAdjustments","pendingStoreDocuments","storePerformance","myPayoutHistory"].map(q));
+  Promise.all(["commissionPeriodPreview","riderCashOutstanding","platformFinanceReport","payoutRuns","reconciliationReport","walletAdjustments","pendingStoreDocuments","storePerformance","myPayoutHistory","whatsappTemplates"].map(q));
 '
+
+echo "== WhatsApp / phone-OTP (see LOCALSELL_DEPLOYMENT.md section 12.2) =="
+echo "  - deploy/localsell.env needs WHATSAPP_ACCESS_TOKEN, WHATSAPP_VERIFY_TOKEN (WHATSAPP_APP_SECRET optional)"
+echo "  - PhoneVerification / WhatsappTemplate / WhatsappMessageLog tables: created by db:deploy above (additive)"
+echo "  - after deploy: admin -> Configuration -> WhatsApp (set IDs + Enabled), then 'Sync from Meta'"
+echo "  - Meta dashboard webhook -> https://api.localsell.in/webhooks/whatsapp"
 
 echo "== done. First deploy? add the Maps key + demo data - see LOCALSELL_DEPLOYMENT.md section 8 =="
 '@ -replace "`r`n","`n"
@@ -161,8 +167,21 @@ echo "== done. First deploy? add the Maps key + demo data - see LOCALSELL_DEPLOY
 [System.IO.File]::WriteAllText((Join-Path $stage 'SERVER-DEPLOY.sh'), $serverScript, (New-Object System.Text.UTF8Encoding($false)))
 
 # ---- zip ----------------------------------------------------------------
+# NOT Compress-Archive: Windows PowerShell 5.1 writes ZIP entry paths with "\"
+# separators, and Linux `unzip` then treats "localsell-api\src\x.ts" as ONE
+# filename in the top dir instead of nested folders — so the server ends up with
+# junk files and the real tree untouched. Build entries by hand with "/".
 if (Test-Path $Out) { Remove-Item $Out -Force }
-Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $Out -CompressionLevel Optimal
+Add-Type -AssemblyName System.IO.Compression | Out-Null
+Add-Type -AssemblyName System.IO.Compression.FileSystem | Out-Null
+$zip = [System.IO.Compression.ZipFile]::Open($Out, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+  foreach ($f in Get-ChildItem $stage -Recurse -File) {
+    $rel = $f.FullName.Substring($stage.Length + 1).Replace('\', '/')
+    [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+      $zip, $f.FullName, $rel, [System.IO.Compression.CompressionLevel]::Optimal)
+  }
+} finally { $zip.Dispose() }
 
 $mb = [math]::Round((Get-Item $Out).Length / 1MB, 1)
 $files = (Get-ChildItem $stage -Recurse -File).Count

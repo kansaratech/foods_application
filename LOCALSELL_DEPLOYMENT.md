@@ -636,6 +636,88 @@ restore a DB dump if the backfill itself is suspected.
 
 ---
 
+## 12.2 Deploying the WhatsApp + phone‑OTP release
+
+Adds: WhatsApp Cloud API (Meta) for phone OTP + order‑lifecycle messages, a
+delivery‑receipt webhook, phone‑number login on the customer web, and an admin
+"WhatsApp" configuration screen.
+
+| Change | Server action |
+|---|---|
+| **DB schema** — 3 new tables (`PhoneVerification`, `WhatsappTemplate`, `WhatsappMessageLog`) + `Configuration` columns (`whatsapp*`) | `db:deploy` — additive `prisma db push`, no data loss. `WhatsappTemplate` rows are re‑seeded by `npm run seed`; on a no‑`seed` redeploy an admin runs **Sync from Meta** (below) |
+| **API** — `/webhooks/whatsapp` route, `login(type:"phone")`, `sendWhatsAppTemplate`, `syncWhatsappTemplates`, order‑event notifier | rebuild `api` image. The webhook rides the existing `api.localsell.in` vhost (`ProxyPass / → :6002`) — **no Apache change** |
+| **Admin** — Configuration → WhatsApp (config + template table + "Sync from Meta" + 30‑day usage) | rebuild `admin` image |
+| **Web** — "Continue with mobile number" entry, `login-with-phone` / `phone-otp` / `complete-profile` panels; en/hi locale keys | rebuild `web` image (locale + panels are compiled in) |
+| **Mobile apps** (`localsell-app`) | **not done / not a server service** — phone‑first mobile screens are deferred |
+
+### New env keys (`deploy/localsell.env`)
+
+| Key | Required? | Value |
+|---|---|---|
+| `WHATSAPP_ACCESS_TOKEN` | to send | permanent Meta **System User** token (Business Settings → Users → System users) |
+| `WHATSAPP_VERIFY_TOKEN` | for the webhook | any random string; you type the **same** string into Meta's webhook config |
+| `WHATSAPP_APP_SECRET` | optional | Meta App → Settings → Basic → App secret. Set it to enforce `X‑Hub‑Signature‑256`; blank = skip the check |
+
+Non‑secret IDs (`whatsappPhoneNumberId`, `whatsappWabaId`, `whatsappApiVersion`,
+`whatsappOtpTemplate`, `whatsappOtpLang`) are **not** env — set them in the admin
+screen, or in `prisma/seed-data.json → configuration` before a `seed`. The
+current `seed-data.json` already carries `551380631388343` / `567424539778633` /
+`localsell_otp` / `en_US`, with `whatsappCloudEnabled: false`.
+
+### Steps
+
+```powershell
+# 1. dev machine
+powershell -ExecutionPolicy Bypass -File scripts\make-deploy-zip.ps1
+#    -> <Desktop>\localsell-deploy.zip   (upload in binary mode)
+```
+
+```bash
+# 2. server
+cd <project dir>
+nano deploy/localsell.env          # add the 2-3 WHATSAPP_* keys, keep the rest
+unzip -o ~/localsell-deploy.zip     # -o overwrites; keeps deploy/localsell.env
+bash SERVER-DEPLOY.sh              # up -d --build + db:deploy + field probe
+#    probe now also prints:  OK whatsappTemplates
+```
+
+### After the containers are up
+
+1. **Admin → Configuration → WhatsApp**
+   - Phone number ID `551380631388343`, WABA ID `567424539778633`, API version `v22.0`
+   - Paste `WHATSAPP_ACCESS_TOKEN` here too if you didn't put it in the env (the
+     env value wins if both are set)
+   - **Sync from Meta** → the 8 `localsell_*` templates should show `APPROVED`
+   - Flip **Enabled** on. This is **required** for the web "Continue with mobile
+     number" flow — with it off the OTP is generated but delivered nowhere except
+     the api log (or use `testOtp` in Configuration for a staging box). Order
+     lifecycle messages also start flowing once it's on.
+2. **Meta App dashboard → WhatsApp → Configuration → Webhook**
+   - Callback URL `https://api.localsell.in/webhooks/whatsapp`
+   - Verify token = your `WHATSAPP_VERIFY_TOKEN`
+   - Subscribe to fields **messages** and **message_template_status_update**
+   - Quick check: `curl -s "https://api.localsell.in/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=<token>&hub.challenge=OK"` → prints `OK`
+3. **Phone OTP at signup** — only when the phone‑first web screens are live:
+   Admin → Configuration → set `skipMobileVerification` **off**. Leave it **on**
+   until then (email/Google still work; the "Continue with mobile number" button
+   also works with it on — the account is just born pre‑verified).
+
+### Browser checks
+
+- `https://localsell.in` → auth modal → **Continue with mobile number** → enter a
+  real number → WhatsApp OTP arrives → code → (new number) name step → signed in.
+- Place → accept → out‑for‑delivery → deliver a test order with `whatsappCloudEnabled`
+  on: the customer's number gets the matching template at each step; Admin →
+  Configuration → WhatsApp shows the send count climbing.
+
+### Rollback
+
+Redeploy the previous zip + `up -d --build`. The 3 tables + `Configuration`
+columns are additive and harmless to leave; `whatsappCloudEnabled` defaults off
+so an older API build simply ignores them.
+
+---
+
 ## 13. Troubleshooting (issues hit on the first deploy)
 
 | Symptom | Cause | Fix |
@@ -650,6 +732,10 @@ restore a DB dump if the backfill itself is suspected.
 | Site loads, no data / CORS error | `NEXT_PUBLIC_SERVER_URL` wrong (rebuild) or origin missing from `CORS_ORIGIN` (restart api) | |
 | `apachectl` warns `DocumentRoot … does not exist` for `ams` | pre‑existing typo in someone else's conf (`publich_html`) | not ours — ignore |
 | store build fails on `expo export` | missing `EXPO_PUBLIC_*` arg | check `deploy/localsell.env`, `docker compose logs store` |
+| WhatsApp OTP never arrives, `WhatsappMessageLog` shows `FAILED 132001` | template not `APPROVED` / wrong name | admin → Configuration → WhatsApp → **Sync from Meta**; the `localsell_*` templates must be APPROVED |
+| WhatsApp send `FAILED 190` / `token` | `WHATSAPP_ACCESS_TOKEN` expired or missing | put a fresh permanent System User token in `deploy/localsell.env`, `docker compose … restart api` |
+| Meta webhook verification fails | `WHATSAPP_VERIFY_TOKEN` mismatch, or api vhost not live | the string in Meta must equal the env value; `curl` the `hub.challenge` check in §12.2 |
+| "Continue with mobile number" does nothing / OTP box rejects every code | `whatsappCloudEnabled` off **and** no SMS fallback → code only in the api log | flip `whatsappCloudEnabled` on (admin), or read the code from `docker compose … logs api` on a test box |
 
 ---
 

@@ -4,7 +4,7 @@ import { SUBSCRIPTION_ORDER } from "@/lib/apollo/subscriptions";
 import { MAX_TIME } from "@/lib/utils/constants";
 import { IOrder } from "@/lib/utils/interfaces/order.interface";
 import { orderSubTotal } from "@/lib/utils/methods";
-import { getIsAcceptButtonVisible } from "@/lib/utils/methods/gloabl";
+import { getIsAcceptButtonVisible } from "@/lib/utils/methods/global";
 import { ORDER_TYPE } from "@/lib/utils/types";
 import { memo, useContext, useEffect, useRef, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";

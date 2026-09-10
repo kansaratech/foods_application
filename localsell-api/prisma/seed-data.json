@@ -31,6 +31,7 @@
     "commissionBillingCycle": "MONTHLY",
     "riderCashLimit": 3000,
     "platformLegalName": "Maekotech Solutions LLP",
+    "isPaidVersion": true,
     "skipEmailVerification": true,
     "skipMobileVerification": true,
     "skipWhatsAppOTP": true,

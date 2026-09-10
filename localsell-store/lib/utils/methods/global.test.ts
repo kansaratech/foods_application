@@ -1,4 +1,4 @@
-import { getIsAcceptButtonVisible } from "./gloabl";
+import { getIsAcceptButtonVisible } from "./global";
 
 describe("getIsAcceptButtonVisible", () => {
   it("becomes visible within the five-minute grace period", () => {
