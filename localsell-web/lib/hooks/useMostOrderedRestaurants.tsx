@@ -39,7 +39,6 @@ const useMostOrderedRestaurants = (enabled = true, page = 1, limit=10, shopType?
   let groceriesData: IRestaurant[] =
     queryData?.filter((item) => item?.shopType.toLowerCase() === "grocery") ||
     [];
-    console.log("groceriesData in hook", groceriesData);
   return {
     queryData,
     loading,

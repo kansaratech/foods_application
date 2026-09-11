@@ -185,7 +185,7 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
   const client = new ApolloClient({
     link: ApolloLink.from([errorLink, requestLink, terminatingLink]),
     cache,
-    connectToDevTools: process.env.NODE_ENV !== "production",
+    devtools: { enabled: process.env.NODE_ENV !== "production" },
   });
 
   clientRef.current = client;

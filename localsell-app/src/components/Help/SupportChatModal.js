@@ -102,10 +102,10 @@ const SupportChatModal = ({ visible, currentTheme, ticket, onClose }) => {
   const supportBubbleColor = currentTheme.themeBackground === '#000' ? '#1F2937' : currentTheme.gray100
   const supportTextColor = currentTheme.themeBackground === '#000' ? currentTheme.fontFourthColor : currentTheme.gray700
 
+  // API returns messages oldest-first (createdAt asc); keep that order so
+  // replies sit below the message they answer.
   const orderedMessages = (data?.getTicketMessages?.messages || [])
     .filter((msg) => msg?.content?.trim() !== ticketDescription)
-    .slice()
-    .reverse()
   const isClosed = ['closed', 'Closed'].includes(ticketData?.status)
 
   const formatTimestamp = (timestamp) => {

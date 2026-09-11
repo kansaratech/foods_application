@@ -160,7 +160,8 @@ export const orderTypeDefs = /* GraphQL */ `
     ): OrdersActiveOrdersResult!
     "Order history for a single customer — the super-admin's user-detail page."
     ordersByUser(userId: ID!, page: Int, limit: Int): OrdersActiveOrdersResult!
-    restaurantOrders: [Order!]!
+    "Active orders for the store app. Pass restaurantId to pick one outlet when a vendor runs several on one login (#59); omitted = the owner's only store."
+    restaurantOrders(restaurantId: String): [Order!]!
     orderManagementSummary: OrderManagementSummary!
     allOrdersPaginated(
       page: Int

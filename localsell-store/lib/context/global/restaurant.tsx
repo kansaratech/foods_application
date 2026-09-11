@@ -139,35 +139,21 @@ const Provider = ({ children }: IRestaurantProviderProps) => {
           updateQuery: (prev, { subscriptionData }) => {
             if (!subscriptionData.data) return prev;
             const restaurantOrders = prev?.restaurantOrders ?? [];
-            const { origin, order } = subscriptionData.data.subscribePlaceOrder;
-            if (origin === "new") {
-              if (
-                restaurantOrders?.findIndex(
-                  (o: IOrder) => o?._id === order?._id,
-                ) > -1
-              )
-                return prev;
-              return {
-                restaurantOrders: [order, ...restaurantOrders],
-              };
-            } else if (origin === "update") {
-              const orderIndex = restaurantOrders.findIndex(
-                (o: IOrder) => o?._id === order?._id,
-              );
-              // Not in the list yet (e.g. the initial "new" event was missed
-              // during a socket reconnect) — add it so the store self-heals.
-              if (orderIndex < 0) {
-                return {
-                  restaurantOrders: [order, ...restaurantOrders],
-                };
-              }
-              const updatedOrders = [...restaurantOrders];
-              updatedOrders[orderIndex] = order;
-              return {
-                restaurantOrders: updatedOrders,
-              };
+            // subscribePlaceOrder fires once — when a customer places an order
+            // for this outlet. `origin` from the API is an internal tag
+            // ("order_service"), not "new"/"update"; don't gate on it, just
+            // upsert so the order shows without a manual pull-to-refresh.
+            const { order } = subscriptionData.data.subscribePlaceOrder;
+            if (!order?._id) return prev;
+            const orderIndex = restaurantOrders.findIndex(
+              (o: IOrder) => o?._id === order._id,
+            );
+            if (orderIndex < 0) {
+              return { restaurantOrders: [order, ...restaurantOrders] };
             }
-            return prev;
+            const updatedOrders = [...restaurantOrders];
+            updatedOrders[orderIndex] = order;
+            return { restaurantOrders: updatedOrders };
           },
           onError: () => {
             cleanupSubscription();

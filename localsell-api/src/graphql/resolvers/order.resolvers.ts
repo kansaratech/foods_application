@@ -555,17 +555,30 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       };
     },
 
-    // Store-app dashboard: the store owns exactly one restaurant per login, so
-    // this resolves to their single restaurant's currently-active orders.
-    restaurantOrders: async (_parent, _args, context) => {
+    // Store-app dashboard: the currently-active orders for one outlet. The store
+    // app passes the restaurantId it logged into (#59 lets one vendor run several
+    // outlets on one login); if it's omitted we fall back to the owner's single
+    // store so older app builds keep working.
+    restaurantOrders: async (_parent, args: { restaurantId?: string }, context) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
-      const restaurants = await prisma.restaurant.findMany({ where: { ownerId: currentUser.id } });
-      if (restaurants.length === 0) return [];
-      if (restaurants.length > 1) {
-        throw userInputError('You own multiple stores - this view only supports a single store per login');
+
+      let restaurantId = args.restaurantId;
+      if (restaurantId) {
+        const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+        if (!restaurant || (currentUser.userType === 'VENDOR' && restaurant.ownerId !== currentUser.id)) {
+          throw notFoundError('Restaurant not found');
+        }
+      } else {
+        const restaurants = await prisma.restaurant.findMany({ where: { ownerId: currentUser.id } });
+        if (restaurants.length === 0) return [];
+        if (restaurants.length > 1) {
+          throw userInputError('You own multiple stores - update the app so it sends the store you signed into');
+        }
+        restaurantId = restaurants[0].id;
       }
+
       return prisma.order.findMany({
-        where: { restaurantId: restaurants[0].id, orderStatus: { in: ACTIVE_STATUSES } },
+        where: { restaurantId, orderStatus: { in: ACTIVE_STATUSES } },
         orderBy: { createdAt: 'desc' },
       });
     },

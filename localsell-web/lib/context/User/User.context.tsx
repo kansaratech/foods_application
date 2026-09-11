@@ -29,7 +29,6 @@ import {
   IFood,
   IOption,
   IOrder,
-  IProfileResponse,
   IRestaurant,
   IVariation,
 } from "@/lib/utils/interfaces";
@@ -209,6 +208,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
     onError,
   });
 
+  // Apollo 3.14+ deprecates `onCompleted` / `onError` / `variables` as hook
+  // options — side-effects belong in `useEffect` off `data` / `error`, and
+  // per-call variables belong on the returned execute fn (see `onInit`).
   const [
     fetchProfile,
     {
@@ -219,8 +221,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
     },
   ] = useLazyQuery(GET_USER_PROFILE, {
     fetchPolicy: "cache-and-network",
-    onCompleted: onProfileCompleted,
-    onError,
   });
 
   const [
@@ -235,12 +235,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
       subscribeToMore: subscribeToMoreOrders,
     },
   ] = useLazyQuery(ORDERS, {
-    variables: {
-      page: 1,
-      limit: 300,
-    },
     fetchPolicy: "cache-and-network",
-    onError,
   });
 
   // Universal cart transformation function that can be used anywhere
@@ -323,7 +318,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
 
     if (_token) {
       await fetchProfile();
-      await fetchOrders();
+      await fetchOrders({ variables: { page: 1, limit: 300 } });
     }
 
     setIsLoading(false);
@@ -373,12 +368,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
   }, [token, onInit]);
 
 
-
-  function onProfileCompleted(data: IProfileResponse) {
-    if (data.profile) {
-      updateNotificationToken();
-    }
-  }
 
   function onError(error: ApolloError) {
     console.log("error", error.message);
@@ -676,6 +665,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
       }
     }
   }, [saveNotificationToken]);
+
+  // Derived side-effects — replace the deprecated useLazyQuery
+  // `onCompleted` / `onError` options.
+  useEffect(() => {
+    if (dataProfile?.profile) {
+      updateNotificationToken();
+    }
+  }, [dataProfile, updateNotificationToken]);
+
+  useEffect(() => {
+    const err = errorProfile ?? errorOrders;
+    if (err) console.log("error", err.message);
+  }, [errorProfile, errorOrders]);
 
   const updateItemQuantity = useCallback(
     async (key: string, changeAmount: number) => {

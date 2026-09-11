@@ -333,8 +333,9 @@ export default function TicketChatModal({
             </div>
           ) : messages.length > 0 ? (
             <div className="space-y-4">
-              {/* Messages in chronological order (oldest first) */}
-              {[...messages].reverse().map((msg) => {
+              {/* API returns messages oldest-first (createdAt asc); render as-is
+                  so replies sit below the message they answer. */}
+              {[...messages].map((msg) => {
                 // Skip messages that contain the ticket description
                 if (msg.content.trim() === ticketDescription.trim()) {
                   return null;
