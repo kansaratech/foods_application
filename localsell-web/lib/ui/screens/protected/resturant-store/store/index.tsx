@@ -470,7 +470,10 @@ export default function StoreDetailsScreen() {
   // Constants
   const headerData = {
     name: data?.restaurant?.name ?? "...",
-    averageReview: data?.restaurant?.reviewData?.ratings ?? "...",
+    averageReview:
+      typeof data?.restaurant?.reviewData?.ratings === "number"
+        ? data.restaurant.reviewData.ratings.toFixed(1)
+        : "...",
     averageTotal: data?.restaurant?.reviewData?.total ?? "...",
     isAvailable: data?.restaurant?.isAvailable ?? true,
     openingTimes: data?.restaurant?.openingTimes ?? [],
