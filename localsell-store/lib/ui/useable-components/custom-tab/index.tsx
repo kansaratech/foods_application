@@ -17,7 +17,7 @@ const CustomTab = ({
 
   return (
     <View
-      className="sticky top-0 z-10 w-full py-3 lg:max-w-4xl lg:self-center"
+      className="sticky top-0 z-10 w-full py-3 lg:max-w-7xl lg:self-center"
       style={{ backgroundColor: appTheme.themeBackground }}
     >
       <View
@@ -36,7 +36,7 @@ const CustomTab = ({
 
           return (
             <TouchableOpacity
-              accessibilityRole="button"
+              accessibilityRole="tab"
               accessibilityState={{ selected: isSelected }}
               key={String(option)}
               onPress={() => setSelectedTab(option)}
@@ -48,7 +48,7 @@ const CustomTab = ({
               <Text
                 className="font-semibold"
                 style={{
-                  color: isSelected ? appTheme.white : appTheme.fontSecondColor,
+                  color: isSelected ? appTheme.white : appTheme.fontMainColor,
                 }}
               >
                 {t(option)}
@@ -65,7 +65,7 @@ const CustomTab = ({
                     paddingHorizontal: 5,
                     alignItems: "center",
                     justifyContent: "center",
-                    marginLeft: 8,
+                    marginLeft: 2,
                   }}
                 >
                   <Text

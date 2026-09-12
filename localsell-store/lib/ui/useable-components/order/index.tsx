@@ -160,7 +160,7 @@ const Order = ({
   return (
     <View className="w-full">
       <View
-        className="gap-y-3 rounded-2xl mx-0 my-3 p-5"
+        className="gap-y-4 rounded-2xl mx-0 my-2 p-5"
         style={{
           backgroundColor:
             currentTheme === "dark" ? appTheme.themeBackground : "#ffffff",
@@ -169,64 +169,74 @@ const Order = ({
             currentTheme === "dark" ? appTheme.borderLineColor : "#e2e8f0",
         }}
       >
-        {/* Status */}
-        <View className="flex-row justify-between items-center">
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 16,
-              fontWeight: "bold",
-            }}
-          >
-            {t("Status")}
-          </Text>
-          <View
-            className={`ps-3 pe-3 bg-green-100 border border-1 rounded-[12px] ${
-              tab === "delivered"
-                ? "border-blue-500 bg-blue-100"
-                : tab === "processing"
-                  ? "border-yellow-500 bg-yellow-100"
-                  : "border-green-500 bg-green-100"
-            }`}
-          >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <View style={{ flex: 1, gap: 5 }}>
+            <Text
+              style={{ color: secondaryText, fontSize: 12, fontWeight: "500" }}
+            >
+              {t("Order ID")}
+            </Text>
             <Text
               style={{
-                color:
-                  tab === "delivered"
-                    ? "navy"
-                    : tab === "processing"
-                      ? "#92400E"
-                      : "#166534",
-                fontSize: 12,
-                fontWeight: "600",
+                color: appTheme.fontMainColor,
+                fontSize: 19,
+                fontWeight: "700",
               }}
             >
-              {t(order?.orderStatus ?? "")}
+              #{order.orderId}
             </Text>
           </View>
-        </View>
-
-        {/* Order ID */}
-        <View className="flex-row justify-between items-center">
-          <Text
+          <View
             style={{
-              color: appTheme.fontMainColor,
-              fontSize: 16,
-              fontWeight: "bold",
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 20,
+              backgroundColor:
+                tab === "delivered"
+                  ? "#eff6ff"
+                  : tab === "processing"
+                    ? "#fff7ed"
+                    : "#ecfdf5",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            {t("Order ID")}
-          </Text>
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 16,
-              fontWeight: "600",
-              letterSpacing: 0.3,
-            }}
-          >
-            #{order?.orderId}
-          </Text>
+            <View
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: 3,
+                backgroundColor:
+                  tab === "delivered"
+                    ? "#1d4ed8"
+                    : tab === "processing"
+                      ? "#b45309"
+                      : "#15803d",
+              }}
+            />
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "600",
+                color:
+                  tab === "delivered"
+                    ? "#1d4ed8"
+                    : tab === "processing"
+                      ? "#92400e"
+                      : "#166534",
+              }}
+            >
+              {t(order.orderStatus ?? "")}
+            </Text>
+          </View>
         </View>
 
         {["ACCEPTED", "ASSIGNED"].includes(order.orderStatus ?? "") && (
@@ -271,7 +281,7 @@ const Order = ({
                 className="flex-row justify-between items-start mb-3 mt-1"
               >
                 {/* Left Side: Image and Details */}
-                <View className="flex-row gap-x-2 flex-1">
+                <View className="flex-row gap-x-3 flex-1">
                   {/* Image */}
                   <View
                     className="w-16 h-16 rounded-xl overflow-hidden items-center justify-center"
@@ -302,14 +312,17 @@ const Order = ({
                       >
                         {item?.description}
                       </Text>
-                      <Text
-                        style={{
-                          color: secondaryText,
-                          fontSize: 12,
-                        }}
-                      >
-                        {item?.specialInstructions}
-                      </Text>
+                      {!!item?.specialInstructions && (
+                        <Text
+                          style={{
+                            color: secondaryText,
+                            fontSize: 12,
+                            marginTop: 4,
+                          }}
+                        >
+                          {item.specialInstructions}
+                        </Text>
+                      )}
                     </View>
 
                     {/* Toggle and Collapsible Details */}
@@ -317,6 +330,10 @@ const Order = ({
                       {(variation.title ||
                         (item?.addons && item?.addons.length > 0)) && (
                         <TouchableOpacity
+                          accessibilityRole="button"
+                          accessibilityState={{
+                            expanded: !!showDetails[item._id],
+                          }}
                           onPress={() => onToggleDetails(item._id)}
                           className="flex-row items-center mb-2"
                         >
@@ -409,7 +426,7 @@ const Order = ({
                 </View>
 
                 {/* Right Side: Price */}
-                <View className="w-auto items-end">
+                <View className="w-auto items-end pl-3">
                   <Text
                     style={{ color: appTheme.fontMainColor, fontWeight: "600" }}
                   >
@@ -426,9 +443,12 @@ const Order = ({
             borderTopWidth: 1,
             borderColor:
               currentTheme === "dark" ? appTheme.borderLineColor : "#e2e8f0",
-            paddingTop: 16,
+            padding: 14,
+            borderRadius: 12,
+            backgroundColor:
+              currentTheme === "dark" ? appTheme.cartContainer : "#f8fafc",
             marginTop: 4,
-            gap: 10,
+            gap: 8,
           }}
         >
           {[
@@ -555,6 +575,7 @@ const Order = ({
                     borderWidth: 1,
                     borderColor: appTheme.primary,
                   }}
+                  accessibilityRole="button"
                   onPress={() => handlePresentModalPress(order)}
                 >
                   <Text
@@ -649,6 +670,15 @@ export default memo(Order, (prevProps, nextProps) => {
   if (prevProps.order.orderStatus !== nextProps.order.orderStatus) return false;
   if (prevProps.order.isPickedUp !== nextProps.order.isPickedUp) return false;
   if (prevProps.order.preparationTime !== nextProps.order.preparationTime) {
+    return false;
+  }
+  if (
+    prevProps.order.storeDeliveryAgent?._id !==
+    nextProps.order.storeDeliveryAgent?._id
+  ) {
+    return false;
+  }
+  if (prevProps.order.deliveryMode !== nextProps.order.deliveryMode) {
     return false;
   }
   if (prevProps.handlePresentModalPress !== nextProps.handlePresentModalPress) {

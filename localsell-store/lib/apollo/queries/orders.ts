@@ -167,6 +167,21 @@ export const ORDERS_BY_REST_ID = gql`
           _id
           title
           quantity
+          variation {
+            _id
+            title
+            price
+          }
+          addons {
+            _id
+            title
+            options {
+              _id
+              title
+              price
+              quantity
+            }
+          }
         }
       }
     }

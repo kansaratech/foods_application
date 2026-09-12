@@ -1,5 +1,12 @@
 import { useCallback, useMemo, useState } from "react";
-import { Platform, FlatList, StyleSheet, Text, View } from "react-native";
+import {
+  Platform,
+  FlatList,
+  useWindowDimensions,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 // UI
 import CustomTab from "@/lib/ui/useable-components/custom-tab";
 import OrderLoader from "@/lib/ui/useable-components/order-loader";
@@ -27,6 +34,8 @@ function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
   // Hooks
   const { t } = useTranslation();
   const { appTheme } = useApptheme();
+  const { width } = useWindowDimensions();
+  const columns = Platform.OS === "web" && width >= 1280 ? 2 : 1;
   const tabBarHeight = useBottomTabBarHeight();
   const { loading, processingOrders, refetch, currentTab, setCurrentTab } =
     useOrders();
@@ -64,14 +73,21 @@ function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
 
   const renderOrderItem = useCallback(
     ({ item }: { item: IOrder }) => (
-      <Order
-        tab={route.key as ORDER_TYPE}
-        order={item}
-        showDetails={showDetails}
-        onToggleDetails={toggleShowDetails}
-      />
+      <View
+        style={{
+          width: columns === 2 ? "50%" : "100%",
+          paddingHorizontal: columns === 2 ? 8 : 0,
+        }}
+      >
+        <Order
+          tab={route.key as ORDER_TYPE}
+          order={item}
+          showDetails={showDetails}
+          onToggleDetails={toggleShowDetails}
+        />
+      </View>
     ),
-    [route.key, showDetails, toggleShowDetails],
+    [columns, route.key, showDetails, toggleShowDetails],
   );
 
   const renderEmptyState = () => (
@@ -131,11 +147,13 @@ function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
         }
       />
 
-      <View className="flex-1 w-full lg:max-w-4xl lg:self-center">
+      <View className="flex-1 w-full lg:max-w-7xl lg:self-center">
         {loading && (!orders || orders.length < 1) ? (
           <OrderLoader label={t("Loading processing orders")} />
         ) : orders?.length > 0 ? (
           <FlatList
+            key={columns}
+            numColumns={columns}
             className="w-full"
             contentContainerStyle={[
               style.listContent,

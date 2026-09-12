@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useMutation, useQuery } from "@apollo/client";
 import { useTranslation } from "react-i18next";
@@ -56,7 +57,9 @@ export function DeliveryModeBadge({ order }: { order: IOrder }) {
  * delivered.
  */
 export default function OrderDispatch({ order }: { order: IOrder }) {
-  const { appTheme } = useApptheme();
+  const { appTheme, currentTheme } = useApptheme();
+  const secondaryText =
+    currentTheme === "dark" ? appTheme.fontSecondColor : "#64748b";
   const { t } = useTranslation();
   const { userId: storeId } = useUserContext();
   const { refetch } = useRestaurantContext();
@@ -126,11 +129,13 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
 
   const Segment = ({
     label,
+    icon,
     active,
     onPress,
     disabled,
   }: {
     label: string;
+    icon: "bicycle-outline" | "person-outline";
     active: boolean;
     onPress: () => void;
     disabled?: boolean;
@@ -145,11 +150,21 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
         borderColor: active ? appTheme.primary : appTheme.borderLineColor,
         backgroundColor: active ? appTheme.primary : "transparent",
         opacity: disabled ? 0.5 : 1,
+        minHeight: 74,
+        gap: 7,
       }}
     >
+      <Ionicons
+        name={icon}
+        size={21}
+        color={active ? appTheme.white : secondaryText}
+      />
       <Text
         className="text-xs font-semibold"
-        style={{ color: active ? appTheme.white : appTheme.fontSecondColor }}
+        style={{
+          color: active ? appTheme.white : appTheme.fontMainColor,
+          textAlign: "center",
+        }}
       >
         {label}
       </Text>
@@ -158,11 +173,16 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
 
   return (
     <View
-      className="mt-3 p-4 rounded-2xl border"
-      style={{ borderColor: appTheme.borderLineColor }}
+      className="mt-1 p-4 rounded-2xl border"
+      style={{
+        borderColor:
+          currentTheme === "dark" ? appTheme.borderLineColor : "#e2e8f0",
+        backgroundColor:
+          currentTheme === "dark" ? appTheme.cartContainer : "#f8fafc",
+      }}
     >
       <Text
-        className="text-sm font-bold mb-2"
+        className="text-base font-bold mb-3"
         style={{ color: appTheme.fontMainColor }}
       >
         {t("Delivery")}
@@ -172,12 +192,14 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
       {!locked && (
         <View className="flex-row gap-2 mb-3">
           <Segment
+            icon="bicycle-outline"
             label={t("LocalSell fleet")}
             active={fleetSelected}
             onPress={chooseFleet}
             disabled={assigning}
           />
           <Segment
+            icon="person-outline"
             label={t("My delivery person")}
             active={selfSelected}
             onPress={() => setPickChoice("SELF")}
@@ -208,6 +230,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
             </Text>
             {status !== "PICKED" ? (
               <TouchableOpacity
+                accessibilityRole="button"
                 className="h-12 rounded-xl items-center justify-center"
                 style={{ backgroundColor: appTheme.primary }}
                 onPress={confirmHandover}
@@ -243,6 +266,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
             )}
             {status !== "PICKED" && (
               <TouchableOpacity
+                accessibilityRole="button"
                 className="mt-3"
                 onPress={() => setPickChoice("SELF")}
               >
@@ -286,23 +310,77 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
             >
               {t("Pick who delivers this order:")}
             </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {agents.map((a) => (
-                <TouchableOpacity
-                  key={a._id}
-                  disabled={assigning}
-                  onPress={() => assignAgent(a._id)}
-                  className="px-4 py-3 rounded-xl border"
-                  style={{ borderColor: appTheme.primary }}
-                >
-                  <Text
-                    className="text-xs font-semibold"
-                    style={{ color: appTheme.primary }}
+            <View style={{ gap: 8 }}>
+              {agents.map((agent) => {
+                const selected = order.storeDeliveryAgent?._id === agent._id;
+                return (
+                  <TouchableOpacity
+                    key={agent._id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected, disabled: assigning }}
+                    disabled={assigning}
+                    onPress={() => assignAgent(agent._id)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: 12,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: selected
+                        ? appTheme.primary
+                        : appTheme.borderLineColor,
+                      backgroundColor:
+                        currentTheme === "dark"
+                          ? appTheme.themeBackground
+                          : "#ffffff",
+                      opacity: assigning ? 0.5 : 1,
+                    }}
                   >
-                    {a.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <View
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: appTheme.lowOpacityPrimaryColor,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: appTheme.primary,
+                          fontSize: 14,
+                          fontWeight: "700",
+                        }}
+                      >
+                        {agent.name?.trim().charAt(0).toUpperCase() || "?"}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <Text
+                        style={{
+                          color: appTheme.fontMainColor,
+                          fontSize: 14,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {agent.name}
+                      </Text>
+                      {!!agent.phone && (
+                        <Text style={{ color: secondaryText, fontSize: 12 }}>
+                          {agent.phone}
+                        </Text>
+                      )}
+                    </View>
+                    <Ionicons
+                      name={selected ? "checkmark-circle" : "chevron-forward"}
+                      size={20}
+                      color={selected ? appTheme.primary : secondaryText}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </>
         )
@@ -332,6 +410,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
                 {order.rider.phone ? ` · ${order.rider.phone}` : ""}
               </Text>
               <TouchableOpacity
+                accessibilityRole="button"
                 className="h-12 rounded-xl items-center justify-center"
                 style={{ backgroundColor: appTheme.primary }}
                 onPress={confirmHandover}
@@ -424,6 +503,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
             />
             <View style={{ flexDirection: "row", gap: 12, marginTop: 18 }}>
               <TouchableOpacity
+                accessibilityRole="button"
                 onPress={() => setOtpVisible(false)}
                 style={{
                   flex: 1,

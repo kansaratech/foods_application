@@ -1,5 +1,12 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { FlatList, Platform, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  useWindowDimensions,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import PreparationTimeDialog from "@/lib/ui/useable-components/preparation-time-dialog";
 // UI
 import CustomTab from "@/lib/ui/useable-components/custom-tab";
@@ -34,6 +41,8 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
   // Hooks
   const { t } = useTranslation();
   const { appTheme } = useApptheme();
+  const { width } = useWindowDimensions();
+  const columns = Platform.OS === "web" && width >= 1280 ? 2 : 1;
   const tabBarHeight = useBottomTabBarHeight();
   const { loading, activeOrders, refetch, currentTab, setCurrentTab } =
     useOrders();
@@ -85,15 +94,28 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
 
   const renderOrderItem = useCallback(
     ({ item }: { item: IOrder }) => (
-      <Order
-        tab={route.key as ORDER_TYPE}
-        order={item}
-        handlePresentModalPress={handlePresentModalPress}
-        showDetails={showDetails}
-        onToggleDetails={toggleShowDetails}
-      />
+      <View
+        style={{
+          width: columns === 2 ? "50%" : "100%",
+          paddingHorizontal: columns === 2 ? 8 : 0,
+        }}
+      >
+        <Order
+          tab={route.key as ORDER_TYPE}
+          order={item}
+          handlePresentModalPress={handlePresentModalPress}
+          showDetails={showDetails}
+          onToggleDetails={toggleShowDetails}
+        />
+      </View>
     ),
-    [handlePresentModalPress, route.key, showDetails, toggleShowDetails],
+    [
+      columns,
+      handlePresentModalPress,
+      route.key,
+      showDetails,
+      toggleShowDetails,
+    ],
   );
 
   const renderEmptyState = () => (
@@ -145,11 +167,13 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
             setSelectedTab={setCurrentTab}
           />
 
-          <View className="flex-1 w-full lg:max-w-4xl lg:self-center">
+          <View className="flex-1 w-full lg:max-w-7xl lg:self-center">
             {loading && (!orders || orders?.length < 1) ? (
               <OrderLoader label={t("Loading new orders")} />
             ) : orders?.length > 0 ? (
               <FlatList
+                key={columns}
+                numColumns={columns}
                 className="w-full"
                 contentContainerStyle={[
                   style.listContent,
