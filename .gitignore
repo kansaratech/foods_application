@@ -78,3 +78,6 @@ deploy/localsell.env
 # Scratch / build-artifact dirs (expo web exports, metro logs, typecheck dumps)
 .tmp/
 
+web-dev*.log
+admin-dev*.log
+api-dev*.log
