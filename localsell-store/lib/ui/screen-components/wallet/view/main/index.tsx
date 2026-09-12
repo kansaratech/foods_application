@@ -147,7 +147,7 @@ export default function WalletMain() {
         },
         {
           query: STORE_PROFILE,
-          variables: { userId: userId },
+          variables: { restaurantId: userId },
           fetchPolicy: "network-only",
         },
         {
