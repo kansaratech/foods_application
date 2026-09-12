@@ -17,6 +17,7 @@ import { memo, useCallback, useContext, useState } from 'react';
 
 // Utils
 import { compressImage, compressVideo } from '@/lib/utils/methods';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Components
 import CustomLoader from '../custom-progress-indicator';
@@ -125,15 +126,21 @@ function CustomUploadImageComponent({
         }
       } catch (error) {
         onSetImageUrl(name, '');
+        const detail =
+          getGraphQLErrorMessage(error as Error) ?? t('Upload Failed');
+        const kind =
+          fileTypes.includes('video/webm') || fileTypes.includes('video/mp4')
+            ? t('File')
+            : t('Image');
         showToast({
           type: 'error',
           title: title,
-          message: `${fileTypes.includes('video/webm') || fileTypes.includes('video/mp4') ? t('File') : t('Image')} ${t('Upload Failed')}`,
-          duration: 2500,
+          message: `${kind} ${t('upload failed')}: ${detail}`,
+          duration: 4000,
         });
         setImageValidationErr({
           bool: true,
-          msg: 'Upload failed',
+          msg: detail,
         });
         setImageFile('');
       } finally {

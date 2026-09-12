@@ -28,7 +28,24 @@ export const getGraphQLErrorMessage = (
 
   if (isApolloError(error)) {
     if (error.networkError) {
-      return 'Connection failed. Please check your internet connection.';
+      const netErr = error.networkError as Error & {
+        statusCode?: number;
+        bodyText?: string;
+      };
+      if (netErr.statusCode === 413) {
+        return 'That file is too large for the server to accept. Please upload a smaller file.';
+      }
+      if (typeof netErr.statusCode === 'number' && netErr.statusCode >= 500) {
+        return `Server error (${netErr.statusCode}). Please try again in a moment.`;
+      }
+      if (typeof netErr.statusCode === 'number') {
+        return `Request failed (${netErr.statusCode}). Please try again.`;
+      }
+      // No status code at all means the request never got a response to parse
+      // (offline, DNS/CORS failure, or the connection was dropped mid-upload).
+      return netErr.message
+        ? `Connection failed: ${netErr.message}`
+        : 'Connection failed. Please check your internet connection.';
     }
 
     if (error.graphQLErrors?.length) {

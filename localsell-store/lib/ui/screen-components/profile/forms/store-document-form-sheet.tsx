@@ -1,9 +1,10 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useMutation } from "@apollo/client";
+import { ApolloError, useMutation } from "@apollo/client";
 import { useTranslation } from "react-i18next";
-import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system/legacy";
 import { showMessage } from "react-native-flash-message";
 
 import { useApptheme } from "@/lib/context/theme.context";
@@ -42,6 +43,24 @@ export interface IStoreDocumentRecord {
 export interface StoreDocumentFormSheetHandle {
   open: (kind: TStoreDocumentKind, existing?: IStoreDocumentRecord) => void;
 }
+
+const MAX_DOCUMENT_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+const describeUploadError = (error: unknown): string => {
+  if (error instanceof ApolloError && error.networkError) {
+    const netErr = error.networkError as Error & { statusCode?: number };
+    if (netErr.statusCode === 413) {
+      return "That file is too large for the server to accept. Please upload a file under 5MB.";
+    }
+    if (typeof netErr.statusCode === "number") {
+      return `Upload failed (${netErr.statusCode}). Please try again.`;
+    }
+    return netErr.message
+      ? `Connection failed: ${netErr.message}`
+      : "Connection failed. Please check your internet connection.";
+  }
+  return error instanceof Error ? error.message : "Upload failed. Please try again.";
+};
 
 interface Props {
   restaurantId: string;
@@ -89,31 +108,43 @@ const StoreDocumentFormSheet = forwardRef<StoreDocumentFormSheetHandle, Props>(
     });
 
     const handlePickImage = async () => {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["image/*", "application/pdf"],
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      const asset = result.assets[0];
+
+      if (asset.size && asset.size > MAX_DOCUMENT_SIZE_BYTES) {
         showMessage({
-          message: t("Permission to access photos is required"),
+          message: t("File is too large. Please choose a file under 5MB."),
           type: "danger",
         });
         return;
       }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        base64: true,
-        quality: 0.6,
-      });
-      if (result.canceled || !result.assets?.length) return;
-      const asset = result.assets[0];
-      if (!asset.base64) return;
+
       try {
         setUploading(true);
-        const dataUrl = `data:${asset.mimeType ?? "image/jpeg"};base64,${asset.base64}`;
+        const base64 = await FileSystem.readAsStringAsync(asset.uri, {
+          encoding: "base64",
+        });
+        // Guard again by decoded size in case the picker didn't report `size`
+        // up front (base64 runs ~4/3 the size of the raw bytes).
+        if (base64.length * 0.75 > MAX_DOCUMENT_SIZE_BYTES) {
+          showMessage({
+            message: t("File is too large. Please choose a file under 5MB."),
+            type: "danger",
+          });
+          return;
+        }
+        const mimeType = asset.mimeType ?? "application/octet-stream";
+        const dataUrl = `data:${mimeType};base64,${base64}`;
         const { data } = await uploadImage({ variables: { image: dataUrl } });
         if (data?.uploadImageToS3?.imageUrl) {
           setFileUrl(data.uploadImageToS3.imageUrl);
         }
       } catch (e) {
-        showMessage({ message: (e as Error).message, type: "danger" });
+        showMessage({ message: describeUploadError(e), type: "danger" });
       } finally {
         setUploading(false);
       }
@@ -136,7 +167,7 @@ const StoreDocumentFormSheet = forwardRef<StoreDocumentFormSheetHandle, Props>(
         return;
       }
       if (!fileUrl) {
-        setError(t("Please upload a photo of the document"));
+        setError(t("Please upload the document"));
         return;
       }
       setError("");
@@ -272,11 +303,12 @@ const StoreDocumentFormSheet = forwardRef<StoreDocumentFormSheetHandle, Props>(
               className="text-sm font-semibold mb-2"
               style={{ color: appTheme.fontMainColor }}
             >
-              {t("Upload Photo")}
+              {t("Upload Document (image or PDF, max 5MB)")}
             </Text>
             {!fileUrl ? (
               <TouchableOpacity
                 onPress={handlePickImage}
+                disabled={uploading}
                 className="h-28 items-center justify-center rounded-xl border border-dashed"
                 style={{ borderColor: appTheme.borderLineColor }}
               >
@@ -292,10 +324,10 @@ const StoreDocumentFormSheet = forwardRef<StoreDocumentFormSheetHandle, Props>(
                 style={{ borderColor: appTheme.borderLineColor }}
               >
                 <View className="flex-row items-center gap-2">
-                  <Ionicons name="image" size={20} color={appTheme.primary} />
-                  <Text style={{ color: appTheme.fontMainColor }}>{t("Photo uploaded")}</Text>
+                  <Ionicons name="document-text" size={20} color={appTheme.primary} />
+                  <Text style={{ color: appTheme.fontMainColor }}>{t("Document uploaded")}</Text>
                 </View>
-                <TouchableOpacity onPress={handlePickImage}>
+                <TouchableOpacity onPress={handlePickImage} disabled={uploading}>
                   <Text style={{ color: appTheme.primary }}>{t("Replace")}</Text>
                 </TouchableOpacity>
               </View>
