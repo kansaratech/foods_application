@@ -272,7 +272,17 @@ const Order = ({
           {order?.items?.filter(Boolean).map((item) => {
             // Ensure variation is an object, default to empty if undefined.
             const variation = item.variation || {};
-            const itemPrice = variation.price ?? 0;
+            const addonsTotal = (item.addons ?? []).reduce(
+              (sum, addon) =>
+                sum +
+                (addon.options ?? []).reduce(
+                  (optSum, option) =>
+                    optSum + (option.price ?? 0) * (option.quantity ?? 1),
+                  0,
+                ),
+              0,
+            );
+            const itemPrice = (variation.price ?? 0) + addonsTotal;
             const itemTotal = itemPrice * (item.quantity ?? 1);
 
             return (

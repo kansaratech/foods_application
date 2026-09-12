@@ -64,8 +64,8 @@ const OrderCard: FC<IOrderCardProps> = ({
           if (option.title) {
             optionTitles.push(option.title);
           }
-          // Add option price to total
-          totalPrice += option.price ?? 0;
+          // Add option price to total, respecting the option's own quantity
+          totalPrice += (option.price ?? 0) * (option.quantity ?? 1);
         });
       });
 
@@ -82,6 +82,7 @@ const OrderCard: FC<IOrderCardProps> = ({
           options: (addon.options ?? []).map((opt: any) => ({
             _id: opt._id,
             title: opt.title, // Include title for display purposes
+            quantity: opt.quantity ?? 1,
           })),
         })),
         image: item.image ?? "/default-image.jpg",

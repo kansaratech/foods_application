@@ -141,12 +141,17 @@ export const formatReceiptOld = (order) => {
 
       const addonsSection = addonsText ? `\n     + ${addonsText}` : "";
 
-      const itemPrice = item.variation.price; /*+
+      const itemPrice =
+        item.variation.price +
         item.addons
           .map((addon) =>
-            addon.options.reduce((sum, option) => sum + option.price, 0)
+            addon.options.reduce(
+              (sum, option) =>
+                sum + (option.price ?? 0) * (option.quantity ?? 1),
+              0
+            )
           )
-          .reduce((sum, val) => sum + val, 0); */
+          .reduce((sum, val) => sum + val, 0);
 
       return `${item.quantity}x ${String(item.title)}${variationText}   ${currencySymbol}${itemPrice.toFixed(
         2
@@ -224,12 +229,17 @@ export const formatReceipt = (order) => {
 
       const addonsSection = addonsText ? `\n - ${addonsText}` : "";
 
-      const itemPrice = item.variation.price; /*+
+      const itemPrice =
+        item.variation.price +
         item.addons
           .map((addon) =>
-            addon.options.reduce((sum, option) => sum + option.price, 0)
+            addon.options.reduce(
+              (sum, option) =>
+                sum + (option.price ?? 0) * (option.quantity ?? 1),
+              0
+            )
           )
-          .reduce((sum, val) => sum + val, 0); */
+          .reduce((sum, val) => sum + val, 0);
 
       return `${item.quantity}x ${String(item.title)}${variationText}   [R]${currencySymbol}${itemPrice.toFixed(
         2
