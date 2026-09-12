@@ -264,7 +264,7 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
       return [];
 
     const searchText = filter.toLowerCase();
-    return queryData.filter(({ name, address = "", cuisines = [] }) => {
+    return queryData.filter(({ name = "", address = "", cuisines = [] }) => {
       return (
         name.toLowerCase().includes(searchText) ||
         address.toLowerCase().includes(searchText) ||
