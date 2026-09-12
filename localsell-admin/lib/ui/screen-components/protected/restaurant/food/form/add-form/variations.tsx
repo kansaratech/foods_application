@@ -288,7 +288,7 @@ export default function VariationAddForm({
                         {({ remove, push }) => (
                           <div>
                             <Fieldset
-                              legend={t('Generate variations (Size × Crust, etc.)')}
+                              legend={t('generate_variations_size_crust_etc')}
                               toggleable
                               collapsed
                               className="mb-3 dark:text-white dark:bg-dark-950"
@@ -300,7 +300,7 @@ export default function VariationAddForm({
                                       <CustomTextField
                                         type="text"
                                         name={`attr-name-${gi}`}
-                                        placeholder={t('Attribute (e.g. Size)')}
+                                        placeholder={t('attribute_eg_size')}
                                         showLabel={false}
                                         value={group.name}
                                         onChange={(e) =>
@@ -316,7 +316,7 @@ export default function VariationAddForm({
                                       <CustomTextField
                                         type="text"
                                         name={`attr-values-${gi}`}
-                                        placeholder={t('Comma-separated values (e.g. Small,Medium,Large)')}
+                                        placeholder={t('commaseparated_values_eg_smallmediumlarge')}
                                         showLabel={false}
                                         value={group.values}
                                         onChange={(e) =>

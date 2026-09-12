@@ -70,15 +70,6 @@ export default function LoginWithGoogle({
         </>
       )}
 
-      {/* Legacy email accounts — kept reachable but not headline */}
-      <button
-        type="button"
-        onClick={() => handleChangePanel(1)}
-        className="mb-4 text-sm font-medium text-gray-500 hover:text-primary-color hover:underline dark:text-gray-400"
-      >
-        {t("sign_in_with_email_label") ?? "Sign in with an email account"}
-      </button>
-
       {/* Terms and Privacy */}
       <p className="text-center text-xs text-gray-500 max-w-sm px-2 dark:text-gray-300 ">
         {t("by_signing_up_you_agree_to_our_message")}&nbsp;

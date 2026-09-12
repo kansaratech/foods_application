@@ -1,4 +1,5 @@
 "use client";
+import styles from "../profile-dialog.module.css";
 // Interfaces
 import {
   IUpdateUserPhoneArguments,
@@ -188,7 +189,7 @@ export default function UpdatePhoneModal({
 
 
   return(
-     <CustomDialog visible={isUpdatePhoneModalVisible} onHide={handleUpdatePhoneModal} width="600px" >  
+     <CustomDialog visible={isUpdatePhoneModalVisible} onHide={handleUpdatePhoneModal} width="520px" className={styles.dialog}>
         {
             ActiveStep === 0 ? (
             <PhoneEntry

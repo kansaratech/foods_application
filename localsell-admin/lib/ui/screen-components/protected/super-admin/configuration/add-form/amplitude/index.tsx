@@ -90,7 +90,7 @@ const AmplitudeAddForm = () => {
                 cardTitle={'Amplitude'}
                 buttonLoading={mutationLoading}
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="configuration-fields">
                   <CustomPasswordTextField
                     placeholder="Web Amplitude API Key"
                     feedback={false}

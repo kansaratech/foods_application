@@ -1,134 +1,122 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-
-// Hooks
+import { AppState, Text, View } from "react-native";
+import { Circle, Line, Svg } from "react-native-svg";
+import { useTranslation } from "react-i18next";
 import { useApptheme } from "@/lib/context/theme.context";
 
 interface TimerProps {
-  duration: number; // Duration in seconds
+  deadline: number | null;
 }
 
-const CountdownTimer: React.FC<TimerProps> = ({ duration }) => {
-  // Hooks
-  const { appTheme } = useApptheme();
-  const normalizedDuration = Math.max(0, Math.floor(duration));
-
-  // States
-  const [timeLeft, setTimeLeft] = useState(normalizedDuration);
-
-  // UseEffects
+const CountdownTimer: React.FC<TimerProps> = ({ deadline }) => {
+  const { appTheme, currentTheme } = useApptheme();
+  const { t } = useTranslation();
+  const [now, setNow] = useState(Date.now);
   useEffect(() => {
-    setTimeLeft(normalizedDuration);
-  }, [normalizedDuration]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Convert seconds to HH:MM:SS format
-  const formatTime = (time: number) => {
-    const hours = Math.floor(time / 3600);
-    const minutes = Math.floor((time % 3600) / 60);
-    const seconds = Math.floor(time % 60);
-
-    return {
-      hours: String(hours).padStart(2, "0"),
-      minutes: String(minutes).padStart(2, "0"),
-      seconds: String(seconds).padStart(2, "0"),
+    setNow(Date.now());
+    if (deadline === null) return;
+    const tick = () => setNow(Date.now());
+    const timer = setInterval(tick, 1000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") tick();
+    });
+    return () => {
+      clearInterval(timer);
+      subscription.remove();
     };
-  };
+  }, [deadline]);
 
-  const { hours, minutes, seconds } = formatTime(timeLeft);
-  const isOverdue = hours === "00" && minutes === "00" && seconds === "00";
+  const overdue = deadline !== null && now >= deadline;
+  const seconds =
+    deadline === null ? 0 : Math.ceil(Math.abs(deadline - now) / 1000);
+  const hours = Math.floor(seconds / 3600);
+  const value = [hours, Math.floor((seconds % 3600) / 60), seconds % 60]
+    .map((n) => String(n).padStart(2, "0"))
+    .join(":");
+  const color = overdue
+    ? currentTheme === "dark"
+      ? "#fbbf24"
+      : "#92400e"
+    : appTheme.primary;
+  const label =
+    deadline === null
+      ? t("Preparation time unavailable")
+      : overdue
+        ? t("Preparation overdue")
+        : t("Time Left");
+  const angle = deadline === null ? 0 : (Math.floor(now / 1000) % 60) * 6;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.timerRow}>
-        <View style={styles.box}>
-          <Text
-            style={[
-              styles[isOverdue ? "timerTextEnd" : "timerText"],
-              { color: appTheme.fontMainColor },
-            ]}
-          >
-            {hours}
-          </Text>
-        </View>
-        <Text style={styles.colon}>:</Text>
-        <View style={styles.box}>
-          <Text
-            style={[
-              styles[isOverdue ? "timerTextEnd" : "timerText"],
-              { color: appTheme.fontMainColor },
-            ]}
-          >
-            {minutes}
-          </Text>
-        </View>
-        <Text style={styles.colon}>:</Text>
-        <View style={styles.box}>
-          <Text
-            style={[
-              styles[isOverdue ? "timerTextEnd" : "timerText"],
-              { color: appTheme.fontMainColor },
-            ]}
-          >
-            {seconds}
-          </Text>
-        </View>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+        padding: 16,
+        borderRadius: 14,
+        backgroundColor:
+          currentTheme === "dark" ? "#1f2937" : overdue ? "#fffbeb" : "#eff6ff",
+        borderWidth: 1,
+        borderColor:
+          currentTheme === "dark" ? "#374151" : overdue ? "#fde68a" : "#dbeafe",
+      }}
+    >
+      <Svg width={44} height={44} viewBox="0 0 44 44" accessible={false}>
+        <Circle
+          cx={22}
+          cy={22}
+          r={20}
+          fill="none"
+          stroke={color}
+          strokeWidth={2}
+        />
+        <Line
+          x1={22}
+          y1={22}
+          x2={22}
+          y2={11}
+          stroke={color}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          transform={`rotate(${angle / 12 + 90} 22 22)`}
+        />
+        <Line
+          x1={22}
+          y1={24}
+          x2={22}
+          y2={6}
+          stroke={color}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          transform={`rotate(${angle} 22 22)`}
+        />
+        <Circle cx={22} cy={22} r={2.5} fill={color} />
+      </Svg>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            color: currentTheme === "dark" ? "#cbd5e1" : color,
+            fontSize: 12,
+            fontWeight: "600",
+            marginBottom: 4,
+          }}
+        >
+          {label}
+        </Text>
+        <Text
+          accessibilityLabel={`${label}: ${deadline === null ? "--:--:--" : value}`}
+          style={{
+            color: currentTheme === "dark" ? "#f8fafc" : color,
+            fontSize: 24,
+            fontWeight: "700",
+            fontVariant: ["tabular-nums"],
+            letterSpacing: 1,
+          }}
+        >
+          {deadline === null ? "--:--:--" : value}
+        </Text>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  timerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  box: {
-    width: 30,
-    height: 30,
-    backgroundColor: "transparent",
-    borderRadius: 4,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  timerText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    // color: "red",
-  },
-  timerTextEnd: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "red",
-  },
-  colon: {
-    fontWeight: "bold",
-    color: "red",
-    marginHorizontal: 5,
-  },
-  labelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: 200,
-    marginTop: 5,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "black",
-  },
-});
-
 export default CountdownTimer;

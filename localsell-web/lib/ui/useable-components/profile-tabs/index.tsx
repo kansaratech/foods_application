@@ -6,7 +6,7 @@ export const TabItem: React.FC<{
     onClick: () => void,
     className?: string
   }> = ({ tab, isActive, onClick, className = "" }) => (
-    <span
+    <button type="button" aria-current={isActive ? "page" : undefined}
       key={tab.path}
       onClick={onClick}
       className={`
@@ -21,6 +21,6 @@ export const TabItem: React.FC<{
       `}
     >
       {tab.label}
-    </span>
+    </button>
   )
   

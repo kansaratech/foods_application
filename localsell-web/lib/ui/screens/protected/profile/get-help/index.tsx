@@ -3,7 +3,7 @@ import { GetHelpMain } from "@/lib/ui/screen-components/protected/profile/get-he
 
 export default function GetHelpScreen() {
   return (
-    <div className="flex flex-col space-y-10 my-10">
+    <div data-profile-section="get-help" className="flex flex-col gap-6">
       <GetHelpMain />
     </div>
   );

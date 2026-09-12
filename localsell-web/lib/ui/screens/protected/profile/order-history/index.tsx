@@ -1,4 +1,5 @@
 "use client";
+import styles from "./order-history.module.css";
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
 import {
@@ -15,6 +16,7 @@ import ErrorDisplay from "@/lib/ui/useable-components/slider-error-display";
 
 export default function OrderHistoryScreen() {
   const [page, setPage] = useState(1);
+  const [view, setView] = useState<"active" | "past">("active");
   const [activeOrders, setActiveOrders] = useState<IOrder[]>([]);
   const [pastOrders, setPastOrders] = useState<IOrder[]>([]);
   const [activeOrderHasMore, setActiveOrderHasMore] = useState(true);
@@ -53,16 +55,16 @@ export default function OrderHistoryScreen() {
   // Merge new orders & update hasMore
   useEffect(() => {
     if (!activeOrder?.getUsersActiveOrders) return;
-    
+
     setActiveOrders((prev) => {
       const newOrders = activeOrder.getUsersActiveOrders.filter(
-        (order: IOrder) => !prev.some((p) => p._id === order._id)
+        (order: IOrder) => !prev.some((p) => p._id === order._id),
       );
       return [...prev, ...newOrders];
     });
 
     // Only update hasMore after pagination starts
-    if (page > 1 && activeOrder.getUsersActiveOrders.length < limit) {
+    if (activeOrder.getUsersActiveOrders.length < limit) {
       setActiveOrderHasMore(false);
     }
   }, [activeOrder, page, limit]);
@@ -72,13 +74,13 @@ export default function OrderHistoryScreen() {
 
     setPastOrders((prev) => {
       const newOrders = pastOrder.getUsersPastOrders.filter(
-        (order: IOrder) => !prev.some((p) => p._id === order._id)
+        (order: IOrder) => !prev.some((p) => p._id === order._id),
       );
       return [...prev, ...newOrders];
     });
 
     // Only update hasMore after pagination starts
-    if (page > 1 && pastOrder.getUsersPastOrders.length < limit) {
+    if (pastOrder.getUsersPastOrders.length < limit) {
       setPastOrderHasMore(false);
     }
   }, [pastOrder, page, limit]);
@@ -111,46 +113,75 @@ export default function OrderHistoryScreen() {
     }
   };
 
-  
   const retryInitialLoad = () => {
-  setPage(1);
-  setActiveOrderHasMore(true);
-  setPastOrderHasMore(true);
-  setActiveOrders([]);
-  setPastOrders([]);
-  activeOrderFetchMore({ variables:{page:1} });
-  pastOrderFetchMore({ variables:{page:1} });
-};
-
+    setPage(1);
+    setActiveOrderHasMore(true);
+    setPastOrderHasMore(true);
+    setActiveOrders([]);
+    setPastOrders([]);
+    activeOrderFetchMore({ variables: { page: 1 } });
+    pastOrderFetchMore({ variables: { page: 1 } });
+  };
 
   if (activeOrderError || pastOrderError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <ErrorDisplay
+          message={activeOrderError?.message || pastOrderError?.message}
+          onRetry={retryInitialLoad}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center h-full">
-      <ErrorDisplay
-        message={activeOrderError?.message || pastOrderError?.message}
-        onRetry={retryInitialLoad}
-      />
-    </div>
-  );
-}
-
-
-  return (
-    <div className="flex flex-col space-y-10 my-10">
-      {/* Active Orders */}
-      <ActiveOrders
-        activeOrders={activeOrders}
-        isOrdersLoading={activeOrderNetwork === 1} // initial load only
-      />
-
-      {/* Past Orders */}
-      <PastOrders
-        pastOrders={pastOrders}
-        isOrdersLoading={pastOrderNetwork === 1} // initial load only
-      />
-
+    <section className={styles.history} aria-label={t("order_history")}>
+      <div className={styles.header}>
+        <h2>{t("order_history")}</h2>
+        <div
+          className={styles.switcher}
+          role="group"
+          aria-label={t("order_history")}
+        >
+          <button
+            type="button"
+            aria-pressed={view === "active"}
+            onClick={() => setView("active")}
+          >
+            {t("active_orders_title")}
+          </button>
+          <button
+            type="button"
+            aria-pressed={view === "past"}
+            onClick={() => setView("past")}
+          >
+            {t("past_orders_label")}
+          </button>
+        </div>
+      </div>
+      <div className={styles.panel}>
+        {view === "active" ? (
+          /* Active Orders */
+          <ActiveOrders
+            activeOrders={activeOrders}
+            isOrdersLoading={activeOrderNetwork === 1} // initial load only
+          />
+        ) : (
+          <PastOrders
+            pastOrders={pastOrders}
+            isOrdersLoading={pastOrderNetwork === 1} // initial load only
+            onRatingSubmitted={(orderId, review) =>
+              setPastOrders((prev) =>
+                prev.map((o) => (o._id === orderId ? { ...o, review } : o)),
+              )
+            }
+          />
+        )}
+      </div>
       {/* Load More Button */}
-      {(activeOrderHasMore || pastOrderHasMore) && (
+      {(view === "active"
+        ? activeOrderHasMore && activeOrders.length > 0
+        : pastOrderHasMore && pastOrders.length > 0) && (
         <div className="flex justify-center">
           <button
             onClick={loadMore}
@@ -187,6 +218,6 @@ export default function OrderHistoryScreen() {
           </button>
         </div>
       )}
-    </div>
+    </section>
   );
 }

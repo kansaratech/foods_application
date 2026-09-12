@@ -55,6 +55,7 @@ export const GET_ACTIVE_ORDERS = gql`
               title
               description
               price
+              quantity
             }
             description
             title
@@ -153,6 +154,7 @@ export const GET_ORDER_BY_RESTAURANT = gql`
               title
               description
               price
+              quantity
             }
             description
             title
@@ -172,6 +174,7 @@ export const GET_ORDER_BY_RESTAURANT = gql`
         paymentMethod
         paidAmount
         orderAmount
+        discountAmount
         orderStatus
         status
         paymentStatus
@@ -223,6 +226,7 @@ export const GET_ORDER_BY_RESTAURANT_WITHOUT_PAGINATION = gql`
             title
             description
             price
+            quantity
           }
           description
           title
@@ -296,6 +300,7 @@ export const GET_ORDERS = gql`
             title
             description
             price
+            quantity
           }
           description
           title
@@ -406,6 +411,7 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
               title
               description
               price
+              quantity
             }
             description
             title
@@ -425,6 +431,7 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         paymentMethod
         paidAmount
         orderAmount
+        discountAmount
         orderStatus
         status
         paymentStatus
@@ -520,6 +527,7 @@ export const GET_ORDERS_WITHOUT_PAGINATION = gql`
             title
             description
             price
+            quantity
           }
           description
           title

@@ -160,4 +160,5 @@ export interface IActiveOrdersProps {
 export interface IPastOrdersProps {
   pastOrders: IOrder[];
   isOrdersLoading: boolean;
+  onRatingSubmitted?: (orderId: string, review: IOrder["review"]) => void;
 }

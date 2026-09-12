@@ -1,5 +1,7 @@
 "use client";
 
+import styles from "./cart.module.css";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -179,9 +181,9 @@ export default function Cart({ onClose }: CartProps) {
 
   return (
     <>
-      <div className="h-full flex flex-col bg-white dark:bg-gray-800 dark:text-white relative">
+      <div className={styles.cart}>
         {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b">
+        <div className={styles.header}>
           <h2 className="font-inter font-semibold text-xl text-gray-900 dark:text-white">
             {t("your_order_label")}
           </h2>
@@ -191,22 +193,22 @@ export default function Cart({ onClose }: CartProps) {
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className={styles.content}>
           {/* Cart Items */}
-          <div className="p-4 space-y-4">
+          <div className={styles.items}>
             {cart.map((item) => (
               <div
                 key={item.key}
-                className="flex sm:flex-row sm:items-center bg-white dark:bg-gray-800 dark:text-white rounded-lg p-3 shadow-sm dark:shadow-gray-700"
+                className={styles.item}
               >
                 <div className="flex-grow">
-                  <div className="flex sm:flex-row flex-col sm:items-center gap-4">
+                  <div className={styles.itemInfo}>
                     <Image
                       src={item.image}
-                      alt="item image"
+                      alt={item.foodTitle || item.title || t("food_item_label")}
                       width={112} // w-28 = 112px
                       height={112} // h-28 = 112px
-                      className="w-28 h-28 object-cover rounded-md mb-2"
+                      className={styles.itemImage}
                     />
                     <div>
                       <h3 className="font-inter font-semibold text-sm text-gray-700 dark:text-white ">
@@ -230,13 +232,14 @@ export default function Cart({ onClose }: CartProps) {
                 </div>
 
                 {/* Quantity Controls */}
-                <div className="flex items-center space-x-2">
+                <div className={styles.quantity}>
                   <button
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       updateItemQuantity(item.key, -1);
                     }}
+                    aria-label={`${t("decrease")} ${item.foodTitle || item.title}`}
                     className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
                     type="button"
                   >
@@ -253,6 +256,7 @@ export default function Cart({ onClose }: CartProps) {
                       e.stopPropagation();
                       updateItemQuantity(item.key, 1);
                     }}
+                    aria-label={`${t("increase")} ${item.foodTitle || item.title}`}
                     className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center"
                     type="button"
                   >
@@ -265,16 +269,17 @@ export default function Cart({ onClose }: CartProps) {
 
           {/* Frequently bought together (merchant-curated) */}
           {frequentlyBoughtTogether.length > 0 && (
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 ">
+            <div className={styles.recommendations}>
               <h2 className="font-inter font-semibold text-base text-gray-900 dark:text-white mb-3">
                 {t("frequently_bought_together")}
               </h2>
-              <div className="flex flex-wrap gap-3">
+              <div className={styles.recommendationList}>
                 {frequentlyBoughtTogether.map((food) => (
-                  <div
+                  <button
+                    type="button"
                     key={food._id}
                     onClick={() => handleOpenFoodModal(food)}
-                    className="flex-grow basis-[calc(50%-0.75rem)] bg-white dark:bg-gray-800 rounded-lg overflow-hidden relative transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg cursor-pointer group"
+                    className={styles.recommendationCard}
                   >
                     {food.image && (
                       <Image
@@ -282,7 +287,7 @@ export default function Cart({ onClose }: CartProps) {
                         alt={food.title}
                         width={600}
                         height={144}
-                        className="w-full h-36 object-cover group-hover:opacity-80 transition-opacity duration-300"
+                        className={styles.recommendationImage}
                       />
                     )}
                     <div className="p-2">
@@ -294,7 +299,7 @@ export default function Cart({ onClose }: CartProps) {
                         {food.variations[0]?.price}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -302,11 +307,11 @@ export default function Cart({ onClose }: CartProps) {
 
           {/* Recommended for You Section */}
           {frequentlyBoughtTogether.length === 0 && slicedRelatedItems.length > 0 && (
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 ">
+            <div className={styles.recommendations}>
               <h2 className="font-inter font-semibold text-base  text-gray-900 dark:text-white mb-3">
                 {t("recommended_for_you_label")}
               </h2>
-              <div className="flex flex-wrap gap-3">
+              <div className={styles.recommendationList}>
                 {slicedRelatedItems.map((id: string) => {
                   // Read the food fragment using Apollo Client
                   const food = client.readFragment({
@@ -316,12 +321,12 @@ export default function Cart({ onClose }: CartProps) {
 
                   if (!food) return null;
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={id}
                       // onClick={() => handleAddRelatedItem(id)}
                       onClick={() => handleOpenFoodModal(food)}
-                      className="flex-grow basis-[calc(50%-0.75rem)] bg-white dark:bg-gray-800 rounded-lg overflow-hidden relative 
-                    transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg cursor-pointer group"
+                      className={styles.recommendationCard}
                     >
                       {food.image && (
                         <Image
@@ -329,7 +334,7 @@ export default function Cart({ onClose }: CartProps) {
                           alt={food.title}
                           width={600} // adjust as needed
                           height={144} // h-36 = 144px
-                          className="w-full h-36 object-cover group-hover:opacity-80 transition-opacity duration-300"
+                          className={styles.recommendationImage}
                         />
                       )}
                       <div className="p-2">
@@ -341,7 +346,7 @@ export default function Cart({ onClose }: CartProps) {
                           {food.variations[0].price}
                         </p>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -349,7 +354,7 @@ export default function Cart({ onClose }: CartProps) {
           )}
 
           {/* Add Comment Section */}
-          <div className="p-4 bg-whitedark:bg-gray-800 ">
+          <div className={styles.notes}>
             <div className="bg-gray-50 dark:bg-gray-800  rounded-lg p-3">
               <h2 className="font-inter font-semibold text-base text-gray-900 dark:text-white  mb-2">
                 {t("add_comment_for_restaurant_label")}{" "}
@@ -357,6 +362,8 @@ export default function Cart({ onClose }: CartProps) {
               </h2>
               <textarea
                 id="instructions"
+                aria-label={t("special_requests_placeholder")}
+                maxLength={500}
                 className="w-full h-20 p-2 bg-white dark:bg-gray-800 border border-gray-300 rounded-md resize-none focus:border-secondary-color focus:outline-none text-sm"
                 placeholder={t("special_requests_placeholder")}
                 onChange={({ target: { value } }) => {
@@ -380,7 +387,7 @@ export default function Cart({ onClose }: CartProps) {
         </div>
 
         {/* Fixed Checkout Button */}
-        <div className="p-4 flex flex-col justify-center items-center border-t bg-white dark:bg-gray-800 ">
+        <div className={styles.footer}>
           <button
             className="flex justify-between items-center w-full bg-primary-color text-white rounded-full px-4 py-3"
             onClick={() => {
@@ -390,7 +397,7 @@ export default function Cart({ onClose }: CartProps) {
             type="button"
           >
             <div className="flex items-center">
-              <span className="bg-black text-primary-color rounded-full w-6 h-6 flex items-center justify-center mr-2 rtl:ml-2 text-sm font-medium">
+              <span className={styles.count}>
                 {cartCount}
               </span>
               <span className="text-white text-base font-medium">

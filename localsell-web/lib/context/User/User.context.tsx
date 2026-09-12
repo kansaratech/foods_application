@@ -55,6 +55,7 @@ export interface CartItem {
     options: Array<{
       _id: string;
       title?: string;
+      quantity?: number;
     }>;
   }>;
   specialInstructions?: string;
@@ -281,15 +282,33 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
             const addonItem = addons.find((a: IAddon) => a._id === addon._id);
             if (!addonItem) return;
 
+            // An addon's own `options` can be either inline option objects
+            // (store app / seed data — e.g. "Make Your Thali"-style build-
+            // your-own items) or _id-strings referencing the restaurant's
+            // shared top-level `options` pool (admin panel). Only checking
+            // the shared pool silently dropped inline options' prices to 0,
+            // undercharging every custom item that used them.
+            const inlineOptions =
+              addonItem.options?.length &&
+              typeof addonItem.options[0] === "object" &&
+              addonItem.options[0] !== null
+                ? (addonItem.options as unknown as IOption[])
+                : null;
+
             addon.options.forEach((opt) => {
-              const optionItem = options.find(
-                (o: IOption) => o._id === opt._id
-              );
+              const optionItem =
+                inlineOptions?.find((o) => o._id === opt._id) ??
+                options.find((o: IOption) => o._id === opt._id);
               if (!optionItem) return;
 
-              totalPrice += optionItem.price;
+              const optQuantity = opt.quantity ?? 1;
+              totalPrice += optionItem.price * optQuantity;
               if (optionItem.title) {
-                optionTitles.push(optionItem.title);
+                optionTitles.push(
+                  optQuantity > 1
+                    ? `${optQuantity}x ${optionItem.title}`
+                    : optionItem.title,
+                );
               }
             });
           });
@@ -383,6 +402,22 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
     },
     []
   );
+
+  // AuthProvider (an ancestor of UserProvider, so it can't call useUser()
+  // directly) fires "localsell:login" whenever a login completes, for any
+  // auth path — phone, email, Google. Without this, `token` here only ever
+  // gets set from localStorage at page mount, so profile/orders never
+  // refetch after a same-session login and the header is stuck showing
+  // whatever (or nothing) was there before.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLogin = (e: Event) => {
+      const token = (e as CustomEvent<{ token: string }>).detail?.token;
+      if (token) setTokenAsync(token);
+    };
+    window.addEventListener("localsell:login", onLogin);
+    return () => window.removeEventListener("localsell:login", onLogin);
+  }, [setTokenAsync]);
 
   const logout = useCallback(async () => {
     try {

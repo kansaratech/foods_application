@@ -49,7 +49,7 @@ export default function FinanceScreen() {
       <div>
         <ManagementHeading
           title={t('Finance')}
-          description={t('Monitor revenue, settlements, commissions and payouts.')}
+          description={t('monitor_revenue_settlements_commissions_and_payouts')}
         />
 
         <div className="management-tabs" aria-label="Finance views">

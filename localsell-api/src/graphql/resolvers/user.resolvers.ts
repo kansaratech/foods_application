@@ -238,17 +238,36 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
 
     updateUser: async (
       _parent,
-      args: { updateUserInput: { name: string; phone?: string; phoneIsVerified?: boolean; emailIsVerified?: boolean } },
+      args: {
+        updateUserInput: {
+          name: string;
+          phone?: string;
+          phoneIsVerified?: boolean;
+          email?: string;
+          emailIsVerified?: boolean;
+        };
+      },
       context,
     ) => {
       const currentUser = requireAuth(context);
+      const { email } = args.updateUserInput;
+
+      if (email) {
+        const existing = await prisma.user.findUnique({ where: { email } });
+        if (existing && existing.id !== currentUser.id) {
+          throw userInputError('That email is already in use on another account.');
+        }
+      }
+
       return prisma.user.update({
         where: { id: currentUser.id },
         data: {
           name: args.updateUserInput.name,
           phone: args.updateUserInput.phone,
           phoneIsVerified: args.updateUserInput.phoneIsVerified,
-          emailIsVerified: args.updateUserInput.emailIsVerified,
+          // A freshly-added email is unverified until the user confirms it —
+          // never let the client force this true for a new address.
+          ...(email ? { email, emailIsVerified: false } : { emailIsVerified: args.updateUserInput.emailIsVerified }),
         },
       });
     },

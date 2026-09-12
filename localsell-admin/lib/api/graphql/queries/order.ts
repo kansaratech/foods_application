@@ -46,6 +46,7 @@ export const GET_ORDERS_BY_USER = gql`
               _id
               title
               price
+              quantity
             }
           }
         }

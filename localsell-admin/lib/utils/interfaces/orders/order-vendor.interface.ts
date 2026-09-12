@@ -21,6 +21,7 @@ export interface Items {
     options: Array<{
       price: number;
       title: string;
+      quantity?: number;
     }>;
   }>;
   description: ReactNode;
@@ -48,6 +49,7 @@ export interface IExtendedOrder extends IOrder {
   paymentMethod?: ReactNode;
   deliveryCharges?: number;
   tipping?: number;
+  discountAmount?: number;
   reason?: string | null;
   taxationAmount?: number;
   itemsTitle?: string;
@@ -58,7 +60,7 @@ export interface IExtendedOrder extends IOrder {
   deliveryOtp?: string | null;
   deliveryConfirmedBy?: string | null;
   storeDeliveryAgent?: { _id: string; name: string; phone?: string | null } | null;
-  restaurant?: IRestaurant;
+  restaurant?: IRestaurant & { address?: string | null };
   user?: {
     _id: string;
     name: string;

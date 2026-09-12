@@ -5,6 +5,7 @@ import TextComponent from "@/lib/ui/useable-components/text-field";
 import { getInitials } from "@/lib/utils/methods";
 import { useQuery } from "@apollo/client";
 import UpdatePhoneModal from "../../settings/main/update-phone";
+import UpdateEmailModal from "../../settings/main/update-email";
 import { useState } from "react";
 import "primeicons/primeicons.css";
 import { useTranslations } from "next-intl";
@@ -12,6 +13,8 @@ import { useTranslations } from "next-intl";
 export default function PersonalInfoMain() {
   const t = useTranslations();
   const [isUpdatePhoneModalVisible, setIsUpdatePhoneModalVisible] =
+    useState<boolean>(false);
+  const [isUpdateEmailModalVisible, setIsUpdateEmailModalVisible] =
     useState<boolean>(false);
 
   // ActiveStep state variable
@@ -33,6 +36,10 @@ export default function PersonalInfoMain() {
     setIsUpdatePhoneModalVisible(!isUpdatePhoneModalVisible);
   };
 
+  const handleUpdateEmailModal = () => {
+    setIsUpdateEmailModalVisible(!isUpdateEmailModalVisible);
+  };
+
   if (!profileLoading) {
     return (
       <div className="p-6 w-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -50,14 +57,31 @@ export default function PersonalInfoMain() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
           <div>
-            <TextComponent
-              text={t("Email")}
-              className="text-black dark:text-white font-semibold text-base md:text-lg"
-            />
-            <TextComponent
-              text={profileData?.profile?.email || "N/A"}
-              className="font-normal text-sm md:text-base text-gray-700 dark:text-gray-200"
-            />
+            <div className="flex items-center gap-2">
+              <TextComponent
+                text={t("Email")}
+                className="text-black dark:text-white font-semibold text-base md:text-lg"
+              />
+              <button
+                type="button"
+                aria-label={t("update_email_title")}
+                onClick={handleUpdateEmailModal}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-light text-primary-color"
+              >
+                <i
+                  aria-hidden="true"
+                  className="pi pi-pen-to-square cursor-pointer dark:text-white text-sm"
+                />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={handleUpdateEmailModal}
+              title="Update email address"
+              className="text-secondary-color dark:text-primary-color hover:text-primary-dark font-normal text-sm md:text-base cursor-pointer"
+            >
+              {profileData?.profile?.email || "N/A"}
+            </button>
             <TextComponent
               text={
                 profileData?.profile?.emailIsVerified
@@ -73,18 +97,26 @@ export default function PersonalInfoMain() {
                 text={t("Phone")}
                 className="text-black dark:text-gray-200 font-semibold text-base md:text-lg"
               />
-              <i
+              <button
+                type="button"
+                aria-label={t("updatePhoneTitle")}
                 onClick={handleUpdatePhoneModal}
-                className="pi pi-pen-to-square cursor-pointer dark:text-white text-sm"
-              ></i>
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-light text-primary-color"
+              >
+                <i
+                  aria-hidden="true"
+                  className="pi pi-pen-to-square cursor-pointer dark:text-white text-sm"
+                />
+              </button>
             </div>
-            <h1
+            <button
+              type="button"
               onClick={handleUpdatePhoneModal}
               title="Update phone number"
               className=" text-secondary-color dark:text-primary-color hover:text-primary-dark font-normal text-sm md:text-base cursor-pointer"
             >
               {profileData?.profile?.phone || "N/A"}
-            </h1>
+            </button>
             <TextComponent
               text={
                 profileData?.profile?.phoneIsVerified
@@ -101,6 +133,12 @@ export default function PersonalInfoMain() {
           ActiveStep={activeStep}
           setActiveStep={setActiveStep}
           isUpdatePhoneModalVisible={isUpdatePhoneModalVisible}
+        />
+        <UpdateEmailModal
+          userEmail={profileData?.profile?.email || ""}
+          userName={profileData?.profile?.name || ""}
+          handleUpdateEmailModal={handleUpdateEmailModal}
+          isUpdateEmailModalVisible={isUpdateEmailModalVisible}
         />
       </div>
     );

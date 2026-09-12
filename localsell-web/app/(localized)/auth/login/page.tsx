@@ -10,7 +10,7 @@ export default function LoginPage() {
   const { setActivePanel, setIsAuthModalVisible } = useAuth();
 
   useEffect(() => {
-    setActivePanel(1);
+    setActivePanel(0);
     setIsAuthModalVisible(true);
   }, [setActivePanel, setIsAuthModalVisible]);
 
@@ -23,7 +23,7 @@ export default function LoginPage() {
       <CustomButton
         label={t("open_login_label")}
         onClick={() => {
-          setActivePanel(1);
+          setActivePanel(0);
           setIsAuthModalVisible(true);
         }}
         className="mt-6 rounded-full bg-primary-color text-white font-medium p-3"

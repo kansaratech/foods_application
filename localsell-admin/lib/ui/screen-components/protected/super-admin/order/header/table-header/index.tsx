@@ -39,52 +39,70 @@ export default function OrderSuperAdminTableHeader(
           </button>
         ))}
       </nav>
-      <MultiSelect
-        panelClassName="custom-multiselect-panel"
-        aria-label="Order status"
-        value={props.selectedActions}
-        options={[
-          'PENDING',
-          'ACCEPTED',
-          'ASSIGNED',
-          'PICKED',
-          'DELIVERED',
-          'COMPLETED',
-          'CANCELLED',
-        ].map((value) => ({
-          label: value.charAt(0) + value.slice(1).toLowerCase(),
-          value,
-        }))}
-        onChange={(e) => props.setSelectedActions(e.value)}
-        placeholder="Status"
-        maxSelectedLabels={1}
-        selectedItemsLabel="{0} statuses"
-        showClear
-      />
-      <Dropdown
-        aria-label="Restaurant"
-        value={props.selectedRestaurantId}
-        options={props.restaurants}
-        optionLabel="name"
-        optionValue="_id"
-        onChange={(e) => props.setSelectedRestaurantId(e.value ?? null)}
-        placeholder="Restaurant"
-        filter
-        showClear
-        loading={props.filtersLoading}
-      />
-      <Dropdown
-        aria-label="Rider"
-        value={props.selectedRiderId}
-        options={props.riders}
-        optionLabel="name"
-        optionValue="_id"
-        onChange={(e) => props.setSelectedRiderId(e.value ?? null)}
-        placeholder="Rider"
-        filter
-        showClear
-        loading={props.filtersLoading}
-      />
+      <label className="orders-filter-field">
+        <span>Status</span>
+        <MultiSelect
+          inputId="orders-status-filter"
+          panelClassName="orders-filter-panel orders-status-panel"
+          aria-label="Order status"
+          value={props.selectedActions}
+          options={[
+            'PENDING',
+            'ACCEPTED',
+            'ASSIGNED',
+            'PICKED',
+            'DELIVERED',
+            'COMPLETED',
+            'CANCELLED',
+          ].map((value) => ({
+            label: value.charAt(0) + value.slice(1).toLowerCase(),
+            value,
+          }))}
+          onChange={(e) => props.setSelectedActions(e.value)}
+          placeholder="Status"
+          maxSelectedLabels={1}
+          selectedItemsLabel="{0} statuses"
+          showClear
+        />
+      </label>
+      <label className="orders-filter-field">
+        <span>Restaurant</span>
+        <Dropdown
+          inputId="orders-restaurant-filter"
+          panelClassName="orders-filter-panel"
+          filterPlaceholder="Search restaurants"
+          emptyFilterMessage="No restaurants found"
+          aria-label="Restaurant"
+          value={props.selectedRestaurantId}
+          options={props.restaurants}
+          optionLabel="name"
+          optionValue="_id"
+          onChange={(e) => props.setSelectedRestaurantId(e.value ?? null)}
+          placeholder="Restaurant"
+          filter
+          showClear
+          loading={props.filtersLoading}
+        />
+      </label>
+      <label className="orders-filter-field">
+        <span>Rider</span>
+        <Dropdown
+          inputId="orders-rider-filter"
+          panelClassName="orders-filter-panel"
+          filterPlaceholder="Search riders"
+          emptyFilterMessage="No riders found"
+          aria-label="Rider"
+          value={props.selectedRiderId}
+          options={props.riders}
+          optionLabel="name"
+          optionValue="_id"
+          onChange={(e) => props.setSelectedRiderId(e.value ?? null)}
+          placeholder="Rider"
+          filter
+          showClear
+          loading={props.filtersLoading}
+        />
+      </label>
       <button
         type="button"
         className="orders-export"

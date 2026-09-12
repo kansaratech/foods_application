@@ -157,8 +157,7 @@ export default function AddressesMain() {
         <div className="flex flex-col items-center gap-4 mt-16">
           <CustomIconButton
             title={t('Add_new_address_title')}
-            iconColor="black"
-            classNames="bg-primary-color  w-[content] px-4"
+            classNames="bg-primary-color text-white w-fit px-4"
             Icon={faPlus}
             loading={false}
             handleClick={() => {

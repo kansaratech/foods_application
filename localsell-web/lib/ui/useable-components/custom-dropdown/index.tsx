@@ -61,7 +61,7 @@ const CustomDropdownComponent = ({
         optionLabel="label"
         placeholder={placeholder}
         itemTemplate={itemTemplate}
-        className="md:w-20rem m-0 h-10 w-full border border-gray-300 dark:border-gray-600 
+        className="md:w-20rem m-0 h-10 w-full border border-gray-300 dark:border-gray-600
              bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100
              rounded focus:shadow-none focus:outline-none text-sm"
         panelClassName="border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
@@ -69,6 +69,12 @@ const CustomDropdownComponent = ({
         checkmark
         focusOnHover={false}
         panelFooterTemplate={panelFooterTemplate}
+        // Without this, PrimeReact appends the overlay panel inline right
+        // after the trigger instead of portaling it — when this dropdown
+        // sits inside a Dialog (as it does here, in the address modal), the
+        // Dialog's own z-index/mask layering can trap the panel behind it or
+        // clip it, making the dropdown look completely unresponsive.
+        appendTo={typeof document !== "undefined" ? document.body : undefined}
         {...props}
       />
     </div>

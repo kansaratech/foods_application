@@ -49,6 +49,7 @@ export const GET_ORDERS = gql`
             title
             description
             price
+            quantity
           }
           description
           title

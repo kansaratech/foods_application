@@ -260,7 +260,7 @@ export default function RestaurantsForm() {
       <ReauthGate
         open={needsReauth}
         title={t('Confirm your password')}
-        description={t('For security, re-enter your password to edit this store.')}
+        description={t('for_security_reenter_your_password_to_edit_this')}
         onVerified={() => setReauthed(true)}
         onCancel={exitWizard}
       />

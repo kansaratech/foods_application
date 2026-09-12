@@ -1,0 +1,257 @@
+.dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: 16px;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px #0f172a33;
+}
+
+.dialog :global(.p-dialog-header) {
+  padding: 16px 24px 0 !important;
+}
+
+.dialog :global(.p-dialog-content) {
+  padding: 0 24px 24px;
+  overscroll-behavior: contain;
+}
+
+.body {
+  width: 100%;
+  min-width: 0;
+}
+.chooser,
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.chooser > div:first-child {
+  padding-right: 24px;
+}
+.chooser > div:first-child span {
+  color: var(--secondary-color);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.chooser button:not(.addressCard),
+.actions button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.chooser > button:first-of-type {
+  background: var(--primary-light);
+  border: 1px solid #c8d9f5;
+  color: var(--primary-dark);
+  margin: 0;
+}
+
+.chooser > button:first-of-type:hover:not(:disabled) {
+  color: white;
+}
+.addressCard {
+  padding: 16px;
+  gap: 16px;
+}
+.addressCard > div {
+  min-width: 0;
+  gap: 12px;
+}
+.addressCard > div > div:first-child {
+  flex-shrink: 0;
+}
+.addressCard > div > div:last-child {
+  min-width: 0;
+  gap: 4px;
+}
+.addressCard span {
+  overflow-wrap: anywhere;
+}
+.addressCard > div > div:last-child > span:last-child {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+}
+.form input,
+.form :global(.p-dropdown) {
+  min-width: 0;
+  height: 46px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+.form :global(.p-dropdown-label) {
+  padding: 12px;
+}
+.form :global(.p-autocomplete) {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  height: 46px;
+}
+.form :global(.p-autocomplete-input) {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+}
+.form input:focus,
+.form :global(.p-dropdown.p-focus) {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+.form input:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+.form > div:last-child {
+  gap: 16px;
+}
+
+.locationTypes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.locationType {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+}
+.locationType[aria-pressed="true"] {
+  border-color: var(--primary-color);
+  background: var(--primary-light);
+}
+.locationType:hover {
+  border-color: var(--primary-color);
+}
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+.actions button:first-child {
+  border-color: #cbd5e1;
+}
+.actions button:first-child:hover {
+  background: #f1f5f9;
+}
+.back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #475569;
+}
+.back:hover {
+  background: #f1f5f9;
+}
+.dialog button:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+:global(html.dark) .field,
+:global(html.dark) .addressCard span {
+  color: #cbd5e1;
+}
+:global(html.dark) .chooser > div:first-child span,
+:global(html.dark) .title {
+  color: #f8fafc;
+}
+:global(html.dark) .locationType {
+  background: #1f2937;
+  border-color: #4b5563;
+}
+:global(html.dark) .locationType[aria-pressed="true"] {
+  background: #16293f;
+  border-color: #60a5fa;
+}
+:global(html.dark) .locationType span {
+  color: #f8fafc;
+}
+:global(html.dark) .actions {
+  border-color: #374151;
+}
+:global(html.dark) .actions button:first-child:hover,
+:global(html.dark) .back:hover {
+  background: #374151;
+}
+
+@media (max-width: 480px) {
+  .dialog {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+    margin: 10px;
+    border-radius: 20px;
+  }
+  .dialog :global(.p-dialog-header) {
+    padding: 12px 16px 0 !important;
+  }
+  .dialog :global(.p-dialog-content) {
+    padding: 0 16px 20px;
+  }
+  .locationTypes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-bottom: 16px;
+}
+
+.headerRow .back {
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0;
+  color: var(--secondary-color);
+  font-size: clamp(18px, 4vw, 24px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+
+.dialog :global(.p-dialog-header-icons) {
+  align-self: flex-start;
+}

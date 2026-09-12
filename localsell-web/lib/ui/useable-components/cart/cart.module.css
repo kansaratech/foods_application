@@ -1,0 +1,256 @@
+.drawer {
+  width: min(100vw, 480px);
+  margin: 0;
+  padding: 0;
+  background: white;
+}
+.drawer :global(.p-sidebar-header) {
+  padding: 12px 20px 0;
+  flex-shrink: 0;
+}
+.drawer :global(.p-sidebar-content) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+.cart {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  background: white;
+  color: var(--secondary-color);
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 24px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+.header h2 {
+  font-size: 24px;
+  letter-spacing: -0.025em;
+}
+.header > span {
+  border-radius: 8px;
+  background: #f1f5f9;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.items {
+  padding: 20px 24px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #edf0f4;
+}
+.item:first-child {
+  padding-top: 0;
+}
+.item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.item > div:first-child {
+  min-width: 0;
+}
+.itemInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.itemInfo > div {
+  min-width: 0;
+}
+.itemInfo h3 {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.itemImage {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+.quantity {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  border: 1px solid #dbe3ee;
+  padding: 3px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.quantity button {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: white;
+  color: var(--primary-color);
+}
+.quantity button:hover {
+  background: var(--primary-light);
+}
+.quantity > span {
+  width: 24px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.recommendations {
+  padding: 18px 24px;
+  background: #f7f9fc;
+  border-block: 1px solid #edf0f4;
+}
+.recommendations h2 {
+  font-size: 14px;
+}
+.recommendationList {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 142px;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+.recommendationCard {
+  text-align: start;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  transition: border-color 150ms;
+}
+.recommendationCard:hover {
+  border-color: var(--primary-color);
+}
+.recommendationCard p {
+  font-size: 12px;
+}
+.recommendationImage {
+  width: 100%;
+  height: 88px;
+  object-fit: cover;
+}
+.notes {
+  padding: 20px 24px;
+}
+.notes > div {
+  background: transparent;
+  padding: 0;
+}
+.notes h2 {
+  font-size: 14px;
+}
+.notes textarea {
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 80px;
+}
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 24px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid #e2e8f0;
+  background: white;
+  box-shadow: 0 -4px 20px #16293f05;
+}
+.footer > button:first-child {
+  min-height: 52px;
+  border-radius: 14px;
+  gap: 12px;
+}
+.footer > button:last-child {
+  border: 0;
+  margin-top: 8px;
+  padding: 8px;
+  min-height: 36px;
+  border-radius: 10px;
+}
+.footer > button:last-child span {
+  font-size: 13px;
+}
+.count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  margin-inline-end: 8px;
+  border-radius: 8px;
+  background: #ffffff26;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cart button:focus-visible,
+.notes textarea:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+:global(html.dark) .drawer,
+:global(html.dark) .cart,
+:global(html.dark) .footer {
+  background: #111827;
+  color: #f8fafc;
+}
+:global(html.dark) .header,
+:global(html.dark) .item,
+:global(html.dark) .footer,
+:global(html.dark) .recommendations {
+  border-color: #374151;
+}
+:global(html.dark) .header > span,
+:global(html.dark) .recommendations,
+:global(html.dark) .quantity {
+  background: #1f2937;
+}
+:global(html.dark) .quantity button,
+:global(html.dark) .recommendationCard {
+  background: #111827;
+  border-color: #374151;
+  color: #93c5fd;
+}
+:global(html.dark) .cart p {
+  color: #cbd5e1;
+}
+@media (max-width: 380px) {
+  .header,
+  .items,
+  .recommendations,
+  .notes,
+  .footer {
+    padding-inline: 16px;
+  }
+  .itemImage {
+    width: 52px;
+    height: 52px;
+  }
+  .item {
+    flex-wrap: wrap;
+  }
+  .quantity {
+    margin-inline-start: auto;
+  }
+}

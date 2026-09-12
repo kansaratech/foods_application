@@ -15,7 +15,10 @@ import {
   CONFIRM_DELIVERY,
 } from "@/lib/apollo/mutations/delivery.mutation";
 import SpinnerComponent from "@/lib/ui/useable-components/spinner";
-import { IOrder, IStoreDeliveryAgent } from "@/lib/utils/interfaces/order.interface";
+import {
+  IOrder,
+  IStoreDeliveryAgent,
+} from "@/lib/utils/interfaces/order.interface";
 
 /** Small pill that says how an order is being fulfilled. */
 export function DeliveryModeBadge({ order }: { order: IOrder }) {
@@ -31,9 +34,15 @@ export function DeliveryModeBadge({ order }: { order: IOrder }) {
   return (
     <View
       className="px-3 py-1 rounded-[12px] border self-start"
-      style={{ borderColor: appTheme.primary, backgroundColor: appTheme.lowOpacityPrimaryColor }}
+      style={{
+        borderColor: appTheme.primary,
+        backgroundColor: appTheme.lowOpacityPrimaryColor,
+      }}
     >
-      <Text className="text-xs font-semibold" style={{ color: appTheme.primary }}>
+      <Text
+        className="text-xs font-semibold"
+        style={{ color: appTheme.primary }}
+      >
         {label}
       </Text>
     </View>
@@ -67,9 +76,16 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
   });
   const agents: IStoreDeliveryAgent[] = data?.storeDeliveryAgents ?? [];
 
-  const onError = (e: { message: string }) => showMessage({ message: e.message, type: "danger" });
-  const [assign, { loading: assigning }] = useMutation(ASSIGN_STORE_DELIVERY_AGENT, { onError });
-  const [confirmDelivery, { loading: delivering }] = useMutation(CONFIRM_DELIVERY, { onError });
+  const onError = (e: { message: string }) =>
+    showMessage({ message: e.message, type: "danger" });
+  const [assign, { loading: assigning }] = useMutation(
+    ASSIGN_STORE_DELIVERY_AGENT,
+    { onError },
+  );
+  const [confirmDelivery, { loading: delivering }] = useMutation(
+    CONFIRM_DELIVERY,
+    { onError },
+  );
 
   if (order.isPickedUp || !isWorkable) return null;
 
@@ -85,14 +101,20 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
     setPickChoice("NONE");
     if (mode === "SELF") {
       await assign({ variables: { orderId: order._id, agentId: null } });
-      showMessage({ message: t("Moved to the LocalSell fleet"), type: "success" });
+      showMessage({
+        message: t("Moved to the LocalSell fleet"),
+        type: "success",
+      });
       await after();
     }
   };
 
   const assignAgent = async (agentId: string) => {
     await assign({ variables: { orderId: order._id, agentId } });
-    showMessage({ message: t("Assigned to your delivery person"), type: "success" });
+    showMessage({
+      message: t("Assigned to your delivery person"),
+      type: "success",
+    });
     setPickChoice("NONE");
     await after();
   };
@@ -114,31 +136,47 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
     disabled?: boolean;
   }) => (
     <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ selected: active, disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
-      className="flex-1 py-2.5 rounded-lg items-center border"
+      className="flex-1 py-3 px-2 rounded-xl items-center justify-center border"
       style={{
         borderColor: active ? appTheme.primary : appTheme.borderLineColor,
         backgroundColor: active ? appTheme.primary : "transparent",
         opacity: disabled ? 0.5 : 1,
       }}
     >
-      <Text className="text-xs font-semibold" style={{ color: active ? appTheme.white : appTheme.fontSecondColor }}>
+      <Text
+        className="text-xs font-semibold"
+        style={{ color: active ? appTheme.white : appTheme.fontSecondColor }}
+      >
         {label}
       </Text>
     </TouchableOpacity>
   );
 
   return (
-    <View className="mt-4 pt-4 border-t" style={{ borderColor: appTheme.borderLineColor }}>
-      <Text className="text-sm font-bold mb-2" style={{ color: appTheme.fontMainColor }}>
+    <View
+      className="mt-3 p-4 rounded-2xl border"
+      style={{ borderColor: appTheme.borderLineColor }}
+    >
+      <Text
+        className="text-sm font-bold mb-2"
+        style={{ color: appTheme.fontMainColor }}
+      >
         {t("Delivery")}
       </Text>
 
       {/* who delivers — segmented choice */}
       {!locked && (
         <View className="flex-row gap-2 mb-3">
-          <Segment label={t("LocalSell fleet")} active={fleetSelected} onPress={chooseFleet} disabled={assigning} />
+          <Segment
+            label={t("LocalSell fleet")}
+            active={fleetSelected}
+            onPress={chooseFleet}
+            disabled={assigning}
+          />
           <Segment
             label={t("My delivery person")}
             active={selfSelected}
@@ -150,29 +188,41 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
 
       {/* ---- SELF path ---- */}
       {selfSelected ? (
-        mode === "SELF" && order.storeDeliveryAgent ? (
+        mode === "SELF" && order.storeDeliveryAgent && pickChoice !== "SELF" ? (
           <>
-            <Text className="text-xs mb-3" style={{ color: appTheme.fontSecondColor }}>
-              {status === "PICKED" ? t("Out for delivery with") : t("Assigned to")}{" "}
-              <Text style={{ fontWeight: "700", color: appTheme.fontMainColor }}>
+            <Text
+              className="text-xs mb-3"
+              style={{ color: appTheme.fontSecondColor }}
+            >
+              {status === "PICKED"
+                ? t("Out for delivery with")
+                : t("Assigned to")}{" "}
+              <Text
+                style={{ fontWeight: "700", color: appTheme.fontMainColor }}
+              >
                 {order.storeDeliveryAgent.name}
               </Text>
-              {order.storeDeliveryAgent.phone ? ` · ${order.storeDeliveryAgent.phone}` : ""}
+              {order.storeDeliveryAgent.phone
+                ? ` · ${order.storeDeliveryAgent.phone}`
+                : ""}
             </Text>
             {status !== "PICKED" ? (
               <TouchableOpacity
-                className="h-14 rounded-2xl items-center justify-center"
+                className="h-12 rounded-xl items-center justify-center"
                 style={{ backgroundColor: appTheme.primary }}
                 onPress={confirmHandover}
               >
-                <Text className="text-base font-semibold" style={{ color: appTheme.white }}>
+                <Text
+                  className="text-base font-semibold"
+                  style={{ color: appTheme.white }}
+                >
                   {t("Handed over to")} {order.storeDeliveryAgent.name}
                 </Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity
                 disabled={delivering}
-                className="h-14 rounded-2xl items-center justify-center"
+                className="h-12 rounded-xl items-center justify-center"
                 style={{ backgroundColor: appTheme.primary }}
                 onPress={() => {
                   setOtp("");
@@ -182,15 +232,24 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
                 {delivering ? (
                   <SpinnerComponent color={appTheme.white} />
                 ) : (
-                  <Text className="text-base font-semibold" style={{ color: appTheme.white }}>
+                  <Text
+                    className="text-base font-semibold"
+                    style={{ color: appTheme.white }}
+                  >
                     {t("Complete delivery")}
                   </Text>
                 )}
               </TouchableOpacity>
             )}
             {status !== "PICKED" && (
-              <TouchableOpacity className="mt-3" onPress={() => setPickChoice("SELF")}>
-                <Text className="text-xs font-semibold" style={{ color: appTheme.primary }}>
+              <TouchableOpacity
+                className="mt-3"
+                onPress={() => setPickChoice("SELF")}
+              >
+                <Text
+                  className="text-xs font-semibold"
+                  style={{ color: appTheme.primary }}
+                >
                   {t("Change person")}
                 </Text>
               </TouchableOpacity>
@@ -200,7 +259,10 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
           <SpinnerComponent />
         ) : agents.length === 0 ? (
           <View>
-            <Text className="text-xs mb-2" style={{ color: appTheme.fontSecondColor }}>
+            <Text
+              className="text-xs mb-2"
+              style={{ color: appTheme.fontSecondColor }}
+            >
               {t("You have no delivery staff yet.")}
             </Text>
             <TouchableOpacity
@@ -208,14 +270,20 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
               className="h-11 rounded-xl items-center justify-center border"
               style={{ borderColor: appTheme.primary }}
             >
-              <Text className="text-xs font-semibold" style={{ color: appTheme.primary }}>
+              <Text
+                className="text-xs font-semibold"
+                style={{ color: appTheme.primary }}
+              >
                 {t("+ Add delivery staff")}
               </Text>
             </TouchableOpacity>
           </View>
         ) : (
           <>
-            <Text className="text-xs mb-2" style={{ color: appTheme.fontSecondColor }}>
+            <Text
+              className="text-xs mb-2"
+              style={{ color: appTheme.fontSecondColor }}
+            >
               {t("Pick who delivers this order:")}
             </Text>
             <View className="flex-row flex-wrap gap-2">
@@ -224,10 +292,13 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
                   key={a._id}
                   disabled={assigning}
                   onPress={() => assignAgent(a._id)}
-                  className="px-4 py-2 rounded-full border"
+                  className="px-4 py-3 rounded-xl border"
                   style={{ borderColor: appTheme.primary }}
                 >
-                  <Text className="text-xs font-semibold" style={{ color: appTheme.primary }}>
+                  <Text
+                    className="text-xs font-semibold"
+                    style={{ color: appTheme.primary }}
+                  >
                     {a.name}
                   </Text>
                 </TouchableOpacity>
@@ -239,30 +310,48 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
         /* ---- FLEET path ---- */
         <>
           {status === "PICKED" ? (
-            <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
+            <Text
+              className="text-xs"
+              style={{ color: appTheme.fontSecondColor }}
+            >
               {t("Picked up by the rider")}
               {order.rider?.name ? ` · ${order.rider.name}` : ""}
             </Text>
           ) : order.rider?.name ? (
             <>
-              <Text className="text-xs mb-3" style={{ color: appTheme.fontSecondColor }}>
+              <Text
+                className="text-xs mb-3"
+                style={{ color: appTheme.fontSecondColor }}
+              >
                 {t("Rider on the way")} ·{" "}
-                <Text style={{ fontWeight: "700", color: appTheme.fontMainColor }}>{order.rider.name}</Text>
+                <Text
+                  style={{ fontWeight: "700", color: appTheme.fontMainColor }}
+                >
+                  {order.rider.name}
+                </Text>
                 {order.rider.phone ? ` · ${order.rider.phone}` : ""}
               </Text>
               <TouchableOpacity
-                className="h-14 rounded-2xl items-center justify-center"
+                className="h-12 rounded-xl items-center justify-center"
                 style={{ backgroundColor: appTheme.primary }}
                 onPress={confirmHandover}
               >
-                <Text className="text-base font-semibold" style={{ color: appTheme.white }}>
+                <Text
+                  className="text-base font-semibold"
+                  style={{ color: appTheme.white }}
+                >
                   {t("Handed over to rider")}
                 </Text>
               </TouchableOpacity>
             </>
           ) : (
-            <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
-              {t("Waiting for a LocalSell rider to accept… You can switch to your own person above at any time.")}
+            <Text
+              className="text-xs"
+              style={{ color: appTheme.fontSecondColor }}
+            >
+              {t(
+                "Waiting for a LocalSell rider to accept… You can switch to your own person above at any time.",
+              )}
             </Text>
           )}
         </>
@@ -274,7 +363,14 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
         animationType="fade"
         onRequestClose={() => setOtpVisible(false)}
       >
-        <View style={{ flex: 1, backgroundColor: "#0008", justifyContent: "center", padding: 24 }}>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#0008",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
           <View
             style={{
               backgroundColor: appTheme.themeBackground,
@@ -285,11 +381,25 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
               alignSelf: "center",
             }}
           >
-            <Text style={{ color: appTheme.fontMainColor, fontSize: 18, fontWeight: "700" }}>
+            <Text
+              style={{
+                color: appTheme.fontMainColor,
+                fontSize: 18,
+                fontWeight: "700",
+              }}
+            >
               {t("Enter delivery code")}
             </Text>
-            <Text style={{ color: appTheme.fontSecondColor, fontSize: 13, marginTop: 6 }}>
-              {t("Ask the customer for the 4-digit code on their order screen.")}
+            <Text
+              style={{
+                color: appTheme.fontSecondColor,
+                fontSize: 13,
+                marginTop: 6,
+              }}
+            >
+              {t(
+                "Ask the customer for the 4-digit code on their order screen.",
+              )}
             </Text>
             <TextInput
               value={otp}
@@ -325,15 +435,24 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: appTheme.fontMainColor, fontWeight: "600" }}>{t("Cancel")}</Text>
+                <Text
+                  style={{ color: appTheme.fontMainColor, fontWeight: "600" }}
+                >
+                  {t("Cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 disabled={otp.length !== 4 || delivering}
                 onPress={async () => {
-                  const res = await confirmDelivery({ variables: { orderId: order._id, otp } });
+                  const res = await confirmDelivery({
+                    variables: { orderId: order._id, otp },
+                  });
                   if (res.data?.confirmDelivery) {
                     setOtpVisible(false);
-                    showMessage({ message: t("Order delivered"), type: "success" });
+                    showMessage({
+                      message: t("Order delivered"),
+                      type: "success",
+                    });
                     await after();
                   }
                 }}
@@ -344,13 +463,17 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor:
-                    otp.length === 4 && !delivering ? appTheme.primary : appTheme.secondaryTextColor,
+                    otp.length === 4 && !delivering
+                      ? appTheme.primary
+                      : appTheme.secondaryTextColor,
                 }}
               >
                 {delivering ? (
                   <SpinnerComponent color={appTheme.white} />
                 ) : (
-                  <Text style={{ color: appTheme.white, fontWeight: "700" }}>{t("Confirm delivery")}</Text>
+                  <Text style={{ color: appTheme.white, fontWeight: "700" }}>
+                    {t("Confirm delivery")}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>

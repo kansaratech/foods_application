@@ -93,14 +93,6 @@ export default function LoginWithPhone({
             </p>
           )}
         </div>
-
-        <button
-          type="button"
-          onClick={() => handleChangePanel(1)}
-          className="self-center text-sm font-medium text-primary-color hover:underline"
-        >
-          {t("use_email_instead_label") ?? "Use email instead"}
-        </button>
       </div>
 
       <CustomButton

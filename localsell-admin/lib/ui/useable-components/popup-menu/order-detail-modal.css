@@ -1,128 +1,257 @@
-/* Custom modal size and style */
-.custom-modal {
-  width: 600px; /* Fixed size for modal */
-  max-width: 600px; /* Ensure it doesn't expand beyond this width */
+.admin-order-dialog {
+  width: 820px;
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 40px);
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px #16293f33;
 }
-
-.order-details-container {
+.admin-order-dialog .p-dialog-header {
+  padding: 22px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+  color: #16293f;
+}
+.admin-order-dialog .p-dialog-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.admin-order-dialog .p-dialog-content {
   padding: 20px;
+  background: #f7f9fc;
+  overscroll-behavior: contain;
 }
-
-.order-section {
-  background: #f4fdf4;
-  padding: 15px;
+.admin-order-dialog .p-dialog-header-icon {
   border-radius: 10px;
-  margin-bottom: 15px;
+  background: #f1f5f9;
+  color: #475569;
 }
-
-.section-header {
-  font-size: 18px;
-  font-weight: bold;
-  color: #2e8b57;
-  margin-bottom: 10px;
-}
-
-.item-list {
-  margin-bottom: 15px;
-}
-
-.item-row {
+.admin-order-dialog .order-details-container {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
 }
-
-.item-price {
-  font-weight: bold;
-  color: #000;
-}
-
-.charges-table {
-  margin-top: 10px;
-}
-
-.charges-row {
+.admin-order-dialog .order-dialog-heading {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 5px;
 }
-
-.total-row {
-  font-weight: bold;
+.admin-order-dialog .order-dialog-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #64748b;
 }
-
-/* Payment Method Section */
-.payment-section {
-  text-align: center; /* Center the payment method text */
-  margin-bottom: 20px; /* Add space between payment method and paid amount */
+.admin-order-dialog .order-financial-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
-
-.payment-type {
-  font-weight: bold;
-  font-size: 18px;
-  margin-bottom: 10px;
-  background-color: #000;
-  color: #fff;
-  padding: 5px 15px;
-  border-radius: 20px;
-  display: inline-block; /* Make the text box tighter */
-}
-
-/* Paid Amount Section */
-.paid-amount {
+.admin-order-dialog .order-side-stack {
   display: flex;
-  justify-content: space-between;
-  margin-top: 5px;
-  padding: 5px 0;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
 }
-
-.paid-label {
-  font-weight: bold;
+.admin-order-dialog .order-customer .information-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
-.paid-value {
-  font-weight: bold;
-  text-align: right;
-  flex-grow: 1;
+.admin-order-dialog .order-customer .information-item:last-child {
+  grid-column: auto;
 }
-
-/* User and rider information sections */
-.information-grid {
+.admin-order-dialog .section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-order-dialog .section-header .pi {
+  color: #1c5bc7;
+  font-size: 15px;
+}
+.admin-order-dialog .order-items .order-item {
+  background: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.admin-order-dialog .order-charges .total-row {
+  padding: 14px;
+  margin-inline: -8px;
+  background: #e8f0fc;
+  border: 0;
+  border-radius: 12px;
+}
+.admin-order-dialog .order-section p {
+  margin: 0;
+}
+.dark .admin-order-dialog .order-items .order-item {
+  background: #172235;
+}
+.dark .admin-order-dialog .order-charges .total-row {
+  background: #172e50;
+}
+.dark .admin-order-dialog .section-header .pi {
+  color: #93c5fd;
+}
+.admin-order-dialog .order-section {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: white;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.admin-order-dialog .section-header {
+  margin: 0 0 16px;
+  color: #16293f;
+  font-size: 15px;
+  font-weight: 700;
+}
+.admin-order-dialog .information-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 20px;
+  gap: 14px 24px;
 }
-
-.information-item {
+.admin-order-dialog .information-item {
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow-wrap: anywhere;
+  gap: 3px;
 }
-
-.information-label {
-  margin-bottom: 2px;
-  font-size: 13px;
-  font-weight: bold;
+.admin-order-dialog .information-item:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.admin-order-dialog .information-label {
+  font-size: 12px;
   color: #64748b;
+  font-weight: 500;
 }
-
-/* Delivery Address Section */
-.delivery-address {
-  margin-top: 10px;
-  font-size: 16px;
+.admin-order-dialog .item-row,
+.admin-order-dialog .charges-row,
+.admin-order-dialog .paid-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
 }
-
+.admin-order-dialog .order-item + .order-item {
+  border-top: 1px solid #edf0f4;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.admin-order-dialog .item-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.admin-order-dialog .item-price,
+.admin-order-dialog .charges-row > :last-child,
+.admin-order-dialog .paid-value {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.admin-order-dialog .item-price {
+  color: #16293f;
+  font-weight: 600;
+}
+.admin-order-dialog .item-addon {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 6px;
+}
+.admin-order-dialog .charges-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-order-dialog .total-row {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  margin-top: 4px;
+  font-size: 17px;
+  color: #16293f;
+}
+.admin-order-dialog .payment-section {
+  margin-bottom: 20px;
+}
+.admin-order-dialog .payment-type {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #e8f0fc;
+  color: #17499e;
+  font-size: 13px;
+  font-weight: 700;
+}
+.admin-order-dialog .paid-amount {
+  padding-top: 14px;
+  border-top: 1px solid #e2e8f0;
+}
+.admin-order-dialog .paid-value {
+  font-weight: 700;
+  color: #16293f;
+}
+.admin-order-dialog .order-section p {
+  overflow-wrap: anywhere;
+}
+.dark .admin-order-dialog,
+.dark .admin-order-dialog .p-dialog-content {
+  background: #0f172a;
+  border-color: #334155;
+}
+.dark .admin-order-dialog .p-dialog-header,
+.dark .admin-order-dialog .order-section {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+.dark
+  .admin-order-dialog
+  :is(.section-header, .item-price, .total-row, .paid-value) {
+  color: #f8fafc;
+}
+.dark .admin-order-dialog .information-label {
+  color: #94a3b8;
+}
+.dark .admin-order-dialog .payment-type {
+  background: #172e50;
+  color: #93c5fd;
+}
 @media (max-width: 640px) {
-  .custom-modal {
-    width: calc(100vw - 24px);
+  .admin-order-dialog .order-financial-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
-
-  .order-details-container {
-    padding: 8px;
+  .admin-order-dialog .order-customer .information-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
-
-  .information-grid {
-    grid-template-columns: 1fr;
+  .admin-order-dialog {
+    max-height: calc(100dvh - 24px);
+  }
+  .admin-order-dialog .p-dialog-header {
+    padding: 18px;
+  }
+  .admin-order-dialog .p-dialog-content {
+    padding: 12px;
+  }
+  .admin-order-dialog .order-details-container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .admin-order-dialog .order-section {
+    padding: 16px;
+  }
+  .admin-order-dialog .information-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-order-dialog .item-row {
+    flex-wrap: wrap;
+    gap: 4px 12px;
   }
 }

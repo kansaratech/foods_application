@@ -98,7 +98,7 @@ const CurrencyAddForm = () => {
                 cardTitle={'Currency'}
                 buttonLoading={mutationLoading}
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="configuration-fields">
                   <CustomDropdownComponent
                     placeholder="Choose Currency"
                     options={currencies}

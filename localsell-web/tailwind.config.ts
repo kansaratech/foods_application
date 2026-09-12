@@ -29,6 +29,7 @@ const config = {
          "primary-color": "var(--primary-color)",
         "primary-light": "var(--primary-light)",
         "primary-dark": "var(--primary-dark)",
+        "primary-hover": "var(--primary-hover)",
         "secondary-color": "var(--secondary-color)",
         "secondary-border-color": "#111827",
         "brand-maroon": "var(--brand-maroon)",

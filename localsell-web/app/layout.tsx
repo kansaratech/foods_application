@@ -33,21 +33,19 @@ export default async function RootLayout({
       <head>
         <link rel="icon" type="image/png" href="/favicon.png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        {/* 🔥 Inline theme script to prevent flash of wrong theme */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                const theme = localStorage.getItem("theme");
-                if (theme === "dark") {
-                  document.documentElement.classList.add("dark");
-                } else {
-                  document.documentElement.classList.remove("dark");
-                }
-              })();
-            `,
-          }}
-        />
+        {/* Inline theme script to prevent flash of wrong theme */}
+        <Script id="theme-flash-prevention" strategy="beforeInteractive">
+          {`
+            (function() {
+              const theme = localStorage.getItem("theme");
+              if (theme === "dark") {
+                document.documentElement.classList.add("dark");
+              } else {
+                document.documentElement.classList.remove("dark");
+              }
+            })();
+          `}
+        </Script>
         <Script
           src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
           strategy="beforeInteractive"

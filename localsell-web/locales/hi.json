@@ -1,4 +1,9 @@
 {
+  "service_area_label": "सेवा क्षेत्र",
+  "select_service_area_placeholder": "सेवा क्षेत्र चुनें",
+  "select_service_area_to_drop_pin": "मानचित्र पर पिन लगाने के लिए सेवा क्षेत्र चुनें या अपना पता खोजें।",
+  "service_area_help": "स्थानीय रेस्तरां का सेवा क्षेत्र चुनें, फिर अपना डिलीवरी पता दर्ज करें।",
+
   "selectCity": "अपना देश चुनें",
   "searchCity": "किसी शहर की खोज करें...",
   "gifts": "उपहार।",
@@ -455,6 +460,9 @@
   "please_enter_valid_otp_code_message": "कृपया एक वैध OTP कोड दर्ज करें",
   "error_occurred_while_verifying_email_message": "ईमेल सत्यापित करते समय त्रुटि हुई",
   "please_enter_valid_email_address_message": "कृपया एक वैध ईमेल पता दर्ज करें",
+  "update_email_title": "आपका ईमेल क्या है?",
+  "email_already_in_use_message": "यह ईमेल पहले से उपयोग में है।",
+  "email_saved_successfully_message": "ईमेल सेव हो गया।",
   "please_check_your_inbox_message": "कृपया अपना इनबॉक्स जांचें",
   "please_check_your_inbox_message_1": "कृपया अपना इनबॉक्स जांचें और नीचे कोड दर्ज करें।",
   "forgot_password_label": "पासवर्ड भूल गए",

@@ -127,7 +127,10 @@ function HomeNewOrdersMain(props: IOrderTabsComponentProps) {
           className="flex-1 items-center px-5"
           style={[
             style.container,
-            { backgroundColor: appTheme.themeBackground, paddingTop: 60 },
+            {
+              backgroundColor: appTheme.themeBackground,
+              paddingTop: Platform.OS === "web" ? 16 : 60,
+            },
           ]}
         >
           <CustomTab

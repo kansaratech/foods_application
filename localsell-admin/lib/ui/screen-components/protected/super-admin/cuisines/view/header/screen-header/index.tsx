@@ -18,7 +18,7 @@ export default function CuisineScreenHeader({
   return (
     <ManagementHeading
       title={t('Cuisines')}
-      description={t('Organize cuisines and help customers discover their next meal.')}
+      description={t('organize_cuisines_and_help_customers_discover_their_next')}
     >
       <TextIconClickable
         icon={faAdd}

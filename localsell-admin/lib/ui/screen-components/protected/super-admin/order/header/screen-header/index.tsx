@@ -11,7 +11,7 @@ const OrdersSuperAdminHeader = () => {
   return (
     <ManagementHeading
       title={t('Orders')}
-      description={t('Track orders, filter activity and manage fulfilment.')}
+      description={t('track_orders_filter_activity_and_manage_fulfilment')}
     ></ManagementHeading>
   );
 };

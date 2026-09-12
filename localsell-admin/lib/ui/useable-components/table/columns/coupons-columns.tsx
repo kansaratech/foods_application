@@ -161,16 +161,13 @@ export const COUPONS_TABLE_COLUMNS = ({
             }
           }
           return (
-            <div className="flex w-full cursor-pointer items-center justify-between gap-2">
+            <div className="coupon-status">
               <div className="flex items-center gap-2">
-                <div className="flex w-20 items-start">
+                <div className="coupon-switch">
                   <CustomInputSwitch
                     isActive={rowData.enabled}
-                    className={
-                      rowData?.enabled
-                        ? 'p-inputswitch-checked absolute'
-                        : 'absolute'
-                    }
+                    className="coupon-status-switch"
+                    label={`${t("Status")}: ${rowData.title}`}
                     onChange={() => handleEnableField(rowData)}
                     loading={rowData._id === editCouponLoading._id && loading}
                   />
@@ -179,10 +176,14 @@ export const COUPONS_TABLE_COLUMNS = ({
                   {label}
                 </span>
               </div>
-              <ActionMenu data={rowData} items={menuItems} />
             </div>
           );
         },
+      },
+      {
+        headerName: t('Actions'),
+        propertyName: 'actions',
+        body: (rowData: ICoupon) => <ActionMenu data={rowData} items={menuItems} />,
       },
     ],
     [loading, editCouponLoading.bool, menuItems]

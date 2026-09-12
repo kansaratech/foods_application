@@ -29,6 +29,7 @@ export const ItemDetailSection = <
     title?: string | undefined;
     price: number;
     isOutOfStock?: boolean;
+    quantity?: number;
   },
 >({
   title,
@@ -41,6 +42,7 @@ export const ItemDetailSection = <
   onMultiSelect,
   requiredTag,
   showTag = false,
+  onOptionQuantityChange,
 }: SectionProps<T>) => {
   const handleSelect = (option: T) => {
     if (option.isOutOfStock) {
@@ -82,46 +84,91 @@ export const ItemDetailSection = <
         )}
       </div>
       <div className="mt-2 space-y-2">
-        {options.map((option) => (
-          <label
-            key={option._id}
-            className="flex items-center gap-x-2 w-full cursor-pointer"
-          >
-            {/* Input Radio/Checkbox */}
-            <input
-              type={multiple ? "checkbox" : "radio"}
-              name={name}
-              checked={
-                multiple
-                  ? filteredMultiSelected.some((o) => o._id === option._id)
-                  : singleSelected && !option.isOutOfStock
-                    ? (singleSelected as Option | null)?._id === option._id
-                    : false
-              }
-              onChange={() => handleSelect(option)}
-              disabled={option.isOutOfStock}
-              className="accent-primary-color dark:accent-primary-color dark:bg-gray-700 dark:border-gray-600 "
-            />
+        {options.map((option) => {
+          const isChecked = multiple
+            ? filteredMultiSelected.some((o) => o._id === option._id)
+            : singleSelected && !option.isOutOfStock
+              ? (singleSelected as Option | null)?._id === option._id
+              : false;
+          const selectedOption = multiple
+            ? filteredMultiSelected.find((o) => o._id === option._id)
+            : undefined;
+          const optionQuantity = selectedOption?.quantity ?? 1;
+          const showStepper =
+            multiple && isChecked && !!onOptionQuantityChange;
 
-            {/* Label & Price */}
-            <div className="flex justify-between items-center w-full">
-              <span className="text-sm text-gray-900 dark:text-white">
-                {option.title}{" "}
-                {option.isOutOfStock ? (
-                  <span className="text-red-500 dark:text-red-400">
-                    {t("out_of_stock_label")}
+          return (
+            <label
+              key={option._id}
+              className="flex items-center gap-x-2 w-full cursor-pointer"
+            >
+              {/* Input Radio/Checkbox */}
+              <input
+                type={multiple ? "checkbox" : "radio"}
+                name={name}
+                checked={isChecked}
+                onChange={() => handleSelect(option)}
+                disabled={option.isOutOfStock}
+                className="accent-primary-color dark:accent-primary-color dark:bg-gray-700 dark:border-gray-600 "
+              />
+
+              {/* Label, quantity stepper & price */}
+              <div className="flex justify-between items-center w-full">
+                <span className="text-sm text-gray-900 dark:text-white">
+                  {option.title}{" "}
+                  {option.isOutOfStock ? (
+                    <span className="text-red-500 dark:text-red-400">
+                      {t("out_of_stock_label")}
+                    </span>
+                  ) : (
+                    ""
+                  )}{" "}
+                </span>
+
+                <div className="flex items-center gap-x-2">
+                  {showStepper && (
+                    <div
+                      className="flex items-center gap-x-1 rounded-full bg-gray-100 px-1 dark:bg-gray-700"
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <button
+                        type="button"
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-sm shadow dark:bg-gray-600 dark:text-white"
+                        onClick={() =>
+                          onOptionQuantityChange?.(
+                            option._id,
+                            Math.max(1, optionQuantity - 1),
+                          )
+                        }
+                      >
+                        -
+                      </button>
+                      <span className="w-4 text-center text-xs font-medium text-gray-900 dark:text-white">
+                        {optionQuantity}
+                      </span>
+                      <button
+                        type="button"
+                        className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-sm text-white shadow"
+                        onClick={() =>
+                          onOptionQuantityChange?.(
+                            option._id,
+                            optionQuantity + 1,
+                          )
+                        }
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {CURRENCY_SYMBOL || "₹"}
+                    {(option.price * (showStepper ? optionQuantity : 1)).toFixed(2)}
                   </span>
-                ) : (
-                  ""
-                )}{" "}
-              </span>
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {CURRENCY_SYMBOL || "₹"}
-                {option.price}
-              </span>
-            </div>
-          </label>
-        ))}
+                </div>
+              </div>
+            </label>
+          );
+        })}
       </div>
     </div>
   );

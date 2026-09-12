@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState, type FC } from "react";
+import type { FC } from "react";
 import Link from "next/link";
-import Lottie from "lottie-react";
-import { useTranslations } from "next-intl";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faReceipt, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 interface EmptyStateProps {
   title: string;
@@ -16,36 +16,34 @@ const EmptyState: FC<EmptyStateProps> = ({
   message,
   actionLabel,
   actionLink,
-}) => {
-  const t = useTranslations();
-  const [animationData, setAnimationData] = useState<null | object>(null);
-
-  useEffect(() => {
-    fetch("/assets/lottie/orders.json")
-      .then((res) => res.json())
-      .then(setAnimationData)
-      .catch((err) => console.error("Failed to load Lottie JSON", err));
-  }, []);
-
-  return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div className="w-32 h-32 md:w-60 md:h-60 flex items-center justify-center">
-        <Lottie animationData={animationData} loop={true} autoplay={true} />
-      </div>
-      <h3 className="text-xl font-semibold mb-2 dark:text-white">{title}</h3>
-      <p className="text-gray-600 mb-6 max-w-md dark:text-gray-400">
-        {message}
-      </p>
-      {actionLabel && actionLink && (
-        <Link
-          href={actionLink}
-          className="inline-flex items-center justify-center px-6 py-3 bg-primary-light dark:bg-gray-700 dark:hover:bg-primary-color text-black dark:text-white hover:text-white font-medium rounded-full transition-colors hover:bg-primary-color focus:outline-none focus:ring-2 focus:ring-primary-color focus:ring-offset-2"
-        >
-          {t("explore_store")}
-        </Link>
-      )}
+}) => (
+  <div className="flex flex-col items-center justify-center px-5 py-12 text-center sm:py-16">
+    <div
+      aria-hidden="true"
+      className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary-light text-primary-color dark:bg-gray-800 dark:text-blue-400"
+    >
+      <FontAwesomeIcon icon={faReceipt} className="h-8 w-8" />
     </div>
-  );
-};
+    <h3 className="mb-2 text-xl font-semibold tracking-tight text-secondary-color dark:text-white">
+      {title}
+    </h3>
+    <p className="mb-7 max-w-sm text-sm leading-6 text-slate-500 dark:text-gray-300">
+      {message}
+    </p>
+    {actionLabel && actionLink && (
+      <Link
+        href={actionLink}
+        className="inline-flex min-h-12 items-center justify-center gap-3 rounded-xl bg-primary-color px-6 py-3 text-sm font-semibold text-white"
+      >
+        {actionLabel}
+        <FontAwesomeIcon
+          icon={faArrowRight}
+          aria-hidden="true"
+          className="h-3 w-3 rtl:rotate-180"
+        />
+      </Link>
+    )}
+  </div>
+);
 
 export default EmptyState;

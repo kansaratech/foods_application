@@ -56,7 +56,7 @@ export default function MyPayoutsMain() {
     <div className="flex flex-col gap-5 p-3">
       <div className="rounded border p-4 text-sm dark:border-dark-600">
         <p className="text-gray-500">
-          {t('Every payout run that includes your store — settled from your wallet balance.')}
+          {t('every_payout_run_that_includes_your_store_settled')}
         </p>
       </div>
 

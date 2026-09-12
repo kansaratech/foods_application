@@ -7,7 +7,7 @@ export const orderSubTotal = (order: IOrder) => {
     variation_price = item.variation.price;
     item.addons.forEach((addon) => {
       addon.options.forEach((option) => {
-        variation_price += option.price;
+        variation_price += option.price * (option.quantity ?? 1);
       });
     });
 

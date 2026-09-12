@@ -44,6 +44,7 @@ export const SUBSCRIBE_PLACE_ORDER = gql`
               title
               description
               price
+              quantity
             }
             description
             title

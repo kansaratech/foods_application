@@ -86,16 +86,25 @@ export async function buildOrderItems(
         throw userInputError(`Addon ${addonInput._id} was not found for this restaurant`);
       }
 
-      const optionsData: Prisma.OrderItemAddonOptionCreateWithoutOrderItemAddonInput[] = [];
+      // Quantity (e.g. 2x Tawa Roti) is expressed by the client repeating an
+      // option's id in the array that many times — no API shape change, the
+      // resolver just counts occurrences and stores one aggregated row.
+      const quantityByOptionId = new Map<string, number>();
       for (const optionId of addonInput.options) {
+        quantityByOptionId.set(optionId, (quantityByOptionId.get(optionId) ?? 0) + 1);
+      }
+
+      const optionsData: Prisma.OrderItemAddonOptionCreateWithoutOrderItemAddonInput[] = [];
+      for (const [optionId, optionQuantity] of quantityByOptionId) {
         const option = addon.options.find((o) => o.id === optionId);
         if (!option) {
           throw userInputError(`Option ${optionId} does not belong to addon ${addon.title}`);
         }
-        addonsTotal += option.price;
+        addonsTotal += option.price * optionQuantity;
         optionsData.push({
           title: option.title,
           price: option.price,
+          quantity: optionQuantity,
           option: { connect: { id: option.id } },
         });
       }

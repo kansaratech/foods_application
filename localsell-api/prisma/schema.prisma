@@ -793,6 +793,10 @@ model OrderItemAddonOption {
   optionId         String
   title            String
   price            Float
+  // How many units of this option (e.g. 2x Tawa Roti). The client expresses
+  // this by repeating the option's id in OrderAddonInput.options that many
+  // times — no API shape change needed, the resolver just counts occurrences.
+  quantity         Int    @default(1)
 
   orderItemAddon OrderItemAddon @relation(fields: [orderItemAddonId], references: [id], onDelete: Cascade)
   option         Option         @relation(fields: [optionId], references: [id])

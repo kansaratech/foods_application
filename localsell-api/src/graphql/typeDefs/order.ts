@@ -5,6 +5,8 @@ export const orderTypeDefs = /* GraphQL */ `
     title: String!
     price: Float!
     description: String
+    "How many units of this option were ordered (e.g. 2x Tawa Roti)."
+    quantity: Int!
   }
 
   type OrderItemAddon {

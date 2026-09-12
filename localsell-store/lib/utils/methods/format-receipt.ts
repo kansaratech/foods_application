@@ -131,7 +131,7 @@ export const formatReceiptOld = (order) => {
       const addonsText = item.addons
         .map(
           (addon) =>
-            `${addon.title}: ${addon.options.map((option) => `${option.title} ${option.price}`).join(", ")}`
+            `${addon.title}: ${addon.options.map((option) => `${(option.quantity ?? 1) > 1 ? `${option.quantity}x ` : ""}${option.title} ${option.price}`).join(", ")}`
         )
         .join("; ");
 
@@ -214,7 +214,7 @@ export const formatReceipt = (order) => {
       const addonsText = item.addons
         .map(
           (addon) =>
-            `${addon.title}: ${addon.options.map((option) => `${option.title} [R]${currencySymbol}${option.price}`).join(", ")}`
+            `${addon.title}: ${addon.options.map((option) => `${(option.quantity ?? 1) > 1 ? `${option.quantity}x ` : ""}${option.title} [R]${currencySymbol}${option.price}`).join(", ")}`
         )
         .join("\n - ");
 

@@ -15,7 +15,7 @@ export default function LandingHeader() {
   const locale = useLocale();
   const [, startTransition] = useTransition();
   const [searchTerm, setSearchTerm] = useState("");
-  const { setIsAuthModalVisible, authToken } = useAuth();
+  const { setIsAuthModalVisible, setActivePanel, authToken } = useAuth();
   const { cartCount, profile } = useUser();
 
   const isLoggedIn = Boolean(authToken);
@@ -137,10 +137,13 @@ export default function LandingHeader() {
           ) : (
             <button
               type="button"
-              onClick={() => setIsAuthModalVisible(true)}
+              onClick={() => {
+                setActivePanel(0);
+                setIsAuthModalVisible(true);
+              }}
               className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
             >
-              Log in
+              Log in / Sign up
             </button>
           )}
         </div>

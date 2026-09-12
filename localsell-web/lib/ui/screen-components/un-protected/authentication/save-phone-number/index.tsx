@@ -15,7 +15,7 @@ export default function SavePhoneNumber() {
 
   // Hooks
   const t = useTranslations();
-  const { sendOtpToPhoneNumber, setUser, user, isLoading } = useAuth();
+  const { sendOtpToPhoneNumber, setUser, user, isLoading, setActivePanel } = useAuth();
   const {profile}=useUser();
   const { showToast } = useToast();
 
@@ -44,6 +44,7 @@ export default function SavePhoneNumber() {
         return;
       }else{
         await sendOtpToPhoneNumber(user?.phone)
+        setActivePanel(6);
       }
     } catch (error) {
       console.log(error);

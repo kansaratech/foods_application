@@ -1167,3 +1167,71 @@ input:-webkit-autofill:active {
 .rtl-carousel .p-carousel-container {
   direction: ltr !important; /* Force LTR for animation */
 }
+
+/* Shared action colors for native buttons, PrimeReact buttons, and CTA links.
+   Keep these outside the vendor layer so text utilities cannot make blue
+   actions unreadable. Decorative badges and navigation are not selected. */
+:is(button, a, [role="button"]):is(.bg-primary-color, .bg-primary-dark) {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+  transition: background-color 150ms, border-color 150ms, box-shadow 150ms;
+}
+
+:is(button, a, [role="button"]):is(.bg-primary-color, .bg-primary-dark):hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+:is(button, a, [role="button"]):is(.bg-primary-color, .bg-primary-dark):active:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--primary-pressed);
+  border-color: var(--primary-pressed);
+}
+
+:is(button, a, [role="button"]):is(.bg-primary-color, .bg-primary-dark):is(:disabled, [aria-disabled="true"]) {
+  background-color: var(--primary-disabled);
+  border-color: var(--primary-disabled);
+  color: var(--secondary-color);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Icons and labels follow the action's foreground, including disabled states. */
+:is(button, a, [role="button"]):is(.bg-primary-color, .bg-primary-dark) :is(.p-button-label, .p-button-icon, .svg-inline--fa) {
+  color: inherit;
+}
+
+:is(button, a, [role="button"]).bg-primary-light {
+  color: var(--primary-dark);
+}
+
+:is(button, a, [role="button"]).bg-primary-light:hover:not(:disabled):not([aria-disabled="true"]) {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+/* White secondary actions need a dark foreground instead of the theme's white. */
+button.p-button.bg-white {
+  color: var(--secondary-color);
+  border-color: #cbd5e1;
+}
+
+button.p-button.bg-white:hover:not(:disabled) {
+  background-color: #f1f5f9;
+}
+
+html.dark button.p-button.bg-white {
+  background-color: #1f2937;
+  border-color: #4b5563;
+  color: #f8fafc;
+}
+
+html.dark button.p-button.bg-white:hover:not(:disabled) {
+  background-color: #374151;
+}
+
+:is(button.p-button, button.bg-primary-color, a.bg-primary-color, button.bg-primary-light, a.bg-primary-light):focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px var(--primary-focus);
+}

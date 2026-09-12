@@ -417,7 +417,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           userType: "USER",
         });
         setAuthToken(login.token);
-        await fetchProfile();
+        // Non-blocking: finishAuthedSession() below already flags
+        // setRefetchProfileData(true), which refetches the profile in the
+        // background. Awaiting here just stacks a second network round-trip
+        // in front of any success feedback, making login feel sluggish.
+        fetchProfile();
         const hasName = Boolean(login.name && login.name.trim());
         // A brand-new account with no name → caller sends them to the
         // "your name" step; everyone else is done here.
@@ -597,7 +601,6 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true);
       if (SKIP_MOBILE_VERIFICATION) {
         setOtp(TEST_OTP);
-        setActivePanel(6);
         return;
       } else {
         const otpResponse = await sendOtpToPhone({
@@ -615,11 +618,8 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
           showToast({
             type: "info",
             title: t("phone_verification_label"),
-            message: t(
-              `${t("otp_sent_phone_verify_number")} ${phone} ${t("please_verify_your_phone_number")}`
-            ),
+            message: `${t("otp_sent_phone_verify_number")} ${phone} ${t("please_verify_your_phone_number")}`,
           });
-          setActivePanel(6);
         }
       }
     } catch (err) {
@@ -634,7 +634,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [SKIP_MOBILE_VERIFICATION, TEST_OTP, sendOtpToPhone, setActivePanel, setOtp, showToast, t]);
+  }, [SKIP_MOBILE_VERIFICATION, TEST_OTP, sendOtpToPhone, setOtp, showToast, t]);
 
   // Use Effects
   useEffect(() => {
@@ -664,6 +664,19 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener("localsell:logout", onLogout);
     return () => window.removeEventListener("localsell:logout", onLogout);
   }, []);
+
+  // AuthProvider sits ABOVE UserProvider in the tree, so it can't call
+  // useUser() directly to hand off a fresh token. Every login path (phone,
+  // email, Google) converges on setAuthToken(...), so mirror the logout
+  // bridge above: fire an event UserContext listens for, so it re-fetches
+  // profile/orders under its own token instead of staying stuck on whatever
+  // it saw at page mount (this is why the header showed a generic "U /
+  // Account" after a same-session login — UserContext's profile never
+  // refetched).
+  useEffect(() => {
+    if (typeof window === "undefined" || !authToken) return;
+    window.dispatchEvent(new CustomEvent("localsell:login", { detail: { token: authToken } }));
+  }, [authToken]);
 
   useEffect(() => {
     if (typeof user?.token !== "undefined" && !!user?.token) {

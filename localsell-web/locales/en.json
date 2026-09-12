@@ -1,4 +1,9 @@
 {
+  "service_area_label": "Service area",
+  "select_service_area_placeholder": "Select service area",
+  "select_service_area_to_drop_pin": "Select a service area or search your address to position the map pin.",
+  "service_area_help": "Choose the area served by local restaurants, then enter your delivery address.",
+
   "selectCity": "Select your country",
   "searchCity": "Search for a city...",
   "gifts": "GIFTS.",
@@ -465,6 +470,9 @@
   "please_enter_valid_otp_code_message": "Please enter a valid OTP code",
   "error_occurred_while_verifying_email_message": "An error occurred while verifying the email",
   "please_enter_valid_email_address_message": "Please enter a valid email address",
+  "update_email_title": "What's your email?",
+  "email_already_in_use_message": "That email is already in use.",
+  "email_saved_successfully_message": "Email saved.",
   "please_check_your_inbox_message": "Please check your inbox",
   "please_check_your_inbox_message_1": "Please check your inbox and enter the code below.",
   "forgot_password_label": "Forgot password",

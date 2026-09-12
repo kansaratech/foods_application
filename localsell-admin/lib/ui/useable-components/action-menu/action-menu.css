@@ -1,0 +1,6 @@
+.admin-row-menu-trigger { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border:1px solid #dce5f2; border-radius:10px; color:#36506e; background:#fff; }
+.admin-row-menu-trigger:hover,.admin-row-menu-trigger[aria-expanded="true"] { background:#eaf1ff; color:#1d57cb; }
+.admin-row-menu-trigger:focus-visible { outline:2px solid #1d57cb; outline-offset:3px; }
+.admin-row-menu.p-menu { padding:6px; border:1px solid #dce5f2; border-radius:12px; min-width:160px; box-shadow:0 8px 28px #172b4d24; }
+.admin-row-menu .p-menuitem-link { padding:12px 14px; border-radius:8px; }
+.dark .admin-row-menu-trigger,.dark .admin-row-menu.p-menu { background:#182537; color:#e2e8f0; border-color:#34445a; }

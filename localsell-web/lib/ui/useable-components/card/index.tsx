@@ -87,7 +87,9 @@ const Card: React.FC<ICardProps> = ({
         ) : null}
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-800 shadow-sm dark:bg-gray-900/90 dark:text-white">
           <FiStar className="h-3 w-3 text-[#1c5bc7]" />
-          {item?.reviewAverage ?? "—"}
+          {typeof item?.reviewAverage === "number"
+            ? item.reviewAverage.toFixed(1)
+            : "—"}
         </span>
       </div>
 

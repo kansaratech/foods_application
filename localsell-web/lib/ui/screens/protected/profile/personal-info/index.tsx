@@ -4,7 +4,7 @@ import { FavouriteProducts, PersonalInfoMain } from "@/lib/ui/screen-components/
 
   export default function PersonalInfoScreen() {
     return (
-      <div className="flex flex-col space-y-10 my-10">
+      <div data-profile-section="personal-info" className="flex flex-col gap-6">
         {/* Main Profile */}
        <PersonalInfoMain/>
        {/* Favourites Items  */}

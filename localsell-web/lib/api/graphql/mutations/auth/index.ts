@@ -128,6 +128,7 @@ export const UPDATE_USER = gql`
     $name: String!
     $phone: String
     $phoneIsVerified: Boolean
+    $email: String
     $emailIsVerified: Boolean
   ) {
     updateUser(
@@ -135,12 +136,14 @@ export const UPDATE_USER = gql`
         name: $name
         phone: $phone
         phoneIsVerified: $phoneIsVerified
+        email: $email
         emailIsVerified: $emailIsVerified
       }
     ) {
       _id
       name
       phone
+      email
       phoneIsVerified
       emailIsVerified
     }

@@ -17,7 +17,7 @@ export default function CouponScreenHeader({
   return (
     <ManagementHeading
       title={t('Coupons')}
-      description={t('Create and manage promotional discounts for your customers.')}
+      description={t('create_and_manage_promotional_discounts_for_your_customers')}
     >
       <TextIconClickable
         className="rounded border dark:border-dark-600  border-gray-300 bg-black text-white sm:w-auto"

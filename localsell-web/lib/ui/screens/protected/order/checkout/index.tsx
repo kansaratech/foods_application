@@ -25,7 +25,7 @@ import {
 } from "@react-google-maps/api";
 
 // Componentns
-import { PaddingContainer } from "@/lib/ui/useable-components/containers";
+import styles from "./checkout.module.css";
 import Divider from "@/lib/ui/useable-components/custom-divider";
 import UserAddressComponent from "@/lib/ui/useable-components/address";
 
@@ -69,13 +69,11 @@ import {
 } from "@/lib/utils/methods";
 
 // Asets
-import HomeIcon from "../../../../../assets/home_icon.png";
-import RestIcon from "../../../../../assets/rest_icon.png";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import Image from '@/lib/ui/useable-components/safe-image';
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/lib/providers/ThemeProvider";
-import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
+import { checkoutLightMapStyle, checkoutDarkMapStyle } from "@/lib/utils/mapStyles/checkout-map";
 import { GET_TIPS } from "@/lib/api/graphql/queries/tipping";
 
 //Coupon localStorage Keys
@@ -114,7 +112,7 @@ export default function OrderCheckoutScreen() {
   const router = useRouter();
   const { CURRENCY_SYMBOL, CURRENCY, DELIVERY_RATE, COST_TYPE, SERVER_URL } =
     useConfig();
-  const { authToken, setIsAuthModalVisible } = useAuth();
+  const { authToken, setIsAuthModalVisible, setActivePanel } = useAuth();
   const { showToast } = useToast();
 
   const {
@@ -496,7 +494,12 @@ export default function OrderCheckoutScreen() {
         addons: food.addons
           ? food.addons.map(({ _id, options }) => ({
               _id,
-              options: options.map(({ _id }) => _id),
+              // The API has no per-option quantity field on the input — a
+              // selection of "2x Tawa Roti" is expressed by repeating the
+              // option's id twice; the resolver counts occurrences.
+              options: options.flatMap((opt) =>
+                Array(Math.max(1, opt.quantity ?? 1)).fill(opt._id),
+              ),
             }))
           : [],
         specialInstructions: food.specialInstructions,
@@ -718,6 +721,7 @@ export default function OrderCheckoutScreen() {
 
     // Check if user is autenticated
     if (!authToken) {
+      setActivePanel(0);
       setIsAuthModalVisible(true);
       return;
     }
@@ -941,33 +945,34 @@ export default function OrderCheckoutScreen() {
           <GoogleMap
             mapContainerStyle={{
               width: "100%",
-              height: "35vh",
+              height: "clamp(180px, 25vh, 280px)",
             }}
             options={{
-              styles: theme === "dark" ? darkMapStyle : null,
+              styles: theme === "dark" ? checkoutDarkMapStyle : checkoutLightMapStyle,
               disableDefaultUI: true,
             }}
-            center={{
-              lat: 24.8607, // Example: Karachi
-              lng: 67.0011,
-            }}
+            center={origin || destination}
             zoom={13}
           >
             {/* Custom Origin Marker */}
             <Marker
               position={origin}
+              title={t("tab_restaurants")}
               icon={{
-                url: RestIcon.src, // Replace with your icon path or external URL
-                scaledSize: new window.google.maps.Size(40, 40),
+                url: "/assets/map/restaurant-pin.svg",
+                scaledSize: new window.google.maps.Size(44, 52),
+                anchor: new window.google.maps.Point(22, 49),
               }}
             />
 
             {/* Custom Destination Marker */}
             <Marker
               position={destination}
+              title={t("Address")}
               icon={{
-                url: HomeIcon.src, // Replace with your icon path or external URL
-                scaledSize: new window.google.maps.Size(40, 40),
+                url: "/assets/map/delivery-pin.svg",
+                scaledSize: new window.google.maps.Size(44, 52),
+                anchor: new window.google.maps.Point(22, 49),
               }}
             />
 
@@ -988,9 +993,9 @@ export default function OrderCheckoutScreen() {
                   directions,
                   suppressMarkers: true, // Hide default markers
                   polylineOptions: {
-                    strokeColor: "#1c5bc7", // blue line
-                    strokeOpacity: 0.8,
-                    strokeWeight: 3, // thickness
+                    strokeColor: theme === "dark" ? "#60a5fa" : "#1c5bc7",
+                    strokeOpacity: 1,
+                    strokeWeight: 5,
                     zIndex: 10,
                   },
                 }}
@@ -1028,17 +1033,19 @@ export default function OrderCheckoutScreen() {
           */}
 
       {/* <!-- Main Content --> */}
-      <PaddingContainer className="pb-10">
-        <div className="max-w-6xl md:pt-10 p-4 md:p-0 lg:flex lg:space-x-4">
-          <div className="lg:w-3/4 md:mr-40 md:rtl:ml-40">
+      <div className={styles.checkout}>
+        <div className={styles.grid}>
+          <div className={styles.form}>
             {/* <!-- Delivery and Pickup Toggle --> */}
-            <div className="flex justify-between bg-gray-100 dark:bg-gray-800 rounded-full p-2 mb-6">
+            <div className={styles.fulfilment}>
               <button
                 className={`w-1/2 ${
                   deliveryType === "Delivery"
                     ? "bg-primary-color"
                     : "bg-gray-100 dark:bg-gray-700"
                 } text-white py-2 rounded-full flex items-center justify-center`}
+                type="button"
+                aria-pressed={deliveryType === "Delivery"}
                 onClick={() => {
                   setDeliveryType("Delivery");
                   setIsPickUp(false);
@@ -1059,6 +1066,8 @@ export default function OrderCheckoutScreen() {
                     ? "bg-primary-color"
                     : "bg-gray-100 dark:bg-gray-700"
                 } px-6 py-2 rounded-full mx-2 flex items-center justify-center`}
+                type="button"
+                aria-pressed={deliveryType === "Pickup"}
                 onClick={() => {
                   setDeliveryType("Pickup");
                   setIsPickUp(true);
@@ -1177,7 +1186,7 @@ export default function OrderCheckoutScreen() {
                           item.image ||
                           "https://storage.googleapis.com/a1aa/image/cPA2BWDjl26C-OR-Sz-gd7gFcDc7QbvTZ_904FkN0Y.jpg"
                         }
-                        alt="Big Share meal"
+                        alt={item.foodTitle || t("food_item_label")}
                         width={50}
                         height={50}
                         className="w-12 h-12 rounded-full mr-2 rtl:ml-2 object-cover"
@@ -1260,7 +1269,7 @@ export default function OrderCheckoutScreen() {
                   <div className="flex items-center justify-between mb-2">
                     <label
                       className="text-gray-600 dark:text-gray-300 flex items-center text-sm sm:text-base md:text-[12px] lg:text-[12px] xl:text-[14px]"
-                      htmlFor="card"
+                      htmlFor={`payment-${paymentMethodItem.value}`}
                     >
                       <span className="font-medium pr-1">
                         {CURRENCY_SYMBOL}
@@ -1269,7 +1278,7 @@ export default function OrderCheckoutScreen() {
                     </label>
                     <input
                       className="mr-2"
-                      id="card"
+                      id={`payment-${paymentMethodItem.value}`}
                       name="payment"
                       type="radio"
                       checked={paymentMethod === paymentMethodItem.value}
@@ -1291,7 +1300,7 @@ export default function OrderCheckoutScreen() {
                   <p className="text-gray-500 dark:text-gray-400 mb-4 leading-5 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle mt-2">
                     {t("tip_courier_info")}
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className={styles.tips}>
                     {tipData?.tips.tipVariations.map(
                       (tip: string, index: number) => (
                         <button
@@ -1391,10 +1400,10 @@ export default function OrderCheckoutScreen() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            className="hidden sticky top-20 h-max lg:block lg:w-1/3 lg:m-0 pb-10"
+            className={styles.desktopSummary}
           >
             <div
-              className="bg-white dark:bg-gray-800 p-2  top-4 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 expandable max-h-0 sm:max-h-full lg:block hidden"
+              className={styles.summary}
               id="price-summary"
             >
               <h2 className="text-sm lg:text-lg font-semibold text-left flex justify-between dark:text-white">
@@ -1505,9 +1514,9 @@ export default function OrderCheckoutScreen() {
           </motion.div>
 
           {/* <!-- Order Summary - Medium & Small Screens --> */}
-          <div className="block lg:hidden md:mr-40">
+          <div className={styles.mobileSummary}>
             <div
-              className="bg-white dark:bg-gray-800 dark:text-white p-2 sticky top-4 rounded-lg shadow-md border border-gray-300 expandable h-fit lg:hidden block"
+              className={styles.summary}
               id="price-summary"
             >
               <h2 className="text-sm lg:text-base font-semibold text-left flex justify-between dark:text-white ">
@@ -1724,7 +1733,7 @@ export default function OrderCheckoutScreen() {
                 </AnimatePresence>
               </div> */}
         </div>
-      </PaddingContainer>
+      </div>
 
       <UserAddressComponent
         confirmYourAddress={true}

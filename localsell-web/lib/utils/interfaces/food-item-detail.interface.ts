@@ -17,6 +17,9 @@ export interface Option {
   title: string;
   price: number;
   isOutOfStock?: boolean;
+  // How many units of this option are selected (e.g. 2x Tawa Roti). Only
+  // meaningful once an option is picked; absent/1 means a single unit.
+  quantity?: number;
 }
 
 export interface SectionProps<T extends { _id: string }> {
@@ -31,6 +34,9 @@ export interface SectionProps<T extends { _id: string }> {
   multiple?: boolean;
   requiredTag?: string;
   showTag?: boolean;
+  // When set, a checked multi-select option gets a +/- stepper (e.g. "2x
+  // Tawa Roti") instead of just a checkbox. Ignored for single-select.
+  onOptionQuantityChange?: (optionId: string, quantity: number) => void;
 }
 export interface AddonSectionProps<T extends { _id: string }> {
   title: string;

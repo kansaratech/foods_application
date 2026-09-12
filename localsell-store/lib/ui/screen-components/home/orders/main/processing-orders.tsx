@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { Platform, FlatList, StyleSheet, Text, View } from "react-native";
 // UI
 import CustomTab from "@/lib/ui/useable-components/custom-tab";
 import OrderLoader from "@/lib/ui/useable-components/order-loader";
@@ -111,7 +111,13 @@ function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
   return (
     <View
       className="flex-1 items-center px-5"
-      style={[style.container, { backgroundColor: appTheme.themeBackground, paddingTop: 60 }]}
+      style={[
+        style.container,
+        {
+          backgroundColor: appTheme.themeBackground,
+          paddingTop: Platform.OS === "web" ? 16 : 60,
+        },
+      ]}
     >
       <CustomTab
         options={ORDER_DISPATCH_TYPE}

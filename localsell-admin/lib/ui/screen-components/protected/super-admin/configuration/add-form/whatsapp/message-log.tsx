@@ -49,7 +49,7 @@ function fmt(iso: string) {
 }
 
 export default function WhatsAppMessageLog() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [page, setPage] = useState(1);
   const [days, setDays] = useState(30);
   const [status, setStatus] = useState('');
@@ -86,7 +86,7 @@ export default function WhatsAppMessageLog() {
     'h-9 rounded-md border border-gray-300 bg-white px-2 text-sm dark:border-dark-600 dark:bg-dark-950 dark:text-white';
 
   return (
-    <div className="configuration-card mt-4">
+    <div className="configuration-card">
       <div className="configuration-card-heading">
         <h2>WhatsApp message log</h2>
         <button
@@ -166,7 +166,7 @@ export default function WhatsAppMessageLog() {
             </label>
 
             <form
-              className="flex items-end gap-2"
+              className="configuration-log-search"
               onSubmit={(e) => {
                 e.preventDefault();
                 resetTo(() => setSearch(searchDraft.trim()));
@@ -225,7 +225,9 @@ export default function WhatsAppMessageLog() {
                     key={r._id}
                     className="border-t border-gray-100 align-top dark:border-gray-800"
                   >
-                    <td className="whitespace-nowrap py-2 pr-4">{fmt(r.createdAt)}</td>
+                    <td className="whitespace-nowrap py-2 pr-4">
+                      {fmt(r.createdAt)}
+                    </td>
                     <td className="whitespace-nowrap py-2 pr-4 font-mono text-xs">
                       {r.toPhone}
                     </td>
@@ -274,7 +276,7 @@ export default function WhatsAppMessageLog() {
           </div>
 
           {/* Pager */}
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+          <div className="configuration-log-pager">
             <span>
               {totalCount === 0
                 ? 'No results'

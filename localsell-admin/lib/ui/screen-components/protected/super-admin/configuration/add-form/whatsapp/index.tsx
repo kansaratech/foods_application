@@ -8,7 +8,6 @@ import ConfigCard from '../../view/card';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomPasswordTextField from '@/lib/ui/useable-components/password-input-field';
 import CustomButton from '@/lib/ui/useable-components/button';
-import WhatsAppMessageLog from './message-log';
 
 import useToast from '@/lib/hooks/useToast';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
@@ -73,19 +72,27 @@ const WhatsAppAddForm = () => {
     whatsappAccessToken: '',
   };
 
-  const [saveConfig, { loading: saving }] = useMutation(SAVE_WHATSAPP_CONFIGURATION, {
-    refetchQueries: [{ query: GET_CONFIGURATION }],
-  });
+  const [saveConfig, { loading: saving }] = useMutation(
+    SAVE_WHATSAPP_CONFIGURATION,
+    {
+      refetchQueries: [{ query: GET_CONFIGURATION }],
+    }
+  );
 
-  const { data: tplData, refetch: refetchTemplates } = useQuery(GET_WHATSAPP_TEMPLATES, {
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data: tplData, refetch: refetchTemplates } = useQuery(
+    GET_WHATSAPP_TEMPLATES,
+    {
+      fetchPolicy: 'cache-and-network',
+    }
+  );
   const { data: statsData } = useQuery(GET_WHATSAPP_USAGE_STATS, {
     variables: { days: 30 },
     fetchPolicy: 'cache-and-network',
   });
 
-  const [syncTemplates, { loading: syncing }] = useMutation(SYNC_WHATSAPP_TEMPLATES);
+  const [syncTemplates, { loading: syncing }] = useMutation(
+    SYNC_WHATSAPP_TEMPLATES
+  );
   const [busy, setBusy] = useState(false);
 
   const templates: ITemplateRow[] = tplData?.whatsappTemplates ?? [];
@@ -100,13 +107,19 @@ const WhatsAppAddForm = () => {
           whatsappPhoneNumberId: values.whatsappPhoneNumberId.trim(),
           whatsappWabaId: values.whatsappWabaId.trim(),
           whatsappApiVersion: values.whatsappApiVersion.trim() || 'v22.0',
-          whatsappOtpTemplate: values.whatsappOtpTemplate.trim() || 'localsell_otp',
+          whatsappOtpTemplate:
+            values.whatsappOtpTemplate.trim() || 'localsell_otp',
           whatsappOtpLang: values.whatsappOtpLang.trim() || 'en_US',
           ...(token ? { whatsappAccessToken: token } : {}),
         },
       },
       onCompleted: () =>
-        showToast({ type: 'success', title: 'Saved', message: 'WhatsApp configuration updated', duration: 3000 }),
+        showToast({
+          type: 'success',
+          title: 'Saved',
+          message: 'WhatsApp configuration updated',
+          duration: 3000,
+        }),
       onError: (error) =>
         showToast({
           type: 'error',
@@ -130,15 +143,24 @@ const WhatsAppAddForm = () => {
       });
       await refetchTemplates();
     } catch (e) {
-      showToast({ type: 'error', title: 'Sync failed', message: (e as Error).message, duration: 4000 });
+      showToast({
+        type: 'error',
+        title: 'Sync failed',
+        message: (e as Error).message,
+        duration: 4000,
+      });
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="configuration-wide">
-      <Formik initialValues={initialValues} onSubmit={handleSubmit} enableReinitialize>
+    <div className="configuration-wide configuration-stack">
+      <Formik
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
+        enableReinitialize
+      >
         {({ values, handleSubmit, handleChange, setFieldValue }) => (
           <Form onSubmit={handleSubmit}>
             <ConfigCard
@@ -146,9 +168,14 @@ const WhatsAppAddForm = () => {
               buttonLoading={saving}
               toggleLabel="Enabled"
               toggleValue={values.whatsappCloudEnabled}
-              toggleOnChange={() => setFieldValue('whatsappCloudEnabled', !values.whatsappCloudEnabled)}
+              toggleOnChange={() =>
+                setFieldValue(
+                  'whatsappCloudEnabled',
+                  !values.whatsappCloudEnabled
+                )
+              }
             >
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="configuration-fields">
                 <CustomTextField
                   type="text"
                   name="whatsappPhoneNumberId"
@@ -176,7 +203,9 @@ const WhatsAppAddForm = () => {
                 <CustomPasswordTextField
                   name="whatsappAccessToken"
                   placeholder={
-                    WHATSAPP_ACCESS_TOKEN_SET ? 'Access token (set — leave blank to keep)' : 'Access token'
+                    WHATSAPP_ACCESS_TOKEN_SET
+                      ? 'Access token (set — leave blank to keep)'
+                      : 'Access token'
                   }
                   feedback={false}
                   showLabel
@@ -200,17 +229,16 @@ const WhatsAppAddForm = () => {
                   onChange={handleChange}
                 />
               </div>
-              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                The access token is a permanent System User token from Meta Business Settings. Leave it
-                blank to keep the current value. Webhook (delivery receipts) is configured via
-                environment variables — see LOCALSELL_WHATSAPP.md.
+              <p className="configuration-helper">
+                The access token is a permanent System User token from Meta
+                Business Settings. Leave it blank to keep the current value.
               </p>
             </ConfigCard>
           </Form>
         )}
       </Formik>
 
-      <div className="configuration-card mt-4">
+      <div className="configuration-card">
         <div className="configuration-card-heading">
           <h2>WhatsApp templates</h2>
           <CustomButton
@@ -235,9 +263,14 @@ const WhatsAppAddForm = () => {
               </thead>
               <tbody>
                 {templates.map((t) => (
-                  <tr key={t._id} className="border-t border-gray-100 dark:border-gray-800">
+                  <tr
+                    key={t._id}
+                    className="border-t border-gray-100 dark:border-gray-800"
+                  >
                     <td className="py-2 pr-4 font-medium">{t.key}</td>
-                    <td className="py-2 pr-4 font-mono text-xs">{t.metaName}</td>
+                    <td className="py-2 pr-4 font-mono text-xs">
+                      {t.metaName}
+                    </td>
                     <td className="py-2 pr-4">{t.category}</td>
                     <td className="py-2 pr-4">{t.language}</td>
                     <td className="py-2 pr-4">
@@ -270,16 +303,19 @@ const WhatsAppAddForm = () => {
               {(stats.rows ?? [])
                 .slice(0, 6)
                 .map(
-                  (r: { userType?: string; purpose: string; status: string; count: number }) =>
-                    `${r.userType ?? '—'}/${r.purpose}/${r.status}: ${r.count}`,
+                  (r: {
+                    userType?: string;
+                    purpose: string;
+                    status: string;
+                    count: number;
+                  }) =>
+                    `${r.userType ?? '—'}/${r.purpose}/${r.status}: ${r.count}`
                 )
                 .join(', ')}
             </p>
           )}
         </div>
       </div>
-
-      <WhatsAppMessageLog />
     </div>
   );
 };

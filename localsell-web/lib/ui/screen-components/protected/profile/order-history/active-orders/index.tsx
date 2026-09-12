@@ -6,7 +6,6 @@ import { IActiveOrdersProps, IOrder } from "@/lib/utils/interfaces/orders.interf
 import { twMerge } from "tailwind-merge";
 import { useRouter } from "next/navigation";
 import useDebounceFunction from "@/lib/hooks/useDebounceForFunction";
-import TextComponent from "@/lib/ui/useable-components/text-field";
 import { useTranslations } from "next-intl";
 
 
@@ -48,7 +47,6 @@ export default function ActiveOrders({ activeOrders, isOrdersLoading }: IActiveO
   //  (optional) we can use styling for order status- for example if order is pending then display the order card style in yellow color 
   return (
     <div className="space-y-4 py-4">
-      <TextComponent text={t("active_orders_title")} className="text-xl md:text-2xl font-semibold mb-6 dark:text-gray-100" />
       <div className="space-y-4">
         {activeOrders?.map((order: IOrder) => (
           <OrderCard

@@ -46,10 +46,9 @@
 }
 .orders-toolbar {
   display: grid;
-  grid-template-columns: minmax(200px, 2.2fr) minmax(260px, 2.4fr) repeat(
-      3,
-      minmax(110px, 1fr)
-    ) auto;
+  grid-template-columns:
+    minmax(200px, 2.2fr) minmax(260px, 2.4fr) repeat(3, minmax(110px, 1fr))
+    auto;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
@@ -218,5 +217,205 @@
   .orders-search,
   .orders-date-tabs {
     grid-column: 1 / -1;
+  }
+}
+
+/* Orders filters: two balanced rows instead of a compressed single strip. */
+.management-orders .orders-toolbar {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 16px;
+}
+.orders-toolbar .orders-search {
+  grid-column: span 6;
+  height: 44px;
+  border-radius: 10px;
+  padding-inline: 14px;
+}
+.orders-toolbar .orders-search input {
+  font-size: 14px;
+  outline: none;
+}
+.orders-search:focus-within {
+  border-color: #1c5bc7;
+  box-shadow: 0 0 0 3px #1c5bc71a;
+}
+.orders-toolbar .orders-date-tabs {
+  grid-column: span 6;
+  min-height: 44px;
+  border-radius: 10px;
+  gap: 3px;
+}
+.orders-toolbar .orders-date-tabs button {
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.orders-filter-field {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.orders-filter-field > span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #52647b;
+}
+.orders-toolbar .p-dropdown,
+.orders-toolbar .p-multiselect {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border-color: #dbe3ee;
+  box-shadow: none;
+}
+.orders-toolbar .p-dropdown-label,
+.orders-toolbar .p-multiselect-label {
+  padding: 11px 13px;
+  font-size: 14px;
+}
+.orders-toolbar .p-dropdown.p-focus,
+.orders-toolbar .p-multiselect.p-focus {
+  border-color: #1c5bc7;
+  box-shadow: 0 0 0 3px #1c5bc71a;
+}
+.orders-toolbar .orders-export {
+  grid-column: span 3;
+  height: 44px;
+  border-radius: 10px;
+  background: #1c5bc7;
+  font-size: 14px;
+  font-weight: 600;
+}
+.orders-toolbar .orders-export:hover:not(:disabled) {
+  background: #17499e;
+}
+.orders-toolbar button:focus-visible {
+  outline: 2px solid #1c5bc7;
+  outline-offset: 3px;
+}
+.orders-filter-panel {
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 12px 32px #16293f26;
+  overflow: hidden;
+  margin-top: 6px;
+  max-width: calc(100vw - 24px);
+}
+.orders-filter-panel .p-dropdown-header,
+.orders-filter-panel .p-multiselect-header {
+  padding: 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+.orders-filter-panel .p-dropdown-filter {
+  height: 40px;
+  width: 100%;
+  border: 1px solid #dbe3ee;
+  border-radius: 9px;
+  padding: 8px 36px 8px 12px;
+  font-size: 14px;
+  background: white;
+}
+.orders-filter-panel .p-dropdown-items,
+.orders-filter-panel .p-multiselect-items {
+  padding: 6px;
+}
+.orders-filter-panel .p-dropdown-item,
+.orders-filter-panel .p-multiselect-item {
+  min-height: 42px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  gap: 10px;
+}
+.orders-filter-panel .p-dropdown-item:hover,
+.orders-filter-panel .p-multiselect-item:hover {
+  background: #f1f5f9;
+}
+.orders-filter-panel .p-dropdown-item.p-highlight,
+.orders-filter-panel .p-multiselect-item.p-highlight {
+  background: #e8f0fc;
+  color: #17499e;
+  font-weight: 600;
+}
+.orders-filter-panel .p-dropdown-empty-message {
+  padding: 16px;
+  font-size: 14px;
+  color: #64748b;
+}
+.orders-summary-card {
+  border-radius: 14px;
+}
+.orders-status {
+  border-radius: 7px;
+  font-weight: 600;
+}
+.orders-status.pending {
+  color: #92400e;
+}
+.orders-status.delivered,
+.orders-status.completed {
+  color: #047857;
+}
+.dark .orders-filter-field > span {
+  color: #cbd5e1;
+}
+.dark .orders-filter-panel {
+  background: #182235;
+  border-color: #334155;
+}
+.dark .orders-filter-panel .p-dropdown-header,
+.dark .orders-filter-panel .p-multiselect-header,
+.dark .orders-filter-panel .p-dropdown-filter {
+  background: #111827;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.dark .orders-filter-panel .p-dropdown-item,
+.dark .orders-filter-panel .p-multiselect-item {
+  color: #cbd5e1;
+}
+.dark .orders-filter-panel .p-dropdown-item:hover,
+.dark .orders-filter-panel .p-multiselect-item:hover {
+  background: #263449;
+}
+.dark .orders-filter-panel .p-dropdown-item.p-highlight,
+.dark .orders-filter-panel .p-multiselect-item.p-highlight {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+@media (max-width: 900px) {
+  .orders-toolbar .orders-search,
+  .orders-toolbar .orders-date-tabs {
+    grid-column: span 12;
+  }
+  .orders-filter-field,
+  .orders-toolbar .orders-export {
+    grid-column: span 6;
+  }
+}
+@media (max-width: 480px) {
+  .management-orders .orders-toolbar {
+    padding: 14px;
+    gap: 12px;
+  }
+  .orders-filter-field,
+  .orders-toolbar .orders-export {
+    grid-column: span 12;
+  }
+  .orders-toolbar .orders-date-tabs {
+    overflow-x: auto;
+  }
+  .orders-toolbar .orders-date-tabs button {
+    flex-shrink: 0;
+    padding-inline: 10px;
   }
 }

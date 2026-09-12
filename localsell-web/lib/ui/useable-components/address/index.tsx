@@ -3,6 +3,8 @@
 
 "use client";
 
+import styles from "./address.module.css";
+
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Dialog } from "primereact/dialog";
 import { useMutation } from "@apollo/client";
@@ -97,7 +99,7 @@ export default function UserAddressComponent(
   // States
   const [modifiyingId, setModifyingId] = useState("");
   const [[index, direction], setIndex] = useState<[number, number]>([0, 0]);
-  const [selectedCity, setSelectedCity] = useState<IDropdownSelectItem | null>(
+  const [selectedServiceArea, setSelectedServiceArea] = useState<IDropdownSelectItem | null>(
     null
   );
   const [newDraggedCenter, setNewDraggedCenter] = useState({ lat: 0, lng: 0 });
@@ -147,7 +149,7 @@ export default function UserAddressComponent(
   );
 
   // Memo
-  const cities_dropdown = useMemo(() => {
+  const serviceAreaOptions = useMemo(() => {
     return cities?.map((city) => {
       return {
         _id: city.id,
@@ -171,8 +173,8 @@ export default function UserAddressComponent(
 
     setSelectedLocationType(editAddress?.label || "");
     setInputValue(editAddress?.deliveryAddress || "");
-    setSelectedCity(
-      cities_dropdown?.find((city) => city.label === editAddress?.details) ||
+    setSelectedServiceArea(
+      serviceAreaOptions?.find((city) => city.label === editAddress?.details) ||
         null
     );
     setPincode(extractPincode(editAddress?.deliveryAddress));
@@ -368,9 +370,23 @@ export default function UserAddressComponent(
     OTHER: "Other",
   } as const;
 
-  const isPincodeValid = /^[1-9]\d{5}$/.test(pincode.trim());
+  // Pincode is a display convenience folded into the delivery-address text —
+  // the server has no dedicated field for it and delivery zones are computed
+  // from lat/lng, not PIN. Google's reverse-geocode often returns a Plus Code
+  // with no postal component for small towns (Deogarh included), so it's only
+  // ever blocking when the user typed something that isn't a real 6-digit PIN.
+  const isPincodeValid = pincode.trim() === "" || /^[1-9]\d{5}$/.test(pincode.trim());
 
   const onHandleCreateAddress = () => {
+    if (!isDragged && !selectedServiceArea) {
+      showToast({
+        type: "error",
+        title: t("missing_pincode_title"),
+        message: t("select_service_area_to_drop_pin"),
+      });
+      return;
+    }
+
     if (!isPincodeValid) {
       showToast({
         type: "error",
@@ -381,13 +397,11 @@ export default function UserAddressComponent(
     }
 
     // Compose a single delivery-address line from the structured fields so the
-    // courier has the exact spot (schema stores one string + city in details).
+    // courier has the exact spot. Service-area metadata stays in details;
+    // a delivery-zone title is not part of the customer's postal address.
     const composed = [
       areaLine.trim(),
-      inputValue.trim() || selectedCity?.label,
-      selectedCity?.label && !inputValue.includes(String(selectedCity?.label))
-        ? selectedCity?.label
-        : "",
+      inputValue.trim(),
       stateName.trim(),
       pincode.trim(),
     ]
@@ -399,7 +413,7 @@ export default function UserAddressComponent(
       longitude: `${userAddress?.location?.coordinates[0]}`,
       latitude: `${userAddress?.location?.coordinates[1]}`,
       deliveryAddress: composed || userAddress?.deliveryAddress || "",
-      details: selectedCity?.label,
+      details: selectedServiceArea?.label,
       label: selectedLocationType,
     };
 
@@ -416,7 +430,7 @@ export default function UserAddressComponent(
     setIndex([0, 0]);
     setSelectedLocationType("House");
     setInputValue("");
-    setSelectedCity(null);
+    setSelectedServiceArea(null);
     setIsDragged(false);
     setPickedCurrentLocation(false);
     setAreaLine("");
@@ -482,7 +496,7 @@ export default function UserAddressComponent(
   ################
   */
   const CHOOSE_ADDRESS = (
-    <div className="w-full space-y-4 flex flex-col items-center">
+    <div className={styles.chooser}>
       {/* Header */}
       <div className="w-full">
         {confirmYourAddress ? (
@@ -582,7 +596,7 @@ export default function UserAddressComponent(
                 }}
                 aria-pressed={isActive}
                 aria-label={t("choose_Address_label") + " " + address.label}
-                className={`w-full mb-3 flex items-center justify-between gap-x-2 rounded-xl border p-2 text-left transition-colors ${
+                className={`${styles.addressCard} w-full mb-3 flex items-center justify-between gap-x-2 rounded-xl border p-2 text-left transition-colors ${
                   isActive
                     ? "border-primary-color bg-primary-light dark:bg-gray-800"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
@@ -653,19 +667,13 @@ export default function UserAddressComponent(
   );
 
   // Pin position for the add-address map — the marker is "dropped" as soon as a
-  // city or a searched area resolves to real coordinates.
+  // service area or a searched address resolves to real coordinates.
   const addPinLng = Number(userAddress?.location?.coordinates?.[0]) || 0;
   const addPinLat = Number(userAddress?.location?.coordinates?.[1]) || 0;
   const addHasPin = addPinLat !== 0 && addPinLng !== 0;
 
   const ADD_ADDRESS = (
-    <div className="w-full space-y-2">
-      {/* Header */}
-      <div className="w-full">
-        <span className="font-inter font-semibold text-[18px] tracking-normal">
-          {t("Add_new_address")}
-        </span>
-      </div>
+    <div className={styles.form}>
       {/* Google Maps */}
       {isLoaded && (
         <div className="w-full">
@@ -676,7 +684,8 @@ export default function UserAddressComponent(
             }}
             mapContainerStyle={{
               width: "100%",
-              height: "35vh",
+              height: "clamp(160px, 23vh, 220px)",
+              borderRadius: "16px",
             }}
             center={{
               lat: addPinLat || 0,
@@ -695,20 +704,23 @@ export default function UserAddressComponent(
           </GoogleMap>
           {!addHasPin && (
             <p className="mt-1 text-[11px] text-gray-400">
-              {t("select_city_to_drop_pin")}
+              {t("select_service_area_to_drop_pin")}
             </p>
           )}
         </div>
       )}
 
       <div className="w-full flex flex-col items-center gap-y-2">
-        <div className="w-full space-y-2">
+        <div className={styles.fields}>
+          <label className={styles.field} htmlFor="address-service-area">{t("service_area_label")}</label>
+          <p className="text-xs leading-5 text-gray-500 dark:text-gray-300">{t("service_area_help")}</p>
           <CustomDropdownComponent
-            name="City"
-            placeholder={t("select_city_placeholder")}
-            selectedItem={selectedCity}
+            inputId="address-service-area"
+            name="serviceArea"
+            placeholder={t("select_service_area_placeholder")}
+            selectedItem={selectedServiceArea}
             setSelectedItem={async (key: string, item: IDropdownSelectItem) => {
-              setSelectedCity(item);
+              setSelectedServiceArea(item);
 
               const { coords } = JSON.parse(item.code || "");
 
@@ -728,12 +740,14 @@ export default function UserAddressComponent(
                 label: t("label_home"),
               });
             }}
-            options={cities_dropdown}
+            options={serviceAreaOptions}
           />
 
+          <label className={styles.field} htmlFor="google-map">{t("enter_full_Address_placeholder")}</label>
           <AutoComplete
+            aria-label={t("enter_full_Address_placeholder")}
             id="google-map"
-            disabled={!selectedCity}
+            disabled={!selectedServiceArea}
             className={`mr-4 h-11 w-full border border-gray-300 px-2 text-sm focus:shadow-none focus:outline-none`}
             value={inputValue}
             completeMethod={(event) => {
@@ -748,6 +762,10 @@ export default function UserAddressComponent(
             dropdown={false}
             multiple={false}
             loadingIcon={undefined}
+            // Same nested-in-a-Dialog portal issue as the city dropdown —
+            // without this the suggestions panel can render behind/clipped
+            // by the Dialog and look unresponsive.
+            appendTo={typeof document !== "undefined" ? document.body : undefined}
             placeholder={t("enter_full_Address_placeholder")}
             style={{ width: "100%" }}
             itemTemplate={(item) => {
@@ -782,22 +800,30 @@ export default function UserAddressComponent(
           />
 
           {/* Structured address fields — pincode is required for exact delivery */}
-          <input
+          <label className={styles.field} htmlFor="address-area">
+            <span>{t("area_locality_placeholder")}</span>
+            <input id="address-area"
             type="text"
             value={areaLine}
             onChange={(e) => setAreaLine(e.target.value)}
             placeholder={t("area_locality_placeholder")}
             className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
           />
+          </label>
           <div className="grid grid-cols-2 gap-2">
-            <input
+            <label className={styles.field} htmlFor="address-state">
+            <span>{t("state_placeholder")}</span>
+            <input id="address-state"
               type="text"
               value={stateName}
               onChange={(e) => setStateName(e.target.value)}
               placeholder={t("state_placeholder")}
               className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
-            <input
+          </label>
+            <label className={styles.field} htmlFor="address-pincode">
+            <span>{t("pincode_placeholder")}</span>
+            <input id="address-pincode"
               type="text"
               inputMode="numeric"
               maxLength={6}
@@ -811,6 +837,7 @@ export default function UserAddressComponent(
                   : "border-gray-300 dark:border-gray-600"
               }`}
             />
+          </label>
           </div>
           {pincode.length > 0 && !isPincodeValid && (
             <span className="text-xs text-red-500">
@@ -825,11 +852,13 @@ export default function UserAddressComponent(
               {t("Location_Type")}
             </span>
           </div>
-          <div className="w-full grid grid-cols-2 gap-4">
+          <div className={styles.locationTypes}>
             {LOCATIONT_TYPE.map((item) => (
-              <div
+              <button
+                type="button"
+                aria-pressed={selectedLocationType === item.name}
                 key={item.name}
-                className="p-2 cursor-pointer flex items-center gap-x-2 shadow rounded dark:bg-gray-800"
+                className={styles.locationType}
                 onClick={() => setSelectedLocationType(item.name)}
               >
                 <div>
@@ -845,12 +874,12 @@ export default function UserAddressComponent(
                     {item.translatedName}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="w-full flex justify-between gap-x-2">
+        <div className={styles.actions}>
           <button
             className="w-full h-fit bg-transparent text-gray-900 dark:text-white py-2 border border-black dark:border-gray-600 rounded-full text-base lg:text-[14px]"
             onClick={() => {
@@ -863,7 +892,7 @@ export default function UserAddressComponent(
               setSelectedLocationType("House");
               setIndex([0, 0]);
               setInputValue("");
-              setSelectedCity(null);
+              setSelectedServiceArea(null);
               setIsDragged(false);
               onHide();
             }}
@@ -871,8 +900,10 @@ export default function UserAddressComponent(
             <span>{t("cancel_address")}</span>
           </button>
           <button
-            disabled={(!isDragged && !selectedCity) || !isPincodeValid}
-            className={`w-full h-fit  ${(!isDragged && !selectedCity) || !isPincodeValid ? "bg-primary-light dark:bg-gray-700 text-gray-900 dark:text-white" : "bg-primary-color text-white"} py-2 rounded-full text-base lg:text-[14px]`}
+            className={`w-full h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px] ${
+              (!isDragged && !selectedServiceArea) || !isPincodeValid ? "opacity-50" : ""
+            }`}
+            disabled={modifyingAddressLoading || (!isDragged && !selectedServiceArea) || !isPincodeValid}
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (
@@ -890,13 +921,7 @@ export default function UserAddressComponent(
   );
 
   const EDIT_ADDRESS_UI = (
-    <div className="w-full space-y-2">
-      {/* Header */}
-      <div className="w-full">
-        <span className="font-inter font-semibold text-[18px] tracking-normal">
-          {t("Add_new_address")}
-        </span>
-      </div>
+    <div className={styles.form}>
       {/* Google Maps */}
       {isLoaded && (
         <div className="w-full">
@@ -907,7 +932,8 @@ export default function UserAddressComponent(
             }}
             mapContainerStyle={{
               width: "100%",
-              height: "400px",
+              height: "clamp(160px, 23vh, 220px)",
+              borderRadius: "16px",
             }}
             center={{
               lat: Number(editAddress?.location?.coordinates[1]) || 0,
@@ -929,13 +955,16 @@ export default function UserAddressComponent(
       )}
 
       <div className="w-full flex flex-col items-center gap-y-2">
-        <div className="w-full space-y-2">
+        <div className={styles.fields}>
+          <label className={styles.field} htmlFor="address-service-area">{t("service_area_label")}</label>
+          <p className="text-xs leading-5 text-gray-500 dark:text-gray-300">{t("service_area_help")}</p>
           <CustomDropdownComponent
-            name={t("City_label")}
-            placeholder={t("select_city_placeholder")}
-            selectedItem={selectedCity}
+            inputId="address-service-area"
+            name={t("service_area_label")}
+            placeholder={t("select_service_area_placeholder")}
+            selectedItem={selectedServiceArea}
             setSelectedItem={async (key: string, item: IDropdownSelectItem) => {
-              setSelectedCity(item);
+              setSelectedServiceArea(item);
 
               const { coords } = JSON.parse(item.code || "");
 
@@ -953,10 +982,12 @@ export default function UserAddressComponent(
                 label: t("home"),
               });
             }}
-            options={cities_dropdown}
+            options={serviceAreaOptions}
           />
 
+          <label className={styles.field} htmlFor="google-map">{t("enter_full_Address_placeholder")}</label>
           <AutoComplete
+            aria-label={t("enter_full_Address_placeholder")}
             id="google-map"
             disabled={false}
             className={`mr-4 h-11 w-full border border-gray-300 dark:text-white px-2 text-sm focus:shadow-none focus:outline-none`}
@@ -973,6 +1004,10 @@ export default function UserAddressComponent(
             dropdown={false}
             multiple={false}
             loadingIcon={undefined}
+            // Same nested-in-a-Dialog portal issue as the city dropdown —
+            // without this the suggestions panel can render behind/clipped
+            // by the Dialog and look unresponsive.
+            appendTo={typeof document !== "undefined" ? document.body : undefined}
             placeholder={t("enter_full_Address_placeholder")}
             style={{ width: "100%" }}
             itemTemplate={(item) => {
@@ -1022,11 +1057,13 @@ export default function UserAddressComponent(
               {t("Location_Type")}
             </span>
           </div>
-          <div className="w-full grid grid-cols-2 gap-4">
+          <div className={styles.locationTypes}>
             {LOCATIONT_TYPE.map((item) => (
-              <div
+              <button
+                type="button"
+                aria-pressed={selectedLocationType === item.name}
                 key={item.name}
-                className="p-2 cursor-pointer flex items-center gap-x-2 shadow rounded dark:bg-gray-800"
+                className={styles.locationType}
                 onClick={() => setSelectedLocationType(item.name)}
               >
                 <div>
@@ -1042,12 +1079,12 @@ export default function UserAddressComponent(
                     {item.translatedName}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
 
-        <div className="w-full flex justify-between gap-x-2">
+        <div className={styles.actions}>
           <button
             className="w-full  h-fit bg-transparent text-gray-900 dark:text-white py-2 border border-black dark:border-gray-600 rounded-full text-base lg:text-[14px]"
             onClick={() => {
@@ -1060,7 +1097,7 @@ export default function UserAddressComponent(
               setSelectedLocationType("House");
               setIndex([0, 0]);
               setInputValue("");
-              setSelectedCity(null);
+              setSelectedServiceArea(null);
               setIsDragged(false);
               onHide();
             }}
@@ -1069,6 +1106,7 @@ export default function UserAddressComponent(
           </button>
           <button
             className="w-full h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px]"
+            disabled={modifyingAddressLoading || (!isDragged && !selectedServiceArea) || !isPincodeValid}
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (
@@ -1141,25 +1179,29 @@ export default function UserAddressComponent(
         setPickedCurrentLocation(false);
         onHide();
       }}
-      className={`w-[90%] lg:w-1/3 bg-white m-4  `}
+      className={styles.dialog}
       headerClassName="dark:bg-gray-900 dark:text-white"
       contentClassName="dark:bg-gray-900 dark:text-white"
       header={
         index !== 0 ? (
-          <div
-            className="flex items-center gap-2 cursor-pointer"
+          <div className={styles.headerRow}>
+          <button
+            type="button"
+            aria-label={t("go_back")}
+            className={styles.back}
             onClick={() => paginate(-1)}
           >
             <FontAwesomeIcon
               icon={faArrowCircleLeft}
               className="dark:text-white"
             />
+          </button>
+          <h2 className={styles.title}>{t("Add_new_address")}</h2>
           </div>
         ) : null
       }
-      headerStyle={{ paddingTop: "10px", paddingBottom: "0px" }}
     >
-      <AnimatePresence initial={false} custom={direction}>
+      <AnimatePresence mode="wait" initial={false} custom={direction}>
         <motion.div
           key={index}
           custom={direction}
@@ -1168,7 +1210,7 @@ export default function UserAddressComponent(
           animate="center"
           exit="exit"
           transition={{ duration: 0.2 }}
-          className="w-full relative flex justify-between px-4 dark:bg-gray-900 dark:text-white" // changed from absolute to relative
+          className={styles.body}
         >
           {COMPONENTS_LIST[index]}
         </motion.div>

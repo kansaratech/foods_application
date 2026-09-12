@@ -69,6 +69,7 @@ export const userTypeDefs = /* GraphQL */ `
     name: String!
     phone: String
     phoneIsVerified: Boolean
+    email: String
     emailIsVerified: Boolean
   }
 

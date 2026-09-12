@@ -41,7 +41,7 @@ export default function ReauthGate({
         showToast({
           type: 'error',
           title: t('Confirm your password'),
-          message: t('Incorrect password. Please try again.'),
+          message: t('incorrect_password_please_try_again'),
         });
       }
     },
@@ -49,7 +49,7 @@ export default function ReauthGate({
       showToast({
         type: 'error',
         title: t('Confirm your password'),
-        message: t('Incorrect password. Please try again.'),
+        message: t('incorrect_password_please_try_again'),
       });
     },
   });
@@ -70,7 +70,7 @@ export default function ReauthGate({
     >
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">
         {description ??
-          t('For security, re-enter your password to make this change.')}
+          t('for_security_reenter_your_password_to_make_this')}
       </p>
       <form
         onSubmit={(e) => {

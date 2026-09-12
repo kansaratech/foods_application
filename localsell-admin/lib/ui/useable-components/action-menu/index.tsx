@@ -9,7 +9,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Menu } from 'primereact/menu';
 
 // Hooks
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useId, useState } from 'react';
+import './action-menu.css';
 
 const ActionMenu = <T,>({
   items,
@@ -18,6 +19,8 @@ const ActionMenu = <T,>({
   onToggle = () => { },
 }: IActionMenuProps<T>) => {
   const menuRef = useRef<Menu>(null);
+  const menuId = useId();
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (menuRef.current) {
@@ -46,8 +49,11 @@ const ActionMenu = <T,>({
         }))}
         popup
         ref={menuRef}
-        id="popup_menu"
+        id={menuId}
+        className="admin-row-menu"
+        onShow={() => setExpanded(true)}
         onHide={() => {
+          setExpanded(false);
           // Only trigger onToggle if the menu was actually open
           if (isOpen) {
             onToggle();
@@ -55,14 +61,17 @@ const ActionMenu = <T,>({
         }}
       />
       <button
-        aria-controls="popup_menu"
+        type="button"
+        aria-label="Row actions"
+        aria-expanded={expanded}
+        aria-controls={menuId}
         aria-haspopup="true"
         onClick={(event) => {
           event.stopPropagation();
           menuRef.current?.toggle(event);
           onToggle();
         }}
-        className="h-full w-full"
+        className="admin-row-menu-trigger"
       >
         <FontAwesomeIcon icon={faEllipsisV} />
       </button>

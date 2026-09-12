@@ -11,7 +11,7 @@ const TippingHeader = () => {
   return (
     <ManagementHeading
       title={t('Tipping')}
-      description={t('Set the suggested tip amounts customers see at checkout.')}
+      description={t('set_the_suggested_tip_amounts_customers_see_at')}
     ></ManagementHeading>
   );
 };

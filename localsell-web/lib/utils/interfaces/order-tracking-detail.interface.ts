@@ -25,6 +25,7 @@ interface ItemOption {
   title: string;
   description: string;
   price: number;
+  quantity: number;
   __typename: string;
 }
 

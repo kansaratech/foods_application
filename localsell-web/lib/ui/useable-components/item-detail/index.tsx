@@ -100,6 +100,25 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
     }));
   };
 
+  // Update how many units of a single multi-select option are wanted (e.g.
+  // 2x Tawa Roti). No-op for single-select addons.
+  const handleOptionQuantityChange = (
+    addonId: string,
+    optionId: string,
+    quantity: number,
+  ) => {
+    setSelectedAddonOptions((prev) => {
+      const current = prev[addonId];
+      if (!Array.isArray(current)) return prev;
+      return {
+        ...prev,
+        [addonId]: current.map((opt) =>
+          opt._id === optionId ? { ...opt, quantity } : opt,
+        ),
+      };
+    });
+  };
+
   const t = useTranslations();
 
   // Validate if all required addons are selected
@@ -148,7 +167,7 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
     if (!isFormValid() || !foodItem || !selectedVariation) return;
 
     if (!authToken) {
-      setActivePanel(1);
+      setActivePanel(0);
       setIsAuthModalVisible(true);
       showToast({
         type: "info",
@@ -184,8 +203,11 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
       .map(([addonId, optionOrOptions]) => {
         // Handle both single and multi-select addons
         const options = Array.isArray(optionOrOptions)
-          ? optionOrOptions.map((opt) => ({ _id: opt._id }))
-          : [{ _id: optionOrOptions._id }];
+          ? optionOrOptions.map((opt) => ({
+              _id: opt._id,
+              quantity: opt.quantity ?? 1,
+            }))
+          : [{ _id: optionOrOptions._id, quantity: 1 }];
 
         return {
           _id: addonId,
@@ -289,7 +311,7 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
       if (Array.isArray(selected)) {
         // Multiple selected options
         selected.forEach((option) => {
-          totalPrice += option.price;
+          totalPrice += option.price * (option.quantity ?? 1);
         });
       } else {
         // Single selected option
@@ -477,6 +499,16 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
                 options={addonOptions as Option[]}
                 requiredTag={requiredTagText}
                 showTag={true}
+                onOptionQuantityChange={
+                  !isSingleSelect
+                    ? (optionId, qty) =>
+                        handleOptionQuantityChange(
+                          addon._id ?? "",
+                          optionId,
+                          qty,
+                        )
+                    : undefined
+                }
               />
             );
           })}

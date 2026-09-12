@@ -1,4 +1,5 @@
 "use client";
+import cartStyles from "@/lib/ui/useable-components/cart/cart.module.css";
 
 // Core
 import { Sidebar } from "primereact/sidebar";
@@ -185,6 +186,7 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
     if (authToken) {
       setIsUserAddressModalOpen(true);
     } else {
+      setActivePanel(0);
       setIsAuthModalVisible(true);
     }
   };
@@ -209,9 +211,12 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
       setActivePanel(0);
       setAuthToken("");
       setIsLogin(false);
-      void logout().finally(() => {
-        router.replace("/");
-      });
+      // Navigate immediately — the auth token above is already cleared
+      // synchronously, so the homepage won't render as logged-in either
+      // way. Gating navigation on logout()'s cache teardown (which can be
+      // slow when subscriptions are open) just made logout feel stuck.
+      void logout();
+      router.replace("/");
     }, 100);
   };
 
@@ -571,6 +576,7 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
                       className="hidden h-11 items-center justify-between gap-3 rounded-full bg-primary-color px-4 text-white shadow-sm transition-all duration-200 hover:brightness-95 lg:flex lg:min-w-[240px]"
                       onClick={() => {
                         if (!authToken) {
+                          setActivePanel(0);
                           setIsAuthModalVisible(true);
                         } else {
                           setIsCartOpen(true);
@@ -609,6 +615,7 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
                       className={`${cartCount > 0 ? "lg:hidden" : ""} relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 transition-all duration-200 hover:bg-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-color/40 active:scale-95 dark:bg-gray-800 dark:hover:bg-gray-700`}
                       onClick={() => {
                         if (!authToken) {
+                          setActivePanel(0);
                           setIsAuthModalVisible(true);
                         } else {
                           setIsCartOpen(true);
@@ -782,7 +789,7 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
           localStorage.removeItem("orderInstructions");
           window.dispatchEvent(new Event("orderInstructionsUpdated"));
         }}
-        className={`!ml-0 !p-0 !m-0 w-full md:w-[430px] lg:w-[580px] dark:bg-gray-800`}
+        className={cartStyles.drawer}
       >
         <Cart
           onClose={() => {

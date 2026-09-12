@@ -1,4 +1,5 @@
 "use client";
+import styles from "../profile-dialog.module.css";
 
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -114,11 +115,11 @@ export default function NameUpdateModal({
     <CustomDialog
       visible={isUpdateNameModalVisible}
       onHide={handleUpdateNameModal}
-      width="600px"
+      width="520px" className={styles.dialog}
     >
       <div className="flex flex-col  items-center  p-4">
         <div className=" flex items-center justify-center">
-          <LaptopSvg width={250} height={250} />
+          <LaptopSvg width={156} height={132} />
         </div>
         <div className="w-full">
           <div className="">
@@ -151,7 +152,7 @@ export default function NameUpdateModal({
       <div className="flex flex-row w-full justify-between  gap-2 md:gap-0 px-4 ">
         <CustomButton
           label={t('cancel_label')}
-          className="bg-white dark:bg-gray-800 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 dark:text-gray-200 p-3 w-full md:w-[268px] h-14 text-lg font-medium"
+          className="bg-white dark:bg-gray-800 text-gray-900 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 dark:text-gray-200 p-3 w-full md:w-[268px] h-14 text-lg font-medium"
           onClick={handleCancel}
         />
 

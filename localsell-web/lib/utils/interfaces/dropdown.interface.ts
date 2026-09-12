@@ -28,6 +28,7 @@ export interface IMultiSelectComponentProps extends ISelectionComponentProps {
 }
 
 export interface IDropdownComponentProps extends ISelectionComponentProps {
+  inputId?: string;
   name: string;
   optionLabel?: string;
   optionValue?: string;

@@ -31,14 +31,19 @@ export default function Main() {
             </h2>
           </div>
 
-          {benefits.map((item) => (
-            <Link key={item.title} href={item.href} className="group relative grid min-h-[128px] grid-cols-[48px_1fr_24px] items-center gap-4 border-b border-slate-200 px-5 py-6 transition-colors hover:bg-[#f2f6fc] lg:border-b-0 lg:px-7 xl:grid-cols-[52px_1fr_28px] xl:px-10 dark:border-gray-700 dark:hover:bg-gray-800/70">
-              <item.icon aria-hidden="true" className="h-8 w-8 text-[#1c5bc7]" strokeWidth={1.7} />
-              <span>
+          {benefits.map((item, index) => (
+            <Link key={item.title} href={item.href} className={`group relative grid min-h-[128px] grid-cols-[48px_1fr_24px] items-center gap-4 border-b border-slate-200 px-5 py-6 transition-colors hover:bg-[#f2f6fc] lg:border-b-0 lg:px-7 xl:grid-cols-[52px_1fr_28px] xl:px-10 dark:border-gray-700 dark:hover:bg-gray-800/70 ${index === 0 ? "lg:hover:bg-transparent dark:lg:hover:bg-transparent" : ""}`}>
+              {index === 0 && (
+                <svg aria-hidden="true" viewBox="0 0 480 128" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 hidden h-full w-full fill-[#f2f6fc] opacity-0 transition-opacity group-hover:opacity-100 dark:fill-gray-800 lg:block">
+                  <path d="M-3 64 C-3 25 20 1 60 1 H480 V128 H0 V64 Z" />
+                </svg>
+              )}
+              <item.icon aria-hidden="true" className="relative h-8 w-8 text-[#1c5bc7]" strokeWidth={1.7} />
+              <span className="relative">
                 <span className="block text-sm font-bold text-slate-950 transition-colors group-hover:text-[#1c5bc7] dark:text-white dark:group-hover:text-blue-300">{item.title}</span>
                 <span className="mt-1 block text-xs leading-5 text-slate-600 dark:text-gray-300">{item.copy}</span>
               </span>
-              <FiArrowRight aria-hidden="true" className="h-5 w-5 text-slate-900 transition group-hover:translate-x-1 group-hover:text-[#1c5bc7] dark:text-white" />
+              <FiArrowRight aria-hidden="true" className="relative h-5 w-5 text-slate-900 transition group-hover:translate-x-1 group-hover:text-[#1c5bc7] dark:text-white" />
             </Link>
           ))}
 

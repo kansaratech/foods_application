@@ -7,14 +7,15 @@ export default function CustomIconButton({
   title,
   handleClick,
   SvgIcon,
-  iconColor="white",
+  iconColor="currentColor",
   loading,
   classNames
 }: IGlobalButtonProps) {
   return (
     <Button
     loading={loading}
-    className={twMerge("bg-white flex items-center justify-center gap-x-4 px-3 rounded-full border border-gray-300 p-2 m-auto w-72",
+    disabled={loading}
+    className={twMerge("bg-white text-slate-700 flex items-center justify-center gap-x-4 px-3 rounded-full border border-gray-300 p-2 m-auto w-72",
       classNames
      )}
       onClick={handleClick}

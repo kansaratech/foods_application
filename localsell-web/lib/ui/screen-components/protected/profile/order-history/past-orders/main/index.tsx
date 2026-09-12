@@ -6,7 +6,6 @@ import OrderCardSkeleton from "@/lib/ui/useable-components/custom-skeletons/orde
 import OrderCard from "@/lib/ui/useable-components/order-card";
 import EmptyState from "@/lib/ui/useable-components/orders-empty-state";
 import RatingModal from "../rating/main";
-import TextComponent from "@/lib/ui/useable-components/text-field";
 // Interfaces
 import {
   IOrder,
@@ -25,6 +24,7 @@ export default function PastOrders({
 
   pastOrders,
   isOrdersLoading,
+  onRatingSubmitted,
 }: IPastOrdersProps) {
   // states
   const t = useTranslations()
@@ -44,13 +44,20 @@ export default function PastOrders({
     }
   );
 
-  function onCompleted() {
+  function onCompleted(data: { reviewOrder?: IOrder }) {
     showToast({
       type: "success",
       title: t("rating_label"),
       message: t('rating_submitted_successfully_message'),
       duration: 3000,
     });
+    // The mutation updates Apollo's normalized cache fine, but `pastOrders`
+    // here is a local useState snapshot (accumulated across pagination),
+    // which doesn't re-sync from the cache on its own — so without this the
+    // "Rate the Order" stars kept showing until a full page reload.
+    if (data?.reviewOrder?._id && onRatingSubmitted) {
+      onRatingSubmitted(data.reviewOrder._id, data.reviewOrder.review);
+    }
     setSelectedOrder(null);
   }
   function onError() {
@@ -130,7 +137,7 @@ export default function PastOrders({
     return (
       <EmptyState
         // icon="fa-solid fa-receipt"
-        title={t('past_orders_label')}
+        title={t("no_past_orders_title")}
         message={t("no_past_orders_message")}
         actionLabel={t("browse_store_button")}
         actionLink="/store"
@@ -141,10 +148,6 @@ export default function PastOrders({
   return (
     <>
       <div className="space-y-4 py-4">
-        <TextComponent
-          text={t('past_orders_label')}
-          className="text-xl md:text-2xl  font-semibold mb-6"
-        />
         <div className="space-y-4">
           {pastOrders?.map((order: IOrder) => (
             <OrderCard

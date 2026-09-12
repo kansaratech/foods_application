@@ -10,7 +10,7 @@ export default function WaitlistScreen() {
     <div className="management-page management-waitlist">
       <ManagementHeading
         title={t('Waitlist')}
-        description={t('Review customer interest in areas awaiting service.')}
+        description={t('review_customer_interest_in_areas_awaiting_service')}
       />
       <WaitlistMain />
     </div>

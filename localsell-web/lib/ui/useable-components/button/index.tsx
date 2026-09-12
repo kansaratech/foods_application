@@ -13,12 +13,13 @@ export default function CustomButton({
   label,
   type,
   loading,
+  disabled,
   ...props
 }: ICustomButtonProps) {
   return (
     <Button
       loading={loading}
-      disabled={loading}
+      disabled={loading || disabled}
       // `text-white` is the default so a primary (blue) button is always
       // readable; any explicit `text-*` in `className` overrides it via twMerge.
       className={twMerge("shadow-none text-sm text-white", className)}

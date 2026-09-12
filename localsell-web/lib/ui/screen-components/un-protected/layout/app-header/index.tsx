@@ -1,4 +1,5 @@
 "use client";
+import cartStyles from "@/lib/ui/useable-components/cart/cart.module.css";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
@@ -133,7 +134,7 @@ export default function AppHeader() {
   const locale = useLocale();
   const [, startTransition] = useTransition();
 
-  const { setIsAuthModalVisible, authToken } = useAuth();
+  const { setIsAuthModalVisible, setActivePanel, authToken } = useAuth();
   const { userAddress, setUserAddress } = useUserAddress();
   const { cartCount, profile, logout } = useUser();
 
@@ -398,10 +399,13 @@ export default function AppHeader() {
           ) : (
             <button
               type="button"
-              onClick={() => setIsAuthModalVisible(true)}
+              onClick={() => {
+                setActivePanel(0);
+                setIsAuthModalVisible(true);
+              }}
               className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
             >
-              Log in
+              Log in / Sign up
             </button>
           )}
         </div>
@@ -428,7 +432,7 @@ export default function AppHeader() {
         position={sidebarSide}
         visible={isCartOpen}
         onHide={() => setIsCartOpen(false)}
-        className="!m-0 !p-0 w-full md:w-[430px] lg:w-[560px] dark:bg-gray-800"
+        className={cartStyles.drawer}
       >
         <Cart onClose={() => setIsCartOpen(false)} />
       </Sidebar>

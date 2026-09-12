@@ -1,13 +1,15 @@
 .configuration-page {
   height: 100%;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
-  padding: 20px 26px;
-  background: #f4f7fc;
-  color: #17234b;
+  padding: 24px;
+  background: var(--app-bg);
+  color: var(--app-text);
+  container-type: inline-size;
 }
 .configuration-heading {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 .configuration-heading h1 {
   font-size: 24px;
@@ -16,233 +18,386 @@
   letter-spacing: -0.5px;
 }
 .configuration-heading p {
-  color: #7282a3;
-  font-size: 12px;
-  margin-top: 2px;
+  margin-top: 6px;
+  color: var(--app-text-muted);
+  font-size: 14px;
 }
 .configuration-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 20px;
   align-items: stretch;
 }
 .configuration-grid > div {
   min-width: 0;
 }
-.configuration-grid > div > form,
-.configuration-wide > div,
-.configuration-wide > div > form {
+/* Only standalone form cards stretch to match their neighbour. Stacked
+   sections must retain natural heights so their panels cannot overlap. */
+.configuration-grid > div:not(.configuration-wide) > form {
+  display: flex;
   height: 100%;
 }
 .configuration-wide {
   grid-column: 1 / -1;
 }
+.configuration-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.configuration-stack > form,
+.configuration-stack > .configuration-card {
+  height: auto;
+  flex: none;
+}
 .configuration-card {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   width: 100%;
-  height: 100%;
-  border: 1px solid #e3eaf5;
-  border-radius: 8px;
-  background: white;
-  box-shadow: 0 2px 6px #23375b04;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
 }
 .configuration-card-heading {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px 8px;
+  gap: 12px 20px;
+  padding: 20px;
 }
 .configuration-card-heading h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-size: 16px;
-  line-height: 1.35;
-  font-weight: 650;
-  letter-spacing: -0.3px;
+  line-height: 1.5;
+  font-weight: 600;
 }
 .configuration-card-body {
-  padding: 0 16px;
+  padding: 0 20px 20px;
   flex: 1;
   min-width: 0;
 }
 .configuration-card-footer {
   display: flex;
   justify-content: flex-end;
-  padding: 10px 16px 12px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--app-border);
 }
 .configuration-page .configuration-save {
-  min-width: 68px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 8px;
+  min-width: 88px;
   width: auto;
-  height: 32px;
-  padding: 0 18px;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-  background: #0755f5;
-  border: 1px solid #0755f5;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px #0755f512;
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-primary-contrast);
+  background: var(--app-primary);
+  border: 1px solid var(--app-primary);
+  border-radius: 8px;
 }
 .configuration-page .configuration-save:hover {
-  background: #0646ce;
+  filter: brightness(0.95);
 }
 .configuration-page .configuration-save:disabled {
   opacity: 0.6;
 }
+/* Use the shared ls-field controls; do not override their inner input boxes. */
 .configuration-card-body label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #26365c;
+  color: var(--app-text);
+  line-height: 1.5;
 }
-.configuration-card-body input:not([type='checkbox']),
-.configuration-card-body .p-dropdown,
-.configuration-card-body .p-inputnumber,
-.configuration-card-body .p-password {
-  width: 100%;
+.configuration-fields,
+.configuration-version-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+.configuration-fields > *,
+.configuration-version-fields > * {
   min-width: 0;
-  font-size: 12px;
-}
-.configuration-card-body input:not([type='checkbox']),
-.configuration-card-body .p-dropdown {
-  height: 34px;
-  border-radius: 5px;
-  border-color: #d9e3f3;
-  background: white;
-  color: #31436c;
-}
-.configuration-card-body .p-dropdown-label {
-  display: flex;
-  align-items: center;
-  padding: 6px 10px;
-  font-size: 12px;
-}
-.configuration-card-body .p-dropdown-trigger {
-  width: 30px;
-}
-.configuration-card-body .p-password input {
-  padding-right: 36px;
 }
 .configuration-helper {
-  margin-top: 5px;
-  color: #7d8cac;
-  font-size: 11px;
+  margin-top: 8px;
+  color: var(--app-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 .configuration-verification {
   display: flex;
   flex-direction: column;
-  gap: 9px;
 }
 .configuration-verification > label {
   margin: 0;
   width: 100%;
+  min-height: 44px;
+  padding: 10px 0;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
+}
+.configuration-verification > label + label {
+  border-top: 1px solid var(--app-border);
 }
 .configuration-card-heading > label {
   margin: 0;
-  font-size: 12px;
+  max-width: 100%;
+  font-size: 13px;
   font-weight: 400;
   gap: 12px;
 }
 .configuration-page .peer:checked ~ span:first-of-type {
-  background: #0755f5;
+  background: var(--app-primary);
 }
 .configuration-textarea-label {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
 }
 .configuration-textarea-label textarea {
   width: 100%;
-  min-height: 48px;
-  max-height: 240px;
+  min-height: 112px;
+  max-height: 320px;
   resize: vertical;
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: 10px 12px;
+  font: inherit;
   font-weight: 400;
-  border: 1px solid #d9e3f3;
-  border-radius: 5px;
-  color: #31436c;
-  background: white;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  color: var(--app-text);
+  background: var(--app-surface);
 }
 .configuration-textarea-label textarea[aria-invalid='true'] {
   border-color: #dc2626;
 }
-.configuration-version-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px 26px;
-}
-.configuration-version-fields > div {
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) minmax(0, 1.2fr);
-  align-items: center;
-  gap: 10px;
-}
-.configuration-version-fields > div label {
-  line-height: 1.35;
-}
-.configuration-advanced-button {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  justify-self: start;
-  border: 1px solid #d9e3f3;
-  border-radius: 6px;
-  padding: 9px 12px;
-  font-size: 12px;
-  color: #64748b;
-}
 .configuration-page button:focus-visible,
-.configuration-page input:focus-visible,
 .configuration-page textarea:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid var(--app-primary);
   outline-offset: 2px;
 }
-.dark .configuration-page {
-  background: #111827;
-  color: #e2e8f0;
+.configuration-card-body table {
+  min-width: 640px;
 }
-.dark .configuration-card {
-  background: #182235;
-  border-color: #334155;
+.configuration-card-body th {
+  font-weight: 500;
+  color: var(--app-text-muted);
 }
-.dark .configuration-card-body label,
-.dark .configuration-card-heading > label {
-  color: #cbd5e1;
+.configuration-card-body td {
+  overflow-wrap: anywhere;
+  max-width: 320px;
 }
-.dark .configuration-card-body input:not([type='checkbox']),
-.dark .configuration-card-body .p-dropdown,
-.dark .configuration-textarea-label textarea {
-  background: #111827;
-  border-color: #475569;
-  color: #e2e8f0;
+.configuration-log-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  min-width: 0;
 }
-@media (max-width: 1100px) {
-  .configuration-version-fields > div {
+.configuration-log-search > label {
+  flex: 1;
+  min-width: 160px;
+}
+.configuration-log-search input {
+  width: 100%;
+}
+.configuration-log-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--app-text-muted);
+}
+@container (max-width: 860px) {
+  .configuration-grid {
     grid-template-columns: 1fr;
-    gap: 4px;
+  }
+}
+@container (max-width: 540px) {
+  .configuration-fields,
+  .configuration-version-fields {
+    grid-template-columns: 1fr;
+  }
+  .configuration-card-heading {
+    padding: 16px;
+  }
+  .configuration-card-body {
+    padding: 0 16px 16px;
+  }
+  .configuration-card-footer {
+    padding: 12px 16px;
+  }
+  .configuration-card-heading > label {
+    width: 100%;
+    justify-content: space-between;
   }
 }
 @media (max-width: 700px) {
   .configuration-page {
     padding: 16px 12px;
   }
-  .configuration-grid {
-    grid-template-columns: 1fr;
+}
+
+/* Settings navigation and page hierarchy */
+.configuration-heading,
+.configuration-workspace {
+  width: 100%;
+  min-width: 0;
+}
+.configuration-page {
+  padding: 24px 20px;
+}
+.configuration-heading h1 {
+  font-size: 28px;
+  letter-spacing: -0.8px;
+}
+.configuration-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  overflow-x: auto;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
+  margin-bottom: 28px;
+}
+.configuration-tabs button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  flex: 1 0 auto;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+}
+.configuration-tabs button:hover {
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+.configuration-tabs button[aria-selected='true'] {
+  background: var(--highlight-bg);
+  color: var(--highlight-text-color);
+  font-weight: 600;
+}
+.configuration-workspace [role='tabpanel'][hidden] {
+  display: none;
+}
+.configuration-section-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.configuration-section-intro h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.configuration-section-intro p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--app-text-muted);
+}
+.configuration-section-intro > span {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--app-text-muted);
+}
+.configuration-card-heading {
+  padding-bottom: 16px;
+}
+.configuration-card-footer {
+  background: var(--app-bg);
+  border-radius: 0 0 12px 12px;
+}
+.configuration-card-body table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.configuration-card-body thead {
+  background: var(--app-bg);
+}
+.configuration-card-body th {
+  padding: 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.configuration-card-body td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--app-border);
+  font-size: 13px;
+}
+.configuration-card-body tbody tr:last-child td {
+  border-bottom: 0;
+}
+.configuration-card-body tbody tr:hover {
+  background: var(--app-hover);
+}
+.configuration-card-body td span {
+  white-space: nowrap;
+  border-radius: 6px;
+}
+.configuration-card-body .overflow-x-auto {
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+}
+.configuration-card-body select {
+  min-height: 40px;
+  border-color: var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+.configuration-card-body label:has(select) {
+  gap: 6px;
+}
+.configuration-log-search input {
+  height: 40px;
+  border-color: var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+}
+.configuration-log-search button {
+  height: 40px;
+}
+@container (max-width: 740px) {
+  .configuration-section-intro {
+    align-items: start;
+    flex-direction: column;
+    gap: 8px;
   }
-  .configuration-card-heading {
-    flex-wrap: wrap;
-    gap: 10px;
+}
+@media (max-width: 700px) {
+  .configuration-page {
+    padding: 20px 12px;
   }
-  .configuration-version-fields {
-    grid-template-columns: 1fr;
+  .configuration-heading h1 {
+    font-size: 24px;
   }
-  .configuration-card-heading > label {
-    width: 100%;
-    justify-content: space-between;
+  .configuration-tabs {
+    margin-bottom: 20px;
+  }
+  .configuration-tabs button {
+    padding: 10px 12px;
+    font-size: 13px;
   }
 }

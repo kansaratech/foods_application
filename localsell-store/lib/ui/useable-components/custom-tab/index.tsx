@@ -17,11 +17,11 @@ const CustomTab = ({
 
   return (
     <View
-      className="sticky top-0 z-10 w-full py-3 lg:max-w-xl lg:self-center"
+      className="sticky top-0 z-10 w-full py-3 lg:max-w-4xl lg:self-center"
       style={{ backgroundColor: appTheme.themeBackground }}
     >
       <View
-        className="h-14 w-full flex-row p-1.5 justify-center items-center rounded-2xl"
+        className="h-12 w-full flex-row p-1.5 justify-center items-center rounded-2xl"
         style={{ backgroundColor: appTheme.sidebarIconBackground }}
       >
         {options.map((option) => {
@@ -36,6 +36,8 @@ const CustomTab = ({
 
           return (
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               key={String(option)}
               onPress={() => setSelectedTab(option)}
               className="h-full px-4 w-1/2 flex-row gap-2 items-center justify-center rounded-xl"
@@ -54,7 +56,9 @@ const CustomTab = ({
               {showBadge && (
                 <View
                   style={{
-                    backgroundColor: isSelected ? appTheme.white : appTheme.error,
+                    backgroundColor: isSelected
+                      ? appTheme.white
+                      : appTheme.error,
                     borderRadius: 100,
                     minWidth: 20,
                     height: 20,

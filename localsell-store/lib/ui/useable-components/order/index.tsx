@@ -10,7 +10,7 @@ import { memo, useContext, useEffect, useRef, useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import CountdownTimer from "../custom-timer";
 import SpinnerComponent from "../spinner";
-import { TimeLeftIcon } from "../svg";
+import { preparationDeadline } from "@/lib/utils/methods/preparation-deadline";
 
 // Hooks
 import { useSoundContext } from "@/lib/context/global/sound.context";
@@ -30,6 +30,28 @@ interface IOrderProps {
   onToggleDetails: (itemId: string) => void;
 }
 
+const OrderThumbnail = ({ uri, title }: { uri?: string; title?: string }) => {
+  const [failed, setFailed] = useState(false);
+  const { appTheme } = useApptheme();
+  useEffect(() => setFailed(false), [uri]);
+  return uri && !failed ? (
+    <Image
+      source={{ uri }}
+      accessibilityLabel={title}
+      resizeMode="cover"
+      onError={() => setFailed(true)}
+      style={{ width: 64, height: 64 }}
+    />
+  ) : (
+    <Text
+      accessibilityLabel={title}
+      style={{ color: appTheme.primary, fontWeight: "700", fontSize: 20 }}
+    >
+      {title?.trim().charAt(0).toUpperCase() || "?"}
+    </Text>
+  );
+};
+
 const didOrderDetailVisibilityChange = (
   prevShowDetails: Record<string, boolean>,
   nextShowDetails: Record<string, boolean>,
@@ -46,7 +68,9 @@ const Order = ({
   showDetails = {},
   onToggleDetails,
 }: IOrderProps) => {
-  const { appTheme } = useApptheme();
+  const { appTheme, currentTheme } = useApptheme();
+  const secondaryText =
+    currentTheme === "dark" ? appTheme.fontSecondColor : "#64748b";
   const { silenceRing } = useSoundContext();
   const configuration = useContext(ConfigurationContext);
   const { t } = useTranslation();
@@ -82,10 +106,10 @@ const Order = ({
       1000,
   );
 
-  // Preparation Time
-  const prep = new Date(order.preparationTime ?? "2023-08-16T08:00:00.000Z");
-  const diffTime = prep.getTime() - timeNow.getTime();
-  const totalPrep = diffTime > 0 ? diffTime / 1000 : 0;
+  const prepDeadline = preparationDeadline(
+    order.preparationTime,
+    order.acceptedAt,
+  );
 
   const decision = !isAcceptButtonVisible
     ? acceptanceTime
@@ -136,11 +160,13 @@ const Order = ({
   return (
     <View className="w-full">
       <View
-        className="gap-y-2 rounded-[8px] m-4 p-4"
+        className="gap-y-3 rounded-2xl mx-0 my-3 p-5"
         style={{
-          backgroundColor: appTheme.themeBackground,
+          backgroundColor:
+            currentTheme === "dark" ? appTheme.themeBackground : "#ffffff",
           borderWidth: 1,
-          borderColor: appTheme.borderLineColor,
+          borderColor:
+            currentTheme === "dark" ? appTheme.borderLineColor : "#e2e8f0",
         }}
       >
         {/* Status */}
@@ -196,12 +222,16 @@ const Order = ({
               color: appTheme.fontMainColor,
               fontSize: 16,
               fontWeight: "600",
-              textDecorationLine: "underline",
+              letterSpacing: 0.3,
             }}
           >
             #{order?.orderId}
           </Text>
         </View>
+
+        {["ACCEPTED", "ASSIGNED"].includes(order.orderStatus ?? "") && (
+          <CountdownTimer deadline={prepDeadline} />
+        )}
 
         {/* Fulfilment */}
         <DeliveryModeBadge order={order} />
@@ -210,7 +240,7 @@ const Order = ({
         <View className="flex-row justify-between items-center">
           <Text
             style={{
-              color: appTheme.fontSecondColor,
+              color: secondaryText,
               fontSize: 14,
               fontWeight: "bold",
             }}
@@ -219,7 +249,7 @@ const Order = ({
           </Text>
           <Text
             style={{
-              color: appTheme.fontSecondColor,
+              color: secondaryText,
               fontSize: 14,
               fontWeight: "bold",
             }}
@@ -238,21 +268,18 @@ const Order = ({
             return (
               <View
                 key={item._id}
-                className="flex-row justify-between items-start mb-6"
+                className="flex-row justify-between items-start mb-3 mt-1"
               >
                 {/* Left Side: Image and Details */}
                 <View className="flex-row gap-x-2 flex-1">
                   {/* Image */}
                   <View
-                    className="w-[60px] h-[70px] rounded-[8px] overflow-hidden"
+                    className="w-16 h-16 rounded-xl overflow-hidden items-center justify-center"
                     style={{
                       backgroundColor: appTheme.lowOpacityPrimaryColor,
                     }}
                   >
-                    <Image
-                      src={item.image}
-                      style={{ width: 60, height: 70, borderRadius: 8 }}
-                    />
+                    <OrderThumbnail uri={item.image} title={item.title} />
                   </View>
 
                   {/* Item Details */}
@@ -269,7 +296,7 @@ const Order = ({
                       </Text>
                       <Text
                         style={{
-                          color: appTheme.fontSecondColor,
+                          color: secondaryText,
                           fontSize: 12,
                         }}
                       >
@@ -277,7 +304,7 @@ const Order = ({
                       </Text>
                       <Text
                         style={{
-                          color: appTheme.fontSecondColor,
+                          color: secondaryText,
                           fontSize: 12,
                         }}
                       >
@@ -321,7 +348,7 @@ const Order = ({
                               <View className="flex-row items-center">
                                 <Text
                                   style={{
-                                    color: appTheme.fontSecondColor,
+                                    color: secondaryText,
                                     fontSize: 12,
                                     fontWeight: "500",
                                   }}
@@ -351,11 +378,13 @@ const Order = ({
                                 >
                                   <Text
                                     style={{
-                                      color: appTheme.fontSecondColor,
+                                      color: secondaryText,
                                       fontSize: 12,
                                     }}
                                   >
-                                    {option.title}
+                                    {(option.quantity ?? 1) > 1
+                                      ? `${option.quantity}x ${option.title}`
+                                      : option.title}
                                   </Text>
                                   <Text
                                     className="ml-2"
@@ -364,7 +393,10 @@ const Order = ({
                                       fontSize: 12,
                                     }}
                                   >
-                                    {`(+${configuration?.currencySymbol}${option?.price})`}
+                                    {`(+${configuration?.currencySymbol}${(
+                                      (option?.price ?? 0) *
+                                      (option.quantity ?? 1)
+                                    ).toFixed(2)})`}
                                   </Text>
                                 </View>
                               ))}
@@ -389,152 +421,75 @@ const Order = ({
           })}
         </View>
 
-        {/* Divider */}
         <View
-          className="h-0.5 mb-4 mt-4"
-          style={{ backgroundColor: appTheme.borderLineColor }}
-        />
-
-        {/* Sub Total */}
-        <View className="flex-row justify-between">
-          <Text
+          style={{
+            borderTopWidth: 1,
+            borderColor:
+              currentTheme === "dark" ? appTheme.borderLineColor : "#e2e8f0",
+            paddingTop: 16,
+            marginTop: 4,
+            gap: 10,
+          }}
+        >
+          {[
+            { label: "Sub Total", value: orderSubTotal(order) },
+            { label: "Tip", value: order.tipping },
+            { label: "Tax", value: order.taxationAmount },
+            ...(order.discountAmount > 0
+              ? [{ label: "discountAmount", value: order.discountAmount }]
+              : []),
+            ...(!order.isPickedUp
+              ? [{ label: "Delivery Charges", value: order.deliveryCharges }]
+              : []),
+          ].map((row) => (
+            <View
+              key={row.label}
+              className="flex-row justify-between items-center"
+            >
+              <Text style={{ color: secondaryText, fontSize: 14 }}>
+                {t(row.label)}
+              </Text>
+              <Text
+                style={{
+                  color: appTheme.fontMainColor,
+                  fontSize: 14,
+                  fontWeight: "500",
+                }}
+              >
+                {configuration.currencySymbol}
+                {Number(row.value || 0).toFixed(2)}
+              </Text>
+            </View>
+          ))}
+          <View
+            className="flex-row justify-between items-center"
             style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
+              borderTopWidth: 1,
+              borderColor: appTheme.borderLineColor,
+              paddingTop: 12,
+              marginTop: 2,
             }}
           >
-            {t("Sub Total")}
-          </Text>
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {configuration?.currencySymbol}
-            {orderSubTotal(order)}
-          </Text>
-        </View>
-
-        {/* Tip */}
-        <View className="flex-row justify-between">
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {t("Tip")}
-          </Text>
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {configuration?.currencySymbol}
-            {order?.tipping}
-          </Text>
-        </View>
-
-        {/* Tax */}
-        <View className="flex-row justify-between">
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {t("Tax")}
-          </Text>
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {configuration?.currencySymbol}
-            {order?.taxationAmount}
-          </Text>
-        </View>
-
-        {/* Discount Amount */}
-        {order?.discountAmount > 0 && (
-          <View className="flex-row justify-between">
             <Text
               style={{
                 color: appTheme.fontMainColor,
                 fontSize: 18,
-                fontWeight: "600",
+                fontWeight: "700",
               }}
             >
-              {t("discountAmount")}
+              {t("Total")}
             </Text>
             <Text
               style={{
                 color: appTheme.fontMainColor,
-                fontSize: 18,
-                fontWeight: "600",
+                fontSize: 20,
+                fontWeight: "700",
               }}
             >
-              {configuration?.currencySymbol}
-              {order?.discountAmount}
+              {configuration.currencySymbol}
+              {Number(order.orderAmount || 0).toFixed(2)}
             </Text>
           </View>
-        )}
-
-        {/* Delivery */}
-        {!order?.isPickedUp && (
-          <View className="flex-row justify-between">
-            <Text
-              style={{
-                color: appTheme.fontMainColor,
-                fontSize: 18,
-                fontWeight: "600",
-              }}
-            >
-              {t("Delivery Charges")}
-            </Text>
-            <Text
-              style={{
-                color: appTheme.fontMainColor,
-                fontSize: 18,
-                fontWeight: "600",
-              }}
-            >
-              {configuration?.currencySymbol}
-              {order?.deliveryCharges}
-            </Text>
-          </View>
-        )}
-
-        {/* Total Amount */}
-        <View className="flex-row justify-between">
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {t("Total")}
-          </Text>
-          <Text
-            style={{
-              color: appTheme.fontMainColor,
-              fontSize: 18,
-              fontWeight: "600",
-            }}
-          >
-            {configuration?.currencySymbol}
-            {order?.orderAmount}
-          </Text>
         </View>
 
         {/* Order Instructions */}
@@ -566,11 +521,14 @@ const Order = ({
         {/* New Order */}
         {order?.orderStatus === "PENDING" && (
           <View>
-            <View className="flex-row gap-x-4 w-full mt-10">
+            <View className="flex-row gap-x-3 w-full mt-4">
               {/* Decline */}
               <TouchableOpacity
-                className="flex-1 h-16 items-center justify-center rounded-[30px]"
+                className="flex-1 h-12 items-center justify-center rounded-xl"
                 style={{ borderWidth: 1, borderColor: "#ef4444" }}
+                accessibilityRole="button"
+                disabled={loadingCancelOrder}
+                accessibilityState={{ disabled: loadingCancelOrder }}
                 onPress={() => onCancelOrderHandler()}
               >
                 {loadingCancelOrder ? (
@@ -579,8 +537,8 @@ const Order = ({
                   <Text
                     style={{
                       color: "#ef4444",
-                      fontSize: 18,
-                      fontWeight: "500",
+                      fontSize: 15,
+                      fontWeight: "600",
                     }}
                   >
                     {t("Decline")}
@@ -591,7 +549,7 @@ const Order = ({
               {/* Accept */}
               {handlePresentModalPress && (
                 <TouchableOpacity
-                  className="flex-1 h-16 items-center justify-center rounded-[30px]"
+                  className="flex-1 h-12 items-center justify-center rounded-xl"
                   style={{
                     backgroundColor: appTheme.primary,
                     borderWidth: 1,
@@ -602,8 +560,8 @@ const Order = ({
                   <Text
                     style={{
                       color: appTheme.white,
-                      fontSize: 18,
-                      fontWeight: "500",
+                      fontSize: 15,
+                      fontWeight: "600",
                     }}
                   >
                     {t("Accept")}
@@ -619,32 +577,13 @@ const Order = ({
           order?.orderStatus ?? "",
         ) && (
           <>
-            <View className="w-full items-center">
-              <View className="flex-row items-center justify-center gap-x-2">
-                <TimeLeftIcon />
-                <View>
-                  <Text
-                    style={{
-                      color: appTheme.fontMainColor,
-                      fontSize: 14,
-                      fontWeight: "500",
-                    }}
-                  >
-                    {t("Time Left")}
-                  </Text>
-
-                  <CountdownTimer duration={totalPrep} />
-                </View>
-              </View>
-            </View>
-
             <OrderDispatch order={order} />
 
             {order.orderStatus === "ASSIGNED" && (
-              <View className="flex-row gap-x-4 w-full mt-10">
+              <View className="flex-row gap-x-3 w-full mt-4">
                 {/* Hand Order to Rider */}
                 {/* <TouchableOpacity
-                  className="flex-1 h-16 items-center justify-center rounded-[30px]"
+                  className="flex-1 h-12 items-center justify-center rounded-xl"
                   style={{
                     backgroundColor: appTheme.primary,
                     borderWidth: 1,
@@ -669,10 +608,10 @@ const Order = ({
               </View>
             )}
             {order.orderStatus === "ACCEPTED" && order.isPickedUp && (
-              <View className="flex-row gap-x-4 w-full mt-10">
+              <View className="flex-row gap-x-3 w-full mt-4">
                 {/* Hand Order to Rider */}
                 <TouchableOpacity
-                  className="flex-1 h-16 items-center justify-center rounded-[30px]"
+                  className="flex-1 h-12 items-center justify-center rounded-xl"
                   style={{
                     backgroundColor: appTheme.primary,
                     borderWidth: 1,

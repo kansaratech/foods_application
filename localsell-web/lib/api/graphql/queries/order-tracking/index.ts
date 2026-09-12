@@ -1,88 +1,91 @@
 import { gql } from "@apollo/client";
 
-export const ORDER_TRACKING = gql`query OrderDetails($orderDetailsId: String!) {
-  orderDetails(id: $orderDetailsId) {
-   _id
-    orderId
-    restaurant {
+export const ORDER_TRACKING = gql`
+  query OrderDetails($orderDetailsId: String!) {
+    orderDetails(id: $orderDetailsId) {
       _id
-      name
-      image
-      slug
-      address
-      location {
-        coordinates
-        __typename
-      }
-      __typename
-    }
-    deliveryAddress {
-      location {
-        coordinates
-        __typename
-      }
-      deliveryAddress
-      __typename
-    }
-    items {
-      _id
-      title
-      food
-      description
-      quantity
-      image
-      variation {
+      orderId
+      restaurant {
         _id
-        title
-        price
-        discounted
-        __typename
-      }
-      addons {
-        _id
-        options {
-          _id
-          title
-          description
-          price
+        name
+        image
+        slug
+        address
+        location {
+          coordinates
           __typename
         }
-        title
-        description
-        quantityMinimum
-        quantityMaximum
         __typename
       }
+      deliveryAddress {
+        location {
+          coordinates
+          __typename
+        }
+        deliveryAddress
+        __typename
+      }
+      items {
+        _id
+        title
+        food
+        description
+        quantity
+        image
+        variation {
+          _id
+          title
+          price
+          discounted
+          __typename
+        }
+        addons {
+          _id
+          options {
+            _id
+            title
+            description
+            price
+            quantity
+            __typename
+          }
+          title
+          description
+          quantityMinimum
+          quantityMaximum
+          __typename
+        }
+        __typename
+      }
+      user {
+        _id
+        name
+        phone
+        __typename
+      }
+      rider {
+        _id
+      }
+      paymentMethod
+      paidAmount
+      orderAmount
+      discountAmount
+      orderStatus
+      deliveryCharges
+      tipping
+      taxationAmount
+      orderDate
+      expectedTime
+      isPickedUp
+      deliveryOtp
+      deliveryConfirmedBy
+      createdAt
+      cancelledAt
+      deliveredAt
+      acceptedAt
+      pickedAt
+      instructions
       __typename
     }
-    user {
-      _id
-      name
-      phone
-      __typename
-    }
-    rider{
-      _id
-    }
-    paymentMethod
-    paidAmount
-    orderAmount
-    discountAmount
-    orderStatus
-    deliveryCharges
-    tipping
-    taxationAmount
-    orderDate
-    expectedTime
-    isPickedUp
-    deliveryOtp
-    deliveryConfirmedBy
-    createdAt
-    cancelledAt
-    deliveredAt
-    acceptedAt
-    pickedAt
-    instructions
-    __typename
   }
-}`;
+`;

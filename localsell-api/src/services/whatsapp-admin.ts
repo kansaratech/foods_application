@@ -8,6 +8,7 @@
 import { prisma } from '../prisma/client';
 import { env } from '../config/env';
 import { WA_TEMPLATES } from '../utils/whatsappTemplates';
+import type { WhatsappTemplate } from '@prisma/client';
 
 interface MetaTemplate {
   name: string;
@@ -21,7 +22,7 @@ export interface SyncResult {
   ok: boolean;
   message: string;
   updated: number;
-  templates: Array<{ key: string; metaName: string; status: string; category: string; language: string }>;
+  templates: WhatsappTemplate[];
 }
 
 export async function syncWhatsappTemplates(): Promise<SyncResult> {
@@ -59,7 +60,7 @@ export async function syncWhatsappTemplates(): Promise<SyncResult> {
     const language = meta?.language || existing?.language || def.language;
     const category = meta?.category || existing?.category || def.category;
 
-    await prisma.whatsappTemplate.upsert({
+    const row = await prisma.whatsappTemplate.upsert({
       where: { key: def.key },
       update: {
         status,
@@ -83,7 +84,7 @@ export async function syncWhatsappTemplates(): Promise<SyncResult> {
       },
     });
     updated += 1;
-    out.push({ key: def.key, metaName: targetName, status, category, language });
+    out.push(row);
   }
 
   const missing = out.filter((t) => t.status === 'MISSING').map((t) => t.metaName);

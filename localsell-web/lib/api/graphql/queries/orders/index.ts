@@ -45,6 +45,7 @@ export const ORDERS = gql`
             title
             description
             price
+            quantity
           }
           title
           description
@@ -90,11 +91,10 @@ export const ORDERS = gql`
   }
 `;
 
-
 export const GET_USERS_PAST_ORDERS = gql`
   query GetUsersPastOrders($page: Int!, $limit: Int!, $offset: Int!) {
     getUsersPastOrders(page: $page, limit: $limit, offset: $offset) {
-     _id
+      _id
       orderId
       id
       restaurant {
@@ -139,6 +139,7 @@ export const GET_USERS_PAST_ORDERS = gql`
             title
             description
             price
+            quantity
           }
           title
           description
@@ -187,7 +188,7 @@ export const GET_USERS_PAST_ORDERS = gql`
 export const GET_USERS_ACTIVE_ORDERS = gql`
   query GetUsersActiveOrders($page: Int!, $limit: Int!, $offset: Int!) {
     getUsersActiveOrders(page: $page, limit: $limit, offset: $offset) {
-    _id
+      _id
       orderId
       id
       restaurant {
@@ -232,6 +233,7 @@ export const GET_USERS_ACTIVE_ORDERS = gql`
             title
             description
             price
+            quantity
           }
           title
           description
@@ -272,7 +274,7 @@ export const GET_USERS_ACTIVE_ORDERS = gql`
       deliveredAt
       cancelledAt
       assignedAt
-      instructions  
+      instructions
     }
   }
 `;

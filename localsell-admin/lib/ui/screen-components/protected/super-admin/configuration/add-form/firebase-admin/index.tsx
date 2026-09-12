@@ -113,7 +113,7 @@ const FirebaseAdminAddForm = () => {
                 cardTitle={'Firebase Admin Configuration'}
                 buttonLoading={mutationLoading}
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="configuration-fields">
                   {/* Firebase Key */}
                   <CustomPasswordTextField
                     placeholder="Firebase Key"

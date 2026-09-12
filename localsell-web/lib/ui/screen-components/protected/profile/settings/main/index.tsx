@@ -200,7 +200,7 @@ const handleConfirmDelete = async () => {
             className="font-normal text-gray-700 dark:text-gray-300 text-base md:text-lg "
           />
           <TextComponent
-            text={profileData?.profile?.email}
+            text={profileData?.profile?.email || "?"}
             className="font-medium text-gray-700 dark:text-gray-100  text-base md:text-lg "
           />
         </div>
@@ -222,13 +222,13 @@ const handleConfirmDelete = async () => {
                 className="text-sm md:text-md font-light bg-[#dd1515c5] hover:bg-[#dd1515ab] px-[16px] py-[8px] text-white"
               />
             )}
-            <h1
+            <button type="button"
               title={t("updatePhoneTitle")}
               onClick={handleUpdatePhoneModal}
               className="font-medium text-secondary-color dark:text-primary-color hover:text-primary-dark text-base md:text-lg cursor-pointer"
             >
               {profileData?.profile?.phone || "N/A"}
-            </h1>
+            </button>
           </div>
         </div>
       </div>
@@ -240,13 +240,13 @@ const handleConfirmDelete = async () => {
             text={t("nameLabel")}
             className="font-normal text-gray-700 dark:text-gray-300 text-base md:text-lg "
           />
-          <h1
+          <button type="button"
             title={t("updateNameTitle")}
             onClick={handleUpdateNameModal}
             className="font-medium text-secondary-color dark:text-primary-color hover:text-primary-dark text-base md:text-lg cursor-pointer"
           >
             {profileData?.profile?.name || "N/A"}
-          </h1>
+          </button>
         </div>
       </div>
 

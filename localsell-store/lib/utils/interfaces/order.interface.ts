@@ -40,6 +40,7 @@ export interface AddonOption {
   title: string;
   description?: string;
   price: number;
+  quantity?: number;
 }
 
 export interface Addon {

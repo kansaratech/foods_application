@@ -1,5 +1,5 @@
 // CSS
-import './index.module.css';
+import './coupons.css';
 
 // GraphQL
 import { DELETE_COUPON, GET_COUPONS_PAGINATED } from '@/lib/api/graphql';
@@ -189,7 +189,7 @@ export default function CouponsMain({
   }, [debouncedSearch, enabled]);
 
   return (
-    <div className="p-3">
+    <div className="coupons-table p-3">
       <Table
         columns={COUPONS_TABLE_COLUMNS({ menuItems })}
         data={data?.couponsPaginated?.data || []}

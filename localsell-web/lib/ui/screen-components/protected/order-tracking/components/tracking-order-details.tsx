@@ -29,45 +29,6 @@ function TrackingOrderDetails({
     onUseLocalStorage("save", "orderTrackingRestaurantId", restaurantId);
   }
 
-  const calculateTotalAddonPrice = () => {
-    if (!orderTrackingDetails?.items) return 0;
-
-    return orderTrackingDetails.items.reduce((total, item) => {
-      if (!item.addons || item.addons.length === 0) return total;
-
-      const addonTotal = item.addons.reduce((addonSum, addon) => {
-        const optionsTotal = addon.options.reduce((optSum, option) => {
-          return optSum + (option.price as number);
-        }, 0);
-        return addonSum + optionsTotal;
-      }, 0);
-
-      return total + addonTotal * item.quantity;
-    }, 0);
-  };
-
-  // Calculate subtotal (items only)
-  const calculateSubtotal = () => {
-    if (!orderTrackingDetails?.items) return 0;
-
-    return orderTrackingDetails?.items.reduce((total, item) => {
-      return total + item?.variation?.price * item?.quantity;
-    }, 0);
-  };
-
-  // console.log("order detail..",orderTrackingDetails);
-
-  // // Calculate total
-  // const calculateTotal = () => {
-  //   const subtotal = calculateSubtotal();
-  //   const deliveryCharge = orderTrackingDetails?.deliveryCharges || 0;
-  //   const tax = orderTrackingDetails?.taxationAmount || 0;
-  //   const tip = orderTrackingDetails?.tipping || 0;
-  //   const addons = calculateTotalAddonPrice();
-
-  //   return subtotal + deliveryCharge + tax + tip + addons;
-  // };
-
   const calculateItemTotal = (item: any) => {
     const variationPrice = item.variation.price || 0;
     const addonsPrice =
@@ -75,12 +36,24 @@ function TrackingOrderDetails({
         return (
           sum +
           addon.options.reduce(
-            (optSum: number, option: any) => optSum + (option.price || 0),
+            (optSum: number, option: any) =>
+              optSum + (option.price || 0) * (option.quantity ?? 1),
             0,
           )
         );
       }, 0) || 0;
     return (variationPrice + addonsPrice) * item.quantity;
+  };
+
+  // Subtotal (addon-inclusive, per item) — matches the server's discount base
+  // (order.service.ts itemsTotal) so Subtotal + Delivery + Tax + Tip - Discount
+  // reconciles with orderAmount.
+  const calculateSubtotal = () => {
+    if (!orderTrackingDetails?.items) return 0;
+    return orderTrackingDetails.items.reduce(
+      (total, item) => total + calculateItemTotal(item),
+      0,
+    );
   };
 
   // Check if order can be cancelled (only PENDING or ACCEPTED)
@@ -161,9 +134,10 @@ function TrackingOrderDetails({
                             key={option._id || optIndex}
                             className="text-xs text-gray-500 dark:text-gray-400"
                           >
-                            + {option.title}
+                            + {option.quantity > 1 ? `${option.quantity}× ` : ""}
+                            {option.title}
                             {option.price > 0
-                              ? ` (${formatCurrency(option.price)})`
+                              ? ` (${formatCurrency(option.price * (option.quantity ?? 1))})`
                               : ""}
                           </p>
                         ))}
@@ -202,7 +176,7 @@ function TrackingOrderDetails({
                 {item.quantity}x {item.title}
               </span>
               <span>
-                {formatCurrency(item.variation.price * item.quantity)}
+                {formatCurrency(calculateItemTotal(item))}
               </span>
             </div>
           ))}
@@ -224,13 +198,6 @@ function TrackingOrderDetails({
             <div className="flex justify-between">
               <span>{t("order_details_tip_label")}</span>
               <span>{formatCurrency(orderTrackingDetails.tipping)}</span>
-            </div>
-          )}
-
-          {calculateTotalAddonPrice() > 0 && (
-            <div className="flex justify-between">
-              <span>{t("Addons_label")}</span>
-              <span>{formatCurrency(calculateTotalAddonPrice() || 0)}</span>
             </div>
           )}
 

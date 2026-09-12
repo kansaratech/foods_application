@@ -35,12 +35,14 @@ export default function CustomDialog({
       <div className="relative">
         {/* Close button */}
         {showCloseButton && (
-          <span
+          <button
+            type="button"
+            aria-label="Close dialog"
             onClick={onHide}
             className={`${direction === "rtl" ? "left-4" : "right-4"} absolute cursor-pointer top-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-700 focus:outline-none`}
           >
-            <CircleCrossSvg color="black" width={28} height={28} />
-          </span>
+            <CircleCrossSvg color="currentColor" width={24} height={24} />
+          </button>
         )}
 
         {/* Just render the children passed to the dialog */}

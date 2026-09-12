@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-import CustomButton from "@/lib/ui/useable-components/button";
 import CustomPhoneTextField from "@/lib/ui/useable-components/phone-input-field";
 import { LaptopSvg } from "@/lib/utils/assets/svg";
 import { IUser } from "@/lib/utils/interfaces";
@@ -15,7 +14,7 @@ export interface IPhoneEntryProps {
   userPhone?: string;
 }
 
-const PhoneEntry = ({ handleChange, handleSubmit, user, handleUpdatePhoneModal, userPhone }: IPhoneEntryProps) => {
+const PhoneEntry = ({ handleChange, handleSubmit, handleUpdatePhoneModal, userPhone }: IPhoneEntryProps) => {
   const [loading, setLoading] = useState(false);
   const t= useTranslations()
 
@@ -29,11 +28,11 @@ const PhoneEntry = ({ handleChange, handleSubmit, user, handleUpdatePhoneModal, 
      setLoading(false);
    }
  };
- console.log('user phone:', user?.phone);
+
   return (
     <div className="flex flex-col justify-between px-4 w-full items-center dark:bg-gray-900 dark:text-white">
       <div className="flex items-center justify-center">
-        <LaptopSvg width={250} height={250} />
+        <LaptopSvg width={156} height={132} />
       </div>
 
       <h2 className="font-extrabold text-lg md:text-xl lg:text-2xl my-2 text-start w-full leading-8">
@@ -55,13 +54,16 @@ const PhoneEntry = ({ handleChange, handleSubmit, user, handleUpdatePhoneModal, 
       </div>
 
       <div className="flex flex-row w-full justify-between mt-2 gap-2 md:gap-0">
-        <CustomButton
-          label={t('update_phone_name_cancel_button')}
-          className="bg-white border dark:bg-gray-800 border-gray-300 dark:text-gray-100 dark:border-gray-400 flex items-center justify-center rounded-full p-2 sm:p-3 w-full md:w-[268px] mb-4 text-sm sm:text-lg font-medium"
+        <button
+          type="button"
+          className="profile-dialog-cancel"
           onClick={handleUpdatePhoneModal}
-        />
+        >
+          {t("update_phone_name_cancel_button")}
+        </button>
 
         <button
+          type="button"
           onClick={handleSaveClick}
           disabled={loading}
           aria-label={loading ? t("update_phone_name_saving_aria") : t("update_phone_name_save_aria")}

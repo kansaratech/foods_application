@@ -14,7 +14,7 @@ export default function CustomInputSwitch({
       <CustomLoader size="14.7px" />
     </div>
   ) : (
-    <label className={`ml-2 flex flex-shrink-0 cursor-pointer items-center ${className}`} >
+    <div className={`ml-2 flex flex-shrink-0 cursor-pointer items-center ${className}`} >
       <div className="relative">
         <div
           className={`flex items-center gap-2 ${reverse && 'flex-row-reverse'}`}
@@ -26,12 +26,12 @@ export default function CustomInputSwitch({
               checked={isActive}
               onChange={onChange}
             />
-            <div className="peer h-4 w-8 rounded-full bg-gray-300 peer-checked:bg-primary-color peer-focus:outline-none dark:bg-gray-700"></div>
-            <div className="absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-gray-50 transition-transform peer-checked:translate-x-4"></div>
+            <div className="peer h-6 w-11 rounded-full bg-gray-300 peer-checked:bg-primary-color peer-focus-visible:ring-2 peer-focus-visible:ring-primary-color peer-focus-visible:ring-offset-2 dark:bg-gray-700"></div>
+            <div className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-gray-50 transition-transform peer-checked:translate-x-5"></div>
           </label>
           {label && <span className="ml-2">{label}</span>}
         </div>
       </div>
-    </label>
+    </div>
   );
 }

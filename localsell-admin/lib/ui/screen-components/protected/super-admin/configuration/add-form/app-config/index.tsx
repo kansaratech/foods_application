@@ -155,7 +155,7 @@ const AppConfigAddForm = () => {
                   }
                 }}
               >
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="configuration-fields">
                   {/* Terms and Conditions Field */}
                   <label
                     className="configuration-textarea-label"
