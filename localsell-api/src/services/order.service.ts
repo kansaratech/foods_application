@@ -49,7 +49,9 @@ export async function buildOrderItems(
   for (const item of items) {
     const food = await prisma.food.findFirst({
       where: { id: item.food, restaurantId },
-      include: { variations: true },
+      include: {
+        variations: { include: { addons: { include: { addon: true } } } },
+      },
     });
     if (!food) {
       throw userInputError(`Food ${item.food} was not found for this restaurant`);
@@ -61,6 +63,7 @@ export async function buildOrderItems(
     let unitPrice: number;
     let variationId: string | null = null;
     let variationTitle = '';
+    let resolvedVariation: (typeof food.variations)[number] | null = null;
 
     if (item.variation) {
       const variation = food.variations.find((v) => v.id === item.variation);
@@ -73,17 +76,20 @@ export async function buildOrderItems(
       unitPrice = effectivePrice(variation.price, variation.discounted);
       variationId = variation.id;
       variationTitle = variation.title;
+      resolvedVariation = variation;
     } else if (food.variations.length === 1) {
       const [only] = food.variations;
       unitPrice = effectivePrice(only.price, only.discounted);
       variationId = only.id;
       variationTitle = only.title;
+      resolvedVariation = only;
     } else {
       throw userInputError(`A variation must be selected for food "${food.title}"`);
     }
 
     let addonsTotal = 0;
     const addonsData: Prisma.OrderItemAddonCreateWithoutOrderItemInput[] = [];
+    const selectedCountByAddonId = new Map<string, number>();
 
     for (const addonInput of item.addons ?? []) {
       const addon = await prisma.addon.findFirst({
@@ -103,11 +109,13 @@ export async function buildOrderItems(
       }
 
       const optionsData: Prisma.OrderItemAddonOptionCreateWithoutOrderItemAddonInput[] = [];
+      let selectedCount = 0;
       for (const [optionId, optionQuantity] of quantityByOptionId) {
         const option = addon.options.find((o) => o.id === optionId);
         if (!option) {
           throw userInputError(`Option ${optionId} does not belong to addon ${addon.title}`);
         }
+        selectedCount += optionQuantity;
         addonsTotal += option.price * optionQuantity;
         optionsData.push({
           title: option.title,
@@ -117,11 +125,34 @@ export async function buildOrderItems(
         });
       }
 
+      if (selectedCount < addon.quantityMinimum) {
+        throw userInputError(
+          `"${addon.title}" requires at least ${addon.quantityMinimum} selection(s)`,
+        );
+      }
+      if (selectedCount > addon.quantityMaximum) {
+        throw userInputError(
+          `"${addon.title}" allows at most ${addon.quantityMaximum} selection(s)`,
+        );
+      }
+      selectedCountByAddonId.set(addon.id, selectedCount);
+
       addonsData.push({
         title: addon.title,
         addon: { connect: { id: addon.id } },
         options: { create: optionsData },
       });
+    }
+
+    // Required addon groups (quantityMinimum > 0) that the client never
+    // submitted at all — the loop above only validates groups that were
+    // actually present in the request.
+    for (const { addon } of resolvedVariation?.addons ?? []) {
+      if (addon.quantityMinimum > 0 && !selectedCountByAddonId.has(addon.id)) {
+        throw userInputError(
+          `"${addon.title}" requires at least ${addon.quantityMinimum} selection(s)`,
+        );
+      }
     }
 
     const quantity = Math.max(1, Math.floor(item.quantity));

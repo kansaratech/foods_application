@@ -63,6 +63,7 @@ export const PLACE_ORDER = gql`
             title
             description
             price
+            quantity
           }
           title
           description
@@ -145,6 +146,7 @@ export const ADD_REVIEW_ORDER = gql`
             title
             description
             price
+            quantity
           }
           title
           description
