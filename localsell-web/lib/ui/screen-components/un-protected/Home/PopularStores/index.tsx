@@ -22,9 +22,9 @@ interface IPopularStore {
   reviewCount?: number | null;
 }
 
-const placeholderHint = (name: string, shopType?: string | null) => {
+const placeholderHint = (name?: string | null, shopType?: string | null) => {
   if (shopType === "grocery") return "produce shelf";
-  const n = name.toLowerCase();
+  const n = (name ?? "").toLowerCase();
   if (n.includes("sweet") || n.includes("mithai") || n.includes("khaman"))
     return "mithai counter";
   if (n.includes("biryani")) return "biryani handi";

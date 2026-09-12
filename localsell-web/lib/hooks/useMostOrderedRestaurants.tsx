@@ -33,11 +33,11 @@ const useMostOrderedRestaurants = (enabled = true, page = 1, limit=10, shopType?
   let queryData = data?.mostOrderedRestaurantsPreview || [];
 
   let restaurantsData: IRestaurant[] =
-    queryData?.filter((item) => item?.shopType.toLowerCase() === "restaurant") ||
+    queryData?.filter((item) => item?.shopType?.toLowerCase() === "restaurant") ||
     [];
 
   let groceriesData: IRestaurant[] =
-    queryData?.filter((item) => item?.shopType.toLowerCase() === "grocery") ||
+    queryData?.filter((item) => item?.shopType?.toLowerCase() === "grocery") ||
     [];
   return {
     queryData,

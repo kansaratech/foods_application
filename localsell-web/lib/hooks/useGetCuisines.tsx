@@ -35,7 +35,7 @@ const useGetCuisines = (enabled = true, shoptype?: string) => {
     data?.nearByRestaurantsCuisines
   )
     ? data.nearByRestaurantsCuisines.filter(
-        (item) => item.shopType.toLowerCase() === "restaurant"
+        (item) => item?.shopType?.toLowerCase() === "restaurant"
       )
     : [];
 
@@ -43,7 +43,7 @@ const useGetCuisines = (enabled = true, shoptype?: string) => {
     data?.nearByRestaurantsCuisines
   )
     ? data.nearByRestaurantsCuisines.filter(
-        (item) => item.shopType.toLowerCase() === "grocery"
+        (item) => item?.shopType?.toLowerCase() === "grocery"
       )
     : [];
   return {
