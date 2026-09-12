@@ -205,6 +205,7 @@ export const RIDER_ORDERS = gql`
             _id
             title
             price
+            quantity
           }
           title
           description

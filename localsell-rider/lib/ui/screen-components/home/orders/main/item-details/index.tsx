@@ -18,9 +18,21 @@ const ItemDetails = ({
 
   if (!order) return null;
 
+  const addonsTotalFor = (item: IOrder["items"][number]) =>
+    (item.addons ?? []).reduce(
+      (sum, addon) =>
+        sum +
+        (addon.options ?? []).reduce(
+          (optSum, option) =>
+            optSum + (option.price ?? 0) * (option.quantity ?? 1),
+          0,
+        ),
+      0,
+    );
+
   const itemAmount = useMemo(() => {
     return order?.items?.reduce((sum, item) => {
-      return sum + item.quantity * item.variation.price;
+      return sum + item.quantity * (item.variation.price + addonsTotalFor(item));
     }, 0);
   }, [order?.items]);
 
@@ -108,8 +120,14 @@ const ItemDetails = ({
                           {addon?.options?.map((option) => {
                             return (
                               <View key={option._id} className="flex-row items-center">
-                                <Text style={{ color: appTheme.fontMainColor }}>{option.title}</Text>
-                                <Text className="ml-2" style={{ color: appTheme.fontSecondColor }}>+{formatCurrency(option?.price)}</Text>
+                                <Text style={{ color: appTheme.fontMainColor }}>
+                                  {(option.quantity ?? 1) > 1
+                                    ? `${option.quantity}x ${option.title}`
+                                    : option.title}
+                                </Text>
+                                <Text className="ml-2" style={{ color: appTheme.fontSecondColor }}>
+                                  +{formatCurrency((option?.price ?? 0) * (option.quantity ?? 1))}
+                                </Text>
                               </View>
                             );
                           })}
@@ -125,7 +143,10 @@ const ItemDetails = ({
                   className="font-[Inter] text-[14px] font-semibold text-right"
                   style={{ color: appTheme.fontMainColor }}
                 >
-                  {formatCurrency((item.variation?.price ?? 0) * (item.quantity ?? 1))}
+                  {formatCurrency(
+                    ((item.variation?.price ?? 0) + addonsTotalFor(item)) *
+                      (item.quantity ?? 1),
+                  )}
                 </Text>
               </View>
             </View>

@@ -24,6 +24,7 @@ export interface IOrder {
         _id: string;
         price: number;
         title: string;
+        quantity?: number;
       }>;
     }>;
     description: ReactNode;
