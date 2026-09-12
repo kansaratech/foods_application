@@ -10,6 +10,7 @@ export const GET_COUPONS = gql`
       startDate
       endDate
       lifeTimeActive
+      firstOrderOnly
     }
   }
 `;
@@ -39,6 +40,7 @@ export const GET_COUPONS_PAGINATED = gql`
         startDate
         endDate
         lifeTimeActive
+        firstOrderOnly
       }
       totalCount
       currentPage

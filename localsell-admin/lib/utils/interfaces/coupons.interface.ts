@@ -6,6 +6,7 @@ export interface ICoupon {
   discount: number;
   enabled: boolean;
   lifeTimeActive: boolean;
+  firstOrderOnly?: boolean;
   startDate: string;
   endDate: string;
   title: string;

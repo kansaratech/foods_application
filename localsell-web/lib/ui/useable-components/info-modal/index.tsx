@@ -11,7 +11,8 @@ import { useConfig } from "@/lib/context/configuration/configuration.context";
 
 // Useable components
 import GoogleMapComponent from "@/lib/ui/useable-components/google-map-component";
-import CustomDialog from "../custom-dialog";
+import { Dialog } from "primereact/dialog";
+import "./info-modal.css";
 
 // Methods and Interfaces
 import {
@@ -40,7 +41,6 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
       "Friday",
       "Saturday",
     ];
-    console.log(restaurantInfo);
     const today = days[new Date().getDay()];
     setCurrentDay(today.slice(0, 3).toUpperCase());
 
@@ -102,18 +102,21 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
   };
 
   return (
-    <CustomDialog
+    <Dialog
       visible={visible}
       onHide={onHide}
-      className="m-0 z-[100]"
-      width="550px"
+      header={restaurantInfo.name}
+      className="store-info-dialog"
+      style={{ width: "820px", maxWidth: "calc(100vw - 24px)" }}
+      dismissableMask
+      draggable={false}
     >
       <div className="restaurant-info-modal">
         {/* Map */}
-        <div className="relative">
+        <div className="store-info-map">
           <GoogleMapComponent
             center={mapCenter}
-            circleRadius={300}
+            circleRadius={0}
             visible={visible && !!GOOGLE_MAPS_KEY}
           />
           {visible && !GOOGLE_MAPS_KEY && (
@@ -123,11 +126,7 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
           )}
         </div>
 
-        <div className="py-6 md:px-6">
-          <h1 className="text-xl md:text-3xl font-bold mb-2">
-            {restaurantInfo.name}
-          </h1>
-
+        <div className="store-info-body">
           <div className="flex items-center mb-4">
             <FontAwesomeIcon
               icon={faCircle}
@@ -147,8 +146,9 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
             {restaurantInfo.description}
           </p>
 
+          <div className="store-info-grid">
           {/* Address */}
-          <div className="mb-6">
+          <div className="store-info-section">
             <h2 className="text-lg md:text-xl font-bold mb-2">
               {t("Address")}
             </h2>
@@ -166,13 +166,13 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
           </div>
 
           {/* Opening Hours */}
-          <div className="mb-6">
+          <div className="store-info-section store-info-hours">
             <h2 className="text-lg md:text-xl font-bold mb-2">
               {t("OpeningHours")}
             </h2>
             <div className="grid grid-cols-1 gap-2">
               {restaurantInfo.openingTimes.map((day) => (
-                <div key={day.day} className="flex justify-between items-start">
+                <div key={day.day} className={`store-hours-row ${day.day === currentDay ? "store-hours-today" : ""}`}>
                   {/* Day Name */}
                   <div className="w-28 text-xs md:text-[16px] font-normal leading-[24px]">
                     {t(getCurrentDay(day.day))}
@@ -188,7 +188,7 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
           </div>
 
           {/* Delivery Info */}
-          <div className="mb-6">
+          <div className="store-info-section">
             <h2 className="text-lg md:text-xl font-bold mb-2">
               {t("DeliveryInfo")}
             </h2>
@@ -208,7 +208,7 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="store-info-section">
             <h2 className="text-lg md:text-xl font-bold mb-2">
               {t("Contact")}
             </h2>
@@ -248,9 +248,10 @@ const InfoModal = ({ visible, onHide, restaurantInfo }: IInfoModalProps) => {
               )}
             </div>
           </div>
+          </div>
         </div>
       </div>
-    </CustomDialog>
+    </Dialog>
   );
 };
 

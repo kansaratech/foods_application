@@ -457,33 +457,34 @@ export default function VariationAddForm({
                                                       : '',
                                                 }}
                                               />
-                                              {value.discounted > 0 && (
-                                                <div className="absolute bottom-[-15px] left-[2px] font-semibold text-[10px] flex gap-2">
-                                                  <p>
-                                                    {t('Actual Price')}&nbsp;:
-                                                    &nbsp;
-                                                    <span className="line-through">
-                                                      {value.price +
-                                                        value.discounted}
-                                                    </span>
-                                                  </p>
-                                                  ,
-                                                  <p>
-                                                    {t('Discounted Price')}
-                                                    &nbsp;: &nbsp;
-                                                    <span>{value.price}</span>
-                                                  </p>
-                                                </div>
-                                              )}
+                                              {value.discounted > 0 &&
+                                                value.discounted <
+                                                  value.price && (
+                                                  <div className="absolute bottom-[-15px] left-[2px] font-semibold text-[10px] flex gap-2">
+                                                    <p>
+                                                      {t('Actual Price')}
+                                                      &nbsp;: &nbsp;
+                                                      <span className="line-through">
+                                                        {value.price}
+                                                      </span>
+                                                    </p>
+                                                    ,
+                                                    <p>
+                                                      {t('Discounted Price')}
+                                                      &nbsp;: &nbsp;
+                                                      <span>
+                                                        {value.discounted}
+                                                      </span>
+                                                    </p>
+                                                  </div>
+                                                )}
                                             </div>
 
                                             <div className="col-span-6 sm:col-span-6">
                                               <CustomNumberField
                                                 name={`variations[${index}].discounted`}
                                                 min={0}
-                                                placeholder={t(
-                                                  'Discount Price'
-                                                )}
+                                                placeholder={t('Discounted Price')}
                                                 showLabel={true}
                                                 value={value.discounted}
                                                 onChangeFieldValue={

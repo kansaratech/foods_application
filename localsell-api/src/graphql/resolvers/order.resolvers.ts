@@ -11,6 +11,7 @@ import { pubsub, TOPICS } from '../../utils/pubsub';
 import { recordOrderCommission, recordRiderCash, resolveCommissionRate, riderOutstandingCash } from '../../utils/commission';
 import { assertRiderNotRejected } from './rider-docs.resolvers';
 import { assertRiderApproved } from './rider.resolvers';
+import { hasPriorOrder } from './coupon.resolvers';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
 const PAST_STATUSES: OrderStatus[] = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
@@ -632,6 +633,11 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         const isWithinWindow =
           coupon && (coupon.lifeTimeActive || ((!coupon.startDate || now >= coupon.startDate) && (!coupon.endDate || now <= coupon.endDate)));
         if (coupon && isWithinWindow) {
+          // Re-checked here (not just at the checkout-time preview) so a
+          // client can't skip verification and place the order directly.
+          if (coupon.firstOrderOnly && (await hasPriorOrder(currentUser.id))) {
+            throw userInputError('This coupon is valid for first-time orders only');
+          }
           discountAmount = Math.min(itemsTotal, itemsTotal * (coupon.discount / 100));
         }
       }

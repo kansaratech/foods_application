@@ -547,7 +547,7 @@ export default function RestaurantDetailsScreen() {
         {loading ? (
           <Skeleton width="100%" height="18rem" borderRadius="0" />
         ) : (
-          <div className="relative h-[280px] w-full sm:h-[320px]">
+          <div className="relative h-[220px] w-full sm:h-[260px]">
             <Image
               src={restaurantInfo.image}
               alt={restaurantInfo.name}
@@ -574,7 +574,7 @@ export default function RestaurantDetailsScreen() {
                 />
               </span>
               <div className="min-w-0 text-white">
-                <h1 className="font-black tracking-[-0.035em] text-[30px] leading-[1.05] drop-shadow-md sm:text-[40px] md:text-[46px]">
+                <h1 className="font-bold tracking-[-0.025em] text-[28px] leading-tight drop-shadow-md sm:text-[36px] md:text-[40px]">
                   {restaurantInfo.name}
                 </h1>
                 <p className="mt-1.5 line-clamp-1 text-sm font-medium text-white/90 sm:text-base">
@@ -585,6 +585,9 @@ export default function RestaurantDetailsScreen() {
           </div>
         )}
         <button
+          type="button"
+          aria-label={isLiked ? "Remove from favourites" : "Add to favourites"}
+          aria-pressed={isLiked}
           disabled={addFavoriteLoading}
           onClick={handleFavoriteClick}
           className={`absolute top-4 ${direction === "rtl" ? "left-4" : "right-4"} flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition hover:scale-105 active:scale-95 dark:bg-gray-700`}
@@ -597,11 +600,11 @@ export default function RestaurantDetailsScreen() {
         </button>
       </div>
       {/* Restaurant Info */}
-      <div className="bg-gray-50 dark:bg-gray-800 shadow-[0px_1px_3px_rgba(0,0,0,0.1)] p-3 h-[80px] flex justify-between items-center">
+      <div className="border-b border-slate-200 bg-white py-4 dark:border-gray-700 dark:bg-gray-900">
         <PaddingContainer>
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+          <div className="flex flex-wrap items-center gap-3 px-3 sm:gap-4">
             {/* Time */}
-            <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300 font-inter font-normal text-sm sm:text-base md:text-lg leading-5 sm:leading-6 md:leading-7 tracking-[0px] align-middle">
+            <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300 rounded-lg px-3 py-2 text-sm font-medium leading-5">
               <ClockSvg />
               {loading ? (
                 <Skeleton width="1rem" height="1.5rem" />
@@ -611,7 +614,7 @@ export default function RestaurantDetailsScreen() {
             </span>
 
             {/* Rating */}
-            <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300  font-inter font-normal text-sm sm:text-base md:text-lg leading-5 sm:leading-6 md:leading-7 tracking-[0px] align-middle">
+            <span className="flex items-center gap-2 text-gray-600 dark:text-gray-300  rounded-lg px-3 py-2 text-sm font-medium leading-5">
               <RatingSvg />
               {loading ? (
                 <Skeleton width="1rem" height="1.5rem" />
@@ -622,7 +625,7 @@ export default function RestaurantDetailsScreen() {
 
             {/* Info Link */}
             <a
-              className="flex items-center gap-2 text-secondary-color dark:text-primary-color font-inter font-normal text-sm sm:text-base md:text-lg leading-5 sm:leading-6 md:leading-7 tracking-[0px] align-middle"
+              className="flex items-center gap-2 text-secondary-color dark:text-primary-color rounded-lg px-3 py-2 text-sm font-medium leading-5"
               href="#"
               onClick={(e) => {
                 e.preventDefault();
@@ -639,7 +642,7 @@ export default function RestaurantDetailsScreen() {
 
             {/* Review Link */}
             <a
-              className="flex items-center gap-2 text-secondary-color dark:text-primary-color font-inter font-normal text-sm sm:text-base md:text-lg leading-5 sm:leading-6 md:leading-7 tracking-[0px] align-middle"
+              className="flex items-center gap-2 text-secondary-color dark:text-primary-color rounded-lg px-3 py-2 text-sm font-medium leading-5"
               href="#"
               onClick={(e) => {
                 e.preventDefault();
@@ -693,9 +696,9 @@ export default function RestaurantDetailsScreen() {
         className="lg:top-[64px] top-[125px] sticky z-50 bg-white dark:bg-gray-900 shadow-[0_1px_1px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_1px_rgba(255,255,255,0.05)]"
       >
         <PaddingContainer>
-          <div className="p-3 w-full flex flex-col gap-3">
+          <div className="p-3 w-full grid grid-cols-1 gap-3 lg:grid-cols-[minmax(280px,480px)_minmax(0,1fr)] lg:items-center lg:gap-x-6">
             {/* Search Input */}
-            <div className="relative w-full md:max-w-[480px]">
+            <div className="relative w-full min-w-0">
               <FontAwesomeIcon
                 icon={faSearch}
                 style={{ width: 14, height: 14 }}
@@ -725,7 +728,7 @@ export default function RestaurantDetailsScreen() {
                 className="min-h-12 w-full overflow-x-auto overflow-y-hidden flex items-center py-1
                   [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               >
-                <ul className="flex gap-3 items-center w-max flex-nowrap">
+                <ul className="flex gap-3 items-center w-max flex-nowrap lg:ms-auto">
                   {(showAll ? deals : deals.slice(0, visibleItems)).map(
                     (category: ICategory, index: number) => {
                       const _slug = toSlug(category.title);
@@ -763,7 +766,7 @@ export default function RestaurantDetailsScreen() {
             </div>
 
             {normalizedFilter && (
-              <div className="flex items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400 lg:col-span-2">
                 <span>
                   {deals.reduce((count, category) => count + category.foods.length, 0)} results
                 </span>
@@ -800,14 +803,14 @@ export default function RestaurantDetailsScreen() {
             return (
               <div
                 key={catIndex}
-                className="mb-4 p-3"
+                className="mb-7 p-3 scroll-mt-44"
                 id={categorySlug}
                 data-category-id={categorySlug}
                 ref={(el) => {
                   categoryRefs.current[categorySlug] = el;
                 }}
               >
-                <h2 className="mb-4 text-[22px] font-black leading-[1.12] tracking-[-0.035em] text-slate-950 dark:text-gray-100 sm:text-[24px]">
+                <h2 className="mb-4 text-[22px] font-bold leading-tight tracking-[-0.02em] text-slate-950 dark:text-gray-100 sm:text-[24px]">
                   {category.title}
                 </h2>
 
@@ -815,10 +818,10 @@ export default function RestaurantDetailsScreen() {
                   {category.foods.map((meal: IFood, mealIndex) => (
                     <div
                       key={mealIndex}
-                      className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:-translate-y-1 hover:cursor-pointer hover:shadow-[0_18px_45px_rgba(22,41,63,0.14)] ${
+                      className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:cursor-pointer hover:shadow-md ${
                         meal.isOutOfStock
                           ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950"
-                          : "border-slate-200 bg-white shadow-[0_10px_30px_rgba(22,41,63,0.06)] hover:border-[#1c5bc7]/40 dark:border-gray-700 dark:bg-gray-800"
+                          : "border-slate-200 bg-white shadow-sm hover:border-[#1c5bc7]/40 dark:border-gray-700 dark:bg-gray-800"
                       }`}
                       onClick={() => handleRestaurantClick(meal)}
                     >
@@ -852,7 +855,7 @@ export default function RestaurantDetailsScreen() {
 
                       {/* Text Content */}
                       <div className="flex min-w-0 flex-1 flex-col">
-                        <h3 className="line-clamp-1 text-[15px] font-bold tracking-[-0.01em] text-slate-900 dark:text-gray-100">
+                        <h3 className="line-clamp-2 text-[15px] font-semibold tracking-[-0.01em] text-slate-900 dark:text-gray-100">
                           {meal.title}
                         </h3>
                         <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-gray-400">
@@ -862,7 +865,7 @@ export default function RestaurantDetailsScreen() {
                                 .join(" + ")
                             : meal.description}
                         </p>
-                        <div className="mt-auto flex items-center justify-between pt-2">
+                        <div className="mt-auto flex items-center justify-between gap-2 pe-10 pt-3">
                           <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#16293f] dark:text-primary-color">
                             <span>
                               {CURRENCY_SYMBOL}
@@ -887,7 +890,7 @@ export default function RestaurantDetailsScreen() {
 
                       {/* Add Button */}
                       <button
-                        className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-8 w-8 items-center justify-center rounded-full bg-[#1c5bc7] text-white shadow-md transition hover:scale-110`}
+                        className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c5bc7] text-white shadow-md transition hover:scale-110`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRestaurantClick(meal);

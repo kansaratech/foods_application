@@ -7,6 +7,7 @@ export const couponTypeDefs = /* GraphQL */ `
     startDate: String
     endDate: String
     lifeTimeActive: Boolean
+    firstOrderOnly: Boolean
     restaurantId: String
   }
 
@@ -23,6 +24,7 @@ export const couponTypeDefs = /* GraphQL */ `
     discount: Float
     enabled: Boolean
     lifeTimeActive: Boolean
+    firstOrderOnly: Boolean
     startDate: String
     endDate: String
   }

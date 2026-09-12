@@ -5,6 +5,14 @@ import { userInputError } from '../utils/errors';
 
 const nanoid = customAlphabet('0123456789', 8);
 
+// A discounted price is only real if it's a positive number strictly below
+// the original price — guards against a stray 0 (or a bad discount >= price)
+// ever being charged as the unit price. Belt-and-suspenders alongside the
+// sanitizing done on write in food.resolvers.ts.
+function effectivePrice(price: number, discounted: number | null | undefined): number {
+  return discounted != null && discounted > 0 && discounted < price ? discounted : price;
+}
+
 export interface OrderAddonInput {
   _id: string;
   options: string[];
@@ -62,12 +70,12 @@ export async function buildOrderItems(
       if (variation.isOutOfStock) {
         throw userInputError(`Variation "${variation.title}" is currently unavailable`);
       }
-      unitPrice = variation.discounted ?? variation.price;
+      unitPrice = effectivePrice(variation.price, variation.discounted);
       variationId = variation.id;
       variationTitle = variation.title;
     } else if (food.variations.length === 1) {
       const [only] = food.variations;
-      unitPrice = only.discounted ?? only.price;
+      unitPrice = effectivePrice(only.price, only.discounted);
       variationId = only.id;
       variationTitle = only.title;
     } else {

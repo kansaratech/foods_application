@@ -214,9 +214,7 @@ export default function WhatsAppMessageLog() {
                   <th className="py-2 pr-4">Role</th>
                   <th className="py-2 pr-4">Purpose</th>
                   <th className="py-2 pr-4">Template</th>
-                  <th className="py-2 pr-4">Channel</th>
                   <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">Detail</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,7 +234,6 @@ export default function WhatsAppMessageLog() {
                     <td className="py-2 pr-4 font-mono text-xs">
                       {r.templateKey ?? '—'}
                     </td>
-                    <td className="py-2 pr-4 text-xs">{r.channel}</td>
                     <td className="py-2 pr-4">
                       <span
                         className={`rounded px-2 py-0.5 text-xs font-medium ${
@@ -246,27 +243,18 @@ export default function WhatsAppMessageLog() {
                         {r.status}
                       </span>
                     </td>
-                    <td className="py-2 pr-4 text-xs text-gray-500">
-                      {r.errorCode || r.errorDetail
-                        ? `${r.errorCode ? r.errorCode + ' · ' : ''}${
-                            r.errorDetail ?? ''
-                          }`
-                        : r.metaMessageId
-                          ? r.metaMessageId
-                          : '—'}
-                    </td>
                   </tr>
                 ))}
                 {rows.length === 0 && !loading && (
                   <tr>
-                    <td colSpan={8} className="py-6 text-gray-400">
+                    <td colSpan={6} className="py-6 text-gray-400">
                       No WhatsApp messages match these filters.
                     </td>
                   </tr>
                 )}
                 {loading && rows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-6 text-gray-400">
+                    <td colSpan={6} className="py-6 text-gray-400">
                       Loading…
                     </td>
                   </tr>

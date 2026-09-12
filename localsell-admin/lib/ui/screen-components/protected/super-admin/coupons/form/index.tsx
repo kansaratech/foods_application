@@ -47,6 +47,7 @@ export default function CouponForm({
     discount: isEditing.bool ? isEditing?.data?.discount : 0,
     enabled: isEditing.bool ? isEditing?.data?.enabled : true,
     lifeTimeActive: isEditing.bool ? isEditing?.data?.lifeTimeActive : false,
+    firstOrderOnly: isEditing.bool ? (isEditing?.data?.firstOrderOnly ?? false) : false,
     startDate:
       isEditing.bool && isEditing?.data?.startDate
         ? (() => {
@@ -89,6 +90,7 @@ export default function CouponForm({
             enabled: false,
             title: '',
             lifeTimeActive: false,
+            firstOrderOnly: false,
             startDate: '',
             endDate: '',
           },
@@ -112,6 +114,7 @@ export default function CouponForm({
             enabled: false,
             title: '',
             lifeTimeActive: false,
+            firstOrderOnly: false,
             startDate: '',
             endDate: '',
           },
@@ -140,6 +143,7 @@ export default function CouponForm({
             enabled: false,
             title: '',
             lifeTimeActive: false,
+            firstOrderOnly: false,
             startDate: '',
             endDate: '',
           },
@@ -163,6 +167,7 @@ export default function CouponForm({
             enabled: false,
             title: '',
             lifeTimeActive: false,
+            firstOrderOnly: false,
             startDate: '',
             endDate: '',
           },
@@ -185,6 +190,7 @@ export default function CouponForm({
             enabled: true,
             title: '',
             lifeTimeActive: false,
+            firstOrderOnly: false,
             startDate: '',
             endDate: '',
           },
@@ -205,6 +211,7 @@ export default function CouponForm({
               discount: values.discount,
               enabled: values.enabled,
               lifeTimeActive: values.lifeTimeActive,
+              firstOrderOnly: values.firstOrderOnly,
               startDate: values.startDate,
               endDate: values.endDate,
             };
@@ -215,6 +222,7 @@ export default function CouponForm({
               discount: values.discount,
               enabled: values.enabled,
               lifeTimeActive: values.lifeTimeActive,
+              firstOrderOnly: values.firstOrderOnly,
               startDate: values.startDate,
               endDate: values.endDate,
             };
@@ -242,6 +250,7 @@ export default function CouponForm({
               enabled: true,
               title: '',
               lifeTimeActive: false,
+              firstOrderOnly: false,
               startDate: '',
               endDate: '',
             },
@@ -316,6 +325,14 @@ export default function CouponForm({
                   isActive={values.lifeTimeActive}
                   onChange={(e: ChangeEvent<HTMLInputElement>) =>
                     setFieldValue('lifeTimeActive', e.target.checked)
+                  }
+                />
+
+                <CustomInputSwitch
+                  label={t('First Order Only')}
+                  isActive={values.firstOrderOnly}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setFieldValue('firstOrderOnly', e.target.checked)
                   }
                 />
 

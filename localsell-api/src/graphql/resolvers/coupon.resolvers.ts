@@ -11,6 +11,7 @@ interface CouponInputArgs {
   discount?: number;
   enabled?: boolean;
   lifeTimeActive?: boolean;
+  firstOrderOnly?: boolean;
   startDate?: string;
   endDate?: string;
 }
@@ -21,9 +22,20 @@ function couponData(input: CouponInputArgs) {
     discount: input.discount ?? 0,
     enabled: input.enabled ?? true,
     lifeTimeActive: input.lifeTimeActive ?? false,
+    firstOrderOnly: input.firstOrderOnly ?? false,
     startDate: input.startDate ? new Date(input.startDate) : null,
     endDate: input.endDate ? new Date(input.endDate) : null,
   };
+}
+
+// A user's "first order" means they have no prior order in any non-cancelled
+// state — a cancelled order shouldn't burn their first-order eligibility.
+export async function hasPriorOrder(userId: string): Promise<boolean> {
+  const existing = await prisma.order.findFirst({
+    where: { userId, orderStatus: { not: 'CANCELLED' } },
+    select: { id: true },
+  });
+  return Boolean(existing);
 }
 
 export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
@@ -87,7 +99,7 @@ export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
 
   Mutation: {
     coupon: async (_parent, args: { coupon: string; restaurantId: string }, context) => {
-      requireAuth(context);
+      const currentUser = requireAuth(context);
       const now = new Date();
       const match = await prisma.coupon.findFirst({
         where: {
@@ -103,6 +115,9 @@ export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
         match.lifeTimeActive || ((!match.startDate || now >= match.startDate) && (!match.endDate || now <= match.endDate));
       if (!isWithinWindow) {
         return { success: false, message: 'This coupon is not currently active', coupon: null };
+      }
+      if (match.firstOrderOnly && (await hasPriorOrder(currentUser.id))) {
+        return { success: false, message: 'This coupon is valid for first-time orders only', coupon: null };
       }
       return { success: true, message: 'Coupon applied', coupon: match };
     },

@@ -1,0 +1,43 @@
+.store-info-dialog.p-dialog { border-radius:20px; overflow:hidden; max-height:calc(100dvh - 32px); box-shadow:0 24px 80px #10233f33; }
+.store-info-dialog .p-dialog-header { padding:20px 24px; border-bottom:1px solid #e2e8f0; gap:16px; background:#fff; color:#16293f; }
+.store-info-dialog .p-dialog-title { font-size:22px; line-height:1.3; font-weight:700; }
+.store-info-dialog .p-dialog-header-icon { width:36px; height:36px; flex-shrink:0; background:#f1f5f9; border-radius:50%; }
+.store-info-dialog .p-dialog-content { padding:0; background:#f7f9fc; }
+.store-info-map .map-container > div:first-child { height:220px !important; }
+.store-info-map > div { max-height:220px; }
+.store-info-body { padding:24px; color:#475569; font-size:14px; line-height:1.6; }
+.store-info-body > p { font-size:14px; line-height:1.6; }
+.store-info-section { padding:18px; margin-bottom:16px; border:1px solid #e2e8f0; border-radius:14px; background:#fff; }
+.store-info-section:last-child { margin-bottom:0; }
+.store-info-section h2 { font-size:16px; color:#16293f; margin-bottom:12px; }
+.store-info-section p,.store-info-section a,.store-hours-row > div { font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
+.store-info-section a { color:#1c5bc7; font-weight:500; }
+.store-hours-row { display:flex; justify-content:space-between; align-items:start; gap:16px; padding:7px 10px; border-radius:8px; font-variant-numeric:tabular-nums; }
+.store-hours-today { background:#eaf1ff; color:#1c5bc7; font-weight:600; }
+.dark .store-info-dialog .p-dialog-header,.dark .store-info-section { background:#182337; color:#e2e8f0; border-color:#334155; }
+.dark .store-info-dialog .p-dialog-content { background:#111827; }
+.dark .store-info-body,.dark .store-info-section h2 { color:#e2e8f0; }
+.dark .store-hours-today { background:#203858; color:#93c5fd; }
+@media(max-width:640px) { .store-info-dialog .p-dialog-header { padding:16px; } .store-info-dialog .p-dialog-title { font-size:19px; } .store-info-body { padding:16px; } .store-info-section { padding:14px; } }
+
+/* Keep related information visible together without a tall stack of cards. */
+.store-info-dialog .p-dialog-header { padding:14px 20px; }
+.store-info-map .map-container > div:first-child { height:150px !important; }
+.store-info-map > div { max-height:150px; }
+.store-info-body { padding:16px 20px; }
+.store-info-body > div:first-child { margin-bottom:8px; }
+.store-info-body > p { margin-bottom:14px; }
+.store-info-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; align-items:start; }
+.store-info-grid .store-info-section { padding:14px; margin:0; }
+.store-info-grid .store-info-section h2 { margin-bottom:8px; }
+.store-info-hours { grid-column:2; grid-row:1 / span 3; }
+.store-info-grid > .store-info-section:not(.store-info-hours) { grid-column:1; }
+.store-info-hours > .grid { gap:0; }
+.store-hours-row { padding:5px 8px; }
+@media(max-width:600px) {
+  .store-info-grid { grid-template-columns:minmax(0,1fr); }
+  .store-info-hours { grid-column:1; grid-row:auto; }
+  .store-info-body { padding:14px; }
+  .store-info-map .map-container > div:first-child { height:120px !important; }
+  .store-info-map > div { max-height:120px; }
+}

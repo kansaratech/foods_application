@@ -170,10 +170,15 @@ export default function OrderCheckoutScreen() {
 
   function couponCompleted({ coupon }: { coupon: ICoupon }) {
     if (!coupon.success) {
+      // Show the server's actual reason (invalid code, expired, first-order-
+      // only, etc.) instead of a generic "not valid" message — the customer
+      // needs to know *why*, especially for first-order-only coupons.
       showToast({
         type: "info",
         title: t("coupon_not_found_title"),
-        message: `${couponText} ${t("coupon_is_not_valid_message_with_title")}`,
+        message:
+          coupon.message ||
+          `${couponText} ${t("coupon_is_not_valid_message_with_title")}`,
       });
     } else if (coupon.coupon) {
       if (coupon.coupon.enabled) {

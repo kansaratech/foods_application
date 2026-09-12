@@ -16,7 +16,18 @@ export const VariationSchema = Yup.object({
           .min(MIN_PRICE, 'Minimum value must be greater than 0')
           .max(MAX_PRICE)
           .required('Required'),
-        discounted: Yup.number().min(0).required('Required'),
+        // Optional — 0/empty means no discount. When set, it's the actual
+        // discounted (final) selling price, so it must be lower than price.
+        discounted: Yup.number()
+          .min(0)
+          .test(
+            'below-price',
+            'Discounted price must be less than the price',
+            function (value) {
+              if (!value) return true;
+              return value < this.parent.price;
+            }
+          ),
         addons: Yup.array()
           .of(Yup.mixed<IDropdownSelectItem>())
           .required('Required')

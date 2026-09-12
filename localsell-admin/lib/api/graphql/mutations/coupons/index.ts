@@ -10,6 +10,7 @@ export const CREATE_COUPON = gql`
       startDate
       endDate
       lifeTimeActive
+      firstOrderOnly
     }
   }
 `;
@@ -23,6 +24,7 @@ export const EDIT_COUPON = gql`
       startDate
       endDate
       lifeTimeActive
+      firstOrderOnly
     }
   }
 `;

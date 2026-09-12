@@ -892,6 +892,8 @@ model Coupon {
   startDate      DateTime?
   endDate        DateTime?
   lifeTimeActive Boolean   @default(false)
+  // Only redeemable by a user placing their first-ever order.
+  firstOrderOnly Boolean   @default(false)
   restaurantId   String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

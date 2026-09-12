@@ -22,6 +22,22 @@ interface VariationInputArgs {
   addons?: string[];
 }
 
+// `variation.discounted` is read downstream as `discounted ?? price` (a
+// non-null value wins outright) — so a stray literal 0 or a discount that
+// isn't actually cheaper than price would silently zero out or override the
+// real price at order time. Every write site must go through this so "no
+// discount" is always persisted as null, never 0.
+function sanitizeDiscounted(price: number, discounted?: number | null): number | null {
+  if (discounted === null || discounted === undefined) return null;
+  if (!(discounted > 0) || discounted >= price) return null;
+  return discounted;
+}
+
+// Same rule as sanitizeDiscounted, applied on read for display resolvers.
+function effectivePrice(price: number, discounted: number | null | undefined): number {
+  return discounted != null && discounted > 0 && discounted < price ? discounted : price;
+}
+
 interface ComboItemInputArgs {
   foodId: string;
   variationId?: string;
@@ -238,7 +254,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
             create: input.variations.map((v) => ({
               title: v.title,
               price: v.price,
-              discounted: v.discounted,
+              discounted: sanitizeDiscounted(v.price, v.discounted),
               isOutOfStock: v.isOutOfStock ?? false,
               addons: v.addons?.length ? { create: v.addons.map((addonId) => ({ addonId })) } : undefined,
             })),
@@ -272,7 +288,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
         if (v._id) {
           await prisma.variation.update({
             where: { id: v._id },
-            data: { title: v.title, price: v.price, discounted: v.discounted, isOutOfStock: v.isOutOfStock },
+            data: { title: v.title, price: v.price, discounted: sanitizeDiscounted(v.price, v.discounted), isOutOfStock: v.isOutOfStock },
           });
           await prisma.variationAddon.deleteMany({ where: { variationId: v._id } });
           if (v.addons?.length) {
@@ -286,7 +302,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
               foodId: input._id,
               title: v.title,
               price: v.price,
-              discounted: v.discounted,
+              discounted: sanitizeDiscounted(v.price, v.discounted),
               isOutOfStock: v.isOutOfStock ?? false,
               addons: v.addons?.length ? { create: v.addons.map((addonId) => ({ addonId })) } : undefined,
             },
@@ -402,7 +418,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
                 foodId: newFood.id,
                 title: v.title,
                 price: v.price,
-                discounted: v.discounted,
+                discounted: sanitizeDiscounted(v.price, v.discounted),
                 isOutOfStock: v.isOutOfStock,
               },
             });
@@ -641,7 +657,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
             _id: f.id,
             title: f.title,
             image: f.image ?? null,
-            price: v?.discounted ?? v?.price ?? null,
+            price: v ? effectivePrice(v.price, v.discounted) : null,
             isOutOfStock: f.isOutOfStock,
           };
         }),
