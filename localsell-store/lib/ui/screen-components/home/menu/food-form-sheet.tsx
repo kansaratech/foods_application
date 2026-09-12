@@ -1,5 +1,12 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation } from "@apollo/client";
 import { useTranslation } from "react-i18next";
@@ -54,6 +61,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
     const [uploading, setUploading] = useState(false);
     const [variations, setVariations] = useState<VariationRow[]>([]);
     const [error, setError] = useState("");
+    const [addonQuery, setAddonQuery] = useState<Record<string, string>>({});
 
     useImperativeHandle(ref, () => ({
       open: (targetCategoryId: string, food?: IFood) => {
@@ -421,45 +429,113 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
               </View>
 
               {addons.length > 0 && (
-                <View className="gap-1">
-                  <Text
-                    className="text-xs"
-                    style={{ color: appTheme.fontSecondColor }}
-                  >
-                    {t("Addons")}
-                  </Text>
-                  <View className="flex-row flex-wrap gap-2">
-                    {addons.map((addon) => {
-                      const selected = (variation.addons ?? []).includes(
-                        addon._id,
-                      );
-                      return (
-                        <TouchableOpacity
-                          key={addon._id}
-                          onPress={() =>
-                            toggleVariationAddon(variation.key, addon._id)
-                          }
-                          className="rounded-full px-3 py-1"
-                          style={{
-                            backgroundColor: selected
-                              ? appTheme.primary
-                              : appTheme.sidebarIconBackground,
-                          }}
-                        >
-                          <Text
-                            className="text-xs"
-                            style={{
-                              color: selected
-                                ? appTheme.black
-                                : appTheme.fontSecondColor,
-                            }}
-                          >
-                            {addon.title}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
+                <View
+                  className="gap-2 rounded-xl p-2"
+                  style={{
+                    backgroundColor: appTheme.sidebarIconBackground,
+                  }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: appTheme.fontSecondColor }}
+                    >
+                      {t("Addons")}
+                      {(() => {
+                        const count = (variation.addons ?? []).length;
+                        return count > 0 ? ` · ${count} ${t("selected")}` : "";
+                      })()}
+                    </Text>
                   </View>
+                  {addons.length > 6 && (
+                    <TextInput
+                      className="rounded-md border p-1.5 text-xs"
+                      style={{
+                        borderColor: appTheme.borderLineColor,
+                        color: appTheme.fontMainColor,
+                      }}
+                      value={addonQuery[variation.key] ?? ""}
+                      placeholder={t("Search addons")}
+                      placeholderTextColor={appTheme.fontSecondColor}
+                      onChangeText={(val) =>
+                        setAddonQuery((prev) => ({
+                          ...prev,
+                          [variation.key]: val,
+                        }))
+                      }
+                    />
+                  )}
+                  {(() => {
+                    const query = (addonQuery[variation.key] ?? "")
+                      .trim()
+                      .toLowerCase();
+                    const filtered = query
+                      ? addons.filter((a) =>
+                          a.title.toLowerCase().includes(query),
+                        )
+                      : addons;
+                    if (filtered.length === 0) {
+                      return (
+                        <Text
+                          className="text-xs py-1"
+                          style={{ color: appTheme.fontSecondColor }}
+                        >
+                          {t("No addons match your search")}
+                        </Text>
+                      );
+                    }
+                    return (
+                      <ScrollView
+                        style={{ maxHeight: 168 }}
+                        nestedScrollEnabled
+                        showsVerticalScrollIndicator
+                      >
+                        <View className="flex-row flex-wrap gap-2 pb-1">
+                          {filtered.map((addon) => {
+                            const selected = (
+                              variation.addons ?? []
+                            ).includes(addon._id);
+                            return (
+                              <TouchableOpacity
+                                key={addon._id}
+                                onPress={() =>
+                                  toggleVariationAddon(
+                                    variation.key,
+                                    addon._id,
+                                  )
+                                }
+                                className="rounded-full px-3 py-1.5"
+                                style={{
+                                  backgroundColor: selected
+                                    ? appTheme.primary
+                                    : appTheme.themeBackground,
+                                  borderWidth: 1,
+                                  borderColor: selected
+                                    ? appTheme.primary
+                                    : appTheme.borderLineColor,
+                                }}
+                              >
+                                <Text
+                                  className="text-xs"
+                                  style={{
+                                    color: selected
+                                      ? appTheme.white
+                                      : appTheme.fontMainColor,
+                                    fontWeight: selected ? "600" : "400",
+                                  }}
+                                >
+                                  {addon.title}
+                                  {addon.options?.length
+                                    ? ` (${addon.options.length})`
+                                    : ""}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </ScrollView>
+                    );
+                  })()}
                 </View>
               )}
             </View>

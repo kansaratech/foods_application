@@ -475,8 +475,8 @@ export default function WebOrderHistory({
           <>
             <header>
               <div>
-                <h2>{t("Order details")}</h2>
-                <p>#{selected.orderId}</p>
+                <p className="oh-detail-eyebrow">{t("Order details")}</p>
+                <h2>#{selected.orderId}</h2>
               </div>
               <button
                 aria-label={t("Close order details")}
@@ -488,30 +488,46 @@ export default function WebOrderHistory({
                 ×
               </button>
             </header>
-            <p>
-              <strong>{selected.user?.name}</strong>
-              <br />
-              {selected.user?.phone}
-            </p>
-            <p>
-              {date(selected.createdAt)} · {t(mode(selected))}
-            </p>
-            <p>
-              {t(selected.orderStatus || "")} · {selected.paymentMethod}
-            </p>
+            <div className="oh-detail-customer">
+              <strong>{selected.user?.name || t("Customer")}</strong>
+              <span>{selected.user?.phone || "—"}</span>
+            </div>
+            <div className="oh-detail-meta">
+              <span>{date(selected.createdAt)}</span>
+              <span className="oh-chip">{t(mode(selected))}</span>
+            </div>
+            <div className="oh-detail-meta">
+              <span
+                className={`oh-badge ${selected.orderStatus === "CANCELLED" ? "cancelled" : ""}`}
+              >
+                {t(
+                  selected.orderStatus === "COMPLETED"
+                    ? "DELIVERED"
+                    : selected.orderStatus || "",
+                )}
+              </span>
+              <span className="oh-chip oh-chip-payment">
+                {selected.paymentMethod === "COD"
+                  ? "COD"
+                  : selected.paymentMethod || "—"}
+              </span>
+            </div>
             <ul>
               {selected.items?.map((item) => (
                 <li key={item._id}>
-                  {item.quantity} × {item.title}
-                  {item.addons
-                    ?.flatMap((addon) => addon.options ?? [])
-                    .map((option, index) => (
-                      <span key={option._id ?? index} className="oh-addon">
-                        {(option.quantity ?? 1) > 1
-                          ? `${option.quantity}x ${option.title}`
-                          : option.title}
-                      </span>
-                    ))}
+                  <span className="oh-item-qty">{item.quantity}×</span>
+                  <span className="oh-item-body">
+                    <span className="oh-item-title">{item.title}</span>
+                    {item.addons
+                      ?.flatMap((addon) => addon.options ?? [])
+                      .map((option, index) => (
+                        <span key={option._id ?? index} className="oh-addon">
+                          {(option.quantity ?? 1) > 1
+                            ? `${option.quantity}x ${option.title}`
+                            : option.title}
+                        </span>
+                      ))}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -523,14 +539,14 @@ export default function WebOrderHistory({
                 ["Discount", selected.discountAmount],
                 ["Total", selected.orderAmount],
               ].map(([label, amount]) => (
-                <div key={label}>
+                <div key={label} className={label === "Total" ? "oh-total" : ""}>
                   <dt>{t(String(label))}</dt>
                   <dd>{format(Number(amount) || 0)}</dd>
                 </div>
               ))}
             </dl>
             {selected.reason && (
-              <p>
+              <p className="oh-detail-reason">
                 {t("Cancellation reason")}: {selected.reason}
               </p>
             )}
@@ -545,6 +561,22 @@ const styles = `
 .order-history-web{box-sizing:border-box;overflow:auto;flex:1;width:100%;padding:26px 22px 30px;background:linear-gradient(125deg,#f3f8ff,#edf4fc);color:#20314d;font-family:Inter,system-ui,-apple-system,sans-serif;font-size:12px;min-height:0}
 .order-history-web *{box-sizing:border-box}.order-history-web button,.order-history-web input,.order-history-web select{font:inherit}.order-history-web button{cursor:pointer;transition:background .15s}.order-history-web button:disabled{cursor:default;opacity:.4}.order-history-web button:focus-visible,.order-history-web input:focus-visible,.order-history-web select:focus-visible{outline:2px solid #1559e9;outline-offset:3px}.order-history-web button:hover:not(:disabled){filter:brightness(.96)}
 .oh-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:0 3px 20px}.oh-heading h1{font-size:25px;letter-spacing:-.7px;line-height:1.25;margin:0 0 5px;font-weight:750;color:#122b49}.oh-heading p{font-size:13px;color:#687b9b;margin:0}.oh-actions{display:flex;align-items:center;gap:16px}.oh-outline,.oh-view{border:1px solid #5685ff;background:white;color:#0759f5;border-radius:6px;font-weight:600!important;padding:9px 16px}.oh-outline span{font-size:19px;margin-right:7px}.oh-link{border:0;background:none;color:#0760ff;padding:0;text-align:left}.oh-id{font-weight:650!important;white-space:nowrap}
-.oh-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;background:#fff;border:1px solid #e0e8f4;border-radius:7px}.oh-search{height:36px;display:flex;align-items:center;gap:10px;flex:1;min-width:210px;border:1px solid #d9e2f0;border-radius:6px;padding:0 11px;color:#7c8da9}.oh-search input{border:0;outline:none;background:transparent;width:100%;color:#20314d}.oh-search input::placeholder{color:#7383a0}.oh-ranges{display:flex;border:1px solid #dce4f0;border-radius:5px;overflow:hidden;height:35px}.oh-ranges button{border:0;border-right:1px solid #e5ebf5;background:#fff;color:#6b7d9a;padding:0 20px;white-space:nowrap}.oh-ranges button:last-child{border:0}.oh-ranges button.active{background:#1057e9;color:#fff;border-radius:4px}.order-history-web select{height:35px;border:1px solid #d9e2f0;background:#fff;color:#34445e;border-radius:6px;padding:0 30px 0 12px}.oh-toolbar select{min-width:145px}.oh-reset{width:40px;height:35px;background:white;border:1px solid #d9e2f0;border-radius:6px;color:#617591;font-size:20px!important}.oh-count{text-align:right;color:#7d8da7;margin:12px 0 10px}.oh-card{background:#fff;border:1px solid #e0e8f4;border-radius:7px;padding:10px 11px 0;box-shadow:0 8px 24px #24467904}.oh-scroll{overflow-x:auto}.oh-card table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap}.oh-card th{font-size:11px;font-weight:650;background:#ebf1f8;color:#344967;height:37px;padding:10px 12px}.oh-card th:first-child{border-radius:5px 0 0 0}.oh-card th:last-child{border-radius:0 5px 0 0}.oh-card td{padding:10px 12px;height:49px;border-bottom:1px solid #eaf0f7;font-size:12px}.oh-card tbody tr:hover{background:#fafcff}.oh-sort{margin-left:8px}.oh-customer{display:block;font-weight:500}.oh-phone{display:block;color:#6c7f9f;margin-top:3px}.oh-date{white-space:nowrap}.oh-number{text-align:right}.oh-badge{display:inline-block;border-radius:7px;background:#d3f5df;color:#11933f;font-size:10px;font-weight:650;padding:5px 9px}.oh-badge.cancelled{background:#fee5e5;color:#bc3535}.oh-view{padding:6px 20px;min-width:68px}.oh-footer{padding:15px 7px;display:flex;justify-content:space-between;align-items:center;gap:16px;color:#647694;min-height:64px}.oh-pagination{display:flex;align-items:center;gap:13px}.oh-pagination label{display:flex;align-items:center;gap:12px;margin-right:17px}.oh-pagination button,.oh-page{display:grid;place-items:center;width:33px;height:33px;background:white;border:1px solid #dbe4f1;border-radius:6px;color:#667b9e;font-size:20px}.oh-pagination button:disabled{background:#f0f3f8}.oh-page{font-size:13px;color:#1559e9;border-color:#5685ff}.oh-empty{text-align:center;padding:50px!important;color:#6b7d99;white-space:normal}.oh-error{color:#bb3030}.oh-detail{width:min(480px,calc(100% - 32px));border:1px solid #e0e8f4;border-radius:12px;padding:24px;color:#20314d;max-height:85vh;overflow:auto;box-shadow:0 20px 80px #122b4940}.oh-detail::backdrop{background:#18304770}.oh-detail header{display:flex;justify-content:space-between}.oh-detail h2{margin:0}.oh-detail header button{border:0;background:none;font-size:25px;align-self:flex-start;color:#526785}.oh-detail p{line-height:1.7}.oh-detail ul{padding:16px 20px;background:#f3f7fc;border-radius:8px;line-height:1.5}.oh-detail li{padding:4px 0}.oh-addon{display:block;margin-left:14px;font-size:11px;color:#647694}.oh-detail dl div{display:flex;justify-content:space-between;padding:8px 0}.oh-detail dl div:last-child{border-top:1px solid #dce4f0;font-weight:700}
+.oh-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px;background:#fff;border:1px solid #e0e8f4;border-radius:7px}.oh-search{height:36px;display:flex;align-items:center;gap:10px;flex:1;min-width:210px;border:1px solid #d9e2f0;border-radius:6px;padding:0 11px;color:#7c8da9}.oh-search input{border:0;outline:none;background:transparent;width:100%;color:#20314d}.oh-search input::placeholder{color:#7383a0}.oh-ranges{display:flex;border:1px solid #dce4f0;border-radius:5px;overflow:hidden;height:35px}.oh-ranges button{border:0;border-right:1px solid #e5ebf5;background:#fff;color:#6b7d9a;padding:0 20px;white-space:nowrap}.oh-ranges button:last-child{border:0}.oh-ranges button.active{background:#1057e9;color:#fff;border-radius:4px}.order-history-web select{height:35px;border:1px solid #d9e2f0;background:#fff;color:#34445e;border-radius:6px;padding:0 30px 0 12px}.oh-toolbar select{min-width:145px}.oh-reset{width:40px;height:35px;background:white;border:1px solid #d9e2f0;border-radius:6px;color:#617591;font-size:20px!important}.oh-count{text-align:right;color:#7d8da7;margin:12px 0 10px}.oh-card{background:#fff;border:1px solid #e0e8f4;border-radius:7px;padding:10px 11px 0;box-shadow:0 8px 24px #24467904}.oh-scroll{overflow-x:auto}.oh-card table{border-collapse:collapse;width:100%;text-align:left;white-space:nowrap}.oh-card th{font-size:11px;font-weight:650;background:#ebf1f8;color:#344967;height:37px;padding:10px 12px}.oh-card th:first-child{border-radius:5px 0 0 0}.oh-card th:last-child{border-radius:0 5px 0 0}.oh-card td{padding:10px 12px;height:49px;border-bottom:1px solid #eaf0f7;font-size:12px}.oh-card tbody tr:hover{background:#fafcff}.oh-sort{margin-left:8px}.oh-customer{display:block;font-weight:500}.oh-phone{display:block;color:#6c7f9f;margin-top:3px}.oh-date{white-space:nowrap}.oh-number{text-align:right}.oh-badge{display:inline-block;border-radius:7px;background:#d3f5df;color:#11933f;font-size:10px;font-weight:650;padding:5px 9px}.oh-badge.cancelled{background:#fee5e5;color:#bc3535}.oh-view{padding:6px 20px;min-width:68px}.oh-footer{padding:15px 7px;display:flex;justify-content:space-between;align-items:center;gap:16px;color:#647694;min-height:64px}.oh-pagination{display:flex;align-items:center;gap:13px}.oh-pagination label{display:flex;align-items:center;gap:12px;margin-right:17px}.oh-pagination button,.oh-page{display:grid;place-items:center;width:33px;height:33px;background:white;border:1px solid #dbe4f1;border-radius:6px;color:#667b9e;font-size:20px}.oh-pagination button:disabled{background:#f0f3f8}.oh-page{font-size:13px;color:#1559e9;border-color:#5685ff}.oh-empty{text-align:center;padding:50px!important;color:#6b7d99;white-space:normal}.oh-error{color:#bb3030}.oh-detail{width:min(480px,calc(100% - 32px));border:1px solid #e0e8f4;border-radius:16px;padding:0;color:#20314d;max-height:85vh;overflow:auto;box-shadow:0 20px 80px #122b4940}.oh-detail::backdrop{background:#0f244570;backdrop-filter:blur(2px)}
+.oh-detail header{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 0}.oh-detail-eyebrow{margin:0 0 4px;font-size:10.5px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:#7c8da9}.oh-detail h2{margin:0;font-size:20px;letter-spacing:-.3px;color:#122b49}.oh-detail header button{border:0;background:#eef3fb;width:30px;height:30px;border-radius:8px;font-size:18px;line-height:1;color:#526785;flex-shrink:0}.oh-detail header button:hover{background:#e1e9f7}
+.oh-detail-customer{padding:16px 24px 0;display:flex;flex-direction:column;gap:2px}.oh-detail-customer strong{font-size:14.5px;color:#122b49;font-weight:700}.oh-detail-customer span{font-size:12.5px;color:#687b9b}
+.oh-detail-meta{padding:10px 24px 0;display:flex;align-items:center;gap:8px;font-size:12px;color:#687b9b}
+.oh-chip{display:inline-flex;align-items:center;padding:3px 11px;border-radius:20px;background:#eaf1fd;color:#0d51d6;font-size:11px;font-weight:700}
+.oh-chip-payment{background:#f1f3f8;color:#45536e}
+.oh-detail p{line-height:1.7;padding:0 24px}
+.oh-detail ul{margin:18px 24px 0;padding:6px 16px;background:#f3f7fc;border:1px solid #e6edf7;border-radius:10px;line-height:1.5;list-style:none}
+.oh-detail li{display:flex;gap:9px;padding:8px 0}.oh-detail li+li{border-top:1px dashed #dfe7f2}
+.oh-item-qty{flex-shrink:0;font-weight:750;color:#1057e9;font-size:12.5px;min-width:22px}
+.oh-item-body{display:flex;flex-direction:column;gap:2px}
+.oh-item-title{font-weight:600;color:#20314d;font-size:12.5px}
+.oh-addon{display:block;font-size:11px;color:#647694}
+.oh-detail dl{margin:16px 24px 22px;padding:14px 16px;background:#f8fafc;border:1px solid #eef2f8;border-radius:10px}
+.oh-detail dl div{display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px;color:#48597a}
+.oh-total{margin-top:6px;padding-top:12px!important;border-top:1px solid #dce4f0;font-weight:750!important;color:#122b49!important;font-size:14px!important}
+.oh-detail-reason{margin:0 24px 20px;padding:10px 14px;background:#fef2f2;border:1px solid #fbdada;border-radius:8px;color:#b3261e;font-size:12px;line-height:1.5!important}
 @media(min-width:1500px){.order-history-web{padding:32px 40px}.oh-toolbar{gap:18px}.oh-card td{height:55px}}@media(max-width:700px){.order-history-web{padding:20px 12px}.oh-heading{flex-wrap:wrap}.oh-heading h1{font-size:23px}.oh-actions{width:100%;justify-content:space-between}.oh-search{flex-basis:100%}.oh-ranges{width:100%}.oh-ranges button{flex:1;padding:0 12px}.oh-toolbar{gap:10px}.oh-toolbar select{flex:1;min-width:120px}.oh-footer{align-items:flex-start;flex-direction:column}.oh-pagination{width:100%;justify-content:flex-end}.oh-pagination label{margin-right:auto}}
 `;
