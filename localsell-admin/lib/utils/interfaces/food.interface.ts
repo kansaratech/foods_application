@@ -107,6 +107,8 @@ export interface IFoodNew {
   isOutOfStock: boolean;
   pairedFoods?: { _id: string; title: string }[];
   pairedFoodIds?: string[];
+  // Null inherits the store's default GST rate (Restaurant.tax).
+  gstRatePercent?: number | null;
 }
 
 export interface IFoodCategory {

@@ -59,6 +59,7 @@ interface FoodInputArgs {
   isCombo?: boolean;
   comboItems?: ComboItemInputArgs[];
   compareAtPrice?: number | null;
+  gstRatePercent?: number | null;
   pairedFoodIds?: string[];
 }
 
@@ -76,6 +77,7 @@ function foodExtraFields(input: FoodInputArgs) {
           })) as unknown as object)
         : undefined,
     compareAtPrice: input.compareAtPrice ?? undefined,
+    gstRatePercent: input.gstRatePercent ?? undefined,
     pairedFoodIds:
       input.pairedFoodIds !== undefined ? (input.pairedFoodIds as unknown as object) : undefined,
   };

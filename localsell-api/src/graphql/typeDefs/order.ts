@@ -78,6 +78,9 @@ export const orderTypeDefs = /* GraphQL */ `
     deliveryCharges: Float!
     tipping: Float!
     taxationAmount: Float!
+    "Populated only for a GST-Regular store's order (intra-state split of taxationAmount). Null otherwise."
+    cgstAmount: Float
+    sgstAmount: Float
     discountAmount: Float!
     instructions: String
     orderDate: String
@@ -139,7 +142,27 @@ export const orderTypeDefs = /* GraphQL */ `
 
   type OrderManagementSummary { total: Int! pending: Int! inProgress: Int! deliveredToday: Int! }
 
+  "Server-computed bill breakdown for a cart, before placing the order — the same pricing.service.ts pipeline placeOrder uses, so what's previewed is guaranteed to match what gets charged."
+  type OrderPricePreview {
+    itemsTotal: Float!
+    discountAmount: Float!
+    deliveryCharges: Float!
+    "REGULAR | COMPOSITION | UNREGISTERED — drives how the client should render the tax line (a real CGST/SGST breakup for REGULAR, an 'inclusive of tax' caption and no separate line otherwise)."
+    gstMode: String!
+    cgst: Float!
+    sgst: Float!
+    taxationAmount: Float!
+    orderAmount: Float!
+  }
+
   extend type Query {
+    orderPricePreview(
+      restaurant: String!
+      orderInput: [OrderItemInput!]!
+      couponCode: String
+      isPickedUp: Boolean!
+      address: AddressInput
+    ): OrderPricePreview!
     order(id: String!): Order
     orderDetails(id: String!): Order
     orders(offset: Int): [Order!]!

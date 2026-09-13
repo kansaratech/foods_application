@@ -57,10 +57,12 @@ export default function ReviewStep({ onEditStep }: { onEditStep: (step: number) 
       <SummaryCard title={t('Business & KYC')} onEdit={() => onEditStep(1)}>
         <SummaryRow label={t('Business name')} value={values.businessName} />
         <SummaryRow label={t('Business type')} value={values.businessType?.label} />
-        <SummaryRow label={t('GST registered')} value={values.isGstRegistered ? t('Yes') : t('No')} />
-        {values.isGstRegistered && <SummaryRow label={t('GSTIN')} value={values.gstin} />}
+        <SummaryRow label={t('GST registration')} value={values.gstRegistrationType?.label} />
+        {values.gstRegistrationType?.code !== 'UNREGISTERED' && (
+          <SummaryRow label={t('GSTIN')} value={values.gstin} />
+        )}
         <SummaryRow label={t('PAN card')} value={values.panFileUrl ? t('Uploaded') : t('Not uploaded')} />
-        {values.isGstRegistered && (
+        {values.gstRegistrationType?.code !== 'UNREGISTERED' && (
           <SummaryRow label={t('GST certificate')} value={values.gstCertFileUrl ? t('Uploaded') : t('Not uploaded')} />
         )}
       </SummaryCard>

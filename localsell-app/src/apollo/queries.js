@@ -962,6 +962,22 @@ export const getTipping = `query Tips{
     }
   }`
 
+// Server-authoritative bill breakdown for the current cart — mirrors exactly
+// what placeOrder will charge (same pricing.service.ts pipeline on the API),
+// so checkout never shows a tax/delivery figure the server would then override.
+export const getOrderPricePreview = `query OrderPricePreview($restaurant: String!, $orderInput: [OrderItemInput!]!, $couponCode: String, $isPickedUp: Boolean!, $address: AddressInput) {
+    orderPricePreview(restaurant: $restaurant, orderInput: $orderInput, couponCode: $couponCode, isPickedUp: $isPickedUp, address: $address) {
+      itemsTotal
+      discountAmount
+      deliveryCharges
+      gstMode
+      cgst
+      sgst
+      taxationAmount
+      orderAmount
+    }
+  }`
+
 export const FavouriteRestaurant = `query UserFavourite ($latitude:Float,$longitude:Float){
     userFavourite(latitude:$latitude,longitude:$longitude) {
       _id

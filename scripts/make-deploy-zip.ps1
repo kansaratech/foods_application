@@ -98,6 +98,7 @@ Get-ChildItem $stage -Recurse -Filter '*.env' -File |
 $must = @(
   'docker-compose.yml',
   'deploy\localsell.env.example',
+  'deploy\backup.sh',
   'LOCALSELL_DEPLOYMENT.md',
   'localsell-api\package-lock.json',
   'localsell-api\Dockerfile',
@@ -129,6 +130,18 @@ $serverScript = @'
 set -e
 E="--env-file deploy/localsell.env"
 [ -f deploy/localsell.env ] || { echo "!! create deploy/localsell.env first (cp deploy/localsell.env.example, then fill it)"; exit 1; }
+
+echo "== uploads directory (host bind-mount, see LOCALSELL_DEPLOYMENT.md section 12.3) =="
+UPLOADS_DIR="$(grep -m1 '^UPLOADS_HOST_DIR=' deploy/localsell.env | cut -d= -f2-)"
+UPLOADS_DIR="${UPLOADS_DIR:-/var/localsell/uploads}"
+mkdir -p "$UPLOADS_DIR"
+if [ -z "$(ls -A "$UPLOADS_DIR" 2>/dev/null)" ] && docker volume inspect localsell_uploads >/dev/null 2>&1; then
+  echo "  $UPLOADS_DIR is empty and an old 'localsell_uploads' Docker volume exists - migrating its contents once..."
+  docker run --rm -v localsell_uploads:/from -v "$UPLOADS_DIR":/to busybox sh -c 'cp -a /from/. /to/'
+  echo "  migrated ($(ls "$UPLOADS_DIR" | wc -l) file(s)). Old volume left in place - remove once verified: docker volume rm localsell_uploads"
+else
+  echo "  using $UPLOADS_DIR ($(ls -A "$UPLOADS_DIR" 2>/dev/null | wc -l) file(s))"
+fi
 
 echo "== build + (re)start all services =="
 docker compose $E up -d --build

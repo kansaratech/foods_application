@@ -423,6 +423,11 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
 
     createAddress: async (_parent, args: { addressInput: AddressInputArgs }, context) => {
       const currentUser = requireAuth(context);
+      // A freshly added address is the one the customer means to use right
+      // now. Without unselecting the rest here, the previous address stayed
+      // `selected: true` and the client's "find the one flagged selected"
+      // logic picked it over the new one (#74).
+      await prisma.address.updateMany({ where: { userId: currentUser.id }, data: { selected: false } });
       await prisma.address.create({
         data: {
           userId: currentUser.id,
@@ -431,6 +436,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
           details: args.addressInput.details,
           latitude: args.addressInput.latitude ? Number(args.addressInput.latitude) : null,
           longitude: args.addressInput.longitude ? Number(args.addressInput.longitude) : null,
+          selected: true,
         },
       });
       return prisma.user.findUnique({ where: { id: currentUser.id } });

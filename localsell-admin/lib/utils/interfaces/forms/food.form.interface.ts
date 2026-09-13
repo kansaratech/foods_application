@@ -18,4 +18,8 @@ export interface IFoodDetailsForm {
   category: IDropdownSelectItem | null;
   subCategory: IDropdownSelectItem | null;
   pairedFoods: IDropdownSelectItem[];
+  // Blank inherits the store's default GST rate (Restaurant.tax) — set only to
+  // override for this specific item, e.g. a grocery/pharmacy good taxed at a
+  // different slab than the store's default.
+  gstRatePercent: number | null;
 }

@@ -271,6 +271,9 @@ export default function ShopTypesForm({
                       : '',
                   }}
                 />
+                {errors.name && (
+                  <small className="p-error block">{errors.name}</small>
+                )}
 
                 <FormActions
                   onCancel={resetAndClose}

@@ -4,6 +4,7 @@ import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
 import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../services/order.service';
+import { computeDeliveryFee, computeGst } from '../../services/pricing.service';
 import { notifyOrderEvent } from '../../services/order-notify';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
@@ -60,15 +61,20 @@ async function publishRiderAssigned(order: Order) {
  * carrying (undeposited) plus this order would exceed `Configuration.riderCashLimit`.
  * No-op for non-COD orders. (Swiggy/Zomato-style cash limit.)
  */
-/** A non-pickup order's address must sit inside the store's delivery radius. */
-async function assertAddressInDeliveryArea(restaurantId: string, addressId: string | null): Promise<void> {
+/**
+ * A non-pickup order's address must sit inside the store's delivery radius.
+ * Returns the computed distance (km) so the caller can reuse it for a
+ * distance-based delivery fee instead of recomputing — null when either
+ * point is missing coordinates and distance genuinely can't be known.
+ */
+async function assertAddressInDeliveryArea(restaurantId: string, addressId: string | null): Promise<number | null> {
   if (!addressId) throw userInputError('A delivery address is required for delivery orders.');
   const [restaurant, addr] = await Promise.all([
     prisma.restaurant.findUnique({ where: { id: restaurantId } }),
     prisma.address.findUnique({ where: { id: addressId } }),
   ]);
-  if (!restaurant || restaurant.latitude == null || restaurant.longitude == null) return;
-  if (addr?.latitude == null || addr?.longitude == null) return;
+  if (!restaurant || restaurant.latitude == null || restaurant.longitude == null) return null;
+  if (addr?.latitude == null || addr?.longitude == null) return null;
   const reachKm = restaurant.deliveryDistance && restaurant.deliveryDistance > 0 ? restaurant.deliveryDistance : 60;
   const dist = distanceKm(addr.latitude, addr.longitude, restaurant.latitude, restaurant.longitude);
   if (dist > reachKm) {
@@ -76,6 +82,7 @@ async function assertAddressInDeliveryArea(restaurantId: string, addressId: stri
       `This address is outside ${restaurant.name}'s delivery area (${dist.toFixed(1)} km away, limit ${reachKm} km).`,
     );
   }
+  return dist;
 }
 
 async function assertRiderUnderCashLimit(riderId: string, orderId: string): Promise<void> {
@@ -599,6 +606,88 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         riders: riders.map((r) => ({ _id: r.id, name: r.name, username: r.username, phone: r.phone })),
       };
     },
+
+    // Runs the exact same buildOrderItems → computeGst/computeDeliveryFee
+    // pipeline placeOrder uses, without writing anything — so the bill
+    // breakdown a customer sees before paying always matches what placeOrder
+    // will actually charge. Doesn't create an Address row for a not-yet-saved
+    // address (unlike resolveOrderAddress) since this may be called on every
+    // cart/address edit.
+    orderPricePreview: async (
+      _parent,
+      args: {
+        restaurant: string;
+        orderInput: OrderItemInput[];
+        couponCode?: string;
+        isPickedUp: boolean;
+        address?: PlaceOrderArgs['address'];
+      },
+      context,
+    ) => {
+      const currentUser = requireAuth(context);
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: args.restaurant } });
+      if (!restaurant) throw userInputError('Restaurant not found or unavailable');
+
+      const { itemsTotal, lines } = await buildOrderItems(args.restaurant, args.orderInput, restaurant.tax);
+
+      let discountAmount = 0;
+      if (args.couponCode) {
+        const now = new Date();
+        const coupon = await prisma.coupon.findFirst({
+          where: {
+            title: args.couponCode,
+            enabled: true,
+            OR: [{ restaurantId: null }, { restaurantId: args.restaurant }],
+          },
+        });
+        const isWithinWindow =
+          coupon && (coupon.lifeTimeActive || ((!coupon.startDate || now >= coupon.startDate) && (!coupon.endDate || now <= coupon.endDate)));
+        if (coupon && isWithinWindow && !(coupon.firstOrderOnly && (await hasPriorOrder(currentUser.id)))) {
+          discountAmount = Math.min(itemsTotal, itemsTotal * (coupon.discount / 100));
+        }
+      }
+
+      const gst = computeGst(lines, itemsTotal, discountAmount, restaurant.gstRegistrationType);
+
+      let deliveryCharges = 0;
+      if (!args.isPickedUp) {
+        let distance: number | null = null;
+        if (restaurant.latitude != null && restaurant.longitude != null) {
+          let lat: number | null = null;
+          let lng: number | null = null;
+          if (args.address?._id) {
+            const existing = await prisma.address.findFirst({ where: { id: args.address._id, userId: currentUser.id } });
+            lat = existing?.latitude ?? null;
+            lng = existing?.longitude ?? null;
+          }
+          // Fall back to raw coordinates on the input — covers a not-yet-saved
+          // address, or an `_id` that didn't resolve to one of this user's rows.
+          if (lat == null && args.address?.latitude && args.address?.longitude) {
+            lat = Number(args.address.latitude);
+            lng = Number(args.address.longitude);
+          }
+          if (lat != null && lng != null) {
+            distance = distanceKm(lat, lng, restaurant.latitude, restaurant.longitude);
+          }
+        }
+        const config = await prisma.configuration.findFirst();
+        deliveryCharges = computeDeliveryFee(
+          { costType: config?.costType, deliveryRate: config?.deliveryRate },
+          distance ?? 0,
+        );
+      }
+
+      return {
+        itemsTotal,
+        discountAmount,
+        deliveryCharges,
+        gstMode: gst.gstMode,
+        cgst: gst.cgst,
+        sgst: gst.sgst,
+        taxationAmount: gst.taxationAmount,
+        orderAmount: itemsTotal - discountAmount + deliveryCharges + gst.taxationAmount,
+      };
+    },
   },
 
   Mutation: {
@@ -610,7 +699,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         throw userInputError('This store is not currently accepting orders');
       }
 
-      const { itemsData, itemsTotal } = await buildOrderItems(args.restaurant, args.orderInput);
+      const { itemsData, itemsTotal, lines } = await buildOrderItems(args.restaurant, args.orderInput, restaurant.tax);
       if (itemsTotal < restaurant.minimumOrder) {
         throw userInputError(`Order amount is below the restaurant's minimum order of ${restaurant.minimumOrder}`);
       }
@@ -618,7 +707,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const addressId = await resolveOrderAddress(currentUser.id, args.address);
 
       // A delivery order must land within the store's delivery radius. Pickup skips it.
-      if (!args.isPickedUp) await assertAddressInDeliveryArea(args.restaurant, addressId);
+      // The distance is reused below for the delivery fee instead of recomputing it.
+      const distance = args.isPickedUp ? null : await assertAddressInDeliveryArea(args.restaurant, addressId);
 
       let discountAmount = 0;
       if (args.couponCode) {
@@ -642,7 +732,21 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         }
       }
 
-      const orderAmount = itemsTotal - discountAmount + args.deliveryCharges + args.tipping + args.taxationAmount;
+      // Tax and delivery fee are computed here, server-side, from data the
+      // client can't influence — `args.taxationAmount`/`args.deliveryCharges`
+      // are accepted (older client builds still send them) but never trusted;
+      // a tampered client can no longer place an order at a lower charge.
+      const gst = computeGst(lines, itemsTotal, discountAmount, restaurant.gstRegistrationType);
+      let deliveryCharges = 0;
+      if (!args.isPickedUp) {
+        const config = await prisma.configuration.findFirst();
+        deliveryCharges = computeDeliveryFee(
+          { costType: config?.costType, deliveryRate: config?.deliveryRate },
+          distance ?? 0,
+        );
+      }
+
+      const orderAmount = itemsTotal - discountAmount + deliveryCharges + args.tipping + gst.taxationAmount;
 
       // Fulfilment: pickup → PICKUP; a self-delivery-only store → SELF; anything
       // else (PLATFORM or BOTH) defaults to the LocalSell fleet, and the store
@@ -661,8 +765,10 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
           addressId,
           paymentMethod: args.paymentMethod,
           tipping: args.tipping,
-          taxationAmount: args.taxationAmount,
-          deliveryCharges: args.deliveryCharges,
+          taxationAmount: gst.taxationAmount,
+          cgstAmount: gst.gstMode === 'REGULAR' ? gst.cgst : null,
+          sgstAmount: gst.gstMode === 'REGULAR' ? gst.sgst : null,
+          deliveryCharges,
           discountAmount,
           orderAmount,
           instructions: args.instructions,
@@ -709,9 +815,12 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const data: Record<string, unknown> = {};
 
       if (args.paymentMethod && args.paymentMethod !== order.paymentMethod) {
-        // No payment gateway is wired for this launch (COD only) — switching to
-        // "online" just changes the flag; a real integration would capture /
-        // refund here.
+        // Online payment is paused platform-wide for now (COD only) — reject
+        // switching to it here even though checkout also no longer offers it,
+        // so the mutation can't be used to bypass that.
+        if (args.paymentMethod !== 'COD') {
+          throw userInputError('Online payment is currently unavailable — cash on delivery only.');
+        }
         data.paymentMethod = args.paymentMethod;
       }
 
@@ -719,19 +828,22 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       let addressId = order.addressId;
       if (args.address) addressId = await resolveOrderAddress(order.userId, args.address);
 
-      // Delivery fee: 0 for pickup; for delivery use the caller's value, else the
-      // order's existing fee, else the store's default.
+      // Delivery fee: 0 for pickup; for delivery, recomputed server-side (never
+      // trust `args.deliveryCharges`) whenever the caller signals a fulfilment
+      // change — either an explicit delivery-charges touch or a pickup→delivery
+      // switch. Otherwise the order's existing fee is left as-is.
       let deliveryCharges = order.deliveryCharges;
       if (pickup) {
         deliveryCharges = 0;
         if (order.riderId) data.riderId = null;
       } else {
-        await assertAddressInDeliveryArea(order.restaurantId, addressId);
-        if (args.deliveryCharges != null) deliveryCharges = args.deliveryCharges;
-        else if (order.isPickedUp) {
-          const rest = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
+        const distance = await assertAddressInDeliveryArea(order.restaurantId, addressId);
+        if (args.deliveryCharges != null || order.isPickedUp) {
           const config = await prisma.configuration.findFirst();
-          deliveryCharges = rest?.deliveryFee ?? config?.deliveryRate ?? 0;
+          deliveryCharges = computeDeliveryFee(
+            { costType: config?.costType, deliveryRate: config?.deliveryRate },
+            distance ?? 0,
+          );
         }
       }
 

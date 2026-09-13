@@ -29,17 +29,29 @@ export interface OrderItemInput {
 interface BuiltOrderItem {
   data: Prisma.OrderItemCreateWithoutOrderInput;
   lineTotal: number;
+  gstRate: number;
+}
+
+export interface OrderItemLine {
+  lineTotal: number;
+  gstRate: number;
 }
 
 /**
  * Recomputes prices from the current Food/Variation/Option records rather than
  * trusting client-sent totals, and snapshots titles/prices onto the order item
  * so historical orders stay accurate if the menu changes later.
+ *
+ * `defaultGstRate` is the owning restaurant's default rate (Restaurant.tax) —
+ * each line uses its own Food.gstRatePercent when set, else this default, so
+ * the caller can compute tax per line (pricing.service.ts computeGst) after
+ * discount is known.
  */
 export async function buildOrderItems(
   restaurantId: string,
   items: OrderItemInput[],
-): Promise<{ itemsData: Prisma.OrderItemCreateWithoutOrderInput[]; itemsTotal: number }> {
+  defaultGstRate: number = 0,
+): Promise<{ itemsData: Prisma.OrderItemCreateWithoutOrderInput[]; itemsTotal: number; lines: OrderItemLine[] }> {
   if (!items.length) {
     throw userInputError('An order must contain at least one item');
   }
@@ -157,9 +169,11 @@ export async function buildOrderItems(
 
     const quantity = Math.max(1, Math.floor(item.quantity));
     const lineTotal = (unitPrice + addonsTotal) * quantity;
+    const gstRate = food.gstRatePercent ?? defaultGstRate;
 
     built.push({
       lineTotal,
+      gstRate,
       data: {
         title: variationTitle ? `${food.title} (${variationTitle})` : food.title,
         price: unitPrice,
@@ -175,6 +189,7 @@ export async function buildOrderItems(
   return {
     itemsData: built.map((b) => b.data),
     itemsTotal: built.reduce((sum, b) => sum + b.lineTotal, 0),
+    lines: built.map((b) => ({ lineTotal: b.lineTotal, gstRate: b.gstRate })),
   };
 }
 

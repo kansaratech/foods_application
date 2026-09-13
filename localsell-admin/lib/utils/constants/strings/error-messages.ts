@@ -67,6 +67,7 @@ export const RestaurantErrors: IRestaurantFormErrors = {
   deliveryTime: ['Required', 'The value must be greater than or equal to 1'],
   minOrder: ['Required'],
   salesTax: ['Required'],
+  gstin: ['Required', 'Enter a valid 15-character GSTIN'],
   shopType: ['Required'],
   cuisines: ['Required', 'Cuisines field must have at least 1 items'],
   image: ['Required', 'Invalid image URL'],
@@ -84,6 +85,7 @@ export const ProfileErrors: IUpdateProfileFormErrors = {
   deliveryTime: ['Required'],
   minOrder: ['Required'],
   salesTax: ['Required'],
+  gstin: ['Required', 'Enter a valid 15-character GSTIN'],
   orderprefix: ['Required'],
   shopType: ['Required'],
   cuisines: ['Required', 'Cuisines field must have at least 1 items'],
@@ -98,7 +100,6 @@ export const BussinessDetailsErrors: IUpdateBussinessDetailsFormErrors = {
   accountNumber: ['Required'],
   bussinessRegNo: [],
   companyRegNo: [],
-  taxRate: ['Required'],
 };
 
 export const RiderErrors: IRiderErrors = {
@@ -156,6 +157,7 @@ export const AddonsErrors: IAddonsErrors = {
     'Maximum price is 99999',
   ],
   options: ['Required', 'Option field must have at least 1 items'],
+  newOptions: ['Required', 'Add at least one choice, or reuse a saved one'],
 };
 
 export const ZoneErrors: IZoneErrors = {

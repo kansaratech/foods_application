@@ -104,8 +104,8 @@ export default function OptionMain({
   function onErrorFetchAddonsByRestaurant() {
     showToast({
       type: 'error',
-      title: t('Addons Fetch'),
-      message: t('Addons fetch failed'),
+      title: t('Customisation Groups'),
+      message: t('Could not load customisation groups'),
       duration: 2500,
     });
   }
@@ -168,15 +168,15 @@ export default function OptionMain({
             onCompleted: () => {
               showToast({
                 type: 'success',
-                title: t('Delete Add-on'),
-                message: t('Add-on has been deleted successfully'),
+                title: t('Delete Customisation Group'),
+                message: t('Customisation group deleted successfully'),
                 duration: 3000,
               });
               setDeleteId('');
             },
           });
         }}
-        message={t('Are you sure you want to delete this Add-on?')}
+        message={t('Are you sure you want to delete this customisation group?')}
       />
     </div>
   );

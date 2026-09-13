@@ -25,6 +25,7 @@ export const RESTAURANT_CATEGORIES_PAGINATED = gql`
           images
           isActive
           isOutOfStock
+          gstRatePercent
           variations {
             _id
             title
@@ -49,6 +50,7 @@ export const RESTAURANT_ADDONS = gql`
         _id
         title
         description
+        isRequired
         quantityMinimum
         quantityMaximum
         options {

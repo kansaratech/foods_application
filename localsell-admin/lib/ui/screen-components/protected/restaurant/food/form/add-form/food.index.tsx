@@ -37,6 +37,7 @@ import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown
 import CustomMultiSelectComponent from '@/lib/ui/useable-components/custom-multi-select';
 import CustomTextAreaField from '@/lib/ui/useable-components/custom-text-area-field';
 import MultiImageUploadComponent from '@/lib/ui/useable-components/upload/upload-images-gallery';
+import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 
 // API
 import { GET_CATEGORY_BY_RESTAURANT_ID, GET_MENU_FOR_PICKER } from '@/lib/api/graphql';
@@ -65,6 +66,7 @@ const initialValues: IFoodDetailsForm = {
   category: null,
   subCategory: null,
   pairedFoods: [],
+  gstRatePercent: null,
 };
 export default function FoodDetails({
   stepperProps,
@@ -198,6 +200,7 @@ export default function FoodDetails({
       pairedFoodIds: values.pairedFoods
         .map((p) => p.code)
         .filter((code): code is string => !!code),
+      gstRatePercent: values.gstRatePercent,
       __typename: foodContextData?.food?.data?.__typename ?? 'Food',
       variations:
         (foodContextData?.food?.variations ?? []).length > 0
@@ -449,6 +452,24 @@ export default function FoodDetails({
                         />
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           {t('Shown as an upsell alongside this item on the storefront')}
+                        </p>
+                      </div>
+
+                      <div>
+                        <CustomNumberField
+                          prefix="%"
+                          min={0}
+                          max={100}
+                          placeholder={t('GST Rate Override')}
+                          minFractionDigits={2}
+                          maxFractionDigits={2}
+                          name="gstRatePercent"
+                          showLabel={true}
+                          value={values.gstRatePercent ?? undefined}
+                          onChange={setFieldValue}
+                        />
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {t("Leave blank to use the store's default GST rate")}
                         </p>
                       </div>
                     </div>

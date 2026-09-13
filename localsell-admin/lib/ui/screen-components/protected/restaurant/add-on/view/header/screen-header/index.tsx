@@ -15,12 +15,12 @@ const AddonHeader = ({ setIsAddAddonVisible }: IAddonHeaderProps) => {
   return (
     <div className="sticky top-0 z-10 w-full flex-shrink-0 bg-white dark:bg-dark-950 p-3 shadow-sm">
       <div className="flex w-full justify-between">
-        <HeaderText text={t('Addons')} />
+        <HeaderText text={t('Customisation Groups')} />
         <TextIconClickable
           className="rounded border dark:border-dark-600 border-gray-300 bg-black text-white sm:w-auto"
           icon={faAdd}
           iconStyles={{ color: 'white' }}
-          title={t('Add Add-on')}
+          title={t('New Customisation Group')}
           onClick={() => setIsAddAddonVisible(true)}
         />
       </div>

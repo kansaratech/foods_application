@@ -15,6 +15,10 @@ const emailRule = Yup.string()
 const strongPasswordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
 
+// Mirrors localsell-admin/lib/utils/schema/vendor.ts and the server-side check
+// in localsell-api/src/utils/gst.ts.
+const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
 /**
  * `requirePassword` — the create form (new store creds) and, per the security
  * ask, the edit form both make the admin (re)enter the store password to save.
@@ -41,6 +45,17 @@ export const makeRestaurantSchema = (requirePassword: boolean) =>
   minOrder: Yup.number()
     .required('Required')
     .min(1, 'The value must be greater than or equal to 1'),
+  // Left blank ("Use vendor's default"), the store inherits the owning
+  // vendor's declared GST status — see restaurant.resolvers.ts createRestaurant.
+  gstRegistrationType: Yup.mixed<IDropdownSelectItem>().nullable().notRequired(),
+  gstin: Yup.string().when('gstRegistrationType', {
+    is: (value: IDropdownSelectItem | null) => value?.code === 'REGULAR' || value?.code === 'COMPOSITION',
+    then: (schema) =>
+      schema
+        .required('Required')
+        .test('is-valid-gstin', 'Enter a valid 15-character GSTIN', (value) => !!value && GSTIN_REGEX.test(value.toUpperCase())),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   shopType: Yup.mixed<IDropdownSelectItem>().required('Required'),
   cuisines: Yup.array()
     .of(Yup.mixed<IDropdownSelectItem>())

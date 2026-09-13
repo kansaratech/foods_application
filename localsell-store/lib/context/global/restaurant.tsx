@@ -57,9 +57,20 @@ const Provider = ({ children }: IRestaurantProviderProps) => {
   const [notificationToken, setNotificationToken] = useState<string | null>(
     null,
   );
+  const [storeId, setStoreId] = useState<string | null>(null);
   const unsubscribeRef = useRef<null | (() => void)>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subscribedRestaurantRef = useRef<string | null>(null);
+
+  // The store this login is scoped to. Without this, GET_ORDERS falls back
+  // server-side to "the vendor's one restaurant" and throws for any vendor
+  // who owns more than one outlet (#64) — same ID the subscription below
+  // already uses via getStoreId().
+  useEffect(() => {
+    (async () => {
+      setStoreId(await getStoreId());
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -78,6 +89,8 @@ const Provider = ({ children }: IRestaurantProviderProps) => {
   // still calls refetch() manually.
   const { loading, error, data, subscribeToMore, refetch, networkStatus } =
     useQuery<RestaurantOrdersData>(GET_ORDERS, {
+      variables: { restaurant: storeId },
+      skip: !storeId,
       fetchPolicy: "cache-and-network",
     });
 

@@ -212,13 +212,17 @@ export const RESTAURANT_TABLE_COLUMNS = ({
       },
     },
     {
-      headerName: 'Availability',
+      // Toggles `isActive` — whether this store is listed on the customer
+      // website/app at all. Deliberately not called "Availability": that name
+      // is easy to confuse with the separate vendor-controlled `isAvailable`
+      // (temporarily open/closed) flag, which this switch does not touch.
+      headerName: 'Website Listing',
       propertyName: 'actions',
       body: (rowData: IRestaurantResponse) => {
         return (
           <CustomInputSwitch
             className="prevent-row-click stores-availability"
-            label={rowData.isActive ? 'Live' : 'Offline'}
+            label={rowData.isActive ? 'Listed' : 'Delisted'}
             loading={rowData?._id === deletingRestaurant?.id}
             isActive={rowData.isActive}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {

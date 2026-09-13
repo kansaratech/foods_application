@@ -37,6 +37,16 @@ const HEADER_MAX_HEIGHT = Math.round(height * 0.4)
 const HEADER_MIN_HEIGHT = TOP_BAR_HEIGHT
 const SCROLL_RANGE = HEADER_MAX_HEIGHT
 
+// Mirrors localsell-web's item-detail effectiveMin — a group is required either
+// because the vendor set quantityMinimum >= 1 directly, or because they used
+// the "Customer must choose" toggle (isRequired) which may not have bumped
+// quantityMinimum in older data. Keeping this identical to the web formula is
+// what keeps "Required"/"Optional" and add-to-cart blocking consistent
+// between the two customer-facing apps.
+function getEffectiveMin(addon) {
+  return addon?.isRequired && (addon?.quantityMinimum ?? 0) < 1 ? 1 : (addon?.quantityMinimum ?? 0)
+}
+
 function ItemDetail(props) {
   const { food, addons, options, restaurant, cartItem: editCartItem } = props?.route?.params
 
@@ -179,9 +189,10 @@ function ItemDetail(props) {
     const validatedAddons = []
     selectedVariation?.addons?.forEach((addon) => {
       const selected = selectedAddons?.find((ad) => ad._id === addon._id)
-      if (!selected && addon?.quantityMinimum === 0) {
+      const effectiveMin = getEffectiveMin(addon)
+      if (!selected && effectiveMin === 0) {
         validatedAddons.push(false)
-      } else if (selected && selected?.options?.length >= addon?.quantityMinimum && selected?.options?.length <= addon?.quantityMaximum) {
+      } else if (selected && selected?.options?.length >= effectiveMin && selected?.options?.length <= addon?.quantityMaximum) {
         validatedAddons.push(false)
       } else validatedAddons.push(true)
     })
@@ -340,10 +351,11 @@ function ItemDetail(props) {
     let hasError = false
     const validatedAddons = selectedVariation?.addons?.map((addon) => {
       const selected = selectedAddons?.find((ad) => ad._id === addon._id)
+      const effectiveMin = getEffectiveMin(addon)
 
-      if (!selected && addon?.quantityMinimum === 0) {
+      if (!selected && effectiveMin === 0) {
         addon.error = false
-      } else if (selected && selected?.options?.length >= addon?.quantityMinimum && selected?.options?.length <= addon?.quantityMaximum) {
+      } else if (selected && selected?.options?.length >= effectiveMin && selected?.options?.length <= addon?.quantityMaximum) {
         addon.error = false
       } else {
         addon.error = true
@@ -429,8 +441,9 @@ function ItemDetail(props) {
                 </View>
               )}
               {selectedVariation?.addons?.map((addon) => {
+                const effectiveMin = getEffectiveMin(addon)
                 return (<View key={addon?._id}>
-                  <TitleComponent title={addon?.title} subTitle={addon?.description} error={addon.error} status={addon?.quantityMinimum === 0 ? t('optional') : `${addon?.quantityMinimum} ${t('Required')}`} />
+                  <TitleComponent title={addon?.title} subTitle={addon?.description} error={addon.error} status={effectiveMin === 0 ? t('optional') : `${effectiveMin} ${t('Required')}`} />
                   <Options addon={addon} onSelectOption={onSelectOption} addonRefs={addonRefs} selectedAddons={selectedAddons} />
                 </View>)
               })}
@@ -453,7 +466,7 @@ function ItemDetail(props) {
           <HeadingComponent title={food?.title} price={calculatePrice()} />
         </Animated.View>
         <View style={{ backgroundColor: currentTheme.themeBackground, zIndex: 10 }}>
-          <CartComponent onPress={onPressAddToCart} disabled={validateButton()} quantity={editCartItem?.quantity} />
+          <CartComponent onPress={onPressAddToCart} disabled={!validateButton()} quantity={editCartItem?.quantity} />
         </View>
         <View
           style={{

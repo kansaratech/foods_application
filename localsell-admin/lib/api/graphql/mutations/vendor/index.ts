@@ -12,6 +12,7 @@ export const CREATE_VENDOR = gql`
       phoneNumber
       businessName
       businessType
+      gstRegistrationType
       isGstRegistered
       gstin
       status
@@ -33,6 +34,7 @@ export const SAVE_VENDOR_DRAFT = gql`
       phoneNumber
       businessName
       businessType
+      gstRegistrationType
       isGstRegistered
       gstin
       status

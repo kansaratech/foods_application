@@ -155,9 +155,20 @@ export default function VariationAddForm({
   const addonsDropdown = useMemo(
     () =>
       data?.restaurant?.addons.map((addon: IAddon) => {
-        return { label: addon.title, code: addon._id };
+        const prices = (addon.options ?? []).map((o) => o.price).filter((p) => p > 0);
+        const priceHint =
+          prices.length > 0
+            ? Math.min(...prices) === Math.max(...prices)
+              ? ` · +${Math.min(...prices)}`
+              : ` · +${Math.min(...prices)}-${Math.max(...prices)}`
+            : '';
+        const requiredHint = (addon.isRequired ?? addon.quantityMinimum >= 1) ? ` · ${t('Required')}` : '';
+        return {
+          label: `${addon.title} (${addon.options?.length ?? 0} ${t('choices')}${priceHint}${requiredHint})`,
+          code: addon._id,
+        };
       }),
-    [data?.restaurant?.addons]
+    [data?.restaurant?.addons, t]
   );
 
   // API Handlers
@@ -165,8 +176,8 @@ export default function VariationAddForm({
   function onErrorFetchAddonsByRestaurant() {
     showToast({
       type: 'error',
-      title: t('Addons Fetch'),
-      message: t('Addons fetch failed'),
+      title: t('Customisation Groups'),
+      message: t('Could not load customisation groups'),
       duration: 2500,
     });
   }
@@ -507,7 +518,7 @@ export default function VariationAddForm({
                                             <div className="col-span-12 sm:col-span-12">
                                               <CustomMultiSelectComponent
                                                 name={`variations[${index}].addons`}
-                                                placeholder={t('Addons')}
+                                                placeholder={t('Customisation Groups')}
                                                 options={addonsDropdown ?? []}
                                                 selectedItems={
                                                   value.addons ?? [
@@ -517,7 +528,7 @@ export default function VariationAddForm({
                                                 setSelectedItems={setFieldValue}
                                                 showLabel={true}
                                                 extraFooterButton={{
-                                                  title: t('Add New Addon'),
+                                                  title: t('New Customisation Group'),
                                                   onChange: () =>
                                                     setIsAddAddonVisible(true),
                                                 }}

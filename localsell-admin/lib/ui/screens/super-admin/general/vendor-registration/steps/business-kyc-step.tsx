@@ -7,7 +7,6 @@ import { useTranslations } from 'next-intl';
 
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown';
-import CustomInputSwitch from '@/lib/ui/useable-components/custom-input-switch';
 import DocumentUploadCard from '../document-upload-card';
 
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -15,6 +14,17 @@ import { UPSERT_VENDOR_DOCUMENT } from '@/lib/api/graphql';
 import { getGraphQLErrorMessage } from '@/lib/utils/methods';
 import { IVendorRegistrationForm } from '@/lib/utils/interfaces/forms';
 import { IDropdownSelectItem } from '@/lib/utils/interfaces';
+
+// A vendor is one of three GST statuses under Indian law — this drives how
+// every store they create is taxed (see pricing.service.ts on the API):
+// Regular charges GST and splits it as CGST+SGST; Composition legally cannot
+// charge tax separately from the customer at all (Section 10 CGST Act), even
+// though it still holds a GSTIN; Unregistered charges no GST.
+export const GST_REGISTRATION_OPTIONS: IDropdownSelectItem[] = [
+  { code: 'UNREGISTERED', label: 'Not GST registered' },
+  { code: 'REGULAR', label: 'GST Regular' },
+  { code: 'COMPOSITION', label: 'GST Composition scheme' },
+];
 
 export default function BusinessKycStep({
   businessTypeOptions,
@@ -100,17 +110,28 @@ export default function BusinessKycStep({
           />
 
           <div className="md:col-span-2">
-            <CustomInputSwitch
-              isActive={values.isGstRegistered}
-              label={t('GST registered')}
-              onChange={(e) => {
-                setFieldValue('isGstRegistered', e.target.checked);
-                setFieldTouched('isGstRegistered', true, false);
+            <CustomDropdownComponent
+              name="gstRegistrationType"
+              placeholder={`${t('GST registration')} *`}
+              selectedItem={values.gstRegistrationType}
+              setSelectedItem={(key, item) => {
+                setFieldValue(key, item);
+                setFieldTouched(key, true, false);
+                if (item) setFieldError(key, undefined);
+                // Composition/Unregistered can't carry a leftover GSTIN from a
+                // previous selection into a state where it's not required.
+                if (item?.code === 'UNREGISTERED') {
+                  setFieldValue('gstin', '');
+                  setFieldTouched('gstin', false, false);
+                }
               }}
+              options={GST_REGISTRATION_OPTIONS}
+              showLabel
+              error={fieldError('gstRegistrationType')}
             />
           </div>
 
-          {values.isGstRegistered && (
+          {(values.gstRegistrationType?.code === 'REGULAR' || values.gstRegistrationType?.code === 'COMPOSITION') && (
             <div className="md:col-span-2">
               <CustomTextField
                 type="text"
@@ -127,7 +148,11 @@ export default function BusinessKycStep({
                 error={fieldError('gstin')}
               />
               <p className="mt-1 text-xs text-slate-400">
-                {t('GSTIN is used for business verification. GST rates are configured with products.')}
+                {values.gstRegistrationType?.code === 'COMPOSITION'
+                  ? t(
+                      'Composition dealers cannot charge GST separately to customers by law — menu prices will be treated as tax-inclusive.'
+                    )
+                  : t('GSTIN is used for business verification. GST rates are configured with products.')}
               </p>
             </div>
           )}
@@ -148,7 +173,7 @@ export default function BusinessKycStep({
             onUploaded={(url) => saveDocument('PAN', url, 'panFileUrl')}
             onRemove={() => setFieldValue('panFileUrl', '')}
           />
-          {values.isGstRegistered && (
+          {(values.gstRegistrationType?.code === 'REGULAR' || values.gstRegistrationType?.code === 'COMPOSITION') && (
             <DocumentUploadCard
               label={t('GST certificate')}
               helperText={t('Upload the GST registration certificate')}

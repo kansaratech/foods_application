@@ -7,5 +7,4 @@ export const BussinessDetailsSchema = Yup.object().shape({
   accountNumber: Yup.number().required('Required'),
   bussinessRegNo: Yup.number().nullable(),
   companyRegNo: Yup.number().nullable(),
-  taxRate: Yup.number().required('Required'),
 });

@@ -33,11 +33,22 @@ export interface FoodFormSheetHandle {
   open: (categoryId: string, food?: IFood) => void;
 }
 
+// Short price-range hint for an addon chip, e.g. " · +₹10-40" — so a vendor
+// can see roughly what a customisation group costs without opening it.
+function addonPriceHint(addon: IAddon): string {
+  const prices = (addon.options ?? []).map((o) => o.price).filter((p) => p > 0);
+  if (!prices.length) return "";
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return min === max ? ` · +₹${min}` : ` · +₹${min}-${max}`;
+}
+
 interface Props {
   restaurantId: string;
   page: number;
   search: string;
   addons: IAddon[];
+  onCreateAddon?: () => void;
 }
 
 let variationKeySeq = 0;
@@ -47,7 +58,7 @@ interface VariationRow extends Partial<IVariation> {
 }
 
 const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
-  ({ restaurantId, page, search, addons }, ref) => {
+  ({ restaurantId, page, search, addons, onCreateAddon }, ref) => {
     const { appTheme } = useApptheme();
     const { t } = useTranslation();
     const sheetRef = useRef<ResponsiveFormSheetHandle>(null);
@@ -58,6 +69,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
     const [description, setDescription] = useState("");
     const [images, setImages] = useState<string[]>([]);
     const [isActive, setIsActive] = useState(true);
+    const [gstRatePercent, setGstRatePercent] = useState("");
     const [uploading, setUploading] = useState(false);
     const [variations, setVariations] = useState<VariationRow[]>([]);
     const [error, setError] = useState("");
@@ -73,6 +85,9 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
           food?.images?.length ? food.images : food?.image ? [food.image] : [],
         );
         setIsActive(food?.isActive ?? true);
+        setGstRatePercent(
+          food?.gstRatePercent != null ? String(food.gstRatePercent) : "",
+        );
         setVariations(
           food?.variations?.length
             ? food.variations.map((v) => ({
@@ -233,6 +248,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         description: description.trim() || undefined,
         images,
         isActive,
+        gstRatePercent: gstRatePercent.trim() ? Number(gstRatePercent) : null,
         variations: variations.map((v) => ({
           _id: v._id,
           title: (v.title ?? "").trim(),
@@ -338,6 +354,24 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
             />
           </View>
 
+          <View className="gap-2">
+            <Text
+              className="text-sm"
+              style={{ color: appTheme.fontMainColor }}
+            >
+              {t("GST Rate Override (%)")}
+            </Text>
+            <TextInput
+              className="rounded-md border-2 border-gray-300 p-3"
+              value={gstRatePercent}
+              placeholder={t("Leave blank to use the store's default rate")}
+              placeholderTextColor={appTheme.fontSecondColor}
+              style={{ color: appTheme.fontSecondColor }}
+              onChangeText={setGstRatePercent}
+              keyboardType="decimal-pad"
+            />
+          </View>
+
           <View className="flex-row justify-between items-center">
             <Text style={{ color: appTheme.fontMainColor }}>{t("Active")}</Text>
             <CustomSwitch value={isActive} onToggle={setIsActive} />
@@ -440,12 +474,30 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
                       className="text-xs font-semibold"
                       style={{ color: appTheme.fontSecondColor }}
                     >
-                      {t("Addons")}
+                      {t("Customisation Groups")}
                       {(() => {
                         const count = (variation.addons ?? []).length;
                         return count > 0 ? ` · ${count} ${t("selected")}` : "";
                       })()}
                     </Text>
+                    {onCreateAddon && (
+                      <TouchableOpacity
+                        onPress={onCreateAddon}
+                        className="flex-row items-center gap-1"
+                      >
+                        <Ionicons
+                          name="add-circle-outline"
+                          size={16}
+                          color={appTheme.primary}
+                        />
+                        <Text
+                          className="text-xs"
+                          style={{ color: appTheme.primary }}
+                        >
+                          {t("New group")}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                   {addons.length > 6 && (
                     <TextInput
@@ -526,7 +578,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
                                 >
                                   {addon.title}
                                   {addon.options?.length
-                                    ? ` (${addon.options.length})`
+                                    ? ` (${addon.options.length}${addonPriceHint(addon)})`
                                     : ""}
                                 </Text>
                               </TouchableOpacity>

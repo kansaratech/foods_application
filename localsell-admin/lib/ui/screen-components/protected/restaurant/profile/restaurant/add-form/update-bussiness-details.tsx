@@ -70,7 +70,6 @@ export default function UpdateBusinessDetails({
       accountNumber: restaurantData?.bussinessDetails?.accountNumber ?? null,
       bussinessRegNo: restaurantData?.bussinessDetails?.bussinessRegNo ?? null,
       companyRegNo: restaurantData?.bussinessDetails?.companyRegNo ?? null,
-      taxRate: restaurantData?.bussinessDetails?.taxRate ?? null,
     };
   }, [restaurantProfileResponse.data?.restaurant]);
 
@@ -96,7 +95,6 @@ export default function UpdateBusinessDetails({
             accountNumber: data.accountNumber,
             bussinessRegNo: data.bussinessRegNo || null,
             companyRegNo: data.companyRegNo || null,
-            taxRate: data.taxRate,
           },
         },
       });
@@ -250,26 +248,6 @@ export default function UpdateBusinessDetails({
                         borderColor: onErrorMessageMatcher(
                           'companyRegNo',
                           errors?.companyRegNo,
-                          BussinessDetailsErrors
-                        )
-                          ? 'red'
-                          : '',
-                      }}
-                    />
-
-                    <CustomNumberField
-                      min={0}
-                      suffix="%"
-                      useGrouping={false}
-                      placeholder={`${t('tax_rate_%')} %`}
-                      name="taxRate"
-                      showLabel={true}
-                      value={values.taxRate}
-                      onChange={setFieldValue}
-                      style={{
-                        borderColor: onErrorMessageMatcher(
-                          'taxRate',
-                          errors?.taxRate,
                           BussinessDetailsErrors
                         )
                           ? 'red'

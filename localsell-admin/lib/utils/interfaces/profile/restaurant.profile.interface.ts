@@ -30,6 +30,8 @@ export interface IRestaurantData extends IGlobalComponentProps {
   deliveryTime?: number;
   minimumOrder?: number;
   tax?: number;
+  gstRegistrationType?: string;
+  gstin?: string;
   orderPrefix: string;
   shopType: string;
   cuisines: string;
@@ -54,7 +56,6 @@ export interface IRestaurantData extends IGlobalComponentProps {
     bussinessType: IDropdownSelectItem;
     bussinessRegNo: number;
     companyRegNo: number;
-    taxRate: number;
   };
 
   currentWalletAmount: number;
@@ -131,5 +132,4 @@ export interface IUpdateBussinessDetailsForm {
   accountNumber: number | null;
   bussinessRegNo: number | null;
   companyRegNo: number | null;
-  taxRate: number | null;
 }

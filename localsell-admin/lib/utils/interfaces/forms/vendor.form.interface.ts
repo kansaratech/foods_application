@@ -44,7 +44,9 @@ export interface IVendorRegistrationForm {
   confirmPassword: string;
   businessName: string;
   businessType: IDropdownSelectItem | null;
-  isGstRegistered: boolean;
+  // { code: 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED' } — an IDropdownSelectItem
+  // like businessType, since it's driven by the same CustomDropdownComponent.
+  gstRegistrationType: IDropdownSelectItem | null;
   gstin: string;
   // Business & KYC — documents
   panFileUrl: string;

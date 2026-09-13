@@ -237,6 +237,8 @@ export const GET_RESTAURANT_PROFILE = gql`
       deliveryTime
       minimumOrder
       tax
+      gstRegistrationType
+      gstin
       isAvailable
       stripeDetailsSubmitted
       openingTimes {

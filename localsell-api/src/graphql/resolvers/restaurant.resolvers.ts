@@ -7,6 +7,7 @@ import { comparePassword, hashPassword, signAccessToken } from '../../services/a
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 import { recordAudit } from '../../utils/audit';
+import { assertGstinRequiredFor, normalizeGstRegistrationType } from '../../utils/gst';
 
 function slugify(name: string): string {
   return `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now().toString(36)}`;
@@ -88,6 +89,8 @@ interface RestaurantInputArgs {
   password?: string;
   shopType?: string;
   salesTax?: number;
+  gstRegistrationType?: string;
+  gstin?: string;
   commissionRate?: number;
   cuisines?: string[];
   latitude?: number;
@@ -499,6 +502,16 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       // waits in the approval queue and stays hidden from customers until then.
       const adminCreated = currentUser.userType === 'ADMIN';
 
+      // A new store defaults to the owning vendor's KYC-declared GST status,
+      // editable per store since a multi-store vendor can hold a different
+      // GSTIN per state. Validated here regardless of source — never trust
+      // client-side form validation alone.
+      const gstRegistrationType = normalizeGstRegistrationType(
+        input.gstRegistrationType ?? owner.gstRegistrationType,
+      );
+      const gstin = gstRegistrationType === 'UNREGISTERED' ? null : (input.gstin ?? owner.gstin ?? null);
+      assertGstinRequiredFor(gstRegistrationType, gstin);
+
       const restaurant = await prisma.restaurant.create({
         data: {
           name: input.name,
@@ -513,6 +526,8 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           password: input.password ? await hashPassword(input.password) : undefined,
           shopTypeId: await resolveShopTypeId(input.shopType),
           tax: input.salesTax ?? 0,
+          gstRegistrationType,
+          gstin,
           commissionRate,
           latitude: input.latitude,
           longitude: input.longitude,
@@ -584,6 +599,16 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const input = args.restaurant;
       const cuisineIds = input.cuisines ? await resolveCuisineIds(input.cuisines) : undefined;
 
+      // Only re-validate GST fields when the caller actually touches one —
+      // otherwise every unrelated profile edit would require re-submitting GSTIN.
+      let gstRegistrationType: string | undefined;
+      let gstin: string | null | undefined;
+      if (input.gstRegistrationType != null || input.gstin != null) {
+        gstRegistrationType = normalizeGstRegistrationType(input.gstRegistrationType ?? existing.gstRegistrationType);
+        gstin = gstRegistrationType === 'UNREGISTERED' ? null : (input.gstin ?? existing.gstin);
+        assertGstinRequiredFor(gstRegistrationType as 'REGULAR' | 'COMPOSITION', gstin);
+      }
+
       return prisma.restaurant.update({
         where: { id: input._id },
         data: {
@@ -599,6 +624,8 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           password: input.password ? await hashPassword(input.password) : undefined,
           shopTypeId: input.shopType ? await resolveShopTypeId(input.shopType) : undefined,
           tax: input.salesTax,
+          gstRegistrationType,
+          gstin,
           orderPrefix: input.orderPrefix,
           isAvailable: input.isAvailable,
           latitude: input.latitude,

@@ -49,7 +49,12 @@ import { PAYMENT_METHOD_LIST } from "@/lib/utils/constants";
 import { isRestaurantOpen } from "@/lib/utils/constants/isRestaurantOpen";
 
 // API
-import { PLACE_ORDER, VERIFY_COUPON, ORDERS } from "@/lib/api/graphql";
+import {
+  PLACE_ORDER,
+  VERIFY_COUPON,
+  ORDERS,
+  ORDER_PRICE_PREVIEW,
+} from "@/lib/api/graphql";
 
 // Interfaces
 import {
@@ -410,6 +415,39 @@ export default function OrderCheckoutScreen() {
       onCompleted: couponCompleted,
     },
   );
+
+  // Server-authoritative bill breakdown — same pricing.service.ts pipeline
+  // placeOrder uses, so the tax/delivery figures shown here are guaranteed to
+  // match what actually gets charged (fixes the previous client-computed tax
+  // that placeOrder blindly trusted).
+  const { data: pricePreviewData } = useQuery(ORDER_PRICE_PREVIEW, {
+    skip: !restaurantId || cart.length === 0,
+    fetchPolicy: "network-only",
+    variables: {
+      restaurant: restaurantId,
+      orderInput: transformOrder(cart),
+      couponCode: isCouponApplied ? (coupon ? coupon.title : null) : null,
+      isPickedUp: isPickUp,
+      address:
+        deliveryType === "Delivery" && userAddress
+          ? {
+              _id: userAddress._id,
+              latitude: "" + userAddress?.location?.coordinates?.[1],
+              longitude: "" + userAddress?.location?.coordinates?.[0],
+            }
+          : null,
+    },
+  });
+  const pricePreview = pricePreviewData?.orderPricePreview;
+
+  // The server recomputes deliveryCharges the same way; once the preview
+  // resolves it replaces the client-side distance estimate `onInitDeliveryCharges`
+  // set, so every downstream use of `deliveryCharges` becomes authoritative.
+  useEffect(() => {
+    if (pricePreview?.deliveryCharges != null && !isPickUp) {
+      setDeliveryCharges(pricePreview.deliveryCharges);
+    }
+  }, [pricePreview?.deliveryCharges, isPickUp]);
 
   console.log("Tipps from admin:", tipData);
   // Handlers
@@ -872,16 +910,19 @@ export default function OrderCheckoutScreen() {
     return (itemTotal + deliveryAmount).toFixed(2);
   }
 
+  // Sourced from the server preview (pricing.service.ts) rather than computed
+  // here — a Composition or Unregistered store's GST is always 0 by law
+  // (Section 10 CGST Act bars a Composition dealer from charging tax
+  // separately), and a Regular store's rate can vary per item, so this can no
+  // longer be a single flat-percent client calculation.
   function taxCalculation() {
-    const tax = taxValue ?? 0;
-    if (tax === 0) {
-      return tax.toFixed(2);
-    }
-    const delivery = isPickUp ? 0 : deliveryCharges;
-    const amount = +calculatePrice(delivery, true);
-    const taxAmount = ((amount / 100) * tax).toFixed(2);
-    return taxAmount;
+    return (pricePreview?.taxationAmount ?? 0).toFixed(2);
   }
+
+  // REGULAR shows a real GST line; COMPOSITION/UNREGISTERED show an
+  // "inclusive of tax" caption instead of a ₹0 row, which would read as a bug.
+  const gstMode = pricePreview?.gstMode ?? (taxValue ? "REGULAR" : "UNREGISTERED");
+  const showInclusiveTaxCaption = cart.length > 0 && gstMode !== "REGULAR";
 
   /* function calculateTip() {
     if (selectedTip) {
@@ -925,11 +966,12 @@ export default function OrderCheckoutScreen() {
     [],
   );
 
-  // Filter PAYMENT_METHOD_LIST based on stripeDetailsSubmitted
-  const filteredPaymentMethods = !finalRestaurantData?.restaurant
-    ?.stripeDetailsSubmitted
-    ? PAYMENT_METHOD_LIST.filter((method) => method.value === "COD")
-    : PAYMENT_METHOD_LIST;
+  // Online payment is paused platform-wide for now — COD only, regardless of
+  // a store's stripeDetailsSubmitted flag. Revert to the flag-based filter
+  // below once online payment is ready to go live again.
+  const filteredPaymentMethods = PAYMENT_METHOD_LIST.filter(
+    (method) => method.value === "COD",
+  );
 
   // Use Effect
   useEffect(() => {
@@ -1467,6 +1509,11 @@ export default function OrderCheckoutScreen() {
                   </span>
                 </div>
               )}
+              {showInclusiveTaxCaption && (
+                <p className="text-gray-400 dark:text-gray-400 mb-1 text-xs lg:text-[12px]">
+                  Inclusive of all taxes
+                </p>
+              )}
 
               {/* <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
                   <span className="font-inter text-gray-900 leading-5">
@@ -1581,6 +1628,11 @@ export default function OrderCheckoutScreen() {
                     {taxCalculation()}
                   </span>
                 </div>
+              )}
+              {showInclusiveTaxCaption && (
+                <p className="text-gray-400 dark:text-gray-400 mb-1 text-xs lg:text-[12px]">
+                  Inclusive of all taxes
+                </p>
               )}
 
               {/* <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
@@ -1697,6 +1749,11 @@ export default function OrderCheckoutScreen() {
                             {taxCalculation()}
                           </span>
                         </div>
+                      )}
+                      {showInclusiveTaxCaption && (
+                        <p className="text-gray-400 dark:text-gray-400 mb-1 text-[12px]">
+                          Inclusive of all taxes
+                        </p>
                       )}
 
                       <Divider />

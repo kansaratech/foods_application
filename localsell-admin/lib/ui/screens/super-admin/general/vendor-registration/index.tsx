@@ -33,7 +33,7 @@ import CustomDialog from '@/lib/ui/useable-components/delete-dialog';
 import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
 import StepperHeader, { IWizardStep } from '@/lib/ui/useable-components/stepper-header';
 import AccountStep from './steps/account-step';
-import BusinessKycStep from './steps/business-kyc-step';
+import BusinessKycStep, { GST_REGISTRATION_OPTIONS } from './steps/business-kyc-step';
 import PayoutStep from './steps/payout-step';
 import ReviewStep from './steps/review-step';
 
@@ -53,12 +53,17 @@ const emptyInitialValues: IVendorRegistrationForm = {
   email: '',
   phoneNumber: '',
   image: '',
-  sendSetupLink: true,
+  // Defaults unchecked (#68): "send setup link" doesn't actually email
+  // anything yet (createVendor just logs it server-side), so hiding the
+  // password fields behind it by default left admins with no visible way
+  // to set a working vendor login. Direct password entry is now the default;
+  // the checkbox is still there for whoever wants the invite-later path.
+  sendSetupLink: false,
   password: '',
   confirmPassword: '',
   businessName: '',
   businessType: null,
-  isGstRegistered: false,
+  gstRegistrationType: GST_REGISTRATION_OPTIONS[0],
   gstin: '',
   panFileUrl: '',
   gstCertFileUrl: '',
@@ -72,7 +77,7 @@ const STEP_SCHEMAS = [vendorAccountStepSchema, vendorBusinessKycStepSchema, vend
 
 const STEP_FIELDS: (keyof IVendorRegistrationForm)[][] = [
   ['firstName', 'lastName', 'email', 'phoneNumber', 'image', 'sendSetupLink', 'password', 'confirmPassword'],
-  ['businessName', 'businessType', 'isGstRegistered', 'gstin', 'panFileUrl', 'gstCertFileUrl'],
+  ['businessName', 'businessType', 'gstRegistrationType', 'gstin', 'panFileUrl', 'gstCertFileUrl'],
   ['payoutHolderName', 'payoutAccountNumber', 'payoutIfsc', 'payoutBankName'],
 ];
 
@@ -148,7 +153,11 @@ export default function VendorRegistrationScreen() {
       confirmPassword: '',
       businessName: vendor.businessName ?? '',
       businessType: matchedBusinessType,
-      isGstRegistered: !!vendor.isGstRegistered,
+      // Falls back to the legacy boolean for a vendor record saved before
+      // gstRegistrationType existed.
+      gstRegistrationType:
+        GST_REGISTRATION_OPTIONS.find((o) => o.code === vendor.gstRegistrationType) ??
+        (vendor.isGstRegistered ? GST_REGISTRATION_OPTIONS[1] : GST_REGISTRATION_OPTIONS[0]),
       gstin: vendor.gstin ?? '',
       panFileUrl: pan?.fileUrl ?? '',
       gstCertFileUrl: gst?.fileUrl ?? '',
@@ -186,8 +195,8 @@ export default function VendorRegistrationScreen() {
     image: values.image || undefined,
     businessName: values.businessName.trim() || undefined,
     businessType: values.businessType?.code,
-    isGstRegistered: values.isGstRegistered,
-    gstin: values.isGstRegistered ? values.gstin.trim().toUpperCase() : undefined,
+    gstRegistrationType: values.gstRegistrationType?.code,
+    gstin: values.gstRegistrationType?.code !== 'UNREGISTERED' ? values.gstin.trim().toUpperCase() : undefined,
   });
 
   const buildFinalInput = (values: IVendorRegistrationForm) => ({
@@ -200,8 +209,8 @@ export default function VendorRegistrationScreen() {
     image: values.image || undefined,
     businessName: values.businessName.trim(),
     businessType: values.businessType?.code,
-    isGstRegistered: values.isGstRegistered,
-    gstin: values.isGstRegistered ? values.gstin.trim().toUpperCase() : undefined,
+    gstRegistrationType: values.gstRegistrationType?.code,
+    gstin: values.gstRegistrationType?.code !== 'UNREGISTERED' ? values.gstin.trim().toUpperCase() : undefined,
     ...(values.sendSetupLink ? {} : { password: values.password }),
   });
 

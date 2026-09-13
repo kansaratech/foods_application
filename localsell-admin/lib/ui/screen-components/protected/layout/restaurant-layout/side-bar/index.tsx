@@ -124,12 +124,12 @@ export default function MakeSidebar() {
           isParent: false,
         },
         {
-          text: t('Options'),
+          text: t('Choices Library'),
           route: '/admin/store/product-management/options',
           isParent: false,
         },
         {
-          text: t('Addons'),
+          text: t('Customisation Groups'),
           route: '/admin/store/product-management/add-ons',
           isParent: false,
         },

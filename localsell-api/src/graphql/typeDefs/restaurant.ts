@@ -32,6 +32,9 @@ export const restaurantTypeDefs = /* GraphQL */ `
     deliveryTime: Int
     minimumOrder: Float
     tax: Float
+    "REGULAR | COMPOSITION | UNREGISTERED"
+    gstRegistrationType: String
+    gstin: String
     commissionRate: Float
     isActive: Boolean
     isAvailable: Boolean
@@ -142,6 +145,9 @@ export const restaurantTypeDefs = /* GraphQL */ `
     password: String
     shopType: String
     salesTax: Float
+    "REGULAR | COMPOSITION | UNREGISTERED. Defaults from the owning vendor's KYC when omitted."
+    gstRegistrationType: String
+    gstin: String
     commissionRate: Float
     cuisines: [String!]
     latitude: Float
@@ -162,6 +168,8 @@ export const restaurantTypeDefs = /* GraphQL */ `
     username: String
     shopType: String
     salesTax: Float
+    gstRegistrationType: String
+    gstin: String
     orderPrefix: String
     cuisines: [String!]
     password: String

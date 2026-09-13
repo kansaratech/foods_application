@@ -7,7 +7,7 @@ import { useSafeAreaInsets, initialWindowMetrics } from 'react-native-safe-area-
 import { AntDesign, EvilIcons, Feather, FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons'
 import { Placeholder, PlaceholderLine, Fade } from 'rn-placeholder'
 import { Modalize } from 'react-native-modalize'
-import { getTipping } from '../../apollo/queries'
+import { getTipping, getOrderPricePreview } from '../../apollo/queries'
 import { applyCoupon, placeOrder } from '../../apollo/mutations'
 import { scale } from '../../utils/scaling'
 import { stripeCurrencies, paypalCurrencies } from '../../utils/currencies'
@@ -54,6 +54,9 @@ const PLACEORDER = gql`
 `
 const TIPPING = gql`
   ${getTipping}
+`
+const ORDER_PRICE_PREVIEW = gql`
+  ${getOrderPricePreview}
 `
 const APPLY_COUPON = gql`
   ${applyCoupon}
@@ -226,6 +229,37 @@ function Checkout(props) {
     delivery: isPickup ? 0 : deliveryCharges,
     tip: isPickup ? 0 : tip || selectedTip
   }), [cart, coupon?.discount, deliveryCharges, isPickup, restaurant?.tax, selectedTip, tip])
+
+  // Server-authoritative bill breakdown — same pricing.service.ts pipeline
+  // placeOrder uses, so the tax/delivery figures shown here are guaranteed to
+  // match what actually gets charged (fixes the previous client-computed tax
+  // that placeOrder blindly trusted). `pricing` above still drives the initial,
+  // instant estimate; this overrides it once the server responds.
+  const { data: pricePreviewData } = useQuery(ORDER_PRICE_PREVIEW, {
+    skip: !cartRestaurant || !cart?.length,
+    fetchPolicy: 'network-only',
+    variables: {
+      restaurant: cartRestaurant,
+      orderInput: transformOrder(cart),
+      couponCode: coupon ? coupon.title : null,
+      isPickedUp: isPickup,
+      address:
+        !isPickup && location?.latitude && location?.longitude
+          ? { latitude: '' + location.latitude, longitude: '' + location.longitude }
+          : null
+    }
+  })
+  const pricePreview = pricePreviewData?.orderPricePreview
+
+  useEffect(() => {
+    if (pricePreview?.deliveryCharges != null && !isPickup) {
+      setDeliveryCharges(pricePreview.deliveryCharges)
+    }
+  }, [pricePreview?.deliveryCharges, isPickup])
+
+  const gstMode = pricePreview?.gstMode ?? (restaurant?.tax ? 'REGULAR' : 'UNREGISTERED')
+  const showInclusiveTaxCaption = cart?.length > 0 && gstMode !== 'REGULAR'
+
   const inset = useSafeAreaInsets()
 
   const insets = initialWindowMetrics?.insets || { top: 0, bottom: 0, left: 0, right: 0 }
@@ -460,8 +494,13 @@ function Checkout(props) {
     return pricing.tipAmount
   }
 
+  // Sourced from the server preview (pricing.service.ts) rather than the local
+  // `pricing` estimate — a Composition or Unregistered store's GST is always 0
+  // by law (Section 10 CGST Act bars a Composition dealer from charging tax
+  // separately), and a Regular store's rate can vary per item, so this can no
+  // longer be a single flat-percent client calculation.
   function taxCalculation() {
-    return pricing.taxationAmount.toFixed(2)
+    return (pricePreview?.taxationAmount ?? pricing.taxationAmount).toFixed(2)
   }
 
   function calculatePrice(delivery = 0, withDiscount) {
@@ -470,7 +509,9 @@ function Checkout(props) {
   }
 
   function calculateTotal() {
-    return pricing.total.toFixed(2)
+    if (!pricePreview) return pricing.total.toFixed(2)
+    const total = pricePreview.itemsTotal - pricePreview.discountAmount + pricePreview.deliveryCharges + pricePreview.taxationAmount + pricing.tipAmount
+    return total.toFixed(2)
   }
 
   function validateOrder() {
@@ -917,15 +958,25 @@ function Checkout(props) {
                     </>
                   )}
 
-                  <View style={styles(currentTheme).billsec}>
-                    <TextDefault numberOfLines={1} textColor={currentTheme.fontFourthColor} normal bold>
-                      {t('taxFee')}
-                    </TextDefault>
-                    <TextDefault numberOfLines={1} textColor={currentTheme.fontFourthColor} normal bold>
-                      {configuration.currencySymbol}
-                      {taxCalculation()}
-                    </TextDefault>
-                  </View>
+                  {gstMode === 'REGULAR' ? (
+                    <View style={styles(currentTheme).billsec}>
+                      <TextDefault numberOfLines={1} textColor={currentTheme.fontFourthColor} normal bold>
+                        {t('taxFee')}
+                      </TextDefault>
+                      <TextDefault numberOfLines={1} textColor={currentTheme.fontFourthColor} normal bold>
+                        {configuration.currencySymbol}
+                        {taxCalculation()}
+                      </TextDefault>
+                    </View>
+                  ) : (
+                    showInclusiveTaxCaption && (
+                      <View style={styles(currentTheme).billsec}>
+                        <TextDefault numberOfLines={1} textColor={currentTheme.fontFourthColor} small>
+                          Inclusive of all taxes
+                        </TextDefault>
+                      </View>
+                    )
+                  )}
 
                   {!isPickup && (
                     <>

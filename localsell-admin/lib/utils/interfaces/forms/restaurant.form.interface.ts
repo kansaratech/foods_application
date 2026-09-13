@@ -10,6 +10,7 @@ export interface IRestaurantFormErrors {
   deliveryTime: string[];
   minOrder: string[];
   salesTax: string[];
+  gstin: string[];
   shopType: string[];
   cuisines: string[];
   image: string[];
@@ -27,6 +28,11 @@ export interface IRestaurantForm {
   deliveryTime: number;
   minOrder: number;
   salesTax: number;
+  // Null = inherit the owning vendor's declared GST status (the default);
+  // set explicitly here for a multi-store vendor whose stores hold different
+  // GSTINs (e.g. one per state).
+  gstRegistrationType: IDropdownSelectItem | null;
+  gstin: string;
   shopType: IDropdownSelectItem | null;
   cuisines: IDropdownSelectItem[];
   image: string;

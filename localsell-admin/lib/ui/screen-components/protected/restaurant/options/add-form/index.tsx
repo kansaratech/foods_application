@@ -89,8 +89,8 @@ export default function OptionAddForm({
       onCompleted: () => {
         showToast({
           type: 'success',
-          title: t('New Option'),
-          message: `${t('Option have been')} ${option ? t('edited') : t('added')} ${t('successfully')}.`,
+          title: t('New Choice'),
+          message: `${t('Choice has been')} ${option ? t('edited') : t('added')} ${t('successfully')}.`,
         });
 
         onHide();
@@ -137,7 +137,7 @@ export default function OptionAddForm({
           <div className="flex flex-col gap-2">
             <div className="mb-2 flex flex-col">
               <span className="text-lg">
-                {option ? t('Edit') : t('Add')} {t('Option')}
+                {option ? t('Edit') : t('Add')} {t('Choice')}
               </span>
             </div>
 
@@ -186,7 +186,7 @@ export default function OptionAddForm({
                                             </button>
                                           )}
                                           <Fieldset
-                                            legend={`${t('Option')} ${index + 1} ${value.title ? `(${value.title})` : ''}`}
+                                            legend={`${t('Choice')} ${index + 1} ${value.title ? `(${value.title})` : ''}`}
                                             toggleable
                                             className='dark:text-white dark:bg-dark-950 '
                                           >
@@ -277,7 +277,7 @@ export default function OptionAddForm({
                                     className="w-full rounded border dark:border-dark-600 border-black bg-transparent text-black dark:text-white"
                                     icon={faAdd}
                                     iconStyles={{ color: theme === 'dark' ? 'white' : 'black' }}
-                                    title={t('Add New Option')}
+                                    title={t('Add New Choice')}
                                     onClick={() =>
                                       push(initialFormValuesTemplate)
                                     }

@@ -14,6 +14,12 @@
 #
 # The api joins the EXTERNAL `mysql_config_dev_default` network so it can reach
 # the shared MySQL container by name (same pattern as ams_container).
+#
+# Uploads (`/app/uploads` in the api container) are bind-mounted to a plain
+# directory on the HOST — not a Docker-managed named volume — so it's a normal
+# folder any backup/rsync/replica tool can read directly, no
+# `docker run --rm -v ... tar` step needed. Override the host path with
+# UPLOADS_HOST_DIR in deploy/localsell.env; defaults to /var/localsell/uploads.
 
 name: localsell
 
@@ -35,7 +41,7 @@ services:
     ports:
       - "127.0.0.1:6002:4000"
     volumes:
-      - localsell_uploads:/app/uploads
+      - ${UPLOADS_HOST_DIR:-/var/localsell/uploads}:/app/uploads
     networks:
       - localsell_internal
       - mysql_config_dev_default
@@ -115,9 +121,6 @@ services:
     networks:
       - localsell_internal
     logging: *default-logging
-
-volumes:
-  localsell_uploads:
 
 networks:
   localsell_internal:

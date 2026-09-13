@@ -66,6 +66,11 @@ model User {
   businessTypeId  String?
   isGstRegistered Boolean @default(false)
   gstin           String?
+  // Vendor-level default, copied onto each new Restaurant on creation (and
+  // editable per-store after, since a multi-store vendor can hold different
+  // GSTINs per state). REGULAR | COMPOSITION | UNREGISTERED. `isGstRegistered`
+  // is kept in sync (`!== UNREGISTERED`) so existing reads of it still work.
+  gstRegistrationType String @default("UNREGISTERED")
 
   addresses         Address[]
   restaurants       Restaurant[]       @relation("RestaurantOwner")
@@ -144,7 +149,17 @@ model Restaurant {
   orderPrefix            String?
   deliveryTime           Int       @default(30)
   minimumOrder           Float     @default(0)
+  // Default GST rate %, meaningful only when gstRegistrationType = REGULAR.
+  // COMPOSITION/UNREGISTERED stores never charge tax regardless of this value
+  // (composition dealers are legally barred from collecting tax separately —
+  // Section 10 CGST Act). If REGULAR and left at 0, the pricing engine falls
+  // back to 5% (standard restaurant GST rate) rather than silently charging none.
   tax                    Float     @default(0)
+  // REGULAR | COMPOSITION | UNREGISTERED — drives the tax engine in
+  // order.service.ts / pricing.service.ts. Defaults from the owning vendor's
+  // User.gstRegistrationType when a store is created, editable per store.
+  gstRegistrationType    String    @default("UNREGISTERED")
+  gstin                  String?
   commissionRate         Float     @default(0)
   isActive               Boolean   @default(true)
   isAvailable            Boolean   @default(true)
@@ -321,6 +336,10 @@ model Food {
   // Merchant-curated "frequently bought together" — array of Food ids shown as
   // an upsell in the cart.
   pairedFoodIds  Json?
+  // Per-item GST rate override, e.g. for a grocery/pharmacy store selling
+  // goods at a different slab than the store's default. Null = inherit
+  // Restaurant.tax (only meaningful when the store is gstRegistrationType REGULAR).
+  gstRatePercent Float?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -714,6 +733,12 @@ model Order {
   deliveryCharges      Float         @default(0)
   tipping              Float         @default(0)
   taxationAmount       Float         @default(0)
+  // CGST/SGST split of taxationAmount, populated only for a REGULAR store's
+  // order (intra-state only — this platform is same-city hyperlocal delivery,
+  // so there's no IGST branch). Null for COMPOSITION/UNREGISTERED orders,
+  // where taxationAmount is always 0.
+  cgstAmount           Float?
+  sgstAmount           Float?
   discountAmount       Float         @default(0)
   instructions         String?       @db.Text
   isPickedUp           Boolean       @default(false)

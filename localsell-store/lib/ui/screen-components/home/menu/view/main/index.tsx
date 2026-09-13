@@ -490,6 +490,7 @@ export default function MenuMain() {
           page={page}
           search={search}
           addons={addons}
+          onCreateAddon={() => addonSheetRef.current?.open()}
         />
         <AddonFormSheet ref={addonSheetRef} restaurantId={restaurantId ?? ""} />
 

@@ -39,6 +39,7 @@ export const GET_VENDOR_BY_ID = gql`
       phoneNumber
       businessName
       businessTypeId
+      gstRegistrationType
       isGstRegistered
       gstin
       status

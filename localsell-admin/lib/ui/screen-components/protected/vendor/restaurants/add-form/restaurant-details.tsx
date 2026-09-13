@@ -60,6 +60,17 @@ import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 import { useTranslations } from 'next-intl';
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
 
+// A store's GST status defaults to the owning vendor's KYC declaration
+// (server-side, when left as "Use vendor's default") — set explicitly here
+// only for a multi-store vendor whose stores hold different GSTINs, e.g. one
+// per state. See pricing.service.ts on the API for how this drives tax.
+const GST_STORE_OPTIONS: IDropdownSelectItem[] = [
+  { code: '', label: "Use vendor's default" },
+  { code: 'UNREGISTERED', label: 'Not GST registered' },
+  { code: 'REGULAR', label: 'GST Regular' },
+  { code: 'COMPOSITION', label: 'GST Composition scheme' },
+];
+
 const initialValues: IRestaurantForm = {
   name: '',
   username: '',
@@ -70,11 +81,16 @@ const initialValues: IRestaurantForm = {
   deliveryTime: 1,
   minOrder: 1,
   salesTax: 0.0,
+  gstRegistrationType: GST_STORE_OPTIONS[0],
+  gstin: '',
   shopType: null,
   cuisines: [],
   image:
     'https://t4.ftcdn.net/jpg/04/76/57/27/240_F_476572792_zMwqHpmGal1fzh0tDJ3onkLo88IjgNbL.jpg',
-  logo: 'https://res.cloudinary.com/dc6xw0lzg/image/upload/v1735894342/dvi5fjbsgdlrzwip0whg.jpg',
+  // No placeholder here (unlike `image` above) — `logo` is `required()` in
+  // RestaurantSchema, and a truthy default silently satisfied that check
+  // without the vendor ever uploading a real logo (#69).
+  logo: '',
 };
 
 export default function RestaurantDetails({
@@ -189,6 +205,8 @@ export default function RestaurantDetails({
             password: data.password,
             shopType: data.shopType?.code,
             salesTax: data.salesTax,
+            gstRegistrationType: data.gstRegistrationType?.code || undefined,
+            gstin: data.gstRegistrationType?.code ? data.gstin : undefined,
             cuisines: data.cuisines.map(
               (cuisin: IDropdownSelectItem) => cuisin.code
             ),
@@ -464,13 +482,14 @@ export default function RestaurantDetails({
                           prefix="%"
                           min={0}
                           max={100}
-                          placeholder={t('Service Charges')}
+                          placeholder={t('Default GST Rate (Regular stores only)')}
                           minFractionDigits={2}
                           maxFractionDigits={2}
                           name="salesTax"
                           showLabel={true}
                           value={values.salesTax}
                           onChange={setFieldValue}
+                          disabled={values.gstRegistrationType?.code !== 'REGULAR' && !!values.gstRegistrationType?.code}
                           style={{
                             borderColor: onErrorMessageMatcher(
                               'salesTax',
@@ -482,6 +501,44 @@ export default function RestaurantDetails({
                           }}
                         />
                       </div>
+
+                      <div>
+                        <CustomDropdownComponent
+                          name="gstRegistrationType"
+                          placeholder={t('GST Registration')}
+                          selectedItem={values.gstRegistrationType}
+                          setSelectedItem={setFieldValue}
+                          options={GST_STORE_OPTIONS}
+                          showLabel={true}
+                        />
+                      </div>
+
+                      {(values.gstRegistrationType?.code === 'REGULAR' ||
+                        values.gstRegistrationType?.code === 'COMPOSITION') && (
+                        <div>
+                          <CustomTextField
+                            type="text"
+                            name="gstin"
+                            placeholder={`${t('GSTIN')} *`}
+                            maxLength={15}
+                            value={values.gstin}
+                            onChange={(e) =>
+                              setFieldValue('gstin', e.target.value.toUpperCase())
+                            }
+                            showLabel={true}
+                            style={{
+                              borderColor: onErrorMessageMatcher(
+                                'gstin',
+                                errors?.gstin,
+                                RestaurantErrors
+                              )
+                                ? 'red'
+                                : '',
+                            }}
+                          />
+                        </div>
+                      )}
+
                       <div>
                         <CustomDropdownComponent
                           name="shopType"

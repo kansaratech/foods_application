@@ -1,5 +1,35 @@
 import { gql } from "@apollo/client";
 
+// Server-authoritative bill breakdown for the current cart — mirrors exactly
+// what placeOrder will charge (same pricing.service.ts pipeline), so the
+// checkout screen never shows a number the server would then override.
+export const ORDER_PRICE_PREVIEW = gql`
+  query OrderPricePreview(
+    $restaurant: String!
+    $orderInput: [OrderItemInput!]!
+    $couponCode: String
+    $isPickedUp: Boolean!
+    $address: AddressInput
+  ) {
+    orderPricePreview(
+      restaurant: $restaurant
+      orderInput: $orderInput
+      couponCode: $couponCode
+      isPickedUp: $isPickedUp
+      address: $address
+    ) {
+      itemsTotal
+      discountAmount
+      deliveryCharges
+      gstMode
+      cgst
+      sgst
+      taxationAmount
+      orderAmount
+    }
+  }
+`;
+
 export const ORDERS = gql`
   query Orders($offset: Int) {
     orders(offset: $offset) {

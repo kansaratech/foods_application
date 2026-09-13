@@ -9,6 +9,7 @@ export interface IAddon {
   _id: string;
   title: string;
   description?: string | null;
+  isRequired?: boolean | null;
   quantityMinimum?: number | null;
   quantityMaximum?: number | null;
   options: IOption[];
@@ -31,6 +32,8 @@ export interface IFood {
   images?: string[] | null;
   isActive?: boolean | null;
   isOutOfStock?: boolean | null;
+  // Null inherits the store's default GST rate (Restaurant.tax).
+  gstRatePercent?: number | null;
   variations: IVariation[];
 }
 

@@ -9,10 +9,32 @@ import { useApptheme } from "@/lib/context/theme.context";
 import { CREATE_ADDON, EDIT_ADDON } from "@/lib/apollo/mutations/menu.mutation";
 import { RESTAURANT_ADDONS } from "@/lib/apollo/queries/menu.query";
 import { CustomContinueButton } from "@/lib/ui/useable-components";
+import CustomSwitch from "@/lib/ui/useable-components/switch-button";
 import ResponsiveFormSheet, {
   ResponsiveFormSheetHandle,
 } from "@/lib/ui/useable-components/responsive-form-sheet";
 import { IAddon, IOption } from "@/lib/utils/interfaces/menu.interface";
+
+// Keeps quantityMinimum/quantityMaximum consistent with the "Customer must
+// choose" toggle — mirrors normalizeAddonRules in the API's food.resolvers.ts,
+// so the vendor works in plain "required?" + "up to how many?" terms instead
+// of raw min/max numbers.
+function deriveSelectionRules(isRequired: boolean, quantityMaximum: number) {
+  const safeMax = Math.max(1, quantityMaximum || 1);
+  return {
+    quantityMinimum: isRequired ? Math.min(safeMax, 1) : 0,
+    quantityMaximum: safeMax,
+  };
+}
+
+function selectionSummary(isRequired: boolean, min: number, max: number): string {
+  if (isRequired) {
+    return min === max
+      ? `Required — customer picks exactly ${min}`
+      : `Required — customer picks ${min} to ${max}`;
+  }
+  return max <= 1 ? "Optional — customer can pick one" : `Optional — customer can pick up to ${max}`;
+}
 
 export interface AddonFormSheetHandle {
   open: (addon?: IAddon) => void;
@@ -37,8 +59,9 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
     const [editingId, setEditingId] = useState<string | null>(null);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [quantityMinimum, setQuantityMinimum] = useState("0");
-    const [quantityMaximum, setQuantityMaximum] = useState("1");
+    const [isRequired, setIsRequired] = useState(false);
+    const [quantityMinimum, setQuantityMinimum] = useState(0);
+    const [quantityMaximum, setQuantityMaximum] = useState(1);
     const [options, setOptions] = useState<OptionRow[]>([]);
     const [error, setError] = useState("");
 
@@ -47,8 +70,9 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
         setEditingId(addon?._id ?? null);
         setTitle(addon?.title ?? "");
         setDescription(addon?.description ?? "");
-        setQuantityMinimum(String(addon?.quantityMinimum ?? 0));
-        setQuantityMaximum(String(addon?.quantityMaximum ?? 1));
+        setIsRequired(addon?.isRequired ?? (addon?.quantityMinimum ?? 0) >= 1);
+        setQuantityMinimum(addon?.quantityMinimum ?? 0);
+        setQuantityMaximum(addon?.quantityMaximum ?? 1);
         setOptions(
           (addon?.options ?? []).map((o) => ({
             ...o,
@@ -121,8 +145,9 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
         restaurant: restaurantId,
         title: title.trim(),
         description: description.trim() || undefined,
-        quantityMinimum: Number(quantityMinimum) || 0,
-        quantityMaximum: Number(quantityMaximum) || 1,
+        isRequired,
+        quantityMinimum,
+        quantityMaximum,
         options: options.map((o) => ({
           _id: o._id,
           title: (o.title ?? "").trim(),
@@ -141,19 +166,24 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
 
     return (
       <ResponsiveFormSheet ref={sheetRef} snapPoint="75%">
-          <Text
-            className="text-lg font-semibold"
-            style={{ color: appTheme.fontMainColor }}
-          >
-            {editingId ? t("Edit Addon") : t("Add Addon")}
-          </Text>
+          <View className="gap-1">
+            <Text
+              className="text-lg font-semibold"
+              style={{ color: appTheme.fontMainColor }}
+            >
+              {editingId ? t("Edit Customisation Group") : t("New Customisation Group")}
+            </Text>
+            <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
+              {t('e.g. "Choose your toppings" or "Spice level" — a group of choices customers pick from')}
+            </Text>
+          </View>
 
           <View className="gap-2">
             <Text
               className="text-sm"
               style={{ color: appTheme.fontMainColor }}
             >
-              {t("Title")}
+              {t("Group name")}
             </Text>
             <TextInput
               className={`rounded-md border p-3 ${error ? "border-red-600 border-2" : "border-2 border-gray-300"}`}
@@ -185,37 +215,79 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
             />
           </View>
 
-          <View className="flex-row gap-3">
-            <View className="flex-1 gap-2">
-              <Text
-                className="text-sm"
-                style={{ color: appTheme.fontMainColor }}
-              >
-                {t("Min Selectable")}
-              </Text>
-              <TextInput
-                className="rounded-md border-2 border-gray-300 p-3"
-                value={quantityMinimum}
-                keyboardType="number-pad"
-                style={{ color: appTheme.fontSecondColor }}
-                onChangeText={setQuantityMinimum}
+          <View
+            className="gap-3 rounded-xl p-3"
+            style={{ backgroundColor: appTheme.sidebarIconBackground }}
+          >
+            <View className="flex-row justify-between items-center gap-3">
+              <View className="flex-1 gap-0.5">
+                <Text
+                  className="text-sm font-semibold"
+                  style={{ color: appTheme.fontMainColor }}
+                >
+                  {t("Customer must choose from this group")}
+                </Text>
+                <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
+                  {t("Switch on for a mandatory pick, e.g. spice level")}
+                </Text>
+              </View>
+              <CustomSwitch
+                value={isRequired}
+                onToggle={(checked: boolean) => {
+                  const rules = deriveSelectionRules(checked, quantityMaximum);
+                  setIsRequired(checked);
+                  setQuantityMinimum(rules.quantityMinimum);
+                  setQuantityMaximum(rules.quantityMaximum);
+                }}
               />
             </View>
-            <View className="flex-1 gap-2">
-              <Text
-                className="text-sm"
-                style={{ color: appTheme.fontMainColor }}
-              >
-                {t("Max Selectable")}
-              </Text>
-              <TextInput
-                className="rounded-md border-2 border-gray-300 p-3"
-                value={quantityMaximum}
-                keyboardType="number-pad"
-                style={{ color: appTheme.fontSecondColor }}
-                onChangeText={setQuantityMaximum}
-              />
+
+            <View className="flex-row gap-3">
+              {isRequired && (
+                <View className="flex-1 gap-2">
+                  <Text
+                    className="text-sm"
+                    style={{ color: appTheme.fontMainColor }}
+                  >
+                    {t("At least")}
+                  </Text>
+                  <TextInput
+                    className="rounded-md border-2 border-gray-300 p-3"
+                    value={String(quantityMinimum)}
+                    keyboardType="number-pad"
+                    style={{ color: appTheme.fontSecondColor }}
+                    onChangeText={(val) => {
+                      const min = Math.max(1, Number(val) || 1);
+                      setQuantityMinimum(min);
+                      if (min > quantityMaximum) setQuantityMaximum(min);
+                    }}
+                  />
+                </View>
+              )}
+              <View className="flex-1 gap-2">
+                <Text
+                  className="text-sm"
+                  style={{ color: appTheme.fontMainColor }}
+                >
+                  {isRequired ? t("At most") : t("Let customer pick up to")}
+                </Text>
+                <TextInput
+                  className="rounded-md border-2 border-gray-300 p-3"
+                  value={String(quantityMaximum)}
+                  keyboardType="number-pad"
+                  style={{ color: appTheme.fontSecondColor }}
+                  onChangeText={(val) => {
+                    const max = Math.max(1, Number(val) || 1);
+                    setQuantityMaximum(max);
+                    if (isRequired && quantityMinimum > max) setQuantityMinimum(max);
+                  }}
+                />
+              </View>
             </View>
+
+            <Text className="text-xs italic" style={{ color: appTheme.fontSecondColor }}>
+              {t("Customers will see")}: {selectionSummary(isRequired, quantityMinimum, quantityMaximum)}
+            </Text>
           </View>
 
           <View className="flex-row justify-between items-center mt-2">
@@ -223,7 +295,7 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
               className="text-sm font-semibold"
               style={{ color: appTheme.fontMainColor }}
             >
-              {t("Options")}
+              {t("Choices")}
             </Text>
             <TouchableOpacity
               onPress={addOptionRow}
@@ -235,7 +307,7 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
                 color={appTheme.primary}
               />
               <Text style={{ color: appTheme.primary }}>
-                {t("Add Option")}
+                {t("Add a choice")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -250,7 +322,7 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
                   className="text-xs font-semibold"
                   style={{ color: appTheme.fontSecondColor }}
                 >
-                  {t("Option")}
+                  {t("Choice")}
                 </Text>
                 <TouchableOpacity onPress={() => removeOptionRow(option.key)}>
                   <Ionicons
@@ -263,7 +335,7 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
               <TextInput
                 className="rounded-md border-2 border-gray-300 p-2"
                 value={option.title}
-                placeholder={t("Option title")}
+                placeholder={t("e.g. Extra Cheese")}
                 placeholderTextColor={appTheme.fontSecondColor}
                 style={{ color: appTheme.fontSecondColor }}
                 onChangeText={(val) => updateOptionRow(option.key, "title", val)}

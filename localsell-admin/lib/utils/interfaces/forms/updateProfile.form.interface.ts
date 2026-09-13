@@ -10,6 +10,7 @@ export interface IUpdateProfileFormErrors {
   deliveryTime: string[];
   minOrder: string[];
   salesTax: string[];
+  gstin: string[];
   shopType: string[];
   cuisines: string[];
   image: string[];
@@ -25,7 +26,6 @@ export interface IUpdateBussinessDetailsFormErrors {
   accountNumber: string[];
   bussinessRegNo: string[];
   companyRegNo: string[];
-  taxRate: string[];
 }
 
 export interface IUpdateProfileForm {
@@ -38,6 +38,8 @@ export interface IUpdateProfileForm {
   deliveryTime: number;
   minOrder: number;
   salesTax: number;
+  gstRegistrationType: IDropdownSelectItem | null;
+  gstin: string;
   shopType: IDropdownSelectItem | null;
   cuisines: IDropdownSelectItem[];
   image: string;

@@ -73,15 +73,16 @@ export default function ChangeOrderPanel({ order, onChanged }: Props) {
           </Btn>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-wide text-gray-400">{t("Payment")}</span>
-          <Btn active={isCod} onClick={() => modifyOrder({ variables: { id: order._id, paymentMethod: "COD" } })}>
-            {t("Cash")}
-          </Btn>
-          <Btn active={!isCod} onClick={() => modifyOrder({ variables: { id: order._id, paymentMethod: "STRIPE" } })}>
-            {t("Pay online")}
-          </Btn>
-        </div>
+        {/* Online payment is paused platform-wide for now (checkout only
+            offers COD too) — nothing to switch to, so no toggle here. */}
+        {!isCod && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-wide text-gray-400">{t("Payment")}</span>
+            <Btn active={isCod} onClick={() => modifyOrder({ variables: { id: order._id, paymentMethod: "COD" } })}>
+              {t("Cash")}
+            </Btn>
+          </div>
+        )}
       </div>
     </div>
   );

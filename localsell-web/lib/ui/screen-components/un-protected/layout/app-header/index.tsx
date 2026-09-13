@@ -382,7 +382,7 @@ export default function AppHeader() {
                   },
                   {
                     label: "My orders",
-                    command: () => router.push("/profile"),
+                    command: () => router.push("/profile/order-history"),
                   },
                   {
                     label: "Get help",

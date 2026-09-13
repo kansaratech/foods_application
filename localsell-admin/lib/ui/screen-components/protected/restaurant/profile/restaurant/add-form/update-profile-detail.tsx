@@ -46,6 +46,17 @@ import {
 import { useTranslations } from 'next-intl';
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
 import { useShopTypes } from '@/lib/hooks/useShopType';
+import { IDropdownSelectItem } from '@/lib/utils/interfaces';
+
+// A store's GST status defaults to the owning vendor's KYC declaration when
+// left as "Use vendor's default" — set explicitly here only if this specific
+// store needs a different GSTIN (e.g. a multi-store vendor with one per state).
+const GST_STORE_OPTIONS: IDropdownSelectItem[] = [
+  { code: '', label: "Use vendor's default" },
+  { code: 'UNREGISTERED', label: 'Not GST registered' },
+  { code: 'REGULAR', label: 'GST Regular' },
+  { code: 'COMPOSITION', label: 'GST Composition scheme' },
+];
 
 export default function UpdateRestaurantDetails({
   stepperProps,
@@ -122,6 +133,9 @@ export default function UpdateRestaurantDetails({
       deliveryTime: restaurantData?.deliveryTime ?? 0,
       minOrder: restaurantData?.minimumOrder ?? 0,
       salesTax: restaurantData?.tax ?? 0,
+      gstRegistrationType:
+        GST_STORE_OPTIONS.find((o) => o.code === restaurantData?.gstRegistrationType) ?? GST_STORE_OPTIONS[0],
+      gstin: restaurantData?.gstin ?? '',
       shopType:
         dropdownList?.find((type) => type.label === restaurantData?.shopType) ??
         null,
@@ -164,6 +178,8 @@ export default function UpdateRestaurantDetails({
             username: data.username,
             shopType: data.shopType?.code,
             salesTax: data.salesTax,
+            gstRegistrationType: data.gstRegistrationType?.code || undefined,
+            gstin: data.gstRegistrationType?.code ? data.gstin : undefined,
             orderPrefix: data.orderprefix,
             cuisines: data.cuisines.map((cuisine) => cuisine.code),
             ...(data.password ? { password: data.password } : {}),
@@ -386,13 +402,14 @@ export default function UpdateRestaurantDetails({
                       suffix=" %"
                       min={0}
                       max={100}
-                      placeholder={t('Service Charges')}
+                      placeholder={t('Default GST Rate (Regular stores only)')}
                       minFractionDigits={2}
                       maxFractionDigits={2}
                       name="salesTax"
                       showLabel={true}
                       value={values.salesTax}
                       onChange={setFieldValue}
+                      disabled={values.gstRegistrationType?.code !== 'REGULAR' && !!values.gstRegistrationType?.code}
                       style={{
                         borderColor: onErrorMessageMatcher(
                           'salesTax',
@@ -403,6 +420,39 @@ export default function UpdateRestaurantDetails({
                           : '',
                       }}
                     />
+
+                    <CustomDropdownComponent
+                      name="gstRegistrationType"
+                      placeholder={t('GST Registration')}
+                      selectedItem={values.gstRegistrationType}
+                      setSelectedItem={setFieldValue}
+                      options={GST_STORE_OPTIONS}
+                      showLabel={true}
+                    />
+
+                    {(values.gstRegistrationType?.code === 'REGULAR' ||
+                      values.gstRegistrationType?.code === 'COMPOSITION') && (
+                      <CustomTextField
+                        type="text"
+                        name="gstin"
+                        placeholder={`${t('GSTIN')} *`}
+                        maxLength={15}
+                        value={values.gstin}
+                        onChange={(e) =>
+                          setFieldValue('gstin', e.target.value.toUpperCase())
+                        }
+                        showLabel={true}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'gstin',
+                            errors?.gstin,
+                            ProfileErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    )}
 
                     <CustomTextField
                       placeholder={t('Order Prefix')}

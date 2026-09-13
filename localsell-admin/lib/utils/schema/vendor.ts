@@ -84,9 +84,12 @@ export const vendorBusinessKycStepSchema = Yup.object().shape({
   businessType: Yup.mixed<IDropdownSelectItem>()
     .nullable()
     .required('Required'),
-  isGstRegistered: Yup.boolean().required(),
-  gstin: Yup.string().when('isGstRegistered', {
-    is: true,
+  gstRegistrationType: Yup.mixed<IDropdownSelectItem>().nullable().required('Required'),
+  // Required for Regular and Composition — a Composition dealer still holds a
+  // GSTIN, it just can't charge tax separately to the customer (Section 10
+  // CGST Act). Only Unregistered has no GSTIN to give.
+  gstin: Yup.string().when('gstRegistrationType', {
+    is: (value: IDropdownSelectItem | null) => value?.code === 'REGULAR' || value?.code === 'COMPOSITION',
     then: (schema) =>
       schema
         .required('Required')

@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const GET_ORDERS = gql`
-  query Orders {
-    restaurantOrders {
+  query Orders($restaurant: String) {
+    restaurantOrders(restaurantId: $restaurant) {
       _id
       orderId
       id

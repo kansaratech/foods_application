@@ -30,6 +30,8 @@ export const foodTypeDefs = /* GraphQL */ `
     isCombo: Boolean
     comboItems: [ComboItemRef!]!
     compareAtPrice: Float
+    "Per-item GST rate override; null inherits the store's default rate (Restaurant.tax)."
+    gstRatePercent: Float
     pairedFoods: [FoodLite!]!
     subCategory: ID
     variations: [Variation!]!
@@ -112,6 +114,7 @@ export const foodTypeDefs = /* GraphQL */ `
     isCombo: Boolean
     comboItems: [ComboItemInput!]
     compareAtPrice: Float
+    gstRatePercent: Float
     pairedFoodIds: [ID!]
   }
 

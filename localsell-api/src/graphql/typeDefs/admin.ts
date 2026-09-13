@@ -23,6 +23,8 @@ export const adminTypeDefs = /* GraphQL */ `
     businessType: String
     "The ShopType id businessType resolves from — lets the edit form preselect the right dropdown option without a slug round-trip."
     businessTypeId: String
+    "REGULAR | COMPOSITION | UNREGISTERED — the vendor's declared GST status. Copied onto each new store on creation, editable per store after."
+    gstRegistrationType: String
     isGstRegistered: Boolean
     gstin: String
     "ACTIVE | DRAFT — a DRAFT vendor was started in the registration wizard but not yet finalized."
@@ -85,6 +87,8 @@ export const adminTypeDefs = /* GraphQL */ `
     businessName: String
     # Accepts either a ShopType id or slug, resolved server-side.
     businessType: String
+    "REGULAR | COMPOSITION | UNREGISTERED. Preferred over isGstRegistered, which can't distinguish Regular from Composition."
+    gstRegistrationType: String
     isGstRegistered: Boolean
     gstin: String
   }

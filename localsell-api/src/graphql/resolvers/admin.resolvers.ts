@@ -8,6 +8,7 @@ import { comparePassword, hashPassword, signAccessToken, signRefreshToken, verif
 import { forbiddenError, invalidTokenError, notFoundError, tokenExpiredError, userInputError } from '../../utils/errors';
 import { normalizeIndianPhone } from '../../utils/phone';
 import { recordAudit } from '../../utils/audit';
+import { assertGstinRequiredFor, normalizeGstRegistrationType } from '../../utils/gst';
 import { purgeRestaurant } from './restaurant.resolvers';
 
 /** Friendly "phone already in use" — never let the raw `User_phone_key`
@@ -67,8 +68,32 @@ interface VendorInputArgs {
   password?: string;
   businessName?: string;
   businessType?: string;
+  // REGULAR | COMPOSITION | UNREGISTERED. Preferred over the legacy
+  // isGstRegistered boolean, which can't distinguish Regular from Composition.
+  gstRegistrationType?: string;
   isGstRegistered?: boolean;
   gstin?: string;
+}
+
+/**
+ * Resolves the vendor-level GST fields from whichever the caller sent.
+ * `gstRegistrationType` (the 3-way KYC selector) wins when present; the
+ * legacy `isGstRegistered` boolean is a fallback that can only express
+ * Regular/Unregistered, kept for callers that haven't moved to the new field.
+ */
+function resolveVendorGstFields(input: {
+  gstRegistrationType?: string;
+  isGstRegistered?: boolean;
+  gstin?: string;
+}): { gstRegistrationType: string; isGstRegistered: boolean; gstin: string | null } {
+  const type =
+    input.gstRegistrationType != null
+      ? normalizeGstRegistrationType(input.gstRegistrationType)
+      : input.isGstRegistered
+        ? 'REGULAR'
+        : 'UNREGISTERED';
+  const gstin = type === 'UNREGISTERED' ? null : input.gstin?.trim().toUpperCase() || null;
+  return { gstRegistrationType: type, isGstRegistered: type !== 'UNREGISTERED', gstin };
 }
 
 // Accepts either a ShopType id or slug — mirrors resolveShopTypeId in
@@ -258,7 +283,8 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       const phone = normalizeIndianPhone(input.phoneNumber);
 
       const businessTypeId = await resolveBusinessTypeId(input.businessType);
-      const gstRegistered = input.isGstRegistered ?? false;
+      const gst = resolveVendorGstFields(input);
+      assertGstinRequiredFor(gst.gstRegistrationType as 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED', gst.gstin);
 
       const baseData = {
         email,
@@ -271,8 +297,9 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         status: 'ACTIVE',
         businessName: input.businessName,
         businessTypeId,
-        isGstRegistered: gstRegistered,
-        gstin: gstRegistered ? input.gstin?.trim().toUpperCase() : null,
+        gstRegistrationType: gst.gstRegistrationType,
+        isGstRegistered: gst.isGstRegistered,
+        gstin: gst.gstin,
       };
 
       let vendor;
@@ -328,7 +355,9 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       const email = input.email?.trim().toLowerCase() || null;
 
       const businessTypeId = await resolveBusinessTypeId(input.businessType);
-      const gstRegistered = input.isGstRegistered ?? false;
+      // Draft saves stay near-validation-free (#52) — no GSTIN format check here,
+      // just persist whatever the wizard has so far.
+      const gst = resolveVendorGstFields(input);
       const phone = normalizeIndianPhone(input.phoneNumber);
       // Friendly conflict message instead of a raw `User_phone_key` Prisma error.
       await assertPhoneFree(phone, input._id);
@@ -348,8 +377,9 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         phone,
         businessName: input.businessName,
         businessTypeId,
-        isGstRegistered: gstRegistered,
-        gstin: gstRegistered ? input.gstin?.trim().toUpperCase() : null,
+        gstRegistrationType: gst.gstRegistrationType,
+        isGstRegistered: gst.isGstRegistered,
+        gstin: gst.gstin,
       };
 
       if (input._id) {
@@ -386,9 +416,22 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       const businessTypeId = input.businessType !== undefined ? await resolveBusinessTypeId(input.businessType) : undefined;
-      const gstRegistered = input.isGstRegistered;
       const phone = input.phoneNumber !== undefined ? normalizeIndianPhone(input.phoneNumber) : undefined;
       await assertPhoneFree(phone, input._id);
+
+      // Only touch GST fields when the caller actually sent one — otherwise an
+      // unrelated profile edit (e.g. just a phone number change) would silently
+      // wipe an already-declared GST registration.
+      let gstRegistrationType: string | undefined;
+      let isGstRegistered: boolean | undefined;
+      let gstin: string | null | undefined;
+      if (input.gstRegistrationType != null || input.isGstRegistered != null) {
+        const gst = resolveVendorGstFields(input);
+        assertGstinRequiredFor(gst.gstRegistrationType as 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED', gst.gstin);
+        gstRegistrationType = gst.gstRegistrationType;
+        isGstRegistered = gst.isGstRegistered;
+        gstin = gst.gstin;
+      }
 
       return prisma.user.update({
         where: { id: input._id },
@@ -402,8 +445,9 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
           password: input.password ? await hashPassword(input.password) : undefined,
           businessName: input.businessName,
           businessTypeId,
-          isGstRegistered: gstRegistered,
-          gstin: gstRegistered === false ? null : input.gstin?.trim().toUpperCase(),
+          gstRegistrationType,
+          isGstRegistered,
+          gstin,
         },
       });
     },

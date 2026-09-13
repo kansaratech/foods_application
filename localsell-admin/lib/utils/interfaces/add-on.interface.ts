@@ -30,9 +30,10 @@ export interface IAddonMainComponentsProps extends IGlobalComponentProps {
 /*  */
 export interface IAddon {
   _id: string;
-  options: string[];
+  options: IOptions[];
   title: string;
   description: string;
+  isRequired: boolean;
   quantityMinimum: number;
   quantityMaximum: number;
   __typename: string;

@@ -284,6 +284,7 @@ export const generateDummyAddons = (count: number = 10): IAddon[] => {
       _id: `addon_${i + 1}`,
       title: `Addon ${i + 1}`,
       description: `Description for Addon ${i + 1}`,
+      isRequired: true,
       quantityMinimum: 1,
       quantityMaximum: 1,
       __typename: 'Addon',
