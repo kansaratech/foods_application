@@ -276,7 +276,10 @@
     font-size: 0.66rem;
   }
 
-  .responsive-admin-table .dispatch-responsive-table .p-dropdown .p-dropdown-label {
+  .responsive-admin-table
+    .dispatch-responsive-table
+    .p-dropdown
+    .p-dropdown-label {
     padding: 0.45rem 0.5rem;
   }
 
@@ -348,4 +351,37 @@
   .mobile-order-filter .p-dropdown-panel {
     min-width: 11rem;
   }
+}
+
+/* Consistent list surface across admin modules. */
+.responsive-admin-table {
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
+}
+.responsive-admin-table .p-datatable-header {
+  padding: 16px;
+  background: var(--app-surface);
+  border: 0;
+  border-radius: 12px 12px 0 0;
+}
+.responsive-admin-table .p-datatable-thead > tr > th {
+  padding: 14px 16px;
+  background: var(--app-surface-alt);
+  color: var(--app-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-width: 1px 0;
+  border-color: var(--app-border);
+}
+.responsive-admin-table .p-datatable-tbody > tr > td {
+  padding: 16px;
+  border-color: var(--app-border);
+  line-height: 1.5;
+  vertical-align: middle;
+}
+.responsive-admin-table .p-paginator {
+  border-radius: 0 0 12px 12px;
+  background: var(--app-surface);
+  border-color: var(--app-border);
 }

@@ -49,6 +49,7 @@ export const useConfiguration = () => {
   const SMTP_USER = configuration?.smtpUser;
   const DELIVERY_RATE = configuration?.deliveryRate;
   const COST_TYPE = configuration?.costType || 'perKM';
+  const DEFAULT_COMMISSION_RATE = configuration?.defaultCommissionRate ?? 20;
   const TWILIO_ACCOUNT_SID = configuration?.twilioAccountSid;
   const TWILIO_AUTH_TOKEN = configuration?.twilioAuthToken;
   const TWILIO_PHONE_NUMBER = configuration?.twilioPhoneNumber;
@@ -115,6 +116,9 @@ export const useConfiguration = () => {
     // DELIVERY RATE
     DELIVERY_RATE,
     COST_TYPE,
+
+    // COMMISSION
+    DEFAULT_COMMISSION_RATE,
 
     // TWILIO
     TWILIO_ACCOUNT_SID,

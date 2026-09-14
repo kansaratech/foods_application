@@ -1,5 +1,5 @@
 // Core
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { Form, Formik } from 'formik';
 import { useContext, useEffect, useState } from 'react';
 import Image from '@/lib/ui/useable-components/safe-image';
@@ -13,7 +13,7 @@ import { IVendorForm } from '@/lib/utils/interfaces/forms';
 
 // Constants and Methods
 import { MAX_SQUARE_FILE_SIZE, VendorErrors } from '@/lib/utils/constants';
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Components
 import CustomButton from '@/lib/ui/useable-components/button';
@@ -61,7 +61,6 @@ export default function VendorUpdateForms() {
   // Mutations
   const [updateVendor] = useMutation(EDIT_VENDOR, {
     //  refetchQueries: [{ query: GET_VENDORS, fetchPolicy: 'network-only' }],
-    onError,
     onCompleted: () => {},
   });
 
@@ -94,22 +93,11 @@ export default function VendorUpdateForms() {
       showToast({
         type: 'error',
         title: t(`Edit Vendor`),
-        message: t(`Vendor Edit Failed`),
+        message: getGraphQLErrorMessage(error as Error) ?? t(`Vendor Edit Failed`),
         duration: 2500,
       });
     }
   };
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t(`Edit Vendor`),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t(`Vendor Edit Failed`),
-      duration: 2500,
-    });
-  }
 
   //  Effects
   useEffect(() => {

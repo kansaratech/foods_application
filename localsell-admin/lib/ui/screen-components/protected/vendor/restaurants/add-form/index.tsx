@@ -10,7 +10,7 @@ import {
 } from '@/lib/utils/interfaces';
 
 // PrimeReact components
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 import { Stepper } from 'primereact/stepper';
 import { StepperPanel } from 'primereact/stepperpanel';
 
@@ -53,11 +53,13 @@ const VendorRestaurantsForm = ({
   };
 
   return (
-    <Sidebar
+    <FormDialog
+      title={t('Store')}
+      size="xl"
       visible={isRestaurantFormVisible}
       position={position}
       onHide={onSidebarHideHandler}
-      className="w-full sm:w-[600px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <div ref={stepperRef}>
         <Stepper linear headerPosition="bottom" activeStep={activeIndex}>
@@ -87,7 +89,7 @@ const VendorRestaurantsForm = ({
           </StepperPanel>
         </Stepper>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 };
 

@@ -492,15 +492,19 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const cuisineIds = await resolveCuisineIds(input.cuisines);
       const config = await prisma.configuration.findFirst();
-      // A new store inherits the platform default commission unless the form
-      // set an explicit rate. `Restaurant.commissionRate` otherwise defaults to
-      // 0, which silently means "the platform earns nothing from this store".
-      const commissionRate =
-        input.commissionRate != null ? input.commissionRate : (config?.defaultCommissionRate ?? 20);
 
       // A store an admin creates is live immediately; one a vendor self-onboards
       // waits in the approval queue and stays hidden from customers until then.
       const adminCreated = currentUser.userType === 'ADMIN';
+
+      // A new store inherits the platform default commission unless an admin
+      // set an explicit rate — commission is platform policy, so a vendor
+      // creating their own store can never set/override this field even if
+      // they smuggle it into the request; only the platform default applies.
+      // `Restaurant.commissionRate` otherwise defaults to 0, which silently
+      // means "the platform earns nothing from this store".
+      const commissionRate =
+        adminCreated && input.commissionRate != null ? input.commissionRate : (config?.defaultCommissionRate ?? 20);
 
       // A new store defaults to the owning vendor's KYC-declared GST status,
       // editable per store since a multi-store vendor can hold a different
@@ -626,6 +630,10 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           tax: input.salesTax,
           gstRegistrationType,
           gstin,
+          // Commission is platform policy — only an admin can change it here.
+          // A vendor calling this same mutation to edit their own store must
+          // never be able to smuggle in a rate change for themselves.
+          commissionRate: currentUser.userType === 'ADMIN' ? input.commissionRate : undefined,
           orderPrefix: input.orderPrefix,
           isAvailable: input.isAvailable,
           latitude: input.latitude,

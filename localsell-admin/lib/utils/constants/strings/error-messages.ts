@@ -68,6 +68,7 @@ export const RestaurantErrors: IRestaurantFormErrors = {
   minOrder: ['Required'],
   salesTax: ['Required'],
   gstin: ['Required', 'Enter a valid 15-character GSTIN'],
+  commissionRate: [],
   shopType: ['Required'],
   cuisines: ['Required', 'Cuisines field must have at least 1 items'],
   image: ['Required', 'Invalid image URL'],

@@ -60,11 +60,22 @@ export function computeGst(
  * Mirrors the client-side formula (localsell-web/lib/utils/methods/order.ts,
  * calculateAmount) so delivery fee is computed the same way server-side and
  * can't be overridden by whatever a client sends.
+ *
+ * A store that has set its own `deliveryFee` (per-km rate) overrides the
+ * platform-wide config entirely — this is what the admin's own delivery
+ * settings form has always promised ("Delivery Fee (per Km's)... Min Delivery
+ * Fee") but nothing actually read until now. Falls back to the global rate
+ * for every store that hasn't set one, so existing behavior is unchanged.
  */
 export function computeDeliveryFee(
   config: { costType?: string | null; deliveryRate?: number | null },
   distanceKm: number,
+  restaurantOverride?: { deliveryFee?: number | null; minDeliveryFee?: number | null },
 ): number {
+  if (restaurantOverride?.deliveryFee != null) {
+    const perKmAmount = Math.ceil(distanceKm) * restaurantOverride.deliveryFee;
+    return Math.max(perKmAmount, restaurantOverride.minDeliveryFee ?? 0);
+  }
   const rate = config.deliveryRate ?? 0;
   if (config.costType === 'fixed') return rate;
   const amount = Math.ceil(distanceKm) * rate;

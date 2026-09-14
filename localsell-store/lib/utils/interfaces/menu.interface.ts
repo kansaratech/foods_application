@@ -34,7 +34,14 @@ export interface IFood {
   isOutOfStock?: boolean | null;
   // Null inherits the store's default GST rate (Restaurant.tax).
   gstRatePercent?: number | null;
+  subCategory?: string | null;
   variations: IVariation[];
+}
+
+export interface ISubCategory {
+  _id: string;
+  title: string;
+  parentCategoryId: string;
 }
 
 export interface ICategory {

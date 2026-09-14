@@ -67,6 +67,9 @@ export interface IStoreProfile {
   };
   deliveryTime: string;
   tax: number;
+  // REGULAR | COMPOSITION | UNREGISTERED — only REGULAR stores add GST on top
+  // of the listed price (see localsell-api/src/utils/gst.ts).
+  gstRegistrationType?: string;
   notificationToken: string;
   enableNotification: boolean;
   shopType: string;

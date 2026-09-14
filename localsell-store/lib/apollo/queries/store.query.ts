@@ -84,6 +84,7 @@ export const STORE_PROFILE = gql`
       slug
       commissionRate
       tax
+      gstRegistrationType
       notificationToken
       enableNotification
       shopType

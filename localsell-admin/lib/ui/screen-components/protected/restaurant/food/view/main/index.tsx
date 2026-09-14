@@ -176,6 +176,7 @@ export default function FoodsMain() {
           },
           title: fd.title,
           variations: fd.variations,
+          gstRatePercent: fd.gstRatePercent,
           pairedFoods: fd.pairedFoods,
         });
       })
@@ -274,7 +275,10 @@ export default function FoodsMain() {
         setSelectedData={setSelectedProducts}
         selectedData={selectedProducts}
         loading={loading}
-        columns={FOODS_TABLE_COLUMNS({ menuItems })}
+        columns={FOODS_TABLE_COLUMNS({
+          menuItems,
+          pricingSettings: foodsData?.restaurant,
+        })}
       />
       <CustomDialog
         loading={mutationLoading}

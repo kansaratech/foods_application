@@ -2,7 +2,7 @@
 import { Form, Formik, FormikHelpers } from 'formik';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // Interface and Types
 import {
@@ -124,25 +124,28 @@ export default function ZoneAddForm({
     }
   };
 
-
-
-
   return (
-    <Sidebar
+    <FormDialog
+      title={
+        <>
+          {' '}
+          {zone ? t('Edit') : t('Add')} {t('Zone')}{' '}
+        </>
+      }
+      size="xl"
       visible={isAddZoneVisible}
       position={position}
       onHide={onHide}
-      className="w-full dark:border-dark-600 dark:bg-dark-950 dark:text-white"
+      className=""
     >
       <div className="min-h-full w-full bg-slate-50 px-4 py-5 dark:bg-dark-950 sm:px-6 lg:px-10">
         <div className="mx-auto h-full w-full max-w-[1220px]">
           <div className="flex flex-col gap-2">
             <div className="mb-3 flex flex-col">
-              <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {zone ? t('Edit') : t('Add')} {t('Zone')}
-              </span>
               <span className="mt-1 text-sm text-slate-500">
-                {t('Define the service area by searching a location and adjusting its boundary')}
+                {t(
+                  'Define the service area by searching a location and adjusting its boundary'
+                )}
               </span>
             </div>
 
@@ -181,7 +184,10 @@ export default function ZoneAddForm({
                   };
 
                   return (
-                    <Form onSubmit={handleSubmit} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-dark-600 dark:bg-dark-900">
+                    <Form
+                      onSubmit={handleSubmit}
+                      className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-dark-600 dark:bg-dark-900"
+                    >
                       <div className="grid grid-cols-1 gap-4 border-b border-slate-200 p-4 dark:border-dark-600 sm:p-6 md:grid-cols-2">
                         <div>
                           <CustomTextField
@@ -226,8 +232,14 @@ export default function ZoneAddForm({
 
                       <div className="p-4 sm:p-6">
                         <div className="mb-3">
-                          <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('Service area')}</h2>
-                          <p className="mt-1 text-sm text-slate-500">{t('Search an address, click the map to drop a pin, or drag the polygon points to fine-tune the boundary')}</p>
+                          <h2 className="text-base font-semibold text-slate-900 dark:text-white">
+                            {t('Service area')}
+                          </h2>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {t(
+                              'Search an address, click the map to drop a pin, or drag the polygon points to fine-tune the boundary'
+                            )}
+                          </p>
                         </div>
                         {isLoaded && (
                           <CustomGoogleMapsLocationZoneBounds
@@ -246,7 +258,11 @@ export default function ZoneAddForm({
                         )}
 
                         <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-dark-600">
-                          <button type="button" onClick={onHide} className="h-10 rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white">
+                          <button
+                            type="button"
+                            onClick={onHide}
+                            className="h-10 rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
+                          >
                             {t('Cancel')}
                           </button>
                           <CustomButton
@@ -265,6 +281,6 @@ export default function ZoneAddForm({
           </div>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

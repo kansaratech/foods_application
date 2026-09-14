@@ -10,6 +10,7 @@ import { Avatar } from 'primereact/avatar';
 
 // Icons
 import {
+  faKey,
   faLocationDot,
   faStore,
   faTrash,
@@ -38,6 +39,7 @@ import CustomDialog from '../delete-dialog';
 import { CarSVG } from '@/lib/utils/assets/svgs/Car';
 import { FrameSVG } from '@/lib/utils/assets/svgs/Frame';
 import { useTranslations } from 'next-intl';
+import UpdateRestaurantPasswordDialog from './update-password-dialog';
 
 export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   // Props
@@ -62,6 +64,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
 
   const { deliveryRate } = configuration;
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
   const {
     restaurantByOwnerResponse,
@@ -134,6 +137,12 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   };
 
   const handleDelete = () => setConfirmDeleteOpen(true);
+
+  const handleUpdatePassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setPasswordDialogOpen(true);
+  };
 
   const confirmDelete = async () => {
     await hardDeleteRestaurant({ variables: { id: _id } });
@@ -240,6 +249,14 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         >
           {t('Open Portal')}
         </button>
+        <button
+          type="button"
+          aria-label={t('Update Password')}
+          onClick={handleUpdatePassword}
+          className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-dark-900"
+        >
+          <FontAwesomeIcon icon={faKey} />
+        </button>
         {isHardDeleting ? <CustomLoader size="20px" /> : <button type="button" aria-label={t('Delete')} onClick={handleDelete} className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"><FontAwesomeIcon icon={faTrash}/></button>}
       </div>
       <CustomDialog
@@ -249,6 +266,11 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         loading={isHardDeleting}
         title="Delete store"
         message={`Delete "${name}"? This permanently removes the store, its menu, and order history. This cannot be undone.`}
+      />
+      <UpdateRestaurantPasswordDialog
+        visible={passwordDialogOpen}
+        onHide={() => setPasswordDialogOpen(false)}
+        restaurantId={_id}
       />
     </div>
   );

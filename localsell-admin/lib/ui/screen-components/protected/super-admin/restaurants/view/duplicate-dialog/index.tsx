@@ -1,4 +1,4 @@
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { useContext, useMemo, useState } from 'react';
 
 // Prime React
@@ -30,6 +30,7 @@ import {
   IVendorResponseGraphQL,
 } from '@/lib/utils/interfaces';
 import { useTranslations } from 'next-intl';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 const RestaurantDuplicateDialog = ({
   restaurantId,
@@ -77,19 +78,6 @@ const RestaurantDuplicateDialog = ({
         setSelectedVendor({ label: '', code: '' });
         onHide();
       },
-      onError: ({ networkError, graphQLErrors }: ApolloError) => {
-        showToast({
-          type: 'error',
-          title: t('Store duplicate'),
-          message:
-            graphQLErrors[0]?.message ??
-            networkError?.message ??
-            t(`Store duplicate  failed`),
-          duration: 2500,
-        });
-        setSelectedVendor({ label: '', code: '' });
-        onHide();
-      },
     }
   );
 
@@ -121,7 +109,7 @@ const RestaurantDuplicateDialog = ({
       showToast({
         type: 'error',
         title: t('Store duplicate'),
-        message: t(`Store duplicate  failed`),
+        message: getGraphQLErrorMessage(err as Error) ?? t(`Store duplicate failed`),
       });
       setSelectedVendor({ label: '', code: '' });
       onHide();

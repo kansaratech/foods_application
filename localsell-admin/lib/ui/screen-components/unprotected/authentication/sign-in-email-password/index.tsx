@@ -6,8 +6,9 @@ import { ISignInForm } from '@/lib/utils/interfaces/forms';
 import { APP_NAME } from '@/lib/utils/constants';
 import { OWNER_LOGIN } from '@/lib/api/graphql';
 import { ToastContext } from '@/lib/context/global/toast.context';
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { onUseLocalStorage } from '@/lib/utils/methods';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 import { setAuthTokens } from '@/lib/utils/methods/auth';
 import { SignInSchema } from '@/lib/utils/schema';
 import { useRouter } from 'next/navigation';
@@ -32,20 +33,7 @@ export default function LoginEmailPasswordMain() {
   const { refreshUserSession } = useUserContext();
 
   // API
-  const [onLogin, { loading }] = useMutation(OWNER_LOGIN, {
-    onError,
-  });
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: 'Login',
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        `Something went wrong - Please try again`,
-    });
-  }
+  const [onLogin, { loading }] = useMutation(OWNER_LOGIN);
 
   // Handler
   const onSubmitHandler = async (data: ISignInForm) => {
@@ -92,7 +80,7 @@ export default function LoginEmailPasswordMain() {
       showToast({
         type: 'error',
         title: 'Login',
-        message: 'Login Failed',
+        message: getGraphQLErrorMessage(err as Error) ?? 'Login failed. Please try again.',
       });
     }
   };

@@ -67,13 +67,6 @@ export default function SettingsMain() {
         message: t("successToastMessage"),
       });
     },
-    onError: (error) => {
-      showToast({
-        type: "error",
-        title: "Error",
-        message: error.message,
-      });
-    },
   });
 
   // Handle Delete Account button click

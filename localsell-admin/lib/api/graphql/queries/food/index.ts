@@ -4,6 +4,9 @@ export const GET_FOODS_BY_RESTAURANT_ID = gql`
   query Restaurant($id: String!) {
     restaurant(id: $id) {
       _id
+      commissionRate
+      tax
+      gstRegistrationType
       categories {
         _id
         title

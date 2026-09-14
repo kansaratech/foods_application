@@ -642,3 +642,229 @@ body {
   padding: 0;
   background: transparent;
 }
+
+/* Shared admin editing surface: centered, responsive, with a fixed title bar. */
+.admin-form-dialog.p-dialog {
+  max-height: calc(100dvh - 48px);
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgb(15 23 42 / 22%);
+  padding: 0;
+}
+.admin-form-dialog .p-dialog-header {
+  flex-shrink: 0;
+  padding: 20px 28px;
+  border-bottom: 1px solid var(--app-border);
+  background: var(--highlight-bg);
+  color: var(--app-text);
+}
+.admin-form-dialog .p-dialog-title {
+  font-size: 20px;
+  font-weight: 650;
+}
+.admin-form-dialog .p-dialog-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+.admin-form-dialog .p-dialog-content.ls-form-dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 28px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.admin-form-dialog .p-stepper-nav {
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  background: var(--app-surface-alt);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+.admin-form-dialog .p-stepper-panels {
+  padding: 0;
+  background: transparent;
+}
+.admin-form-dialog .p-stepper-action {
+  flex-direction: row;
+  padding: 0;
+  background: transparent;
+  gap: 10px;
+}
+.admin-form-dialog .p-stepper-number {
+  width: 34px;
+  height: 34px;
+}
+.admin-form-dialog .p-stepper-title {
+  font-size: 14px;
+}
+.admin-form-dialog label {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.admin-form-dialog .p-inputtext,
+.admin-form-dialog .p-dropdown,
+.admin-form-dialog .p-multiselect {
+  border-radius: 9px;
+}
+.admin-form-dialog .p-inputtext:enabled:focus,
+.admin-form-dialog .p-dropdown.p-focus,
+.admin-form-dialog .p-multiselect.p-focus {
+  box-shadow: var(--focus-ring);
+}
+.admin-form-dialog .p-button {
+  min-height: 42px;
+  border-radius: 9px;
+  font-weight: 600;
+}
+.admin-form-dialog .p-button.bg-black,
+.admin-form-dialog .admin-primary-action {
+  background: var(--app-primary);
+  border-color: var(--app-primary);
+  color: var(--app-primary-contrast);
+}
+.admin-form-dialog .admin-primary-action,
+.admin-form-dialog .admin-secondary-action {
+  min-width: 112px;
+  padding: 10px 24px;
+}
+.admin-form-dialog .admin-secondary-action {
+  background: var(--app-surface);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+}
+.admin-form-dialog .p-button:enabled:hover {
+  filter: brightness(0.96);
+}
+.admin-product-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 24px;
+}
+.admin-product-fields > div {
+  min-width: 0;
+}
+.admin-product-fields > div:nth-child(3),
+.admin-product-fields > div:nth-child(4),
+.admin-product-fields > div:nth-child(5) {
+  grid-column: 1 / -1;
+}
+.admin-product-fields textarea {
+  min-height: 100px;
+}
+.admin-form-actions {
+  position: sticky;
+  bottom: -24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 18px 0;
+  border-top: 1px solid var(--app-border);
+  background: var(--app-surface);
+  z-index: 2;
+}
+.admin-form-actions--split {
+  justify-content: space-between;
+}
+@media (max-width: 640px) {
+  .admin-form-dialog.p-dialog {
+    max-height: calc(100dvh - 16px);
+    border-radius: 12px;
+  }
+  .admin-form-dialog .p-dialog-header {
+    padding: 16px;
+  }
+  .admin-form-dialog .p-dialog-content.ls-form-dialog-body {
+    padding: 20px 16px;
+  }
+  .admin-product-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .admin-form-dialog .p-stepper-nav {
+    gap: 4px;
+  }
+  .admin-form-dialog .p-stepper-title {
+    font-size: 12px;
+  }
+  .admin-form-actions {
+    bottom: -20px;
+  }
+}
+
+/* Footer is a flex sibling of the scroll region, so it never covers fields. */
+.admin-form-dialog .p-dialog-footer {
+  flex: 0 0 auto;
+  padding: 16px 28px;
+  border-top: 1px solid var(--app-border);
+  background: var(--app-surface-alt);
+}
+.admin-dialog-action-target .admin-form-actions {
+  position: static;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.admin-form-dialog .p-dialog-header-icon {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text-muted);
+}
+.admin-form-dialog .p-dialog-header-icon:enabled:hover {
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+.admin-image-upload {
+  background: var(--highlight-bg);
+  border-color: var(--app-primary);
+}
+.admin-form-dialog .p-dialog-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--app-border) transparent;
+}
+@media (max-width: 640px) {
+  .admin-form-dialog .p-dialog-footer {
+    padding: 14px 16px;
+  }
+  .admin-form-dialog .p-stepper-nav {
+    padding: 12px;
+  }
+  .admin-form-dialog .p-stepper-action {
+    gap: 6px;
+  }
+}
+
+/* Native combo controls follow the same field tokens as product controls. */
+.admin-combo-dialog label.flex {
+  display: flex;
+  margin-bottom: 0;
+}
+.admin-combo-dialog select.ls-field,
+.admin-combo-dialog textarea.ls-field {
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  padding: 8px 12px;
+  font: inherit;
+}
+.admin-combo-dialog select.ls-field {
+  height: 40px;
+}
+.admin-combo-dialog textarea.ls-field {
+  min-height: 96px;
+  resize: vertical;
+}
+.admin-combo-dialog .ls-field:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

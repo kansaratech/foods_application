@@ -43,7 +43,6 @@ const useLogin = () => {
   // API
   const [login] = useMutation(RIDER_LOGIN, {
     onCompleted: onLoginCompleted,
-    onError,
   });
 
     //  useQuery(DEFAULT_RIDER_CREDS, { onCompleted: onDefaultCredsCompleted });
@@ -63,19 +62,6 @@ async function onLoginCompleted({ riderLogin }: { riderLogin: IRiderLoginRespons
     router.replace(ROUTES.home as Href);
   }
 }
-  function onError(err: ApolloError) {
-    const error = err as ApolloError;
-    setIsLoading(false);
-    // Show a uniform credential error instead of the backend's message so the UI
-    // can't distinguish "user not found" from "wrong password" (enumeration).
-    const message = error?.graphQLErrors?.length
-      ? t("Invalid username or password")
-      : error?.networkError
-        ? t("Unable to connect. Please try again.")
-        : t("Something went wrong");
-    FlashMessageComponent({ message });
-  }
-  
   const onLogin = async (username: string, password: string) => {
     try {
       setIsLoading(true);
@@ -91,8 +77,16 @@ async function onLoginCompleted({ riderLogin }: { riderLogin: IRiderLoginRespons
           timeZone,
         },
       });
-    } catch {
-      FlashMessageComponent({ message: t("Something went wrong") });
+    } catch (err) {
+      const error = err as ApolloError;
+      // Show a uniform credential error instead of the backend's message so the UI
+      // can't distinguish "user not found" from "wrong password" (enumeration).
+      const message = error?.graphQLErrors?.length
+        ? t("Invalid username or password")
+        : error?.networkError
+          ? t("Unable to connect. Please try again.")
+          : t("Something went wrong");
+      FlashMessageComponent({ message });
     } finally {
       setIsLoading(false);
     }

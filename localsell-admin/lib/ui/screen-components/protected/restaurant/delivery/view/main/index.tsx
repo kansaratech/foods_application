@@ -15,11 +15,11 @@ import { ProfileContext } from '@/lib/context/restaurant/profile.context';
 // Utilities & Types
 import { RestaurantDeliveryErrors } from '@/lib/utils/constants';
 import { IRestaurantDeliveryForm } from '@/lib/utils/interfaces';
-import { onErrorMessageMatcher } from '@/lib/utils/methods';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods';
 import { DeliverySchema } from '@/lib/utils/schema/delivery';
 
 // GraphQL
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { UPDATE_RESTAURANT_DELIVERY } from '@/lib/api/graphql';
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';
 
@@ -40,7 +40,6 @@ const DeliveryMain = () => {
   // API
   // Mutation
   const [createRestaurant] = useMutation(UPDATE_RESTAURANT_DELIVERY, {
-    onError,
     onCompleted: () => {
       showToast({
         type: 'success',
@@ -66,23 +65,11 @@ const DeliveryMain = () => {
       showToast({
         type: 'error',
         title: `Failed to add Store delivery info`,
-        message: `Store Create Failed`,
+        message: getGraphQLErrorMessage(error as Error) ?? `Store Create Failed`,
         duration: 2500,
       });
     }
   };
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: 'Store delivery info',
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        `Store Create Failed`,
-      duration: 2500,
-    });
-  }
 
   return (
     <div className="mt-7 max-h-[calc(100vh-152px)] overflow-auto rounded border px-8 py-8">

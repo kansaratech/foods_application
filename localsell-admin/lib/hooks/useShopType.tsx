@@ -17,9 +17,17 @@ export const useShopTypes = (
   // Props
   const { invoke_now, transform_to_dropdown_list } = props;
 
+  // `invoke_now` fires this fetch exactly once on mount (see the effect
+  // below) — there's nothing to debounce against, so a debounce here only
+  // adds pure delay before the list can render. Previously 5000ms (likely a
+  // 500 -> 5000 typo), which meant shop types took a full 5s to appear after
+  // every page load — long enough that an admin filling in the rest of the
+  // form would already be typing/selecting by the time this list arrived,
+  // and (combined with Formik's enableReinitialize on this form) that
+  // late-arriving data could wipe out choices already made.
   const { data, loading, fetch } = useLazyQueryQL(GET_SHOP_TYPES, {
     fetchPolicy: 'cache-and-network',
-    debounceMs: 5000,
+    debounceMs: 0,
   }) as ILazyQueryResult<IGetShopTypesData | undefined, undefined>;
 
   // Handler

@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 // Core
-import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { faCircleInfo, faEnvelope } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { Tooltip } from 'primereact/tooltip';
 import { Form, Formik } from 'formik';
-import { useContext, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 
 // Interface and Types
 import {
@@ -33,7 +35,7 @@ import { IRestaurantForm } from '@/lib/utils/interfaces';
 import { IEditState, IShopType } from '@/lib/utils/interfaces';
 
 // Methods
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Schemas
 import {
@@ -58,13 +60,13 @@ import { toTextCase } from '@/lib/utils/methods';
 import { makeRestaurantSchema } from '@/lib/utils/schema/restaurant';
 import {
   ApolloCache,
-  ApolloError,
   useMutation,
   useQuery,
 } from '@apollo/client';
 import { useTranslations } from 'next-intl';
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
 import { useShopTypes } from '@/lib/hooks/useShopType';
+import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 // A store's GST status defaults to the owning vendor's KYC declaration
 // (server-side, when left as "Use vendor's default") — set explicitly here
@@ -89,11 +91,17 @@ const initialValues: IRestaurantForm = {
   salesTax: 0.0,
   gstRegistrationType: GST_STORE_OPTIONS[0],
   gstin: '',
+  // Null = platform default (Configuration.defaultCommissionRate) shown as
+  // the field's placeholder; set explicitly here to override for this store.
+  commissionRate: null,
   shopType: null,
   cuisines: [],
   image:
     'https://t4.ftcdn.net/jpg/04/76/57/27/240_F_476572792_zMwqHpmGal1fzh0tDJ3onkLo88IjgNbL.jpg',
-  logo: 'https://res.cloudinary.com/dc6xw0lzg/image/upload/v1735894342/dvi5fjbsgdlrzwip0whg.jpg',
+  // No placeholder here (unlike `image` above) — `logo` is `required()` in
+  // RestaurantSchema, and a truthy default silently satisfied that check
+  // without a real upload ever happening (#69). Matches the vendor-side form.
+  logo: '',
 };
 
 export default function RestaurantDetailsForm({
@@ -101,6 +109,7 @@ export default function RestaurantDetailsForm({
 }: IRestaurantsAddRestaurantComponentProps) {
   // Hooks
   const t = useTranslations();
+  const { DEFAULT_COMMISSION_RATE } = useConfiguration();
   const [isAddShopTypeVisible, setIsAddShopTypeVisible] = useState(false);
   const [isEditShopType, setIsEditShopType] = useState<IEditState<IShopType>>({
     bool: false,
@@ -154,7 +163,6 @@ export default function RestaurantDetailsForm({
 
   // Mutation
   const [createRestaurant] = useMutation(CREATE_RESTAURANT, {
-    onError,
     onCompleted: ({
       createRestaurant,
     }: {
@@ -184,7 +192,6 @@ export default function RestaurantDetailsForm({
   });
 
   const [editRestaurant] = useMutation(EDIT_RESTAURANT, {
-    onError,
     onCompleted: () => {
       showToast({
         type: 'success',
@@ -215,19 +222,38 @@ export default function RestaurantDetailsForm({
     [cuisineResponse.data?.cuisines]
   );
 
-  // Once the existing store's profile (and the shop-type/cuisine option
-  // lists) are loaded, merge them into the form's starting values. Formik's
-  // enableReinitialize picks this up as soon as it resolves.
-  const formInitialValues = useMemo<IRestaurantForm>(() => {
-    if (!isEditingExisting || !editingProfile) return initialValues;
-    const matchedShopType =
-      (dropdownList || []).find((o) => o.code === editingProfile.shopTypeId) ?? null;
+  // Resolves the existing store's shopType/cuisines against the live option
+  // lists exactly once per store being edited — deliberately NOT on every
+  // dropdownList/cuisinesDropdown reference change. Those lists refetch
+  // whenever the inline "+ Add Shop Category" / "+ Add Product Type" modals
+  // (below) create a new option, and since this form's Formik uses
+  // enableReinitialize, letting formInitialValues recompute on every such
+  // refetch would silently wipe out whatever the admin had just selected —
+  // exactly the "I picked a product type, saved, and it's gone" bug.
+  const [resolvedEditDefaults, setResolvedEditDefaults] = useState<{
+    profileId: string;
+    shopType: IDropdownSelectItem | null;
+    cuisines: IDropdownSelectItem[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!isEditingExisting || !editingProfile) return;
+    if (loading || cuisineResponse.loading) return; // wait for both option lists to finish loading at least once
+    if (resolvedEditDefaults?.profileId === editingProfile._id) return; // already resolved for this store
+
+    const matchedShopType = (dropdownList || []).find((o) => o.code === editingProfile.shopTypeId) ?? null;
     const cuisineOptions: IDropdownSelectItem[] = cuisinesDropdown ?? [];
     const matchedCuisines: IDropdownSelectItem[] = [];
     (editingProfile.cuisines ?? []).forEach((name: string) => {
       const match = cuisineOptions.find((c) => c.code === name);
       if (match) matchedCuisines.push(match);
     });
+    setResolvedEditDefaults({ profileId: editingProfile._id, shopType: matchedShopType, cuisines: matchedCuisines });
+  }, [isEditingExisting, editingProfile, loading, cuisineResponse.loading, dropdownList, cuisinesDropdown, resolvedEditDefaults]);
+
+  const formInitialValues = useMemo<IRestaurantForm>(() => {
+    if (!isEditingExisting || !editingProfile) return initialValues;
+    const resolved = resolvedEditDefaults?.profileId === editingProfile._id ? resolvedEditDefaults : null;
     return {
       name: editingProfile.name ?? '',
       username: editingProfile.username ?? '',
@@ -241,12 +267,13 @@ export default function RestaurantDetailsForm({
       gstRegistrationType:
         GST_STORE_OPTIONS.find((o) => o.code === editingProfile.gstRegistrationType) ?? GST_STORE_OPTIONS[0],
       gstin: editingProfile.gstin ?? '',
-      shopType: matchedShopType,
-      cuisines: matchedCuisines,
+      commissionRate: editingProfile.commissionRate ?? null,
+      shopType: resolved?.shopType ?? null,
+      cuisines: resolved?.cuisines ?? [],
       image: editingProfile.image ?? initialValues.image,
       logo: editingProfile.logo ?? initialValues.logo,
     };
-  }, [isEditingExisting, editingProfile, dropdownList, cuisinesDropdown]);
+  }, [isEditingExisting, editingProfile, resolvedEditDefaults]);
 
   // Handlers
   const onCreateRestaurant = async (data: IRestaurantForm) => {
@@ -289,6 +316,7 @@ export default function RestaurantDetailsForm({
               salesTax: data.salesTax,
               gstRegistrationType: data.gstRegistrationType?.code || undefined,
               gstin: data.gstRegistrationType?.code ? data.gstin : undefined,
+              commissionRate: data.commissionRate ?? undefined,
               cuisines: data.cuisines.map(
                 (cuisin: IDropdownSelectItem) => cuisin.code
               ),
@@ -326,6 +354,7 @@ export default function RestaurantDetailsForm({
             salesTax: data.salesTax,
             gstRegistrationType: data.gstRegistrationType?.code || undefined,
             gstin: data.gstRegistrationType?.code ? data.gstin : undefined,
+            commissionRate: data.commissionRate ?? undefined,
             cuisines: data.cuisines.map(
               (cuisin: IDropdownSelectItem) => cuisin.code
             ),
@@ -336,23 +365,14 @@ export default function RestaurantDetailsForm({
       showToast({
         type: 'error',
         title: isEditingExisting ? t('Store') : t('New Store'),
-        message: isEditingExisting ? t('Store update failed') : t('Store Creation Failed'),
+        message:
+          getGraphQLErrorMessage(error as Error) ??
+          (isEditingExisting ? t('Store update failed') : t('Store Creation Failed')),
         duration: 2500,
       });
     }
   };
 
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t('New Store'),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t('Store Creation Failed'),
-      duration: 2500,
-    });
-  }
   function update(
     cache: ApolloCache<unknown>,
     data: ICreateRestaurantResponse
@@ -399,7 +419,7 @@ export default function RestaurantDetailsForm({
             <Formik
               initialValues={formInitialValues}
               enableReinitialize
-              validationSchema={makeRestaurantSchema(true)}
+              validationSchema={makeRestaurantSchema(!isEditingExisting)}
               onSubmit={async (values) => {
                 await onCreateRestaurant(values);
               }}
@@ -416,6 +436,7 @@ export default function RestaurantDetailsForm({
               }) => {
                 return (
                   <Form onSubmit={handleSubmit}>
+                    <Tooltip target=".field-info-icon" />
                     <div className="mb-3 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-12">
                       <div className="md:col-span-6">
                         <CustomTextField
@@ -465,58 +486,68 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div className="md:col-span-6">
-                        <CustomPasswordTextField
-                          placeholder={t('Password')}
-                          name="password"
-                          maxLength={20}
-                          value={values.password}
-                          showLabel={true}
-                          autoComplete="new-password"
-                          onChange={handleChange}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'password',
-                              errors?.password,
-                              RestaurantErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
-                        {errors.password && touched.password && (
-                          <small className="ml-1 p-error">
-                            {errors.password}
-                          </small>
-                        )}
-                      </div>
+                      {/* Password is only set here on first create. Editing an
+                          existing store's password is a separate, deliberate
+                          action (store card -> key icon -> Update Password)
+                          rather than a field buried in this form, so an admin
+                          can't accidentally overwrite a store's login while
+                          just touching an unrelated basic-detail field. */}
+                      {!isEditingExisting && (
+                        <>
+                          <div className="md:col-span-6">
+                            <CustomPasswordTextField
+                              placeholder={t('Password')}
+                              name="password"
+                              maxLength={20}
+                              value={values.password}
+                              showLabel={true}
+                              autoComplete="new-password"
+                              onChange={handleChange}
+                              style={{
+                                borderColor: onErrorMessageMatcher(
+                                  'password',
+                                  errors?.password,
+                                  RestaurantErrors
+                                )
+                                  ? 'red'
+                                  : '',
+                              }}
+                            />
+                            {errors.password && touched.password && (
+                              <small className="ml-1 p-error">
+                                {errors.password}
+                              </small>
+                            )}
+                          </div>
 
-                      <div className="md:col-span-6">
-                        <CustomPasswordTextField
-                          placeholder={t('Confirm Password')}
-                          name="confirmPassword"
-                          maxLength={20}
-                          showLabel={true}
-                          autoComplete="new-password"
-                          value={values.confirmPassword ?? ''}
-                          onChange={handleChange}
-                          feedback={false}
-                          style={{
-                            borderColor: onErrorMessageMatcher(
-                              'confirmPassword',
-                              errors?.confirmPassword,
-                              RestaurantErrors
-                            )
-                              ? 'red'
-                              : '',
-                          }}
-                        />
-                        {errors.confirmPassword && touched.confirmPassword && (
-                          <small className="ml-1 p-error">
-                            {errors.confirmPassword}
-                          </small>
-                        )}
-                      </div>
+                          <div className="md:col-span-6">
+                            <CustomPasswordTextField
+                              placeholder={t('Confirm Password')}
+                              name="confirmPassword"
+                              maxLength={20}
+                              showLabel={true}
+                              autoComplete="new-password"
+                              value={values.confirmPassword ?? ''}
+                              onChange={handleChange}
+                              feedback={false}
+                              style={{
+                                borderColor: onErrorMessageMatcher(
+                                  'confirmPassword',
+                                  errors?.confirmPassword,
+                                  RestaurantErrors
+                                )
+                                  ? 'red'
+                                  : '',
+                              }}
+                            />
+                            {errors.confirmPassword && touched.confirmPassword && (
+                              <small className="ml-1 p-error">
+                                {errors.confirmPassword}
+                              </small>
+                            )}
+                          </div>
+                        </>
+                      )}
 
                       <div className="md:col-span-4">
                         <CustomPhoneTextField
@@ -611,6 +642,17 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
                       <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
+                        <div className="mb-1 flex items-center gap-1.5">
+                          <label htmlFor="salesTax" className="text-sm font-medium text-content dark:text-white">
+                            {t('Default GST Rate (Regular stores only)')}
+                          </label>
+                          <FontAwesomeIcon
+                            icon={faCircleInfo}
+                            className="field-info-icon cursor-help text-xs text-slate-400"
+                            data-pr-tooltip={t("Default for products that don't set their own GST Rate Override. Only charged for Regular-GST stores")}
+                            data-pr-position="top"
+                          />
+                        </div>
                         <CustomNumberField
                           prefix="%"
                           min={0}
@@ -619,7 +661,7 @@ export default function RestaurantDetailsForm({
                           minFractionDigits={2}
                           maxFractionDigits={2}
                           name="salesTax"
-                          showLabel={true}
+                          showLabel={false}
                           value={values.salesTax}
                           onChange={setFieldValue}
                           disabled={values.gstRegistrationType?.code !== 'REGULAR' && !!values.gstRegistrationType?.code}
@@ -636,41 +678,48 @@ export default function RestaurantDetailsForm({
                       </div>
 
                       <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
-                        <CustomDropdownComponent
-                          name="gstRegistrationType"
-                          placeholder={t('GST Registration')}
-                          selectedItem={values.gstRegistrationType}
-                          setSelectedItem={setFieldValue}
-                          options={GST_STORE_OPTIONS}
-                          showLabel={true}
+                        <div className="mb-1 flex items-center gap-1.5">
+                          <label htmlFor="commissionRate" className="text-sm font-medium text-content dark:text-white">
+                            {`${t('Commission Rate')} (${t('default')} ${DEFAULT_COMMISSION_RATE}%)`}
+                          </label>
+                          <FontAwesomeIcon
+                            icon={faCircleInfo}
+                            className="field-info-icon cursor-help text-xs text-slate-400"
+                            data-pr-tooltip={t('Charged on the food subtotal only (excludes delivery fee, tip and tax). Leave blank to use the platform default commission rate')}
+                            data-pr-position="top"
+                          />
+                        </div>
+                        <CustomNumberField
+                          prefix="%"
+                          min={0}
+                          max={100}
+                          placeholder={`${t('Commission Rate')} (${t('default')} ${DEFAULT_COMMISSION_RATE}%)`}
+                          minFractionDigits={0}
+                          maxFractionDigits={2}
+                          name="commissionRate"
+                          showLabel={false}
+                          value={values.commissionRate ?? undefined}
+                          onChange={setFieldValue}
+                          style={{
+                            borderColor: onErrorMessageMatcher(
+                              'commissionRate',
+                              errors?.commissionRate,
+                              RestaurantErrors
+                            )
+                              ? 'red'
+                              : '',
+                          }}
                         />
                       </div>
 
-                      {(values.gstRegistrationType?.code === 'REGULAR' ||
-                        values.gstRegistrationType?.code === 'COMPOSITION') && (
-                        <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
-                          <CustomTextField
-                            type="text"
-                            name="gstin"
-                            placeholder={`${t('GSTIN')} *`}
-                            maxLength={15}
-                            value={values.gstin}
-                            onChange={(e) =>
-                              setFieldValue('gstin', e.target.value.toUpperCase())
-                            }
-                            showLabel={true}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'gstin',
-                                errors?.gstin,
-                                RestaurantErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
-                      )}
+                      {/* Store-level GST registration override is hidden for now — a
+                          store's GST status defaults to the owning vendor's KYC
+                          declaration (see makeRestaurantSchema / the resolver), which
+                          covers the common case. gstRegistrationType/gstin stay in the
+                          form's initial values and submit payload untouched (still
+                          "" / GST_STORE_OPTIONS[0] = "use vendor's default") so an
+                          existing store that already has a per-store override keeps
+                          it; there's just no control here to set one. */}
 
                       <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
                         <CustomDropdownComponent
@@ -697,7 +746,7 @@ export default function RestaurantDetailsForm({
                         />
                       </div>
 
-                      <div className="min-w-0 md:col-span-6">
+                      <div className="mt-2 min-w-0 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-9">
                         <CustomMultiSelectComponent
                           name="cuisines"
                           placeholder={t('Cuisines')}

@@ -29,6 +29,7 @@ import {
   onErrorMessageMatcher,
   onUseLocalStorage,
   toTextCase,
+  getGraphQLErrorMessage,
 } from '@/lib/utils/methods';
 
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
@@ -78,17 +79,6 @@ export default function UpdateRestaurantDetails({
     useContext(ProfileContext);
 
   const [editRestaurant] = useMutation(EDIT_RESTAURANT, {
-    onError: ({ graphQLErrors, networkError }) => {
-      showToast({
-        type: 'error',
-        title: t('Edit Store'),
-        message:
-          graphQLErrors[0]?.message ??
-          networkError?.message ??
-          t('Store Edit Failed'),
-        duration: 2500,
-      });
-    },
     onCompleted: async () => {
       showToast({
         type: 'success',
@@ -191,7 +181,7 @@ export default function UpdateRestaurantDetails({
       showToast({
         type: 'error',
         title: t('Store Details'),
-        message: t('Something went wrong'),
+        message: getGraphQLErrorMessage(error as Error) ?? t('Something went wrong'),
       });
     }
   };

@@ -23,7 +23,7 @@ import { faAdd, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FieldArray, Form, Formik, FormikHelpers } from 'formik';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // GraphQL
 import {
@@ -36,6 +36,7 @@ import {
   GET_SUBCATEGORIES_BY_PARENT_ID,
 } from '@/lib/api/graphql/queries/sub-categories';
 import { CREATE_SUB_CATEGORIES } from '@/lib/api/graphql/mutations/sub-category';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Contexts
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
@@ -66,42 +67,26 @@ export default function SubCategoriesAddForm({
   };
 
   // Mutations
-  const [
-    createSubCategories,
-    { loading: subCategoriesLoading, error: subCategoriesError },
-  ] = useMutation(CREATE_SUB_CATEGORIES, {
-    refetchQueries: [
-      {
-        query: GET_CATEGORY_BY_RESTAURANT_ID,
-        variables: { id: restaurantId },
-      },
-      {
-        query: GET_SUBCATEGORIES,
-      },
-      {
-        query: GET_SUBCATEGORIES_BY_PARENT_ID,
-        variables: {
-          parentCategoryId: isAddSubCategoriesVisible.parentCategoryId,
+  const [createSubCategories, { loading: subCategoriesLoading }] = useMutation(
+    CREATE_SUB_CATEGORIES,
+    {
+      refetchQueries: [
+        {
+          query: GET_CATEGORY_BY_RESTAURANT_ID,
+          variables: { id: restaurantId },
         },
-      },
-    ],
-    onError: (error) => {
-      return showToast({
-        type: 'error',
-        title: t('Create Sub-Categories'),
-        message:
-          error?.clientErrors[0].message ||
-          subCategoriesError?.clientErrors[0].message ||
-          error?.networkError?.message ||
-          subCategoriesError?.networkError?.message ||
-          error?.graphQLErrors[0]?.message ||
-          subCategoriesError?.graphQLErrors[0]?.message ||
-          error?.cause?.message ||
-          subCategoriesError?.cause?.message ||
-          t('An error occured while adding the new sub-categories'),
-      });
-    },
-  });
+        {
+          query: GET_SUBCATEGORIES,
+        },
+        {
+          query: GET_SUBCATEGORIES_BY_PARENT_ID,
+          variables: {
+            parentCategoryId: isAddSubCategoriesVisible.parentCategoryId,
+          },
+        },
+      ],
+    }
+  );
 
   // Handlers
   async function handleFormSubmit(
@@ -147,20 +132,18 @@ export default function SubCategoriesAddForm({
         type: 'error',
         title: t('Create Sub-Categories'),
         message:
-          subCategoriesError?.cause?.message ||
-          subCategoriesError?.graphQLErrors[0]?.message ||
-          subCategoriesError?.clientErrors[0].message ||
-          subCategoriesError?.networkError?.message ||
+          getGraphQLErrorMessage(error as Error) ??
           t('An error occured while adding the new sub-categories'),
       });
     }
   }
   return (
-    <Sidebar
+    <FormDialog
+      title={t('Sub-Categories')}
       onHide={onHide}
       visible={isAddSubCategoriesVisible.bool}
       position="right"
-      className="dark:text-white dark:bg-dark-950 dark:border dark:border-dark-600"
+      className=""
     >
       <Formik
         initialValues={initialValues}
@@ -249,6 +232,6 @@ export default function SubCategoriesAddForm({
           </Form>
         )}
       </Formik>
-    </Sidebar>
+    </FormDialog>
   );
 }

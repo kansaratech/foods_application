@@ -8,7 +8,8 @@ import { useContext, useState } from 'react';
 import { ToastContext } from '@/lib/context/global/toast.context';
 
 // Apollo Client
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Custom Components
 import CustomInputSwitch from '../../custom-input-switch';
@@ -52,7 +53,6 @@ export const RESTAURANT_TABLE_COLUMNS = ({
         duration: 2000,
       });
     },
-    onError,
   });
 
   // Handle checkbox change
@@ -70,7 +70,9 @@ export const RESTAURANT_TABLE_COLUMNS = ({
       showToast({
         type: 'error',
         title: t('Store Status'),
-        message: `${t('Store marked as')} ${isActive ? t('in-active') : t('active')} ${t('failed')}`,
+        message:
+          getGraphQLErrorMessage(err as Error) ??
+          `${t('Store marked as')} ${isActive ? t('in-active') : t('active')} ${t('failed')}`,
         duration: 2000,
       });
     } finally {
@@ -80,23 +82,6 @@ export const RESTAURANT_TABLE_COLUMNS = ({
       });
     }
   };
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t('Store Status Change'),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t('Store Status Change Failed'),
-      duration: 2500,
-    });
-
-    setDeletingRestaurant({
-      ...deletingRestaurant,
-      id: '',
-    });
-  }
 
   return [
     {

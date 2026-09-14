@@ -1,7 +1,7 @@
 // Core
 import { useContext, useMemo } from 'react';
 import { Form, Formik } from 'formik';
-import { ApolloCache, ApolloError, useMutation } from '@apollo/client';
+import { ApolloCache, useMutation } from '@apollo/client';
 import { useState } from 'react';
 // Icons
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
@@ -39,7 +39,7 @@ import {
   MAX_SQUARE_FILE_SIZE,
   RestaurantErrors,
 } from '@/lib/utils/constants';
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 import { toTextCase } from '@/lib/utils/methods';
 import { useShopTypes } from '@/lib/hooks/useShopType';
 
@@ -59,6 +59,7 @@ import { VendorLayoutRestaurantContext } from '@/lib/context/vendor/restaurant.c
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 import { useTranslations } from 'next-intl';
 import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field';
+import { useConfiguration } from '@/lib/hooks/useConfiguration';
 
 // A store's GST status defaults to the owning vendor's KYC declaration
 // (server-side, when left as "Use vendor's default") — set explicitly here
@@ -83,6 +84,9 @@ const initialValues: IRestaurantForm = {
   salesTax: 0.0,
   gstRegistrationType: GST_STORE_OPTIONS[0],
   gstin: '',
+  // Vendors don't set their own commission rate — it's the platform default,
+  // shown read-only above (see the "Platform commission" banner in this form).
+  commissionRate: null,
   shopType: null,
   cuisines: [],
   image:
@@ -104,6 +108,7 @@ export default function RestaurantDetails({
 
   // Hooks
   const t = useTranslations();
+  const { DEFAULT_COMMISSION_RATE } = useConfiguration();
   const [isAddShopTypeVisible, setIsAddShopTypeVisible] = useState(false);
   const [isEditShopType, setIsEditShopType] = useState<IEditState<IShopType>>({
     bool: false,
@@ -136,7 +141,6 @@ export default function RestaurantDetails({
 
   // Mutation
   const [createRestaurant] = useMutation(CREATE_RESTAURANT, {
-    onError,
     onCompleted: ({
       createRestaurant,
     }: {
@@ -217,23 +221,12 @@ export default function RestaurantDetails({
       showToast({
         type: 'error',
         title: `${vendorId ? t('Edit') : t('Create')} ${t('Vendor')}`,
-        message: t('Store Creation Failed'),
+        message: getGraphQLErrorMessage(error as Error) ?? t('Store Creation Failed'),
         duration: 2500,
       });
     }
   };
 
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t('Create Store'),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t('Store Creation Failed'),
-      duration: 2500,
-    });
-  }
   function update(
     cache: ApolloCache<unknown>,
     data: ICreateRestaurantResponse
@@ -477,6 +470,16 @@ export default function RestaurantDetails({
                           }}
                         />
                       </div>
+
+                      <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 dark:border-dark-600 dark:bg-dark-900">
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                          {t('Platform commission')}: {DEFAULT_COMMISSION_RATE}%
+                        </p>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400">
+                          {t('LocalSell charges this % of each order as commission. Set by LocalSell, not editable here.')}
+                        </p>
+                      </div>
+
                       <div>
                         <CustomNumberField
                           prefix="%"

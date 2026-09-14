@@ -239,6 +239,7 @@ export const GET_RESTAURANT_PROFILE = gql`
       tax
       gstRegistrationType
       gstin
+      commissionRate
       isAvailable
       stripeDetailsSubmitted
       openingTimes {

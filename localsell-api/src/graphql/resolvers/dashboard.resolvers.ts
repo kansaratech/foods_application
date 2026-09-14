@@ -246,6 +246,7 @@ export const dashboardResolvers: IResolvers<unknown, GraphQLContext> = {
           cancelRate: so.length ? round2((cancelled / so.length) * 100) : 0,
           gmv: round2(gmv),
           avgOrderValue: so.length ? round2(gmv / so.length) : 0,
+          commissionRate: s.commissionRate,
           commissionEarned: round2(commissionByStore.get(s.id) ?? 0),
           avgRating: rev?._avg.rating != null ? round2(rev._avg.rating) : null,
           reviewCount: rev?._count._all ?? 0,

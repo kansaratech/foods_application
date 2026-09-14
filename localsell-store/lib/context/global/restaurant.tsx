@@ -18,6 +18,9 @@ import React, {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "@/lib/services/secure-store";
 
+// Context
+import { AuthContext } from "@/lib/context/global/auth.context";
+
 // API
 import { GET_ORDERS } from "@/lib/apollo/queries/orders";
 import { SUBSCRIBE_PLACE_ORDER } from "@/lib/apollo/subscriptions";
@@ -53,6 +56,7 @@ const Context = React.createContext<IRestaurantContext>(
 );
 
 const Provider = ({ children }: IRestaurantProviderProps) => {
+  const { logout } = useContext(AuthContext);
   const [printer, setPrinter] = useState<Printer | null>(null);
   const [notificationToken, setNotificationToken] = useState<string | null>(
     null,
@@ -93,6 +97,21 @@ const Provider = ({ children }: IRestaurantProviderProps) => {
       skip: !storeId,
       fetchPolicy: "cache-and-network",
     });
+
+  // The token can be valid while the store it points at no longer exists —
+  // e.g. hard-deleted from the admin panel, or the id was for a different
+  // owner. restaurantOrders is the one query that checks both (restaurant
+  // exists AND currentUser owns it) and throws NOT_FOUND if either fails, so
+  // it's a safe, unambiguous signal to force a logout rather than leaving the
+  // merchant stuck on a blank/broken screen indefinitely.
+  useEffect(() => {
+    const restaurantMissing = error?.graphQLErrors?.some(
+      (e) => e.extensions?.code === "NOT_FOUND",
+    );
+    if (restaurantMissing) {
+      void logout();
+    }
+  }, [error, logout]);
 
   useEffect(() => {
     async function GetToken() {

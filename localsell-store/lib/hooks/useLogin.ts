@@ -21,7 +21,6 @@ const useLogin = () => {
   // API
   const [login] = useMutation(STORE_LOGIN, {
     onCompleted,
-    onError,
     fetchPolicy: "no-cache",
   });
 
@@ -69,13 +68,6 @@ const useLogin = () => {
       await setTokenAsync(restaurantLogin?.token);
       router.replace(ROUTES.home);
     }
-  }
-
-  function onError(err: ApolloError) {
-    setIsLoading(false);
-    FlashMessageComponent({
-      message: getLoginErrorMessage(err),
-    });
   }
 
   const onLogin = async (username: string, password: string) => {

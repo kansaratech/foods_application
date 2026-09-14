@@ -26,11 +26,11 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 import { DeliverySchema } from '@/lib/utils/schema/delivery';
 
 // Methods
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // GraphQL
 import { UPDATE_RESTAURANT_DELIVERY } from '@/lib/api/graphql';
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import UpdateRestaurantLocation from './update-restaurant-location';
 import { useTranslations } from 'next-intl';
 
@@ -62,7 +62,6 @@ export default function UpdateDelivery({
   // API
   // Mutation
   const [createRestaurant] = useMutation(UPDATE_RESTAURANT_DELIVERY, {
-    onError,
     onCompleted: () => {
       showToast({
         type: 'success',
@@ -90,23 +89,11 @@ export default function UpdateDelivery({
       showToast({
         type: 'error',
         title: t(`Failed to add Store delivery info`),
-        message: t(`Store Creation Failed`),
+        message: getGraphQLErrorMessage(error as Error) ?? t(`Store Creation Failed`),
         duration: 2500,
       });
     }
   };
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t('Store delivery info'),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t(`Store Creation Failed`),
-      duration: 2500,
-    });
-  }
 
   return (
     <div className="flex h-full w-full items-center justify-start">

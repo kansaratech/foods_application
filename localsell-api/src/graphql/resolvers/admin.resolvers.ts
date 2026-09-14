@@ -283,8 +283,17 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       const phone = normalizeIndianPhone(input.phoneNumber);
 
       const businessTypeId = await resolveBusinessTypeId(input.businessType);
+      // resolveVendorGstFields always returns concrete values (defaulting to
+      // UNREGISTERED), which is correct for a brand-new vendor but would wipe
+      // an existing one's GST/KYC status on any partial update (e.g. an
+      // admin-only password reset) that doesn't resend it. Only touch these
+      // fields on update when the caller actually sent GST info.
+      const gstProvided = input.gstRegistrationType != null || input.isGstRegistered != null;
+      const applyGst = !input._id || gstProvided;
       const gst = resolveVendorGstFields(input);
-      assertGstinRequiredFor(gst.gstRegistrationType as 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED', gst.gstin);
+      if (applyGst) {
+        assertGstinRequiredFor(gst.gstRegistrationType as 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED', gst.gstin);
+      }
 
       const baseData = {
         email,
@@ -297,9 +306,9 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         status: 'ACTIVE',
         businessName: input.businessName,
         businessTypeId,
-        gstRegistrationType: gst.gstRegistrationType,
-        isGstRegistered: gst.isGstRegistered,
-        gstin: gst.gstin,
+        ...(applyGst
+          ? { gstRegistrationType: gst.gstRegistrationType, isGstRegistered: gst.isGstRegistered, gstin: gst.gstin }
+          : {}),
       };
 
       let vendor;

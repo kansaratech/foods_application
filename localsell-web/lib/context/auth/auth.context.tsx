@@ -105,7 +105,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const [mutateLogin] = useMutation<
     ILoginProfileResponse,
     undefined | IUserLoginArguments
-  >(LOGIN, { onCompleted: onLoginCompleted, onError: onLoginError });
+  >(LOGIN, { onCompleted: onLoginCompleted });
   const [sendOtpToPhone] =
     useMutation<ISendOtpToPhoneResponse>(SENT_OTP_TO_PHONE);
   const [sendOtpToEmail] =
@@ -494,15 +494,6 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         message: t("invalid_credentials"),
       });
     }
-  }
-
-  function onLoginError(error: ApolloError) {
-    console.error("Error while logging in:", error);
-    showToast({
-      type: "error",
-      title: t("login_error"),
-      message: getLoginErrorMessage(error),
-    });
   }
 
   const getLoginErrorMessage = useCallback((error: ApolloError, loginType?: string) => {

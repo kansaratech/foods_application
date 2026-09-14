@@ -1,8 +1,9 @@
 'use client';
+import { FormDialogActions } from '@/lib/ui/useable-components/form/form-dialog';
 
 // Core
 import { Form, Formik } from 'formik';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useId, useContext, useEffect, useMemo, useState } from 'react';
 
 // Context
 import { FoodsContext } from '@/lib/context/restaurant/foods.context';
@@ -40,7 +41,10 @@ import MultiImageUploadComponent from '@/lib/ui/useable-components/upload/upload
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 
 // API
-import { GET_CATEGORY_BY_RESTAURANT_ID, GET_MENU_FOR_PICKER } from '@/lib/api/graphql';
+import {
+  GET_CATEGORY_BY_RESTAURANT_ID,
+  GET_MENU_FOR_PICKER,
+} from '@/lib/api/graphql';
 import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
 
 // Schema
@@ -72,11 +76,12 @@ export default function FoodDetails({
   stepperProps,
 }: IFoodDetailsComponentProps) {
   // Hooks
+  const formId = useId();
   const t = useTranslations();
   const { theme } = useTheme();
   // Props
   const { onStepChange, order } = stepperProps ?? {
-    onStepChange: () => { },
+    onStepChange: () => {},
     type: '',
     order: -1,
   };
@@ -147,11 +152,14 @@ export default function FoodDetails({
     { id: restaurantId },
     { fetchPolicy: 'cache-and-network', enabled: !!restaurantId }
   ) as IQueryResult<
-    {
-      restaurant?: {
-        categories: { foods: { _id: string; title: string; isCombo?: boolean }[] }[];
-      };
-    } | undefined,
+    | {
+        restaurant?: {
+          categories: {
+            foods: { _id: string; title: string; isCombo?: boolean }[];
+          }[];
+        };
+      }
+    | undefined,
     undefined
   >;
 
@@ -168,9 +176,7 @@ export default function FoodDetails({
     () =>
       (menuForPickerData?.restaurant?.categories ?? [])
         .flatMap((c) => c.foods)
-        .filter(
-          (f) => !f.isCombo && f._id !== foodContextData?.food?.data?._id
-        )
+        .filter((f) => !f.isCombo && f._id !== foodContextData?.food?.data?._id)
         .map((f) => ({ label: f.title, code: f._id })),
     [menuForPickerData, foodContextData?.food?.data?._id]
   );
@@ -282,8 +288,8 @@ export default function FoodDetails({
                 setFieldValue,
               }) => {
                 return (
-                  <Form onSubmit={handleSubmit}>
-                    <div className="space-y-3">
+                  <Form id={formId} onSubmit={handleSubmit}>
+                    <div className="admin-product-fields">
                       <div>
                         <label
                           htmlFor="category"
@@ -309,7 +315,11 @@ export default function FoodDetails({
                                 <TextIconClickable
                                   className="w-full h-fit rounded  text-black dark:text-white"
                                   icon={faAdd}
-                                  iconStyles={theme === 'dark' ? { color: 'white' } : { color: 'black' }}
+                                  iconStyles={
+                                    theme === 'dark'
+                                      ? { color: 'white' }
+                                      : { color: 'black' }
+                                  }
                                   title={t('Add New Category')}
                                   onClick={() => setIsAddCategoryVisible(true)}
                                 />
@@ -451,7 +461,9 @@ export default function FoodDetails({
                           showLabel={true}
                         />
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          {t('Shown as an upsell alongside this item on the storefront')}
+                          {t(
+                            'Shown as an upsell alongside this item on the storefront'
+                          )}
                         </p>
                       </div>
 
@@ -474,14 +486,17 @@ export default function FoodDetails({
                       </div>
                     </div>
 
-                    <div className="flex justify-end mt-4">
-                      <CustomButton
-                        className="w-fit h-10 border dark:border-dark-600 bg-black text-white border-gray-300 px-8"
-                        label={t('Next')}
-                        type="submit"
-                        loading={isSubmitting}
-                      />
-                    </div>
+                    <FormDialogActions>
+                      <div className="admin-form-actions">
+                        <CustomButton
+                          className="admin-primary-action"
+                          label={t('Next')}
+                          type="submit"
+                          form={formId}
+                          loading={isSubmitting}
+                        />
+                      </div>
+                    </FormDialogActions>
                   </Form>
                 );
               }}

@@ -24,12 +24,9 @@ import FormActions from '@/lib/ui/useable-components/form/form-actions';
 // Hooks
 import { ApolloError, useMutation } from '@apollo/client';
 import { useContext } from 'react';
-import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
+import ImageUploadCard from '@/lib/ui/useable-components/image-upload-card';
 import { onErrorMessageMatcher } from '@/lib/utils/methods';
-import {
-  CuisineErrors,
-  MAX_SQUARE_FILE_SIZE,
-} from '@/lib/utils/constants';
+import { CuisineErrors } from '@/lib/utils/constants';
 import { useTranslations } from 'next-intl';
 import { useShopTypes } from '@/lib/hooks/useShopType';
 
@@ -264,23 +261,17 @@ export default function CuisineForm({
                     }}
                   />
 
-                  <CustomUploadImageComponent
-                    name="image"
-                    error={touched.image && errors.image ? errors.image : ''}
-                    onSetImageUrl={setFieldValue}
-                    title={t('Upload Image')}
-                    existingImageUrl={
-                      isEditing.bool ? isEditing.data.image : ''
-                    }
-                    showExistingImage={
-                      isEditing.bool && isEditing.data.image ? true : false
-                    }
-                    fileTypes={['image/jpeg', 'image/jpg', 'image/webp']}
-                    maxFileHeight={1080}
-                    maxFileWidth={1080}
-                    maxFileSize={MAX_SQUARE_FILE_SIZE}
-                    orientation="SQUARE"
+                  <ImageUploadCard
+                    label={t('Image')}
+                    required
+                    helperText={t('JPG, PNG or WebP, up to 2MB — 1:1 ratio recommended')}
+                    aspect="square"
+                    value={values.image}
+                    onUploaded={(url) => setFieldValue('image', url)}
                   />
+                  {touched.image && errors.image && (
+                    <small className="p-error -mt-2 block">{errors.image}</small>
+                  )}
 
                   <FormActions
                     onCancel={resetAndClose}

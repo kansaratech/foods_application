@@ -1,8 +1,9 @@
+import { FormDialogActions } from '@/lib/ui/useable-components/form/form-dialog';
 // Core
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FieldArray, Form, Formik, FormikErrors, FormikProps } from 'formik';
 import { Fieldset } from 'primereact/fieldset';
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useId, useContext, useMemo, useState } from 'react';
 
 // Context
 import { FoodsContext } from '@/lib/context/restaurant/foods.context';
@@ -66,11 +67,12 @@ export default function VariationAddForm({
 }: IFoodVariationsAddRestaurantComponentProps) {
   // Props
   const { onStepChange, order } = stepperProps ?? {
-    onStepChange: () => { },
+    onStepChange: () => {},
     type: '',
     order: -1,
   };
   // Hooks
+  const formId = useId();
   const t = useTranslations();
   const { theme } = useTheme();
 
@@ -89,20 +91,20 @@ export default function VariationAddForm({
   const {
     restaurantLayoutContextData: { restaurantId },
     option,
-    setOption
+    setOption,
   } = useContext(RestaurantLayoutContext);
 
   // Constants
   const initialValues = {
     variations:
       foodContextData?.isEditing ||
-        (foodContextData?.food?.variations ?? [])?.length > 0
+      (foodContextData?.food?.variations ?? [])?.length > 0
         ? (foodContextData?.food?.variations ?? [])
         : [
-          {
-            ...initialFormValuesTemplate,
-          },
-        ],
+            {
+              ...initialFormValuesTemplate,
+            },
+          ],
   };
 
   // Query
@@ -155,14 +157,19 @@ export default function VariationAddForm({
   const addonsDropdown = useMemo(
     () =>
       data?.restaurant?.addons.map((addon: IAddon) => {
-        const prices = (addon.options ?? []).map((o) => o.price).filter((p) => p > 0);
+        const prices = (addon.options ?? [])
+          .map((o) => o.price)
+          .filter((p) => p > 0);
         const priceHint =
           prices.length > 0
             ? Math.min(...prices) === Math.max(...prices)
               ? ` · +${Math.min(...prices)}`
               : ` · +${Math.min(...prices)}-${Math.max(...prices)}`
             : '';
-        const requiredHint = (addon.isRequired ?? addon.quantityMinimum >= 1) ? ` · ${t('Required')}` : '';
+        const requiredHint =
+          (addon.isRequired ?? addon.quantityMinimum >= 1)
+            ? ` · ${t('Required')}`
+            : '';
         return {
           label: `${addon.title} (${addon.options?.length ?? 0} ${t('choices')}${priceHint}${requiredHint})`,
           code: addon._id,
@@ -172,7 +179,7 @@ export default function VariationAddForm({
   );
 
   // API Handlers
-  function onFetchAddonsByRestaurantCompleted() { }
+  function onFetchAddonsByRestaurantCompleted() {}
   function onErrorFetchAddonsByRestaurant() {
     showToast({
       type: 'error',
@@ -237,7 +244,12 @@ export default function VariationAddForm({
     existingTitles: Set<string>
   ): string[] => {
     const cleanGroups = groups
-      .map((g) => g.values.split(',').map((v) => v.trim()).filter(Boolean))
+      .map((g) =>
+        g.values
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      )
       .filter((values) => values.length > 0);
     if (cleanGroups.length === 0) return [];
     let combos: string[][] = [[]];
@@ -293,7 +305,7 @@ export default function VariationAddForm({
                 const _errors: FormikErrors<IVariationForm>[] =
                   (errors?.variations as FormikErrors<IVariationForm>[]) ?? [];
                 return (
-                  <Form onSubmit={handleSubmit}>
+                  <Form id={formId} onSubmit={handleSubmit}>
                     <div>
                       <FieldArray name="variations">
                         {({ remove, push }) => (
@@ -306,7 +318,10 @@ export default function VariationAddForm({
                             >
                               <div className="flex flex-col gap-2">
                                 {attrGroups.map((group, gi) => (
-                                  <div key={gi} className="grid grid-cols-12 gap-2">
+                                  <div
+                                    key={gi}
+                                    className="grid grid-cols-12 gap-2"
+                                  >
                                     <div className="col-span-4">
                                       <CustomTextField
                                         type="text"
@@ -317,7 +332,9 @@ export default function VariationAddForm({
                                         onChange={(e) =>
                                           setAttrGroups((prev) =>
                                             prev.map((g, i) =>
-                                              i === gi ? { ...g, name: e.target.value } : g
+                                              i === gi
+                                                ? { ...g, name: e.target.value }
+                                                : g
                                             )
                                           )
                                         }
@@ -327,13 +344,20 @@ export default function VariationAddForm({
                                       <CustomTextField
                                         type="text"
                                         name={`attr-values-${gi}`}
-                                        placeholder={t('commaseparated_values_eg_smallmediumlarge')}
+                                        placeholder={t(
+                                          'commaseparated_values_eg_smallmediumlarge'
+                                        )}
                                         showLabel={false}
                                         value={group.values}
                                         onChange={(e) =>
                                           setAttrGroups((prev) =>
                                             prev.map((g, i) =>
-                                              i === gi ? { ...g, values: e.target.value } : g
+                                              i === gi
+                                                ? {
+                                                    ...g,
+                                                    values: e.target.value,
+                                                  }
+                                                : g
                                             )
                                           )
                                         }
@@ -345,10 +369,16 @@ export default function VariationAddForm({
                                   <TextIconClickable
                                     className="w-fit rounded border dark:border-dark-600 border-black bg-transparent text-black dark:text-white"
                                     icon={faAdd}
-                                    iconStyles={{ color: theme === 'dark' ? 'white' : 'black' }}
+                                    iconStyles={{
+                                      color:
+                                        theme === 'dark' ? 'white' : 'black',
+                                    }}
                                     title={t('Add attribute')}
                                     onClick={() =>
-                                      setAttrGroups((prev) => [...prev, { name: '', values: '' }])
+                                      setAttrGroups((prev) => [
+                                        ...prev,
+                                        { name: '', values: '' },
+                                      ])
                                     }
                                   />
                                   <CustomButton
@@ -375,7 +405,10 @@ export default function VariationAddForm({
                                         return;
                                       }
                                       newTitles.forEach((title) =>
-                                        push({ ...initialFormValuesTemplate, title })
+                                        push({
+                                          ...initialFormValuesTemplate,
+                                          title,
+                                        })
                                       );
                                       showToast({
                                         type: 'success',
@@ -399,22 +432,22 @@ export default function VariationAddForm({
                                       <div className="relative">
                                         {(foodContextData?.isEditing ||
                                           !!index) && (
-                                            <button
-                                              className="absolute -right-1 top-2"
-                                              onClick={() => remove(index)}
-                                              type="button"
-                                            >
-                                              <FontAwesomeIcon
-                                                icon={faTimes}
-                                                size="lg"
-                                                color="#FF6347"
-                                              />
-                                            </button>
-                                          )}
+                                          <button
+                                            className="absolute -right-1 top-2"
+                                            onClick={() => remove(index)}
+                                            type="button"
+                                          >
+                                            <FontAwesomeIcon
+                                              icon={faTimes}
+                                              size="lg"
+                                              color="#FF6347"
+                                            />
+                                          </button>
+                                        )}
                                         <Fieldset
                                           legend={`${t('Variation')} ${index + 1} ${value.title ? `(${value.title})` : ''}`}
                                           toggleable
-                                          className='dark:text-white dark:bg-dark-950'
+                                          className="dark:text-white dark:bg-dark-950"
                                         >
                                           <div className="grid grid-cols-12 gap-4">
                                             <div className="col-span-12 sm:col-span-12">
@@ -495,7 +528,9 @@ export default function VariationAddForm({
                                               <CustomNumberField
                                                 name={`variations[${index}].discounted`}
                                                 min={0}
-                                                placeholder={t('Discounted Price')}
+                                                placeholder={t(
+                                                  'Discounted Price'
+                                                )}
                                                 showLabel={true}
                                                 value={value.discounted}
                                                 onChangeFieldValue={
@@ -518,7 +553,9 @@ export default function VariationAddForm({
                                             <div className="col-span-12 sm:col-span-12">
                                               <CustomMultiSelectComponent
                                                 name={`variations[${index}].addons`}
-                                                placeholder={t('Customisation Groups')}
+                                                placeholder={t(
+                                                  'Customisation Groups'
+                                                )}
                                                 options={addonsDropdown ?? []}
                                                 selectedItems={
                                                   value.addons ?? [
@@ -528,7 +565,9 @@ export default function VariationAddForm({
                                                 setSelectedItems={setFieldValue}
                                                 showLabel={true}
                                                 extraFooterButton={{
-                                                  title: t('New Customisation Group'),
+                                                  title: t(
+                                                    'New Customisation Group'
+                                                  ),
                                                   onChange: () =>
                                                     setIsAddAddonVisible(true),
                                                 }}
@@ -571,7 +610,9 @@ export default function VariationAddForm({
                               <TextIconClickable
                                 className="w-full rounded border dark:border-dark-600 border-black bg-transparent text-black dark:text-white"
                                 icon={faAdd}
-                                iconStyles={{ color: theme === "dark" ? "white" : "black" }}
+                                iconStyles={{
+                                  color: theme === 'dark' ? 'white' : 'black',
+                                }}
                                 title={t('Add New Variation')}
                                 onClick={() => push(initialFormValuesTemplate)}
                               />
@@ -580,24 +621,29 @@ export default function VariationAddForm({
                         )}
                       </FieldArray>
 
-                      <div className="mt-4 flex justify-between">
-                        <CustomButton
-                          className="h-10 w-fit border dark:border-dark-600 border-gray-300 bg-black px-8 text-white"
-                          label={t('Back')}
-                          type="button"
-                          onClick={() => {
-                            onBackClickHandler(values);
-                          }}
-                        />
-                        <CustomButton
-                          className="h-10 w-fit border dark:border-dark-600 border-gray-300 bg-black  px-8 text-white"
-                          label={
-                            foodContextData?.isEditing ? t('Update') : t('Add')
-                          }
-                          type="submit"
-                          loading={isSubmitting}
-                        />
-                      </div>
+                      <FormDialogActions>
+                        <div className="admin-form-actions admin-form-actions--split">
+                          <CustomButton
+                            className="admin-secondary-action"
+                            label={t('Back')}
+                            type="button"
+                            onClick={() => {
+                              onBackClickHandler(values);
+                            }}
+                          />
+                          <CustomButton
+                            className="admin-primary-action"
+                            label={
+                              foodContextData?.isEditing
+                                ? t('Update')
+                                : t('Add')
+                            }
+                            type="submit"
+                            form={formId}
+                            loading={isSubmitting}
+                          />
+                        </div>
+                      </FormDialogActions>
                     </div>
                   </Form>
                 );
@@ -608,7 +654,7 @@ export default function VariationAddForm({
       </div>
       <div>
         <AddonAddForm
-          className='z-[999]'
+          className="z-[999]"
           isAddOptionsVisible={isAddAddonVisible}
           setIsAddOptionsVisible={setIsAddAddonVisible}
           option={option}

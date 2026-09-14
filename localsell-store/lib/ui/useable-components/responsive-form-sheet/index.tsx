@@ -1,4 +1,10 @@
-import { forwardRef, ReactNode, useImperativeHandle, useRef, useState } from "react";
+import {
+  forwardRef,
+  ReactNode,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { Modal, Platform, Pressable, ScrollView, View } from "react-native";
 import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +20,9 @@ interface Props {
   children: ReactNode;
   snapPoint?: `${number}%`;
   maxWidth?: number;
+  header?: ReactNode;
+  footer?: ReactNode;
+  sidebar?: ReactNode;
 }
 
 // Native (iOS/Android) keeps the familiar bottom sheet. On web, the same
@@ -22,7 +31,10 @@ interface Props {
 // a web app. Both branches expose the same present()/dismiss() handle so
 // call sites don't need any platform-specific code.
 const ResponsiveFormSheet = forwardRef<ResponsiveFormSheetHandle, Props>(
-  ({ children, snapPoint = "90%", maxWidth = 480 }, ref) => {
+  (
+    { children, snapPoint = "90%", maxWidth = 480, header, footer, sidebar },
+    ref,
+  ) => {
     const { appTheme } = useApptheme();
     const [webVisible, setWebVisible] = useState(false);
     const sheetRef = useRef<BottomSheetModal>(null);
@@ -67,9 +79,53 @@ const ResponsiveFormSheet = forwardRef<ResponsiveFormSheetHandle, Props>(
                 overflow: "hidden",
               }}
             >
-              <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
-                {children}
-              </ScrollView>
+              {header && (
+                <View
+                  style={{
+                    padding: 24,
+                    borderBottomWidth: 1,
+                    borderColor: appTheme.borderLineColor,
+                  }}
+                >
+                  {header}
+                </View>
+              )}
+              <View
+                style={{ flexDirection: "row", flexShrink: 1, minHeight: 0 }}
+              >
+                <ScrollView
+                  style={{ flex: 1, minWidth: 0 }}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{ padding: 24, gap: 20 }}
+                >
+                  {children}
+                </ScrollView>
+                {sidebar && (
+                  <ScrollView
+                    style={{
+                      width: 320,
+                      flexGrow: 0,
+                      borderLeftWidth: 1,
+                      borderColor: appTheme.borderLineColor,
+                    }}
+                    contentContainerStyle={{ padding: 20 }}
+                  >
+                    {sidebar}
+                  </ScrollView>
+                )}
+              </View>
+              {footer && (
+                <View
+                  style={{
+                    paddingHorizontal: 24,
+                    paddingVertical: 16,
+                    borderTopWidth: 1,
+                    borderColor: appTheme.borderLineColor,
+                  }}
+                >
+                  {footer}
+                </View>
+              )}
             </Pressable>
           </Pressable>
         </Modal>
@@ -103,7 +159,9 @@ const ResponsiveFormSheet = forwardRef<ResponsiveFormSheetHandle, Props>(
             backgroundColor: appTheme.themeBackground,
           }}
         >
+          {header}
           {children}
+          {footer}
         </BottomSheetScrollView>
       </BottomSheetModal>
     );

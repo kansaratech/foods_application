@@ -129,6 +129,8 @@ export const dashboardTypeDefs = /* GraphQL */ `
     cancelRate: Float!
     gmv: Float!
     avgOrderValue: Float!
+    "The store's own platform commission % (Restaurant.commissionRate) — how much of commissionEarned reflects, made visible so a vendor can see the rate they're actually paying."
+    commissionRate: Float!
     commissionEarned: Float!
     avgRating: Float
     reviewCount: Int!

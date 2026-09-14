@@ -16,6 +16,7 @@ export const GET_STORE_PERFORMANCE = gql`
         cancelRate
         gmv
         avgOrderValue
+        commissionRate
         commissionEarned
         avgRating
         reviewCount

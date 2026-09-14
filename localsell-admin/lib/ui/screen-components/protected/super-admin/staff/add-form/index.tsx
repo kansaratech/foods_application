@@ -2,7 +2,7 @@
 import { Form, Formik, FormikHelpers } from 'formik';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // Interface and Types
 import {
@@ -119,21 +119,21 @@ export default function StaffAddForm({
   };
 
   return (
-    <Sidebar
+    <FormDialog
+      title={
+        <>
+          {' '}
+          {staff ? t('Edit') : t('Add')} {t('Staff')}{' '}
+        </>
+      }
       visible={isAddStaffVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
-            <div className="mb-2 flex flex-col">
-              <span className="text-lg">
-                {staff ? t('Edit') : t('Add')} {t('Staff')}
-              </span>
-            </div>
-
             <div>
               <Formik
                 initialValues={initialValues}
@@ -335,6 +335,6 @@ export default function StaffAddForm({
           </div>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

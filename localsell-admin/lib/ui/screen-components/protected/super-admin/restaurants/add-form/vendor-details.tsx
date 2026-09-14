@@ -1,7 +1,7 @@
 'use client';
 
 // Core
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { Form, Formik } from 'formik';
 import { useContext, useEffect, useState } from 'react';
 
@@ -16,7 +16,7 @@ import { IRestauransVendorDetailsForm } from '@/lib/utils/interfaces/forms';
 
 // Constants and Methods
 import { VendorErrors } from '@/lib/utils/constants';
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Components
 import CustomButton from '@/lib/ui/useable-components/button';
@@ -86,7 +86,6 @@ export default function VendorDetails({
   // Mutations
   const [createVendor] = useMutation(CREATE_VENDOR, {
     refetchQueries: [{ query: GET_VENDORS }],
-    onError,
     onCompleted: (data: ICreateVendorResponseGraphQL) => {
       showToast({
         type: 'success',
@@ -142,24 +141,13 @@ export default function VendorDetails({
       showToast({
         type: 'error',
         title: `${!showAddForm ? t('Select') : t('Create')} ${t('Vendor')}`,
-        message: `${t('Vendor')} ${!showAddForm ? t('Selection') : t('Create')} ${t('Failed')}`,
+        message:
+          getGraphQLErrorMessage(error as Error) ??
+          `${t('Vendor')} ${!showAddForm ? t('Selection') : t('Create')} ${t('Failed')}`,
         duration: 2500,
       });
     }
   };
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    if (!graphQLErrors && !networkError) return;
-    showToast({
-      type: 'error',
-      title: `${!showAddForm ? t('Select') : t('Create')} ${t('Vendor')}`,
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        `${t('Vendor')} ${!showAddForm ? t('Selection') : t('Create')} ${t('Failed')}`,
-      duration: 2500,
-    });
-  }
 
   const onSelectVendor = () => {
     const _id = restaurantsContextData?.vendor?._id;

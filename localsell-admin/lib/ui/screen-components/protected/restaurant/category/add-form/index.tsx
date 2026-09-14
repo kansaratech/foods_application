@@ -2,7 +2,7 @@
 import { FieldArray, Form, Formik } from 'formik';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 import { Fieldset } from 'primereact/fieldset';
 
 // Interface, Types & Schema
@@ -22,7 +22,10 @@ import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/uploa
 
 // Utilities and Constants
 import { CategoryErrors } from '@/lib/utils/constants';
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import {
+  onErrorMessageMatcher,
+  getGraphQLErrorMessage,
+} from '@/lib/utils/methods/error';
 
 //Toast
 import useToast from '@/lib/hooks/useToast';
@@ -33,7 +36,10 @@ import {
   EDIT_CATEGORY,
   GET_CATEGORY_BY_RESTAURANT_ID,
 } from '@/lib/api/graphql';
-import { DELETE_SUB_CATEGORY } from '@/lib/api/graphql/mutations/sub-category';
+import {
+  CREATE_SUB_CATEGORIES,
+  DELETE_SUB_CATEGORY,
+} from '@/lib/api/graphql/mutations/sub-category';
 
 // Contexts
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
@@ -44,9 +50,7 @@ import { faAdd, faTrash } from '@fortawesome/free-solid-svg-icons';
 // Hooks
 import { useMutation, useQuery } from '@apollo/client';
 import { useContext, useEffect } from 'react';
-import {
-  GET_SUBCATEGORIES_BY_PARENT_ID,
-} from '@/lib/api/graphql/queries/sub-categories';
+import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
 import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
 import { useTranslations } from 'next-intl';
 import { onUseLocalStorage } from '@/lib/utils/methods';
@@ -74,7 +78,7 @@ export default function CategoryAddForm({
   const { restaurantLayoutContextData } = useContext(RestaurantLayoutContext);
   const restaurantId = restaurantLayoutContextData?.restaurantId || '';
 
-  const shopType = onUseLocalStorage('get', "shopType")
+  const shopType = onUseLocalStorage('get', 'shopType');
 
   // Fetch all categories for duplicate check
   const {
@@ -154,28 +158,23 @@ export default function CategoryAddForm({
         if (onCategoryAdded) onCategoryAdded();
         onHide();
       },
-      onError: (error) => {
-        let message = '';
-        try {
-          message = error.graphQLErrors[0]?.message;
-        } catch (err) {
-          message = t('ActionFailedTryAgain');
-        }
-        showToast({
-          type: 'error',
-          title: t('New Category'),
-          message,
-          duration: 3000,
-        });
-      },
     }
   );
+
+  // Sub-categories aren't part of CategoryInput (the API rejects the field
+  // outright — see food.ts's typeDefs), and creating one needs the parent
+  // category's id, which only exists after createCategory resolves. So they
+  // go through this separate mutation as a follow-up, not bundled into the
+  // category payload below.
+  const [createSubCategories] = useMutation(CREATE_SUB_CATEGORIES, {
+    refetchQueries: 'active',
+    awaitRefetchQueries: true,
+  });
 
   // Form Submission
   const handleSubmit = async (values: ICategoryForm) => {
     // Duplicate name check (case-insensitive, ignore self if editing)
-    const allCategories =
-      allCategoriesData?.restaurant?.categories || [];
+    const allCategories = allCategoriesData?.restaurant?.categories || [];
     const isDuplicate = allCategories.some(
       (cat: ICategoryForm) =>
         cat.title.trim().toLowerCase() === values.title.trim().toLowerCase() &&
@@ -190,28 +189,45 @@ export default function CategoryAddForm({
       });
       return;
     }
-    const transformedSubCategories = values.subCategories.map((subCategory) => {
-      delete subCategory.__typename;
-      return subCategory;
-    });
     try {
-      await createCategory({
+      const { data } = await createCategory({
         variables: {
           category: {
             restaurant: restaurantId,
             _id: category ? category?._id : '',
             title: values.title,
-            subCategories: transformedSubCategories,
             image: shopType == 'grocery' ? (values?.image ?? '') : '',
           },
         },
       });
+
+      // Only when creating fresh (editing manages sub-categories via their
+      // own add/delete controls elsewhere) and only the rows the admin
+      // actually titled — createSubCategories needs the id this category
+      // was just given, which the response's categories list carries.
+      if (!category && shopType == 'grocery') {
+        const newCategoryId = data?.createCategory?.categories?.find(
+          (c: { _id: string; title: string }) => c.title === values.title.trim()
+        )?._id;
+        const titledSubCategories = values.subCategories
+          .filter((sc) => sc.title?.trim())
+          .map((sc) => ({
+            title: sc.title.trim(),
+            parentCategoryId: newCategoryId,
+          }));
+        if (newCategoryId && titledSubCategories.length) {
+          await createSubCategories({
+            variables: { subCategories: titledSubCategories },
+          });
+        }
+      }
     } catch (error) {
-      console.error({ error });
       showToast({
         type: 'error',
         title: `${category ? t('Edit') : t('Create')} Category`,
-        message: `${t('Failed to create Category, please try again later')}.`,
+        message:
+          getGraphQLErrorMessage(error as Error) ??
+          t('Failed to create Category, please try again later'),
       });
     }
   };
@@ -223,20 +239,21 @@ export default function CategoryAddForm({
   if (subCategoriesLoading) return <CustomLoader />;
   if (!subCategoriesLoading)
     return (
-      <Sidebar
+      <FormDialog
+        title={
+          <>
+            {' '}
+            {category ? t('Edit') : t('Add')} {t('Category')}{' '}
+          </>
+        }
         visible={isAddCategoryVisible}
         position={position}
         onHide={onHide}
-        className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 dark:border dark:border-dark-600"
+        className=""
       >
         <div className="flex h-full w-full items-center justify-start">
           <div className="h-full w-full">
             <div className="flex flex-col gap-2">
-              <div className="mb-2 flex flex-col">
-                <span className="text-lg">
-                  {category ? t('Edit') : t('Add')} {t('Category')}
-                </span>
-              </div>
               <div>
                 <Formik
                   initialValues={initialValues}
@@ -291,7 +308,12 @@ export default function CategoryAddForm({
                                   )
                                     ? 'red'
                                     : '',
-                                }} maxFileSize={0} maxFileWidth={1980} maxFileHeight={1080} fileTypes={[]} />
+                                }}
+                                maxFileSize={0}
+                                maxFileWidth={1980}
+                                maxFileHeight={1080}
+                                fileTypes={[]}
+                              />
                             </div>
                           )}
                           {/* Sub Categories  */}
@@ -399,6 +421,6 @@ export default function CategoryAddForm({
             </div>
           </div>
         </div>
-      </Sidebar>
+      </FormDialog>
     );
 }

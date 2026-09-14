@@ -20,7 +20,7 @@ import { Form, Formik } from 'formik';
 
 // Prime react
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // Hooks
 import { useMutation } from '@apollo/client';
@@ -47,7 +47,9 @@ export default function CouponForm({
     discount: isEditing.bool ? isEditing?.data?.discount : 0,
     enabled: isEditing.bool ? isEditing?.data?.enabled : true,
     lifeTimeActive: isEditing.bool ? isEditing?.data?.lifeTimeActive : false,
-    firstOrderOnly: isEditing.bool ? (isEditing?.data?.firstOrderOnly ?? false) : false,
+    firstOrderOnly: isEditing.bool
+      ? (isEditing?.data?.firstOrderOnly ?? false)
+      : false,
     startDate:
       isEditing.bool && isEditing?.data?.startDate
         ? (() => {
@@ -177,7 +179,8 @@ export default function CouponForm({
   );
 
   return (
-    <Sidebar
+    <FormDialog
+      title={`${isEditing.bool ? t('Edit') : t('Add')} ${t('Coupon')}`}
       visible={visible}
       onHide={() => {
         setVisible(false);
@@ -197,7 +200,7 @@ export default function CouponForm({
         });
       }}
       position="right"
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <Formik
         initialValues={initialValues}
@@ -261,24 +264,26 @@ export default function CouponForm({
         }}
         validateOnChange={true}
       >
-        {({ errors, touched, handleSubmit, values, isSubmitting, setFieldValue }) => {
+        {({
+          errors,
+          touched,
+          handleSubmit,
+          values,
+          isSubmitting,
+          setFieldValue,
+        }) => {
           return (
             <Form onSubmit={handleSubmit}>
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <h2 className='className="mb-3 text-xl font-bold'>
-                    {isEditing.bool ? t('Edit') : t('Add')} {t('Coupon')}
-                  </h2>
-                  <div className="flex items-center gap-x-1">
-                    {values.enabled ? t('Enabled') : t('Disabled')}
-                    <CustomInputSwitch
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                        setFieldValue('enabled', e.target.checked)
-                      }
-                      isActive={values.enabled}
-                      className={values.enabled ? 'p-inputswitch-checked' : ''}
-                    />
-                  </div>
+                <div className="flex items-center justify-end gap-x-1">
+                  {values.enabled ? t('Enabled') : t('Disabled')}
+                  <CustomInputSwitch
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setFieldValue('enabled', e.target.checked)
+                    }
+                    isActive={values.enabled}
+                    className={values.enabled ? 'p-inputswitch-checked' : ''}
+                  />
                 </div>
                 <CustomTextField
                   value={values.title}
@@ -404,6 +409,6 @@ export default function CouponForm({
           );
         }}
       </Formik>
-    </Sidebar>
+    </FormDialog>
   );
 }

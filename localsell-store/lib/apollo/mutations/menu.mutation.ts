@@ -24,6 +24,12 @@ export const DELETE_CATEGORY = gql`
   }
 `;
 
+export const CREATE_SUB_CATEGORIES = gql`
+  mutation CreateSubCategories($subCategories: [SubCategoryInput!]!) {
+    createSubCategories(subCategories: $subCategories)
+  }
+`;
+
 export const CREATE_FOOD = gql`
   mutation CreateFood($foodInput: FoodInput!) {
     createFood(foodInput: $foodInput) {

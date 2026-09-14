@@ -4,7 +4,7 @@
 import { useContext, useRef } from 'react';
 
 // PrimeReact components
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 import { Stepper } from 'primereact/stepper';
 import { StepperPanel } from 'primereact/stepperpanel';
 
@@ -44,11 +44,14 @@ const FoodForm = ({ position = 'right' }: IFoodAddFormComponentProps) => {
   };
 
   return (
-    <Sidebar
+    <FormDialog
+      title={t('Products')}
+      size="xl"
+      portalActions
       visible={isFoodFormVisible}
       position={position}
       onHide={onSidebarHideHandler}
-      className="w-full sm:w-[600px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className="admin-product-dialog"
     >
       <div ref={stepperRef}>
         <Stepper linear headerPosition="bottom" activeStep={activeIndex}>
@@ -71,7 +74,7 @@ const FoodForm = ({ position = 'right' }: IFoodAddFormComponentProps) => {
           </StepperPanel>
         </Stepper>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 };
 

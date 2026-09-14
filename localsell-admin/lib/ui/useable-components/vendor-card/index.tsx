@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // Hooks
 import { useContext, useState } from 'react';
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { useRouter } from 'next/navigation';
 
 // Context
@@ -14,12 +14,14 @@ import { IVendorCardProps } from '@/lib/utils/interfaces';
 
 // Methods
 import { onUseLocalStorage } from '@/lib/utils/methods';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Icons
 import {
   faEdit,
   faEllipsisVertical,
   faEye,
+  faKey,
   faShop,
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
@@ -32,6 +34,7 @@ import Image from '@/lib/ui/useable-components/safe-image';
 import CustomDialog from '../delete-dialog';
 import CustomPopupMenu from '../popup-menu';
 import TextComponent from '../text-field';
+import UpdateVendorPasswordDialog from './update-password-dialog';
 
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -60,6 +63,7 @@ export default function VendorCard({
   // States
   const [isPopupOpen, setPopupOpen] = useState<boolean>(false);
   const [isDeletePopupOpen, setDeletePopupOpen] = useState<boolean>(false);
+  const [isPasswordDialogOpen, setPasswordDialogOpen] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -75,17 +79,6 @@ export default function VendorCard({
 
       onResetVendor(true); // so after refetching is vendor can be selected.
       vendorResponse.refetch();
-    },
-    onError: ({ networkError, graphQLErrors }: ApolloError) => {
-      showToast({
-        type: 'error',
-        title: t('Vendor Delete'),
-        message:
-          graphQLErrors[0]?.message ??
-          networkError?.message ??
-          t('Vendor Deletion  Failed'),
-        duration: 2500,
-      });
     },
   });
 
@@ -109,7 +102,7 @@ export default function VendorCard({
       showToast({
         type: 'error',
         title: t('Vendor Delete'),
-        message: t('Vendor delete failed'),
+        message: getGraphQLErrorMessage(error as Error) ?? t('Vendor delete failed'),
       });
     }
   };
@@ -120,6 +113,10 @@ export default function VendorCard({
 
   const onHandlerDelete = () => {
     setDeletePopupOpen(true);
+  };
+
+  const onHandlerUpdatePassword = () => {
+    setPasswordDialogOpen(true);
   };
 
   const onHandlerView = () => {
@@ -216,6 +213,13 @@ export default function VendorCard({
                     color: 'text-gray-600 dark:text-white',
                   },
                   {
+                    title: t('Update Password'),
+                    icon: faKey,
+                    fn: onHandlerUpdatePassword,
+                    data: vendorId,
+                    color: 'text-gray-600 dark:text-white',
+                  },
+                  {
                     title: t('Delete'),
                     icon: faTrash,
                     fn: onHandlerDelete,
@@ -234,6 +238,13 @@ export default function VendorCard({
         visible={isDeletePopupOpen}
         onHide={onHandleHideDeleteVendor}
         onConfirm={onHandleConfirmDeleteVendor}
+      />
+
+      <UpdateVendorPasswordDialog
+        visible={isPasswordDialogOpen}
+        onHide={() => setPasswordDialogOpen(false)}
+        vendorId={_id}
+        vendorEmail={email}
       />
     </div>
   );

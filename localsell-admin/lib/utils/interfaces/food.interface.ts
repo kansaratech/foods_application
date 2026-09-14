@@ -80,6 +80,7 @@ export interface IVariation {
 }
 
 export interface IFood {
+  gstRatePercent?: number | null;
   _id: string;
   title: string;
   description: string;
@@ -119,6 +120,9 @@ export interface IFoodCategory {
 }
 
 export interface IRestaurant {
+  commissionRate?: number | null;
+  tax?: number | null;
+  gstRegistrationType?: string | null;
   _id: string;
   name?: string;
   categories: IFoodCategory[];

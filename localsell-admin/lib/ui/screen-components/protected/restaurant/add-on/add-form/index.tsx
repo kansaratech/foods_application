@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 import { Fieldset } from 'primereact/fieldset';
 
 // Icons
@@ -34,7 +34,12 @@ import { AddonsErrors } from '@/lib/utils/constants';
 import useToast from '@/lib/hooks/useToast';
 
 // GraphQL
-import { CREATE_ADDONS, EDIT_ADDON, GET_ADDONS_BY_RESTAURANT_ID, GET_OPTIONS_BY_RESTAURANT_ID } from '@/lib/api/graphql';
+import {
+  CREATE_ADDONS,
+  EDIT_ADDON,
+  GET_ADDONS_BY_RESTAURANT_ID,
+  GET_OPTIONS_BY_RESTAURANT_ID,
+} from '@/lib/api/graphql';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
@@ -78,13 +83,19 @@ function deriveSelectionRules(isRequired: boolean, quantityMaximum: number) {
   };
 }
 
-function selectionSummary(isRequired: boolean, min: number, max: number): string {
+function selectionSummary(
+  isRequired: boolean,
+  min: number,
+  max: number
+): string {
   if (isRequired) {
     return min === max
       ? `Required — customer picks exactly ${min}`
       : `Required — customer picks ${min} to ${max}`;
   }
-  return max <= 1 ? 'Optional — customer can pick one' : `Optional — customer can pick up to ${max}`;
+  return max <= 1
+    ? 'Optional — customer can pick one'
+    : `Optional — customer can pick up to ${max}`;
 }
 
 export default function AddonAddForm({
@@ -148,27 +159,32 @@ export default function AddonAddForm({
   );
 
   // Mutation
-  const [saveAddon, { loading: mutationLoading }] = useMutation(addon ? EDIT_ADDON : CREATE_ADDONS, {
-    refetchQueries: [{ query: GET_ADDONS_BY_RESTAURANT_ID, variables: { id: restaurantId } }],
-    awaitRefetchQueries: true,
-    onCompleted: () => {
-      showToast({
-        type: 'success',
-        title: t('Customisation Group'),
-        message: `${t('The customisation group has been')} ${addon ? t('updated') : t('added')}.`,
-      });
-      onHide();
-    },
-    onError: (error) => {
-      let message = '';
-      try {
-        message = error.graphQLErrors[0]?.message;
-      } catch (err) {
-        message = t('Something went wrong');
-      }
-      showToast({ type: 'error', title: t('Customisation Group'), message });
-    },
-  });
+  const [saveAddon, { loading: mutationLoading }] = useMutation(
+    addon ? EDIT_ADDON : CREATE_ADDONS,
+    {
+      refetchQueries: [
+        { query: GET_ADDONS_BY_RESTAURANT_ID, variables: { id: restaurantId } },
+      ],
+      awaitRefetchQueries: true,
+      onCompleted: () => {
+        showToast({
+          type: 'success',
+          title: t('Customisation Group'),
+          message: `${t('The customisation group has been')} ${addon ? t('updated') : t('added')}.`,
+        });
+        onHide();
+      },
+      onError: (error) => {
+        let message = '';
+        try {
+          message = error.graphQLErrors[0]?.message;
+        } catch (err) {
+          message = t('Something went wrong');
+        }
+        showToast({ type: 'error', title: t('Customisation Group'), message });
+      },
+    }
+  );
 
   // Form Submission — always the flat shape (title + inline `options`), which
   // createAddon/editAddon already support without any "option pool" grouping.
@@ -177,11 +193,19 @@ export default function AddonAddForm({
   const handleSubmit = (values: IAddonForm) => {
     const created = values.newOptions
       .filter((o) => o.title?.trim())
-      .map((o) => ({ title: o.title.trim(), description: o.description || undefined, price: o.price ?? 0 }));
+      .map((o) => ({
+        title: o.title.trim(),
+        description: o.description || undefined,
+        price: o.price ?? 0,
+      }));
     const reused = (values.options ?? [])
       .map((item) => (item.code ? optionsById.get(item.code) : undefined))
       .filter((o): o is IOptions => !!o)
-      .map((o) => ({ title: o.title, description: o.description, price: o.price }));
+      .map((o) => ({
+        title: o.title,
+        description: o.description,
+        price: o.price,
+      }));
 
     saveAddon({
       variables: {
@@ -200,20 +224,27 @@ export default function AddonAddForm({
   };
 
   return (
-    <Sidebar
+    <FormDialog
+      title={
+        <>
+          {' '}
+          {addon
+            ? t('Edit Customisation Group')
+            : t('New Customisation Group')}{' '}
+        </>
+      }
       visible={isAddAddonVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[520px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="mb-4 flex flex-col gap-1">
-            <span className="text-lg font-semibold text-slate-900 dark:text-white">
-              {addon ? t('Edit Customisation Group') : t('New Customisation Group')}
-            </span>
             <span className="text-xs text-slate-500 dark:text-gray-400">
-              {t('e.g. "Choose your toppings" or "Spice level" — a group of choices customers pick from on this item')}
+              {t(
+                'e.g. "Choose your toppings" or "Spice level" — a group of choices customers pick from on this item'
+              )}
             </span>
           </div>
 
@@ -223,9 +254,20 @@ export default function AddonAddForm({
             onSubmit={handleSubmit}
             enableReinitialize
           >
-            {({ values, errors, touched, handleChange, handleBlur, setFieldValue, handleSubmit: formikSubmit }) => {
+            {({
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              setFieldValue,
+              handleSubmit: formikSubmit,
+            }) => {
               const _errors = errors as FormikErrors<IAddonForm>;
-              const newOptionsError = typeof _errors.newOptions === 'string' ? _errors.newOptions : undefined;
+              const newOptionsError =
+                typeof _errors.newOptions === 'string'
+                  ? _errors.newOptions
+                  : undefined;
 
               return (
                 <Form onSubmit={formikSubmit}>
@@ -240,10 +282,20 @@ export default function AddonAddForm({
                       onBlur={handleBlur}
                       showLabel
                       style={{
-                        borderColor: touched.title && onErrorMessageMatcher('title', _errors.title, AddonsErrors) ? 'red' : '',
+                        borderColor:
+                          touched.title &&
+                          onErrorMessageMatcher(
+                            'title',
+                            _errors.title,
+                            AddonsErrors
+                          )
+                            ? 'red'
+                            : '',
                       }}
                     />
-                    {touched.title && _errors.title && <small className="p-error -mt-3">{_errors.title}</small>}
+                    {touched.title && _errors.title && (
+                      <small className="p-error -mt-3">{_errors.title}</small>
+                    )}
 
                     <CustomTextAreaField
                       name="description"
@@ -262,22 +314,35 @@ export default function AddonAddForm({
                             {t('Customer must choose from this group')}
                           </p>
                           <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400">
-                            {t('Switch on for a mandatory pick, e.g. spice level or size of a side')}
+                            {t(
+                              'Switch on for a mandatory pick, e.g. spice level or size of a side'
+                            )}
                           </p>
                         </div>
                         <CustomInputSwitch
                           isActive={values.isRequired}
                           onChange={(e) => {
                             const checked = e.target.checked;
-                            const rules = deriveSelectionRules(checked, values.quantityMaximum);
+                            const rules = deriveSelectionRules(
+                              checked,
+                              values.quantityMaximum
+                            );
                             setFieldValue('isRequired', checked);
-                            setFieldValue('quantityMinimum', rules.quantityMinimum);
-                            setFieldValue('quantityMaximum', rules.quantityMaximum);
+                            setFieldValue(
+                              'quantityMinimum',
+                              rules.quantityMinimum
+                            );
+                            setFieldValue(
+                              'quantityMaximum',
+                              rules.quantityMaximum
+                            );
                           }}
                         />
                       </div>
 
-                      <div className={`mt-3 grid gap-3 ${values.isRequired ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                      <div
+                        className={`mt-3 grid gap-3 ${values.isRequired ? 'grid-cols-2' : 'grid-cols-1'}`}
+                      >
                         {values.isRequired && (
                           <CustomNumberField
                             name="quantityMinimum"
@@ -289,7 +354,8 @@ export default function AddonAddForm({
                             onChangeFieldValue={(name, val) => {
                               const min = Math.max(1, Number(val) || 1);
                               setFieldValue('quantityMinimum', min);
-                              if (min > values.quantityMaximum) setFieldValue('quantityMaximum', min);
+                              if (min > values.quantityMaximum)
+                                setFieldValue('quantityMaximum', min);
                             }}
                           />
                         )}
@@ -297,13 +363,20 @@ export default function AddonAddForm({
                           name="quantityMaximum"
                           min={values.isRequired ? values.quantityMinimum : 1}
                           max={99}
-                          placeholder={values.isRequired ? t('At most') : t('Let customer pick up to')}
+                          placeholder={
+                            values.isRequired
+                              ? t('At most')
+                              : t('Let customer pick up to')
+                          }
                           showLabel
                           value={values.quantityMaximum}
                           onChangeFieldValue={(name, val) => {
                             const max = Math.max(1, Number(val) || 1);
                             setFieldValue('quantityMaximum', max);
-                            if (values.isRequired && values.quantityMinimum > max) {
+                            if (
+                              values.isRequired &&
+                              values.quantityMinimum > max
+                            ) {
                               setFieldValue('quantityMinimum', max);
                             }
                           }}
@@ -311,15 +384,24 @@ export default function AddonAddForm({
                       </div>
 
                       <p className="mt-2 text-xs italic text-slate-500 dark:text-gray-400">
-                        {t('Customers will see')}: {selectionSummary(values.isRequired, values.quantityMinimum, values.quantityMaximum)}
+                        {t('Customers will see')}:{' '}
+                        {selectionSummary(
+                          values.isRequired,
+                          values.quantityMinimum,
+                          values.quantityMaximum
+                        )}
                       </p>
                     </div>
 
                     {/* Choices */}
                     <div className="rounded-xl border border-gray-200 bg-slate-50/60 p-4 dark:border-dark-600 dark:bg-dark-900">
                       <div className="mb-3 flex items-center justify-between">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{t('Choices')}</p>
-                        {newOptionsError && <small className="p-error">{newOptionsError}</small>}
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {t('Choices')}
+                        </p>
+                        {newOptionsError && (
+                          <small className="p-error">{newOptionsError}</small>
+                        )}
                       </div>
 
                       <FieldArray name="newOptions">
@@ -337,7 +419,12 @@ export default function AddonAddForm({
                                     placeholder={t('e.g. Extra Cheese')}
                                     maxLength={35}
                                     value={choice.title}
-                                    onChange={(e) => setFieldValue(`newOptions[${index}].title`, e.target.value)}
+                                    onChange={(e) =>
+                                      setFieldValue(
+                                        `newOptions[${index}].title`,
+                                        e.target.value
+                                      )
+                                    }
                                     showLabel={false}
                                   />
                                 </div>
@@ -361,14 +448,19 @@ export default function AddonAddForm({
                                   onClick={() => remove(index)}
                                   aria-label={t('Remove choice')}
                                 >
-                                  <FontAwesomeIcon icon={faTimes} color="#FF6347" />
+                                  <FontAwesomeIcon
+                                    icon={faTimes}
+                                    color="#FF6347"
+                                  />
                                 </button>
                               </div>
                             ))}
                             <TextIconClickable
                               className="w-full rounded border border-dashed border-black bg-transparent text-black dark:border-dark-600 dark:text-white"
                               icon={faAdd}
-                              iconStyles={{ color: theme === 'dark' ? 'white' : 'black' }}
+                              iconStyles={{
+                                color: theme === 'dark' ? 'white' : 'black',
+                              }}
                               title={t('Add a choice')}
                               onClick={() => push(emptyChoice())}
                             />
@@ -409,6 +501,6 @@ export default function AddonAddForm({
           </Formik>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

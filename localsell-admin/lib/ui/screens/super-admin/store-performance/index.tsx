@@ -30,13 +30,22 @@ interface Row {
   cancelRate: number;
   gmv: number;
   avgOrderValue: number;
+  commissionRate: number;
   commissionEarned: number;
   avgRating: number | null;
   reviewCount: number;
   walletBalance: number;
 }
 
-export default function StorePerformanceScreen() {
+interface StorePerformanceScreenProps {
+  breadcrumb?: string;
+  heading?: string;
+}
+
+export default function StorePerformanceScreen({
+  breadcrumb = 'Management / Store Performance',
+  heading = 'Store Performance',
+}: StorePerformanceScreenProps = {}) {
   const t = useTranslations();
   const [dates, setDates] = useState<(Date | null)[] | null>(null);
   const [search, setSearch] = useState('');
@@ -70,6 +79,7 @@ export default function StorePerformanceScreen() {
       'Cancel %',
       'GMV',
       'Avg order',
+      'Commission Rate',
       'Commission',
       'Rating',
       'Reviews',
@@ -85,6 +95,7 @@ export default function StorePerformanceScreen() {
         r.cancelRate,
         r.gmv,
         r.avgOrderValue,
+        `${r.commissionRate}%`,
         r.commissionEarned,
         r.avgRating ?? '',
         r.reviewCount,
@@ -109,9 +120,9 @@ export default function StorePerformanceScreen() {
       <div className="management-heading">
         <div>
           <div className="management-breadcrumb">
-            Management / Store Performance
+            {t(breadcrumb)}
           </div>
-          <h1>{t('Store Performance')}</h1>
+          <h1>{t(heading)}</h1>
           <p className="mt-1 text-xs text-slate-400">
             {result
               ? `${new Date(result.periodStart).toLocaleDateString()} – ${new Date(
@@ -220,6 +231,11 @@ export default function StorePerformanceScreen() {
               headerName: t('Avg order'),
               propertyName: 'avgOrderValue',
               body: (r: Row) => money(r.avgOrderValue),
+            },
+            {
+              headerName: t('Commission Rate'),
+              propertyName: 'commissionRate',
+              body: (r: Row) => `${r.commissionRate}%`,
             },
             {
               headerName: t('Commission'),

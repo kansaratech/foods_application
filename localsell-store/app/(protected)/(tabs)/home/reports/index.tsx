@@ -32,7 +32,7 @@ export default function ReportsScreen() {
   const { appTheme } = useApptheme();
   const { t } = useTranslation();
   const { format } = useCurrency();
-  const { userId: storeId } = useUserContext();
+  const { userId: storeId, dataProfile } = useUserContext();
 
   const [rangeKey, setRangeKey] = useState<RangeKey>("MONTH");
   const [groupBy, setGroupBy] = useState<GroupBy>("DAY");
@@ -132,6 +132,7 @@ export default function ReportsScreen() {
           ) : (
             <>
               <View className="flex-row flex-wrap">
+                <Stat label={t("Your commission rate")} value={`${dataProfile?.commissionRate ?? 0}%`} />
                 <Stat label={t("COD cash collected")} value={format(collection?.codCashCollected ?? 0)} />
                 <Stat label={t("Commission owed")} value={format(collection?.commissionOwed ?? 0)} />
                 <Stat label={t("GST collected")} value={format(collection?.gstCollected ?? 0)} />

@@ -1,6 +1,9 @@
-
 // import { createBanner, editBanner } from '@/lib/api/graphql/mutation/banners';
-import { CREATE_BANNER, EDIT_BANNER,  GET_RESTAURANTS_DROPDOWN } from '@/lib/api/graphql';
+import {
+  CREATE_BANNER,
+  EDIT_BANNER,
+  GET_RESTAURANTS_DROPDOWN,
+} from '@/lib/api/graphql';
 import { GET_BANNERS } from '@/lib/api/graphql/queries/banners';
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 import useToast from '@/lib/hooks/useToast';
@@ -15,10 +18,7 @@ import {
   PLACEMENT_OPTIONS,
   SCREEN_NAMES,
 } from '@/lib/utils/constants';
-import {
-  IQueryResult,
-  IRestaurantsResponseGraphQL,
-} from '@/lib/utils/interfaces';
+import { IQueryResult, IRestaurantResponse } from '@/lib/utils/interfaces';
 import { IBannersAddFormComponentProps } from '@/lib/utils/interfaces/banner.interface';
 import { IBannersForm } from '@/lib/utils/interfaces/forms/banners.form.interface';
 import { onErrorMessageMatcher } from '@/lib/utils/methods';
@@ -27,7 +27,7 @@ import { BannerSchema } from '@/lib/utils/schema/banner';
 import { useMutation } from '@apollo/client';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useTranslations } from 'next-intl';
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 import { useMemo } from 'react';
 
 const BannersAddForm = ({
@@ -39,48 +39,52 @@ const BannersAddForm = ({
   // Queries
   const { data } = useQueryGQL(GET_RESTAURANTS_DROPDOWN, {
     fetchPolicy: 'cache-and-network',
-  }) as IQueryResult<IRestaurantsResponseGraphQL | undefined, undefined>;
+  }) as IQueryResult<
+    { restaurants?: Pick<IRestaurantResponse, '_id' | 'name'>[] } | undefined,
+    undefined
+  >;
 
   // Hooks
   const t = useTranslations();
-  
+
   const RESTAURANT_NAMES = useMemo(() => {
-    // @ts-ignore
-    return data?.restaurants?.map((v) => ({
-      label: v.name,
-      code: v._id,
-    })) ?? []; // Using nullish coalescing operator
+    return (
+      data?.restaurants?.map((v) => ({
+        label: v.name,
+        code: v._id,
+      })) ?? []
+    ); // Using nullish coalescing operator
   }, [data]);
-  
+
   //State
   const initialValues: IBannersForm = {
     title: banner?.title || '',
     description: banner?.description || '',
     action: banner
       ? {
-        label: getLabelByCode(ACTION_TYPES, banner.action),
-        code: banner.action,
-      }
+          label: getLabelByCode(ACTION_TYPES, banner.action),
+          code: banner.action,
+        }
       : null,
     screen: banner
       ? banner.action === 'Navigate Specific Page'
         ? {
-          label: getLabelByCode(SCREEN_NAMES, banner.screen),
-          code: banner.screen,
-        }
-        : banner.action === 'Navigate Specific Restaurant'
-          ? {
-            label: banner.screen,
+            label: getLabelByCode(SCREEN_NAMES, banner.screen),
             code: banner.screen,
           }
+        : banner.action === 'Navigate Specific Restaurant'
+          ? {
+              label: banner.screen,
+              code: banner.screen,
+            }
           : null
       : null,
     file: banner?.file || '',
     placement: banner?.placement
       ? {
-        label: getLabelByCode(PLACEMENT_OPTIONS, banner.placement),
-        code: banner.placement,
-      }
+          label: getLabelByCode(PLACEMENT_OPTIONS, banner.placement),
+          code: banner.placement,
+        }
       : PLACEMENT_OPTIONS[0],
     priority: banner?.priority ?? 0,
     couponCode: banner?.couponCode || '',
@@ -148,21 +152,21 @@ const BannersAddForm = ({
     }
   };
   return (
-    <Sidebar
+    <FormDialog
+      title={
+        <>
+          {' '}
+          {banner ? t('Edit') : t('Add')} {t('Banner')}{' '}
+        </>
+      }
       visible={isAddBannerVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[450px] py-4 dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
-            <div className="mb-2 flex flex-col">
-              <span className="text-lg">
-                {banner ? t('Edit') : t('Add')} {t('Banner')}
-              </span>
-            </div>
-
             <div>
               <Formik
                 initialValues={initialValues}
@@ -249,10 +253,10 @@ const BannersAddForm = ({
                             placeholder={t('Screen')}
                             options={
                               values.action?.code ===
-                                'Navigate Specific Restaurant'
+                              'Navigate Specific Restaurant'
                                 ? RESTAURANT_NAMES
                                 : values.action?.code ===
-                                  'Navigate Specific Page'
+                                    'Navigate Specific Page'
                                   ? SCREEN_NAMES
                                   : []
                             }
@@ -366,10 +370,11 @@ const BannersAddForm = ({
                         </div>
 
                         <div
-                          className={`${errors.file && !values.file
-                            ? 'border-red-500'
-                            : 'border-gray-200 dark:border-dark-600'
-                            } rounded-lg border p-4`}
+                          className={`${
+                            errors.file && !values.file
+                              ? 'border-red-500'
+                              : 'border-gray-200 dark:border-dark-600'
+                          } rounded-lg border p-4`}
                         >
                           <CustomUploadImageComponent
                             key={'file'}
@@ -407,7 +412,7 @@ const BannersAddForm = ({
           </div>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 };
 

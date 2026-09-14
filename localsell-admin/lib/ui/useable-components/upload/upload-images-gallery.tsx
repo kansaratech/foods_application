@@ -78,7 +78,7 @@ function MultiImageUploadComponent({
       if (uploaded.length) onChange([...images, ...uploaded]);
       setIsUploading(false);
     },
-    [remaining, images, onChange, uploadToS3, showToast, title, t],
+    [remaining, images, onChange, uploadToS3, showToast, title, t]
   );
 
   const removeImage = (index: number) => {
@@ -94,9 +94,16 @@ function MultiImageUploadComponent({
             key={`${url}-${index}`}
             className="relative h-24 w-24 overflow-hidden rounded-md border border-gray-300 dark:border-dark-600"
           >
-            <Image alt={`${title} ${index + 1}`} src={url} width={96} height={96} />
+            <Image
+              alt={`${title} ${index + 1}`}
+              src={url}
+              width={96}
+              height={96}
+            />
             <button
               type="button"
+              aria-label={`${t('Remove')} ${t('Image')} ${index + 1}`}
+              disabled={isUploading}
               onClick={() => removeImage(index)}
               className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white"
             >
@@ -108,34 +115,32 @@ function MultiImageUploadComponent({
         {remaining > 0 && (
           <div
             style={style}
-            className="flex h-24 w-24 flex-col items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-gray-300 dark:border-dark-600"
+            className="admin-image-upload flex min-h-24 min-w-40 flex-col items-center justify-center rounded-xl border border-dashed p-3"
           >
             {isUploading ? (
               <CustomLoader />
             ) : (
               <FileUpload
                 ref={fileUploadRef}
+                mode="basic"
                 multiple
                 accept="image/webp,image/jpeg,image/jpg,image/png"
                 customUpload
                 auto
                 uploadHandler={() => undefined}
                 onSelect={handleSelect}
-                chooseLabel=""
+                chooseLabel={t('Upload Images')}
                 chooseOptions={{
                   className:
-                    'w-16 h-16 !p-0 flex items-center justify-center bg-transparent border-0 text-gray-600 dark:text-white',
+                    '!bg-transparent !border-0 !shadow-none !text-primary flex items-center justify-center gap-2 !px-3 !py-2',
                   icon: () => <FontAwesomeIcon icon={faUpload} size="lg" />,
                 }}
-                itemTemplate={() => null}
-                emptyTemplate={() => null}
-                headerTemplate={(options) => options.chooseButton}
               />
             )}
           </div>
         )}
       </div>
-      <p className="text-[10px] text-gray-500">
+      <p className="text-xs text-content-muted">
         {images.length}/{maxImages} {t('images')}
       </p>
     </div>

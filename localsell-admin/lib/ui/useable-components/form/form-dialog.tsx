@@ -1,16 +1,30 @@
 'use client';
 
 import { Dialog } from 'primereact/dialog';
-import type { ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+
+const ActionTarget = createContext<HTMLDivElement | null>(null);
+
+/** Keeps Formik context while moving actions outside the scrolling body.
+ * Submit buttons must reference their form with the HTML form attribute. */
+export function FormDialogActions({ children }: { children: ReactNode }) {
+  const target = useContext(ActionTarget);
+  return target ? createPortal(children, target) : null;
+}
 
 const WIDTHS = {
   sm: '28rem',
   md: '34rem',
   lg: '44rem',
+  xl: '65rem',
 } as const;
 
 export interface FormDialogProps {
   visible: boolean;
+  className?: string;
+  /** Legacy caller option. Form dialogs are always centered. */
+  position?: 'left' | 'right' | 'top' | 'bottom';
   onHide: () => void;
   title: ReactNode;
   subtitle?: ReactNode;
@@ -20,12 +34,10 @@ export interface FormDialogProps {
       `children` and its `<Form>`, or give the button `form="<id>"`. */
   footer?: ReactNode;
   children: ReactNode;
+  portalActions?: boolean;
 }
 
-/**
- * The one modal for short forms (≤ 4 fields). Longer forms get a dedicated
- * route via <FormPage> — see ADMIN_UI_CONSISTENCY.md.
- */
+/** Shared centered form surface, including compact and multi-step editors. */
 export default function FormDialog({
   visible,
   onHide,
@@ -34,18 +46,21 @@ export default function FormDialog({
   size = 'md',
   footer,
   children,
+  className = '',
+  portalActions = false,
 }: FormDialogProps) {
+  const [actionTarget, setActionTarget] = useState<HTMLDivElement | null>(null);
   return (
     <Dialog
       visible={visible}
       onHide={onHide}
       modal
-      dismissableMask
+      dismissableMask={false}
       draggable={false}
       resizable={false}
       blockScroll
-      className="ls-form-dialog"
-      style={{ width: WIDTHS[size], maxWidth: '95vw' }}
+      className={`ls-form-dialog admin-form-dialog ${className}`}
+      style={{ width: WIDTHS[size], maxWidth: 'calc(100vw - 24px)' }}
       contentClassName="ls-form-dialog-body"
       header={
         <div>
@@ -59,9 +74,17 @@ export default function FormDialog({
           )}
         </div>
       }
-      footer={footer}
+      footer={
+        portalActions ? (
+          <div ref={setActionTarget} className="admin-dialog-action-target" />
+        ) : (
+          footer
+        )
+      }
     >
-      {children}
+      <ActionTarget.Provider value={actionTarget}>
+        {children}
+      </ActionTarget.Provider>
     </Dialog>
   );
 }

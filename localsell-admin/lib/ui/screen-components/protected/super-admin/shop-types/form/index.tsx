@@ -14,7 +14,7 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 
 // Components
 import CustomTextField from '@/lib/ui/useable-components/input-field';
-import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
+import ImageUploadCard from '@/lib/ui/useable-components/image-upload-card';
 import CustomInputSwitch from '@/lib/ui/useable-components/custom-input-switch';
 
 // Interfaces
@@ -34,7 +34,7 @@ import FormActions from '@/lib/ui/useable-components/form/form-actions';
 import { onErrorMessageMatcher } from '@/lib/utils/methods';
 
 // Constants
-import { MAX_SQUARE_FILE_SIZE, ShopTypeErrors } from '@/lib/utils/constants';
+import { ShopTypeErrors } from '@/lib/utils/constants';
 
 export default function ShopTypesForm({
   setVisible,
@@ -232,27 +232,12 @@ export default function ShopTypesForm({
                   </div>
                 </div>
 
-                <CustomUploadImageComponent
-                  key="image"
-                  name="image"
-                  title={t('Upload Profile Image')}
-                  fileTypes={['image/jpg', 'image/webp', 'image/jpeg']}
-                  maxFileHeight={1080}
-                  maxFileWidth={1080}
-                  maxFileSize={MAX_SQUARE_FILE_SIZE}
-                  orientation="SQUARE"
-                  onSetImageUrl={setFieldValue}
-                  existingImageUrl={values.image || ''}
-                  showExistingImage={true}
-                  style={{
-                    borderColor: onErrorMessageMatcher(
-                      'image',
-                      errors?.image as string,
-                      ShopTypeErrors
-                    )
-                      ? 'red'
-                      : '',
-                  }}
+                <ImageUploadCard
+                  label={t('Upload Profile Image')}
+                  helperText={t('JPG, PNG or WebP, up to 2MB — 1:1 ratio recommended')}
+                  aspect="square"
+                  value={values.image}
+                  onUploaded={(url) => setFieldValue('image', url)}
                 />
                 <CustomTextField
                   value={values.name}

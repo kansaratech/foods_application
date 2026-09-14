@@ -2,7 +2,7 @@
 import { FieldArray, Form, Formik, FormikErrors } from 'formik';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // Interface and Types
 import { IOptionForm } from '@/lib/utils/interfaces/forms';
@@ -15,10 +15,7 @@ import { IOptionForm } from '@/lib/utils/interfaces/forms';
 import useToast from '@/lib/hooks/useToast';
 
 //GraphQL
-import {
-  CREATE_OPTIONS,
-  EDIT_OPTION,
-} from '@/lib/api/graphql';
+import { CREATE_OPTIONS, EDIT_OPTION } from '@/lib/api/graphql';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
 import CustomButton from '@/lib/ui/useable-components/button';
@@ -126,21 +123,21 @@ export default function OptionAddForm({
   };
 
   return (
-    <Sidebar
+    <FormDialog
+      title={
+        <>
+          {' '}
+          {option ? t('Edit') : t('Add')} {t('Choice')}{' '}
+        </>
+      }
       visible={isAddOptionsVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[450px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
-            <div className="mb-2 flex flex-col">
-              <span className="text-lg">
-                {option ? t('Edit') : t('Add')} {t('Choice')}
-              </span>
-            </div>
-
             <div className="mb-2">
               <Formik
                 initialValues={initialValues}
@@ -188,7 +185,7 @@ export default function OptionAddForm({
                                           <Fieldset
                                             legend={`${t('Choice')} ${index + 1} ${value.title ? `(${value.title})` : ''}`}
                                             toggleable
-                                            className='dark:text-white dark:bg-dark-950 '
+                                            className="dark:text-white dark:bg-dark-950 "
                                           >
                                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                               <div>
@@ -276,7 +273,10 @@ export default function OptionAddForm({
                                   <TextIconClickable
                                     className="w-full rounded border dark:border-dark-600 border-black bg-transparent text-black dark:text-white"
                                     icon={faAdd}
-                                    iconStyles={{ color: theme === 'dark' ? 'white' : 'black' }}
+                                    iconStyles={{
+                                      color:
+                                        theme === 'dark' ? 'white' : 'black',
+                                    }}
                                     title={t('Add New Choice')}
                                     onClick={() =>
                                       push(initialFormValuesTemplate)
@@ -305,6 +305,6 @@ export default function OptionAddForm({
           </div>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

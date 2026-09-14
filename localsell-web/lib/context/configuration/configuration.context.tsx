@@ -16,6 +16,12 @@ import React, { ReactNode, useContext } from "react";
 const ConfigurationContext = React.createContext({} as IConfigProps);
 const GOOGLE_WEB_CLIENT_ID_REGEX =
   /^[a-zA-Z0-9-]+\.apps\.googleusercontent\.com$/;
+// Module-level (not recreated per render) — @react-google-maps/api's
+// useJsApiLoader/LoadScript compares `libraries` by reference and reloads
+// the whole script whenever it sees a new array, even with identical
+// contents. A literal defined inside the component body was a fresh array
+// every render, spamming "LoadScript has been reloaded unintentionally!".
+const LIBRARIES = "places,drawing,geometry".split(",") as Libraries;
 
 export const ConfigurationProvider = ({
   children,
@@ -41,7 +47,6 @@ export const ConfigurationProvider = ({
   const PAYPAL_KEY = configuration.clientId;
   const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   const AMPLITUDE_API_KEY = configuration.webAmplitudeApiKey;
-  const LIBRARIES = "places,drawing,geometry".split(",") as Libraries;
   const COLORS = {
     GOOGLE: configuration.googleColor as string,
   };

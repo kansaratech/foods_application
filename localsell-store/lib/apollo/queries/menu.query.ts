@@ -26,6 +26,7 @@ export const RESTAURANT_CATEGORIES_PAGINATED = gql`
           isActive
           isOutOfStock
           gstRatePercent
+          subCategory
           variations {
             _id
             title
@@ -39,6 +40,16 @@ export const RESTAURANT_CATEGORIES_PAGINATED = gql`
       totalCount
       currentPage
       totalPages
+    }
+  }
+`;
+
+export const SUBCATEGORIES_BY_PARENT_ID = gql`
+  query GetSubCategoriesByParentId($parentCategoryId: String!) {
+    subCategoriesByParentId(parentCategoryId: $parentCategoryId) {
+      _id
+      title
+      parentCategoryId
     }
   }
 `;

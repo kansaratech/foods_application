@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { Form, Formik } from 'formik';
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 import { ProfileContext } from '@/lib/context/restaurant/profile.context';
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
@@ -80,19 +80,16 @@ export default function WithdrawRequestAddForm({
   };
 
   return (
-    <Sidebar
+    <FormDialog
+      title={<> {t('Withdraw Request')} </>}
       visible={isAddWithdrawRequestVisible}
       position={position}
       onHide={onHide}
-      className="w-full sm:w-[600px] dark:text-white dark:bg-dark-950 border dark:border-dark-600"
+      className=""
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
-            <div className="mb-2 flex flex-col">
-              <span className="text-lg">{t('Withdraw Request')}</span>
-            </div>
-
             <Formik
               initialValues={initialValues}
               validationSchema={WithdrawRequestSchema}
@@ -138,6 +135,6 @@ export default function WithdrawRequestAddForm({
           </div>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

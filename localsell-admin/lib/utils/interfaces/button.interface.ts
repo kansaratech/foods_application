@@ -9,6 +9,8 @@ export interface ICustomButtonProps extends IGlobalComponentProps {
   outlined?: boolean;
   icon?: string;
   type?: 'submit' | 'reset' | 'button';
+  /** HTML form owner for submit buttons in a dialog footer. */
+  form?: string;
   disabled?: boolean;
   loading?: boolean;
 }

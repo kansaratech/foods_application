@@ -50,7 +50,7 @@ export const Colors = {
     brandDark: "#0E1B2B",
     themeBackground: "black", // Dark gray for background
     screenBackground: "black",
-    iconColor: "black", // Light gray for icons
+    iconColor: "#E0E0E0", // Light gray for icons
     tagColor: "#17499e", // Muted green for tags
     iconPink: "#17499e",
     radioColor: "#1E1E1E", // Matches the dark background

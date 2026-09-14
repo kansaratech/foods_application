@@ -111,55 +111,64 @@ export default function AccountStep() {
         </div>
       </div>
 
-      <hr className="border-slate-200 dark:border-dark-600" />
+      {/* Password is only set here on first create. Editing an existing
+          vendor's password is a separate, deliberate action (Vendors list →
+          action menu → Update Password) rather than a field buried in this
+          wizard, so an admin can't accidentally overwrite a vendor's login
+          while just touching an unrelated profile field. */}
+      {!values._id && (
+        <>
+          <hr className="border-slate-200 dark:border-dark-600" />
 
-      <div>
-        <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t('Account access')}</p>
-        <div className="flex items-start gap-2">
-          <Checkbox
-            inputId="sendSetupLink"
-            checked={values.sendSetupLink}
-            onChange={(e) => {
-              setFieldValue('sendSetupLink', !!e.checked);
-              setFieldTouched('sendSetupLink', true, false);
-            }}
-          />
           <div>
-            <label htmlFor="sendSetupLink" className="cursor-pointer text-sm font-medium text-slate-900 dark:text-white">
-              {t('Send account setup link instead')}
-            </label>
-            <p className="text-xs text-slate-500">{t('Vendor will receive a secure link to set their password')}</p>
-          </div>
-        </div>
+            <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t('Account access')}</p>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                inputId="sendSetupLink"
+                checked={values.sendSetupLink}
+                onChange={(e) => {
+                  setFieldValue('sendSetupLink', !!e.checked);
+                  setFieldTouched('sendSetupLink', true, false);
+                }}
+              />
+              <div>
+                <label htmlFor="sendSetupLink" className="cursor-pointer text-sm font-medium text-slate-900 dark:text-white">
+                  {t('Send account setup link instead')}
+                </label>
+                <p className="text-xs text-slate-500">{t('Vendor will receive a secure link to set their password')}</p>
+              </div>
+            </div>
 
-        {!values.sendSetupLink && (
-          <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-            <CustomPasswordTextField
-              autoComplete="new-password"
-              placeholder={`${t('Password')} *`}
-              name="password"
-              maxLength={30}
-              value={values.password}
-              showLabel
-              onChange={onFieldChange}
-              style={{ borderColor: fieldError('password') ? 'red' : '' }}
-            />
-            <CustomPasswordTextField
-              autoComplete="new-password"
-              placeholder={`${t('Confirm password')} *`}
-              name="confirmPassword"
-              maxLength={30}
-              showLabel
-              value={values.confirmPassword}
-              onChange={onFieldChange}
-              feedback={false}
-              style={{ borderColor: fieldError('confirmPassword') ? 'red' : '' }}
-            />
-            {fieldError('password') && <small className="p-error -mt-3">{fieldError('password')}</small>}
-            {fieldError('confirmPassword') && <small className="p-error -mt-3">{fieldError('confirmPassword')}</small>}
+            {!values.sendSetupLink && (
+              <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+                <CustomPasswordTextField
+                  autoComplete="new-password"
+                  placeholder={`${t('Password')} *`}
+                  name="password"
+                  maxLength={30}
+                  value={values.password}
+                  showLabel
+                  onChange={onFieldChange}
+                  style={{ borderColor: fieldError('password') ? 'red' : '' }}
+                />
+                <CustomPasswordTextField
+                  autoComplete="new-password"
+                  placeholder={`${t('Confirm password')} *`}
+                  name="confirmPassword"
+                  maxLength={30}
+                  showLabel
+                  value={values.confirmPassword}
+                  onChange={onFieldChange}
+                  feedback={false}
+                  style={{ borderColor: fieldError('confirmPassword') ? 'red' : '' }}
+                />
+                {fieldError('password') && <small className="p-error -mt-3">{fieldError('password')}</small>}
+                {fieldError('confirmPassword') && <small className="p-error -mt-3">{fieldError('confirmPassword')}</small>}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

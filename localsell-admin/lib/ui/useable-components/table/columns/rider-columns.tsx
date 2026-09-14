@@ -25,6 +25,7 @@ import { useMutation } from '@apollo/client';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import { useTranslations } from 'next-intl';
 import { toTextCase } from '@/lib/utils/methods';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 const AVATAR_PALETTE = [
   'bg-blue-100 text-blue-700',
@@ -82,14 +83,6 @@ export const RIDER_TABLE_COLUMNS = ({
         message: t('Status Changed Successfully'),
       });
     },
-    onError: () => {
-      setIsLoading(false);
-      showToast({
-        type: 'error',
-        title: t('Rider Status'),
-        message: t('Status Change Failed'),
-      });
-    },
   });
 
   // Handle availability toggle
@@ -102,7 +95,7 @@ export const RIDER_TABLE_COLUMNS = ({
       showToast({
         type: 'error',
         title: t('Rider Status'),
-        message: t('Something went wrong'),
+        message: getGraphQLErrorMessage(error as Error) ?? t('Something went wrong'),
       });
     } finally {
       setSelectedRider({ id: '', isActive: false });

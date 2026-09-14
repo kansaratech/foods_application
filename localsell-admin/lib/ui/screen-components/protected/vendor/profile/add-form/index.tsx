@@ -1,10 +1,10 @@
 // Core
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import { Form, Formik } from 'formik';
 import { useContext, useEffect, useState } from 'react';
 
 // Prime React
-import { Sidebar } from 'primereact/sidebar';
+import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // Context
 import { ToastContext } from '@/lib/context/global/toast.context';
@@ -16,7 +16,10 @@ import { IVendorForm } from '@/lib/utils/interfaces/forms';
 
 // Constants and Methods
 import { MAX_SQUARE_FILE_SIZE, VendorErrors } from '@/lib/utils/constants';
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import {
+  onErrorMessageMatcher,
+  getGraphQLErrorMessage,
+} from '@/lib/utils/methods/error';
 
 // Components
 import CustomButton from '@/lib/ui/useable-components/button';
@@ -64,7 +67,6 @@ export default function VendorUpdateForm({
   // Mutations
   const [createVendor] = useMutation(EDIT_VENDOR, {
     //  refetchQueries: [{ query: GET_VENDORS, fetchPolicy: 'network-only' }],
-    onError,
     onCompleted: () => {},
   });
 
@@ -97,22 +99,12 @@ export default function VendorUpdateForm({
       showToast({
         type: 'error',
         title: t(`Edit Vendor`),
-        message: t(`Vendor Edit Failed`),
+        message:
+          getGraphQLErrorMessage(error as Error) ?? t(`Vendor Edit Failed`),
         duration: 2500,
       });
     }
   };
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t(`Edit Vendor`),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t(`Vendor Edit Failed`),
-      duration: 2500,
-    });
-  }
 
   // Effects
   useEffect(() => {
@@ -130,19 +122,16 @@ export default function VendorUpdateForm({
   }, [vendor]);
 
   return (
-    <Sidebar
-      visible={vendorFormVisible}
+    <FormDialog
+      title={<> {t('Edit Vendor')} </>}
+      visible={!!vendorFormVisible}
       position={position}
       onHide={() => setIsUpdateProfileVisible(false)}
-      className="w-full sm:w-[450px]"
+      className=""
     >
       <div className="flex h-full w-full items-center justify-start">
         <div className="h-full w-full">
           <div className="flex flex-col gap-2">
-            <div className="mb-2 flex flex-col">
-              <span className="text-lg">{t('Edit Vendor')}</span>
-            </div>
-
             <div>
               <Formik
                 initialValues={formInitialValues}
@@ -284,6 +273,6 @@ export default function VendorUpdateForm({
           </div>
         </div>
       </div>
-    </Sidebar>
+    </FormDialog>
   );
 }

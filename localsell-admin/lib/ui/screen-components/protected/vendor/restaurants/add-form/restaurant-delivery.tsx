@@ -28,14 +28,14 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 import { DeliverySchema } from '@/lib/utils/schema/delivery';
 
 // Methods
-import { onErrorMessageMatcher } from '@/lib/utils/methods/error';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // GraphQL
 import {
   GET_RESTAURANTS_BY_OWNER,
   UPDATE_RESTAURANT_DELIVERY,
 } from '@/lib/api/graphql';
-import { ApolloCache, ApolloError, useMutation } from '@apollo/client';
+import { ApolloCache, useMutation } from '@apollo/client';
 import CustomGoogleMapsLocationBoundsVendorLayoutRestaurant from '@/lib/ui/useable-components/google-maps/location-bounds-restaurant(vendor-layout)';
 import { GoogleMapsContext } from '@/lib/context/global/google-maps.context';
 import { useTranslations } from 'next-intl';
@@ -69,7 +69,6 @@ export default function RestaurantDelivery({
   // API
   // Mutation
   const [createRestaurant] = useMutation(UPDATE_RESTAURANT_DELIVERY, {
-    onError,
     onCompleted: () => {
       showToast({
         type: 'success',
@@ -98,23 +97,11 @@ export default function RestaurantDelivery({
       showToast({
         type: 'error',
         title: t(`Failed to add Store delivery info`),
-        message: t(`Store Create Failed`),
+        message: getGraphQLErrorMessage(error as Error) ?? t(`Store Create Failed`),
         duration: 2500,
       });
     }
   };
-
-  function onError({ graphQLErrors, networkError }: ApolloError) {
-    showToast({
-      type: 'error',
-      title: t('Store delivery info'),
-      message:
-        graphQLErrors[0]?.message ??
-        networkError?.message ??
-        t(`Store Create Failed`),
-      duration: 2500,
-    });
-  }
 
   function update(
     cache: ApolloCache<unknown>,

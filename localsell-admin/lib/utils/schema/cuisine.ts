@@ -16,5 +16,9 @@ export const CuisineFormSchema = Yup.object().shape({
     label: Yup.string().required('Required'),
     code: Yup.string().required('Required'),
   }).required('Please choose one'),
-  image: Yup.string().url().required("Image is Required"),
+  // Yup's built-in .url() rejects bare-hostname URLs like http://localhost:4000/...
+  // (it requires a dotted domain), which blocks every image upload in local dev even
+  // though the URL is perfectly valid. restaurant.ts's logo/image fields sidestep the
+  // same trap with this same lenient check — mirrored here for consistency.
+  image: Yup.string().matches(/^http/, 'Invalid image URL').required('Image is Required'),
 });

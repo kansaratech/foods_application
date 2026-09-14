@@ -1,3 +1,5 @@
+import ProductPriceCell from './product-price-cell';
+import { ProductPricingSettings } from '@/lib/utils/methods/product-pricing';
 // import ActionMenu from '../../action-menu';
 import Image from '@/lib/ui/useable-components/safe-image';
 
@@ -5,22 +7,24 @@ import Image from '@/lib/ui/useable-components/safe-image';
 import { IActionMenuProps, IFoodNew } from '@/lib/utils/interfaces';
 
 import ActionMenu from '../../action-menu';
-import { ApolloError, useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import {
   GET_FOODS_BY_RESTAURANT_ID,
   UPDATE_FOOD_OUT_OF_STOCK,
-  UPDATE_VARIATION_OUT_OF_STOCK,
 } from '@/lib/api/graphql';
 import { useContext, useState } from 'react';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import CustomInputSwitch from '../../custom-input-switch';
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 import { useTranslations } from 'next-intl';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 export const FOODS_TABLE_COLUMNS = ({
   menuItems,
+  pricingSettings,
 }: {
   menuItems: IActionMenuProps<IFoodNew>['items'];
+  pricingSettings?: ProductPricingSettings;
 }) => {
   // Hooks
   const t = useTranslations();
@@ -33,7 +37,6 @@ export const FOODS_TABLE_COLUMNS = ({
 
   // State
   const [isFoodLoading, setIsFoodLoading] = useState<string>('');
-  const [isVariationLoading, setIsVariationLoading] = useState<string>('');
 
   // API
   const [updateFoodOutOfStock] = useMutation(UPDATE_FOOD_OUT_OF_STOCK, {
@@ -51,49 +54,7 @@ export const FOODS_TABLE_COLUMNS = ({
       });
       setIsFoodLoading('');
     },
-    onError: ({ networkError, graphQLErrors }: ApolloError) => {
-      showToast({
-        type: 'error',
-        title: t('Food Stock'),
-        message:
-          networkError?.message ??
-          graphQLErrors[0]?.message ??
-          t('Food Stock status failed'),
-      });
-      setIsFoodLoading('');
-    },
   });
-
-  const [updateVariationOutOfStock] = useMutation(
-    UPDATE_VARIATION_OUT_OF_STOCK,
-    {
-      refetchQueries: [
-        {
-          query: GET_FOODS_BY_RESTAURANT_ID,
-          variables: { id: restaurantId },
-        },
-      ],
-      onCompleted: () => {
-        showToast({
-          type: 'success',
-          title: t('Food Stock'),
-          message: t(`Food stock status has been changed`),
-        });
-        setIsVariationLoading('');
-      },
-      onError: ({ networkError, graphQLErrors }: ApolloError) => {
-        showToast({
-          type: 'error',
-          title: t('Food Stock'),
-          message:
-            networkError?.message ??
-            graphQLErrors[0]?.message ??
-            t('Food Stock status failed'),
-        });
-        setIsVariationLoading('');
-      },
-    }
-  );
 
   // Handlers
   const onUpdateFoodOutOfStock = async (foodId: string, categoryId: string) => {
@@ -111,31 +72,23 @@ export const FOODS_TABLE_COLUMNS = ({
       showToast({
         type: 'error',
         title: t('Food Stock'),
-        message: t('Food Stock status failed'),
+        message:
+          getGraphQLErrorMessage(err as Error) ?? t('Food Stock status failed'),
       });
       setIsFoodLoading('');
-    }
-  };
-
-  const onUpdateVariationOutOfStock = async (variationId: string) => {
-    try {
-      setIsVariationLoading(variationId);
-      await updateVariationOutOfStock({
-        variables: { id: variationId, restaurant: restaurantId },
-      });
-    } catch (err) {
-      showToast({
-        type: 'error',
-        title: t('Food Stock'),
-        message: t('Food Stock status failed'),
-      });
-      setIsVariationLoading('');
     }
   };
 
   return [
     { headerName: t('Title'), propertyName: 'title' },
     { headerName: t('Description'), propertyName: 'description' },
+    {
+      headerName: t('Pricing'),
+      propertyName: 'pricing',
+      body: (food: IFoodNew) => (
+        <ProductPriceCell food={food} settings={pricingSettings} />
+      ),
+    },
     {
       headerName: t('Category'),
       propertyName: 'category.label',
@@ -163,31 +116,6 @@ export const FOODS_TABLE_COLUMNS = ({
               onUpdateFoodOutOfStock(item._id, item.category?.code ?? '')
             }
           />
-        );
-      },
-    },
-    {
-      headerName: t('Variations'),
-      propertyName: 'variations',
-      body: (item: IFoodNew) => {
-        if (!item.variations?.length) return <></>;
-        return (
-          <div className="flex flex-col gap-1.5">
-            {item.variations.map((v) => (
-              <div key={v._id} className="flex items-center gap-2 text-xs">
-                <span className="min-w-0 truncate" title={v.title}>
-                  {v.title} &middot; ₹{v.price}
-                </span>
-                <CustomInputSwitch
-                  loading={isVariationLoading === v._id}
-                  isActive={v.isOutOfStock}
-                  onChange={() =>
-                    v._id && onUpdateVariationOutOfStock(v._id)
-                  }
-                />
-              </div>
-            ))}
-          </div>
         );
       },
     },

@@ -35,6 +35,7 @@ import {
 
 // Method
 import { onUseLocalStorage } from '@/lib/utils/methods';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 // Dummy
 import { DataTableRowClickEvent } from 'primereact/datatable';
@@ -118,18 +119,6 @@ export default function RestaurantsMain() {
         // Refetch data after deletion
         refetch();
       },
-      onError: ({ networkError, graphQLErrors }: ApolloError) => {
-        showToast({
-          type: 'error',
-          title: t('Store Delete'),
-          message:
-            graphQLErrors[0]?.message ??
-            networkError?.message ??
-            t(`Store delete failed`),
-          duration: 2500,
-        });
-        setDeleteId('');
-      },
     }
   );
 
@@ -192,7 +181,7 @@ export default function RestaurantsMain() {
       showToast({
         type: 'error',
         title: t('Store Delete'),
-        message: t(`Store delete failed`),
+        message: getGraphQLErrorMessage(err as Error) ?? t(`Store delete failed`),
       });
       setDeleteId('');
     }

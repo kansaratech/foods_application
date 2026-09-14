@@ -78,6 +78,7 @@ export interface IConfiguration {
   enableRestaurantDemo?: boolean;
   enableAdminDemo?: boolean;
   costType?: string;
+  defaultCommissionRate?: number;
 }
 
 export interface IConfigurationUnresolved {

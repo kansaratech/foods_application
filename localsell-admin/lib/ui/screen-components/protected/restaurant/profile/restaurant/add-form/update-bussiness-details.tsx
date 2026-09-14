@@ -11,7 +11,7 @@ import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 
 import { BussinessDetailsErrors } from '@/lib/utils/constants';
 import { UPDATE_RESTAURANT_BUSSINESS_DETAILS } from '@/lib/api/graphql';
-import { onErrorMessageMatcher } from '@/lib/utils/methods';
+import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods';
 
 import { RestaurantLayoutContext } from '@/lib/context/restaurant/layout-restaurant.context';
 
@@ -43,17 +43,6 @@ export default function UpdateBusinessDetails({
   const [updateRestaurantBussinessDetails] = useMutation(
     UPDATE_RESTAURANT_BUSSINESS_DETAILS,
     {
-      onError: ({ graphQLErrors, networkError }) => {
-        showToast({
-          type: 'error',
-          title: t('Edit Store'),
-          message:
-            graphQLErrors[0]?.message ??
-            networkError?.message ??
-            t('Store Edit Failed'),
-          duration: 2500,
-        });
-      },
       onCompleted: async () => {
         onStepChange(order + 1);
       },
@@ -108,7 +97,7 @@ export default function UpdateBusinessDetails({
       showToast({
         type: 'error',
         title: t('Store Details'),
-        message: t('Something went wrong'),
+        message: getGraphQLErrorMessage(error as Error) ?? t('Something went wrong'),
       });
     }
   };
