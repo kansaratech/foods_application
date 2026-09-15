@@ -61,18 +61,26 @@ export function computeGst(
  * calculateAmount) so delivery fee is computed the same way server-side and
  * can't be overridden by whatever a client sends.
  *
- * A store that has set its own `deliveryFee` (per-km rate) overrides the
- * platform-wide config entirely — this is what the admin's own delivery
- * settings form has always promised ("Delivery Fee (per Km's)... Min Delivery
- * Fee") but nothing actually read until now. Falls back to the global rate
- * for every store that hasn't set one, so existing behavior is unchanged.
+ * A store that has set its own `deliveryFee` overrides the platform-wide
+ * config entirely. `deliveryFeeType` picks how that override is applied:
+ *   "fixed"  — deliveryFee is charged as a flat lump sum, distance ignored
+ *   "per_km" (default) — deliveryFee is a per-km rate, floored by minDeliveryFee
+ * Falls back to the global rate for every store that hasn't set a
+ * `deliveryFee`, so existing behavior is unchanged.
  */
 export function computeDeliveryFee(
   config: { costType?: string | null; deliveryRate?: number | null },
   distanceKm: number,
-  restaurantOverride?: { deliveryFee?: number | null; minDeliveryFee?: number | null },
+  restaurantOverride?: {
+    deliveryFee?: number | null;
+    minDeliveryFee?: number | null;
+    deliveryFeeType?: string | null;
+  },
 ): number {
   if (restaurantOverride?.deliveryFee != null) {
+    if (restaurantOverride.deliveryFeeType === 'fixed') {
+      return restaurantOverride.deliveryFee;
+    }
     const perKmAmount = Math.ceil(distanceKm) * restaurantOverride.deliveryFee;
     return Math.max(perKmAmount, restaurantOverride.minDeliveryFee ?? 0);
   }

@@ -815,7 +815,13 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     updateRestaurantDelivery: async (
       _parent,
-      args: { id: string; minDeliveryFee?: number; deliveryDistance?: number; deliveryFee?: number },
+      args: {
+        id: string;
+        minDeliveryFee?: number;
+        deliveryDistance?: number;
+        deliveryFeeType?: string;
+        deliveryFee?: number;
+      },
       context,
     ) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -828,6 +834,9 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
         data: {
           minDeliveryFee: args.minDeliveryFee,
           deliveryDistance: args.deliveryDistance,
+          ...(args.deliveryFeeType === 'fixed' || args.deliveryFeeType === 'per_km'
+            ? { deliveryFeeType: args.deliveryFeeType }
+            : {}),
           deliveryFee: args.deliveryFee,
         },
       });
@@ -904,6 +913,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
     deliveryInfo: (parent: Restaurant) => ({
       minDeliveryFee: parent.minDeliveryFee,
       deliveryDistance: parent.deliveryDistance,
+      deliveryFeeType: parent.deliveryFeeType,
       deliveryFee: parent.deliveryFee,
     }),
     notificationToken: async (parent: Restaurant) => {

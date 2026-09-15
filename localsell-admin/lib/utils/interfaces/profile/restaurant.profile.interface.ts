@@ -39,6 +39,7 @@ export interface IRestaurantData extends IGlobalComponentProps {
   deliveryInfo?: {
     minDeliveryFee: number;
     deliveryDistance: number;
+    deliveryFeeType?: string;
     deliveryFee: number;
   };
   location: {

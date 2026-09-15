@@ -65,6 +65,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     deliveryProvider: String
     minDeliveryFee: Float
     deliveryDistance: Float
+    deliveryFeeType: String
     deliveryFee: Float
     deliveryInfo: DeliveryInfo
     notificationToken: String
@@ -81,6 +82,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
   type DeliveryInfo {
     minDeliveryFee: Float
     deliveryDistance: Float
+    deliveryFeeType: String
     deliveryFee: Float
   }
 
@@ -311,7 +313,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
       city: String
       state: String
     ): RestaurantMutationResult!
-    updateRestaurantDelivery(id: ID!, minDeliveryFee: Float, deliveryDistance: Float, deliveryFee: Float): RestaurantMutationResult!
+    updateRestaurantDelivery(id: ID!, minDeliveryFee: Float, deliveryDistance: Float, deliveryFeeType: String, deliveryFee: Float): RestaurantMutationResult!
     updateRestaurantBussinessDetails(id: String!, bussinessDetails: BussinessDetailsInput): RestaurantMutationResult!
   }
 `;

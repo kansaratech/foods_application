@@ -195,6 +195,9 @@ model Restaurant {
   deliveryProvider       String    @default("PLATFORM")
   minDeliveryFee         Float?
   deliveryDistance       Float?
+  // "per_km"  — deliveryFee is a per-km rate, multiplied by ceil(distanceKm), floored by minDeliveryFee
+  // "fixed"   — deliveryFee is a flat lump-sum charge regardless of distance
+  deliveryFeeType        String    @default("per_km")
   deliveryFee            Float?
   clonedFromId           String?
   createdAt              DateTime  @default(now())

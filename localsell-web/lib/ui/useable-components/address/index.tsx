@@ -396,6 +396,23 @@ export default function UserAddressComponent(
       return;
     }
 
+    const coordinates = userAddress?.location?.coordinates;
+    const hasValidCoordinates =
+      Array.isArray(coordinates) &&
+      coordinates.length >= 2 &&
+      coordinates.every((c) => c !== undefined && c !== null && !Number.isNaN(Number(c)));
+    if (!hasValidCoordinates) {
+      // Without a real pin, longitude/latitude below would stringify to the
+      // literal "undefined" and fail server-side as a silent-looking error —
+      // catch it here with a message that actually points at the cause.
+      showToast({
+        type: "error",
+        title: t("missing_pincode_title"),
+        message: t("select_service_area_to_drop_pin"),
+      });
+      return;
+    }
+
     // Compose a single delivery-address line from the structured fields so the
     // courier has the exact spot. Service-area metadata stays in details;
     // a delivery-zone title is not part of the customer's postal address.
@@ -482,11 +499,17 @@ export default function UserAddressComponent(
     resetAndClose();
   }
 
-  function onError() {
+  function onError(error?: any) {
+    // Surface the real GraphQL error when there is one instead of always
+    // blaming "required fields" — that generic message was misleading users
+    // even on a 200 OK response whose body carried a genuine server-side
+    // failure (e.g. a Prisma validation error), which the old handler
+    // discarded entirely by never reading its `error` argument.
+    const serverMessage: string | undefined = error?.graphQLErrors?.[0]?.message;
     showToast({
       title: t("Address_updated_success"),
       type: "error",
-      message: t("Address_updated_failed_message"),
+      message: serverMessage || t("Address_updated_failed_message"),
     });
   }
 

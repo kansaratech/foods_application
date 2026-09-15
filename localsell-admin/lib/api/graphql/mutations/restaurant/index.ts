@@ -173,12 +173,14 @@ export const UPDATE_RESTAURANT_DELIVERY = gql`
     $id: ID!
     $minDeliveryFee: Float
     $deliveryDistance: Float
+    $deliveryFeeType: String
     $deliveryFee: Float
   ) {
     updateRestaurantDelivery(
       id: $id
       minDeliveryFee: $minDeliveryFee
       deliveryDistance: $deliveryDistance
+      deliveryFeeType: $deliveryFeeType
       deliveryFee: $deliveryFee
     ) {
       success

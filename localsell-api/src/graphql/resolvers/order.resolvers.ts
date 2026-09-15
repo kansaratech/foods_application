@@ -679,7 +679,11 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         deliveryCharges = computeDeliveryFee(
           { costType: config?.costType, deliveryRate: config?.deliveryRate },
           distance ?? 0,
-          { deliveryFee: restaurant.deliveryFee, minDeliveryFee: restaurant.minDeliveryFee },
+          {
+            deliveryFee: restaurant.deliveryFee,
+            minDeliveryFee: restaurant.minDeliveryFee,
+            deliveryFeeType: restaurant.deliveryFeeType,
+          },
         );
       }
 
@@ -757,7 +761,11 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         deliveryCharges = computeDeliveryFee(
           { costType: config?.costType, deliveryRate: config?.deliveryRate },
           distance ?? 0,
-          { deliveryFee: restaurant.deliveryFee, minDeliveryFee: restaurant.minDeliveryFee },
+          {
+            deliveryFee: restaurant.deliveryFee,
+            minDeliveryFee: restaurant.minDeliveryFee,
+            deliveryFeeType: restaurant.deliveryFeeType,
+          },
         );
       }
 
@@ -854,13 +862,13 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
             prisma.configuration.findFirst(),
             prisma.restaurant.findUnique({
               where: { id: order.restaurantId },
-              select: { deliveryFee: true, minDeliveryFee: true },
+              select: { deliveryFee: true, minDeliveryFee: true, deliveryFeeType: true },
             }),
           ]);
           deliveryCharges = computeDeliveryFee(
             { costType: config?.costType, deliveryRate: config?.deliveryRate },
             distance ?? 0,
-            { deliveryFee: rest?.deliveryFee, minDeliveryFee: rest?.minDeliveryFee },
+            { deliveryFee: rest?.deliveryFee, minDeliveryFee: rest?.minDeliveryFee, deliveryFeeType: rest?.deliveryFeeType },
           );
         }
       }

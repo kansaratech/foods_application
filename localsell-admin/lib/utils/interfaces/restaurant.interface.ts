@@ -110,6 +110,7 @@ export interface IRestaurantsTableHeaderProps {
 
 export interface IDeliveryInfo {
   minDeliveryFee: number;
+  deliveryFeeType?: string;
   deliveryFee: number;
   deliveryDistance: number;
 }

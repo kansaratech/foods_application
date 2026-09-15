@@ -5,6 +5,7 @@ import React, { useContext } from 'react';
 // Custom Components
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
+import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown';
 import UpdateRestaurantLocationBounds from '@/lib/ui/useable-components/google-maps/location-bounds-profile-restaurants';
 
 // Context
@@ -14,9 +15,17 @@ import { ProfileContext } from '@/lib/context/restaurant/profile.context';
 
 // Utilities & Types
 import { RestaurantDeliveryErrors } from '@/lib/utils/constants';
-import { IRestaurantDeliveryForm } from '@/lib/utils/interfaces';
+import { IDropdownSelectItem, IRestaurantDeliveryForm } from '@/lib/utils/interfaces';
 import { onErrorMessageMatcher, getGraphQLErrorMessage } from '@/lib/utils/methods';
 import { DeliverySchema } from '@/lib/utils/schema/delivery';
+
+// A store can charge delivery as a flat lump sum ("fixed") or a per-km rate
+// multiplied by distance ("per_km", the historical/default behavior) — see
+// computeDeliveryFee in localsell-api/src/services/pricing.service.ts.
+const DELIVERY_FEE_TYPE_OPTIONS: IDropdownSelectItem[] = [
+  { code: 'per_km', label: "Per Km" },
+  { code: 'fixed', label: 'Fixed (flat amount)' },
+];
 
 // GraphQL
 import { useMutation } from '@apollo/client';
@@ -30,11 +39,15 @@ const DeliveryMain = () => {
   const { restaurantProfileResponse, loading } = useContext(ProfileContext);
   const { showToast } = useContext(ToastContext);
 
-  const initialValues: IRestaurantDeliveryForm = {
+  const deliveryInfo = restaurantProfileResponse.data?.restaurant.deliveryInfo;
+  const initialValues: IRestaurantDeliveryForm & { deliveryFeeType: IDropdownSelectItem } = {
     minDeliveryFee: null,
     deliveryDistance: null,
     deliveryFee: null,
-    ...restaurantProfileResponse.data?.restaurant.deliveryInfo,
+    ...deliveryInfo,
+    deliveryFeeType:
+      DELIVERY_FEE_TYPE_OPTIONS.find((o) => o.code === deliveryInfo?.deliveryFeeType) ??
+      DELIVERY_FEE_TYPE_OPTIONS[0],
   };
 
   // API
@@ -51,13 +64,16 @@ const DeliveryMain = () => {
   });
 
   // Handlers
-  const onCreateDelivery = async (data: IRestaurantDeliveryForm) => {
+  const onCreateDelivery = async (
+    data: IRestaurantDeliveryForm & { deliveryFeeType?: IDropdownSelectItem }
+  ) => {
     try {
       await createRestaurant({
         variables: {
           id: restaurantId,
           minDeliveryFee: data.minDeliveryFee,
           deliveryDistance: data.deliveryDistance,
+          deliveryFeeType: data.deliveryFeeType?.code || 'per_km',
           deliveryFee: data.deliveryFee,
         },
       });
@@ -132,10 +148,23 @@ const DeliveryMain = () => {
                   }}
                 />
 
+                <CustomDropdownComponent
+                  name="deliveryFeeType"
+                  placeholder="Delivery Fee Type"
+                  selectedItem={values.deliveryFeeType}
+                  setSelectedItem={setFieldValue}
+                  options={DELIVERY_FEE_TYPE_OPTIONS}
+                  showLabel={true}
+                />
+
                 <CustomNumberField
                   min={1}
                   max={99999}
-                  placeholder="Delivery Fee (per Km's) when delivery distance exceed"
+                  placeholder={
+                    values.deliveryFeeType?.code === 'fixed'
+                      ? 'Delivery Fee (flat amount per order)'
+                      : "Delivery Fee (per Km's) when delivery distance exceed"
+                  }
                   name="deliveryFee"
                   showLabel={true}
                   value={values.deliveryFee}

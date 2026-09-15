@@ -7,18 +7,16 @@ const AUTH_KEYS = {
   TOKEN_EXPIRATION: 'tokenExpiration',
 } as const;
 
+// Only auth-scoped keys belong here. `invalidateClientSession()` runs on
+// paths that are NOT necessarily an explicit user logout (unauthenticated
+// mount check, a transient 401, AuthGuard) — if cart/restaurant/coupon keys
+// were in this list, a guest's cart could be wiped by a timing hiccup around
+// login instead of only on a real logout. `logout()` in User.context.tsx
+// clears the cart itself explicitly; that stays independent of this list.
 const SESSION_STORAGE_KEYS = [
   "userToken",
   "userAddress",
   "searchedKeywords",
-  "restaurant",
-  "cartItems",
-  "newOrderInstructions",
-  "orderInstructions",
-  "applied_coupon",
-  "coupon_text",
-  "is_coupon_applied",
-  "coupon_restaurant_id",
   "pending_stripe_order_id",
   "pending_stripe_started_at",
 ] as const;

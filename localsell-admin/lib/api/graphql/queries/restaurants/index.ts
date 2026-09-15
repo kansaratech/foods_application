@@ -162,6 +162,7 @@ export const GET_RESTAURANTS_BY_OWNER = gql`
         deliveryInfo {
           minDeliveryFee
           deliveryDistance
+          deliveryFeeType
           deliveryFee
         }
         openingTimes {
@@ -231,6 +232,7 @@ export const GET_RESTAURANT_PROFILE = gql`
       deliveryInfo {
         minDeliveryFee
         deliveryDistance
+        deliveryFeeType
         deliveryFee
       }
       username
