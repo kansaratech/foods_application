@@ -1,3 +1,4 @@
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 // Contexts
 import { ToastContext } from '@/lib/context/global/toast.context';
 
@@ -100,7 +101,8 @@ function MultiImageUploadComponent({
               width={96}
               height={96}
             />
-            <button
+            <ActionButton
+              variant="danger"
               type="button"
               aria-label={`${t('Remove')} ${t('Image')} ${index + 1}`}
               disabled={isUploading}
@@ -108,7 +110,7 @@ function MultiImageUploadComponent({
               className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white"
             >
               <FontAwesomeIcon icon={faXmark} size="xs" />
-            </button>
+            </ActionButton>
           </div>
         ))}
 

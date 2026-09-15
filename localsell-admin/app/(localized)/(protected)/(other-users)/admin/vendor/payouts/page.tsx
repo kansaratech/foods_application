@@ -1,7 +1,2 @@
-'use client';
-
-import VendorPayoutsScreen from '@/lib/ui/screens/admin/vendor/payouts';
-
-export default function VendorPayoutsPage() {
-  return <VendorPayoutsScreen />;
-}
+import { redirect } from 'next/navigation';
+export default function Page(){redirect('/admin/vendor/commission');}

@@ -251,7 +251,7 @@ const WhatsAppAddForm = () => {
         </div>
         <div className="configuration-card-body">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="ls-native-table w-full text-left text-sm">
               <thead className="text-gray-500">
                 <tr>
                   <th className="py-2 pr-4">Event</th>

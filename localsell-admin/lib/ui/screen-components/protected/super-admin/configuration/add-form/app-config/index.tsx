@@ -162,7 +162,7 @@ const AppConfigAddForm = () => {
                     htmlFor="config-termsAndConditions"
                   >
                     <span>Terms and Conditions</span>
-                    <textarea
+                    <textarea className="ls-field"
                       id="config-termsAndConditions"
                       name="termsAndConditions"
                       value={values.termsAndConditions}
@@ -190,7 +190,7 @@ const AppConfigAddForm = () => {
                     htmlFor="config-privacyPolicy"
                   >
                     <span>Privacy Policy</span>
-                    <textarea
+                    <textarea className="ls-field"
                       id="config-privacyPolicy"
                       name="privacyPolicy"
                       value={values.privacyPolicy}

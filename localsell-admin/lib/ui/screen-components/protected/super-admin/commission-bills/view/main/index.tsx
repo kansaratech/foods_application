@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 import { useContext, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
@@ -21,9 +22,14 @@ import {
 } from '@/lib/utils/interfaces';
 import { Dialog } from 'primereact/dialog';
 
-const money = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const money = (n: number) =>
+  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const day = (d: string) =>
-  new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+  new Date(d).toLocaleDateString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
 const STATUS_FILTERS = ['ALL', 'PENDING', 'PAID', 'WAIVED'];
 const statusClass: Record<string, string> = {
@@ -47,9 +53,12 @@ export default function CommissionBillsMain() {
     data: previewData,
     loading: previewLoading,
     refetch: refetchPreview,
-  } = useQuery<ICommissionPeriodPreviewResponse>(GET_COMMISSION_PERIOD_PREVIEW, {
-    fetchPolicy: 'cache-and-network',
-  });
+  } = useQuery<ICommissionPeriodPreviewResponse>(
+    GET_COMMISSION_PERIOD_PREVIEW,
+    {
+      fetchPolicy: 'cache-and-network',
+    }
+  );
   const preview = previewData?.commissionPeriodPreview;
 
   // ---- Bills ----
@@ -68,7 +77,9 @@ export default function CommissionBillsMain() {
   const bills = billsData?.commissionBills?.bills ?? [];
   const billsTotal = billsData?.commissionBills?.total ?? 0;
 
-  const [closePeriod, { loading: closing }] = useMutation(CLOSE_COMMISSION_PERIOD);
+  const [closePeriod, { loading: closing }] = useMutation(
+    CLOSE_COMMISSION_PERIOD
+  );
   const [updateBillStatus] = useMutation(UPDATE_COMMISSION_BILL_STATUS);
 
   const refreshAll = () => {
@@ -91,11 +102,19 @@ export default function CommissionBillsMain() {
       });
       refreshAll();
     } catch {
-      showToast({ type: 'error', title: t('Error'), message: t('Could not close the period'), duration: 2500 });
+      showToast({
+        type: 'error',
+        title: t('Error'),
+        message: t('Could not close the period'),
+        duration: 2500,
+      });
     }
   };
 
-  const setBillStatus = async (bill: ICommissionBill, status: 'PAID' | 'WAIVED') => {
+  const setBillStatus = async (
+    bill: ICommissionBill,
+    status: 'PAID' | 'WAIVED'
+  ) => {
     try {
       await updateBillStatus({ variables: { id: bill._id, status } });
       showToast({
@@ -106,7 +125,12 @@ export default function CommissionBillsMain() {
       });
       refetchBills();
     } catch {
-      showToast({ type: 'error', title: t('Error'), message: t('Could not update the bill'), duration: 2500 });
+      showToast({
+        type: 'error',
+        title: t('Error'),
+        message: t('Could not update the bill'),
+        duration: 2500,
+      });
     }
   };
 
@@ -119,13 +143,16 @@ export default function CommissionBillsMain() {
         grossFoodSubtotal: r.grossFoodSubtotal,
         commissionTotal: r.commissionTotal,
       })),
-    [preview],
+    [preview]
   );
 
-  const { data: detailData } = useQuery<ICommissionBillDetailResponse>(GET_COMMISSION_BILL, {
-    variables: { id: detailId },
-    skip: !detailId,
-  });
+  const { data: detailData } = useQuery<ICommissionBillDetailResponse>(
+    GET_COMMISSION_BILL,
+    {
+      variables: { id: detailId },
+      skip: !detailId,
+    }
+  );
   const detail = detailData?.commissionBill;
 
   const printInvoice = () => {
@@ -134,12 +161,13 @@ export default function CommissionBillsMain() {
     const rows = detail.records
       .map(
         (r) =>
-          `<tr><td>${r.orderNumber}</td><td>${r.storeName ?? ''}</td><td>${day(r.orderDeliveredAt)}</td><td style="text-align:right">${money(r.foodSubtotal)}</td><td style="text-align:right">${money(r.commissionAmount)}</td></tr>`,
+          `<tr><td>${r.orderNumber}</td><td>${r.storeName ?? ''}</td><td>${day(r.orderDeliveredAt)}</td><td style="text-align:right">${money(r.foodSubtotal)}</td><td style="text-align:right">${money(r.commissionAmount)}</td></tr>`
       )
       .join('');
     const w = window.open('', '_blank', 'width=800,height=900');
     if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>${inv.invoiceNumber}</title>
+    w.document
+      .write(`<!doctype html><html><head><title>${inv.invoiceNumber}</title>
       <style>body{font:13px/1.5 system-ui,sans-serif;padding:40px;color:#111}h1{font-size:20px;margin:0 0 4px}
       table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}
       .muted{color:#666}.tot{font-weight:700;font-size:15px}.row{display:flex;justify-content:space-between;gap:40px;margin-top:20px}</style>
@@ -171,35 +199,44 @@ export default function CommissionBillsMain() {
             </h3>
             {preview && (
               <p className="text-xs text-gray-400">
-                {day(preview.periodStart)} – {day(preview.periodEnd)} · {preview.unbilledOrderCount}{' '}
-                {t('orders')} · {money(preview.unbilledCommissionTotal)} {t('commission')}
+                {day(preview.periodStart)} – {day(preview.periodEnd)} ·{' '}
+                {preview.unbilledOrderCount} {t('orders')} ·{' '}
+                {money(preview.unbilledCommissionTotal)} {t('commission')}
               </p>
             )}
           </div>
           {confirmClose ? (
             <div className="flex items-center gap-2 text-sm">
               <span>{t('Generate bills for all unbilled orders?')}</span>
-              <button
+              <ActionButton
+                variant="primary"
                 onClick={handleClosePeriod}
                 disabled={closing}
                 className="rounded bg-black px-3 py-1.5 text-white disabled:opacity-50"
               >
                 {t('Yes, close period')}
-              </button>
-              <button onClick={() => setConfirmClose(false)} className="rounded border px-3 py-1.5">
+              </ActionButton>
+              <ActionButton
+                variant="secondary"
+                onClick={() => setConfirmClose(false)}
+                className="rounded border px-3 py-1.5"
+              >
                 {t('Cancel')}
-              </button>
+              </ActionButton>
             </div>
           ) : (
             <div className="flex flex-col items-end gap-1">
-              <button
+              <ActionButton
+                variant="primary"
                 onClick={() => setConfirmClose(true)}
                 disabled={!preview?.unbilledOrderCount}
                 className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-40"
               >
                 {t('Close period & generate bills')}
-              </button>
-              <span className="text-[11px] text-gray-400">{t('auto_close_note')}</span>
+              </ActionButton>
+              <span className="text-[11px] text-gray-400">
+                {t('auto_close_note')}
+              </span>
             </div>
           )}
         </div>
@@ -213,13 +250,16 @@ export default function CommissionBillsMain() {
             {
               headerName: t('Food subtotal'),
               propertyName: 'grossFoodSubtotal',
-              body: (r: { grossFoodSubtotal: number }) => money(r.grossFoodSubtotal),
+              body: (r: { grossFoodSubtotal: number }) =>
+                money(r.grossFoodSubtotal),
             },
             {
               headerName: t('Commission due'),
               propertyName: 'commissionTotal',
               body: (r: { commissionTotal: number }) => (
-                <span className="font-semibold">{money(r.commissionTotal)}</span>
+                <span className="font-semibold">
+                  {money(r.commissionTotal)}
+                </span>
               ),
             },
           ]}
@@ -229,7 +269,9 @@ export default function CommissionBillsMain() {
       {/* ---- Bills ---- */}
       <section className="rounded border p-4 dark:border-dark-600">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">{t('Bills')}</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
+            {t('Bills')}
+          </h3>
           <div className="flex gap-1">
             {STATUS_FILTERS.map((s) => (
               <button
@@ -239,7 +281,9 @@ export default function CommissionBillsMain() {
                   setCurrentPage(1);
                 }}
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  statusFilter === s ? 'bg-black text-white' : 'bg-gray-100 text-gray-600'
+                  statusFilter === s
+                    ? 'bg-black text-white'
+                    : 'bg-gray-100 text-gray-600'
                 }`}
               >
                 {t(s === 'ALL' ? 'All' : s)}
@@ -254,7 +298,9 @@ export default function CommissionBillsMain() {
           currentPage={currentPage}
           rowsPerPage={rowsPerPage}
           totalRecords={billsTotal}
-          handleRowClick={(e) => setDetailId((e.data as ICommissionBill)?._id ?? null)}
+          handleRowClick={(e) =>
+            setDetailId((e.data as ICommissionBill)?._id ?? null)
+          }
           onPageChange={(page, rows) => {
             setCurrentPage(page);
             setRowsPerPage(rows);
@@ -263,26 +309,32 @@ export default function CommissionBillsMain() {
             {
               headerName: t('Vendor'),
               propertyName: 'vendor',
-              body: (r: ICommissionBill) => r.vendor?.name || r.vendor?.email || '—',
+              body: (r: ICommissionBill) =>
+                r.vendor?.name || r.vendor?.email || '—',
             },
             {
               headerName: t('Period'),
               propertyName: 'periodStart',
-              body: (r: ICommissionBill) => `${day(r.periodStart)} – ${day(r.periodEnd)}`,
+              body: (r: ICommissionBill) =>
+                `${day(r.periodStart)} – ${day(r.periodEnd)}`,
             },
             { headerName: t('Orders'), propertyName: 'orderCount' },
             {
               headerName: t('Commission'),
               propertyName: 'commissionTotal',
               body: (r: ICommissionBill) => (
-                <span className="font-semibold">{money(r.commissionTotal)}</span>
+                <span className="font-semibold">
+                  {money(r.commissionTotal)}
+                </span>
               ),
             },
             {
               headerName: t('Status'),
               propertyName: 'status',
               body: (r: ICommissionBill) => (
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass[r.status] ?? ''}`}>
+                <span
+                  className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass[r.status] ?? ''}`}
+                >
                   {t(r.status)}
                 </span>
               ),
@@ -293,7 +345,8 @@ export default function CommissionBillsMain() {
               body: (r: ICommissionBill) =>
                 r.status === 'PENDING' ? (
                   <div className="flex gap-2">
-                    <button
+                    <ActionButton
+                      variant="success"
                       onClick={(e) => {
                         e.stopPropagation();
                         setBillStatus(r, 'PAID');
@@ -301,8 +354,9 @@ export default function CommissionBillsMain() {
                       className="rounded bg-green-600 px-2 py-1 text-xs text-white"
                     >
                       {t('Mark paid')}
-                    </button>
-                    <button
+                    </ActionButton>
+                    <ActionButton
+                      variant="secondary"
                       onClick={(e) => {
                         e.stopPropagation();
                         setBillStatus(r, 'WAIVED');
@@ -310,7 +364,7 @@ export default function CommissionBillsMain() {
                       className="rounded border px-2 py-1 text-xs"
                     >
                       {t('Waive')}
-                    </button>
+                    </ActionButton>
                   </div>
                 ) : (
                   <span className="text-xs text-gray-400">
@@ -336,10 +390,12 @@ export default function CommissionBillsMain() {
                 <b>{t('Invoice')}:</b> {detail.bill.invoiceNumber || '—'}
               </span>
               <span>
-                <b>{t('Vendor')}:</b> {detail.bill.vendor?.name || detail.bill.vendor?.email || '—'}
+                <b>{t('Vendor')}:</b>{' '}
+                {detail.bill.vendor?.name || detail.bill.vendor?.email || '—'}
               </span>
               <span>
-                <b>{t('Period')}:</b> {day(detail.bill.periodStart)} – {day(detail.bill.periodEnd)}
+                <b>{t('Period')}:</b> {day(detail.bill.periodStart)} –{' '}
+                {day(detail.bill.periodEnd)}
               </span>
               <span>
                 <b>{t('Status')}:</b> {t(detail.bill.status)}
@@ -347,14 +403,15 @@ export default function CommissionBillsMain() {
               <span>
                 <b>{t('Commission')}:</b> {money(detail.bill.commissionTotal)}
               </span>
-              <button
+              <ActionButton
+                variant="secondary"
                 onClick={printInvoice}
                 className="ml-auto rounded border px-3 py-1 text-xs dark:border-dark-600"
               >
                 {t('Print invoice')}
-              </button>
+              </ActionButton>
             </div>
-            <table className="w-full border-collapse text-xs">
+            <table className="ls-native-table w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b text-left text-gray-500">
                   <th className="py-1">{t('Order')}</th>
@@ -371,9 +428,13 @@ export default function CommissionBillsMain() {
                     <td className="py-1">{rec.orderNumber}</td>
                     <td className="py-1">{rec.storeName || '—'}</td>
                     <td className="py-1">{day(rec.orderDeliveredAt)}</td>
-                    <td className="py-1 text-right">{money(rec.foodSubtotal)}</td>
+                    <td className="py-1 text-right">
+                      {money(rec.foodSubtotal)}
+                    </td>
                     <td className="py-1 text-right">{rec.commissionRate}</td>
-                    <td className="py-1 text-right font-semibold">{money(rec.commissionAmount)}</td>
+                    <td className="py-1 text-right font-semibold">
+                      {money(rec.commissionAmount)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

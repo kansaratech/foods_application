@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { smtpOptions } from './smtp';
 import twilio from 'twilio';
 import { prisma } from '../prisma/client';
 import { env } from '../config/env';
@@ -365,24 +366,9 @@ export async function sendEmail(to: string, subject: string, text: string): Prom
   try {
     const from = config.emailName && config.email ? `${config.emailName} <${config.email}>` : config.email ?? undefined;
 
-    // Generic SMTP (any provider) once a host is configured.
-    if (config.smtpHost) {
-      const transporter = nodemailer.createTransport({
-        host: config.smtpHost,
-        port: config.smtpPort ?? 587,
-        secure: config.smtpSecure ?? false,
-        auth: { user: config.smtpUser || config.email || undefined, pass: config.emailPassword || undefined },
-      });
-      await transporter.sendMail({ from, to, subject, text });
-      return true;
-    }
-
-    // Fallback: Gmail via email/emailPassword (an app password), no SMTP host needed.
-    if (config.email && config.emailPassword) {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: config.email, pass: config.emailPassword },
-      });
+    // Gmail by default, with explicit support for custom SMTP providers.
+    if (config.smtpHost || (config.email && config.emailPassword)) {
+      const transporter = nodemailer.createTransport(smtpOptions(config));
       await transporter.sendMail({ from, to, subject, text });
       return true;
     }

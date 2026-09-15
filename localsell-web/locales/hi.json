@@ -176,6 +176,8 @@
   "phone_verification": "फ़ोन सत्यापन",
   "Missing_Phone_number": " फ़ोन नंबर गायब",
   "Phone_number_is_missing": "फ़ोन नंबर गायब है",
+  "Sign_in_required": "साइन इन आवश्यक है",
+  "Please_sign_in_first_to_place_an_order": "ऑर्डर देने के लिए कृपया पहले साइन इन करें।",
   "phone_otp_error": "फ़ोन OTP त्रुटि",
   "error_sending_otp_to_phone": "फ़ोन पर OTP भेजते समय त्रुटि हुई।",
   "toast_success": "सफलता",

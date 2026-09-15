@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 // Core imports
 import React, {
@@ -53,7 +54,6 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
   // Hooks
   const t = useTranslations();
   const { theme } = useTheme();
-
 
   // Context
   const googleMapsContext = useContext(GoogleMapsContext);
@@ -390,7 +390,8 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
 
           <div className="absolute left-4 top-[4.5rem] z-10 flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-dark-600 dark:bg-dark-900/95">
             {!isDrawing ? (
-              <button
+              <ActionButton
+                variant="primary"
                 type="button"
                 onClick={() => {
                   setDeliveryZoneType('polygon');
@@ -400,7 +401,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
                 className="h-9 rounded-lg bg-primary-color px-4 text-sm font-semibold text-white"
               >
                 {t('Draw new polygon')}
-              </button>
+              </ActionButton>
             ) : (
               <>
                 <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-300">
@@ -408,22 +409,25 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
                     ? `${t('Click map to add points')} (${path.length}/3)`
                     : `${path.length} ${t('points added')}`}
                 </span>
-                <button
+                <ActionButton
+                  variant="secondary"
                   type="button"
                   disabled={!path.length}
                   onClick={() => setPath((current) => current.slice(0, -1))}
                   className="h-9 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-600 dark:text-white"
                 >
                   {t('Undo')}
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
+                  variant="secondary"
                   type="button"
                   onClick={() => setPath([])}
                   className="h-9 rounded-lg border border-red-200 px-3 text-sm font-medium text-red-600"
                 >
                   {t('Clear')}
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
+                  variant="primary"
                   type="button"
                   disabled={path.length < 3}
                   onClick={() => {
@@ -433,7 +437,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
                   className="h-9 rounded-lg bg-primary-color px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {t('Finish polygon')}
-                </button>
+                </ActionButton>
               </>
             )}
           </div>
@@ -456,14 +460,12 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
                 streetViewControl: false,
                 mapTypeControl: false,
                 fullscreenControl: false,
-                 styles: theme === 'dark' ? darkMapStyle : null,
+                styles: theme === 'dark' ? darkMapStyle : null,
               }}
               onClick={onClickGoogleMaps}
               onLoad={(map) => {
                 mapRef.current = map;
               }}
-              
-              
             >
               {deliveryZoneType === 'point' && path.length >= 1 && (
                 <Marker
@@ -481,7 +483,11 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
               {isDrawing && path.length > 1 && (
                 <Polyline
                   path={path}
-                  options={{ strokeColor: '#2563eb', strokeOpacity: 1, strokeWeight: 3 }}
+                  options={{
+                    strokeColor: '#2563eb',
+                    strokeOpacity: 1,
+                    strokeWeight: 3,
+                  }}
                 />
               )}
               {path.length >= 3 && (

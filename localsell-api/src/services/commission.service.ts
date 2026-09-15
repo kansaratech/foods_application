@@ -1,125 +1,127 @@
-import { CommissionBill, CommissionRecord } from '@prisma/client';
-import { prisma } from '../prisma/client';
+import { CommissionBill, Prisma } from "@prisma/client";
+import { prisma } from "../prisma/client";
+import { randomUUID } from "crypto";
+import { userInputError } from "../utils/errors";
+import { reportDates, roundMoney } from "./collections.service";
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
-
-/** Calendar period (month or year) that contains `ref`. */
-export function currentPeriod(cycle: string, ref = new Date()): { start: Date; end: Date } {
-  const y = ref.getUTCFullYear();
-  if (cycle === 'YEARLY') {
-    return { start: new Date(Date.UTC(y, 0, 1)), end: new Date(Date.UTC(y, 11, 31, 23, 59, 59, 999)) };
-  }
-  const m = ref.getUTCMonth();
-  return { start: new Date(Date.UTC(y, m, 1)), end: new Date(Date.UTC(y, m + 1, 0, 23, 59, 59, 999)) };
+/** Billing uses Indian calendar days, independent of the server's timezone. */
+export function currentPeriod(
+  cycle: string,
+  ref = new Date(),
+): { start: Date; end: Date } {
+  const offset = 330 * 60 * 1000;
+  const local = new Date(ref.getTime() + offset),
+    y = local.getUTCFullYear(),
+    m = local.getUTCMonth();
+  return cycle === "YEARLY"
+    ? {
+        start: new Date(Date.UTC(y, 0, 1) - offset),
+        end: new Date(Date.UTC(y + 1, 0, 1) - offset - 1),
+      }
+    : {
+        start: new Date(Date.UTC(y, m, 1) - offset),
+        end: new Date(Date.UTC(y, m + 1, 1) - offset - 1),
+      };
 }
-
 export async function billingCycle(): Promise<string> {
-  const config = await prisma.configuration.findFirst();
-  return config?.commissionBillingCycle === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+  return (await prisma.configuration.findFirst())?.commissionBillingCycle ===
+    "YEARLY"
+    ? "YEARLY"
+    : "MONTHLY";
 }
-
-/** `PDR-INV-202609-0007` — sequential within the bill's period month. */
 export async function nextInvoiceNumber(periodEnd: Date): Promise<string> {
-  const ym = `${periodEnd.getUTCFullYear()}${String(periodEnd.getUTCMonth() + 1).padStart(2, '0')}`;
-  const prefix = `PDR-INV-${ym}-`;
-  const last = await prisma.commissionBill.findFirst({
-    where: { invoiceNumber: { startsWith: prefix } },
-    orderBy: { invoiceNumber: 'desc' },
-    select: { invoiceNumber: true },
-  });
-  const seq = last?.invoiceNumber ? Number(last.invoiceNumber.slice(prefix.length)) + 1 : 1;
-  return `${prefix}${String(seq).padStart(4, '0')}`;
+  const day = new Date(periodEnd.getTime() + 330 * 60000);
+  return `LS-INV-${day.getUTCFullYear()}${String(day.getUTCMonth() + 1).padStart(2, "0")}-${randomUUID().slice(0, 8).toUpperCase()}`;
 }
-
-function groupByVendor(records: CommissionRecord[]) {
-  const byVendor = new Map<
-    string,
-    { orderCount: number; grossFoodSubtotal: number; commissionTotal: number; records: CommissionRecord[] }
-  >();
-  for (const r of records) {
-    const e = byVendor.get(r.vendorId) ?? { orderCount: 0, grossFoodSubtotal: 0, commissionTotal: 0, records: [] };
-    e.orderCount += 1;
-    e.grossFoodSubtotal += r.foodSubtotal;
-    e.commissionTotal += r.commissionAmount;
-    e.records.push(r);
-    byVendor.set(r.vendorId, e);
-  }
-  return byVendor;
-}
-
-/**
- * Roll unbilled `CommissionRecord`s into one `CommissionBill` per vendor.
- *
- * - `before` (auto-close): only records delivered strictly before this date —
- *   i.e. records from a period that has fully ended. The current in-progress
- *   period stays open.
- * - `periodStart` / `periodEnd` (manual "close now"): stamped onto every bill;
- *   when omitted, each bill spans the min/max delivery date of its own records.
- *
- * Idempotent: records already carrying a `billId` are never touched.
- */
 export async function closeCommissionBills(opts: {
   before?: Date;
   periodStart?: string;
   periodEnd?: string;
 }): Promise<CommissionBill[]> {
   const cycle = await billingCycle();
-  const unbilled = await prisma.commissionRecord.findMany({
-    where: {
-      billId: null,
-      selfCollected: false, // only COD-pickup: the store holds the cash and owes the commission
-      ...(opts.before ? { orderDeliveredAt: { lt: opts.before } } : {}),
-    },
-  });
-  if (unbilled.length === 0) return [];
-
-  const byVendor = groupByVendor(unbilled);
-  const fallback = currentPeriod(cycle);
-  const created: CommissionBill[] = [];
-
-  for (const [vendorId, agg] of byVendor.entries()) {
-    const deliveredAts = agg.records.map((r) => r.orderDeliveredAt.getTime());
-    const periodStart = opts.periodStart
-      ? new Date(opts.periodStart)
-      : deliveredAts.length
-        ? new Date(Math.min(...deliveredAts))
-        : fallback.start;
-    const periodEnd = opts.periodEnd
-      ? new Date(opts.periodEnd)
-      : deliveredAts.length
-        ? new Date(Math.max(...deliveredAts))
-        : fallback.end;
-
-    const bill = await prisma.commissionBill.create({
-      data: {
-        vendorId,
-        periodStart,
-        periodEnd,
-        cycle,
-        orderCount: agg.orderCount,
-        grossFoodSubtotal: round2(agg.grossFoodSubtotal),
-        commissionTotal: round2(agg.commissionTotal),
-        status: 'PENDING',
-        invoiceNumber: await nextInvoiceNumber(periodEnd),
-      },
-    });
-    await prisma.commissionRecord.updateMany({
-      where: { id: { in: agg.records.map((r) => r.id) } },
-      data: { billId: bill.id },
-    });
-    created.push(bill);
+  const selectedRange =
+    opts.periodStart || opts.periodEnd
+      ? reportDates(
+          opts.periodStart?.slice(0, 10),
+          opts.periodEnd?.slice(0, 10),
+        )
+      : undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await prisma.$transaction(
+        async (tx) => {
+          const records = await tx.commissionRecord.findMany({
+            where: {
+              billId: null,
+              selfCollected: false,
+              orderDeliveredAt: opts.before
+                ? { lt: opts.before }
+                : selectedRange,
+            },
+            orderBy: { orderDeliveredAt: "asc" },
+          });
+          const groups = new Map<string, typeof records>();
+          for (const record of records) {
+            const period = currentPeriod(cycle, record.orderDeliveredAt);
+            const key = `${record.vendorId}:${period.start.toISOString()}`;
+            groups.set(key, [...(groups.get(key) ?? []), record]);
+          }
+          const bills: CommissionBill[] = [];
+          for (const group of groups.values()) {
+            const period = currentPeriod(cycle, group[0].orderDeliveredAt);
+            const bill = await tx.commissionBill.create({
+              data: {
+                vendorId: group[0].vendorId,
+                periodStart:
+                  selectedRange?.gte && selectedRange.gte > period.start
+                    ? selectedRange.gte
+                    : period.start,
+                periodEnd:
+                  selectedRange?.lte && selectedRange.lte < period.end
+                    ? selectedRange.lte
+                    : period.end,
+                cycle,
+                orderCount: group.length,
+                grossFoodSubtotal: roundMoney(
+                  group.reduce((n, r) => n + r.foodSubtotal, 0),
+                ),
+                commissionTotal: roundMoney(
+                  group.reduce((n, r) => n + r.commissionAmount, 0),
+                ),
+                status: group.every((r) => r.commissionAmount === 0)
+                  ? "PAID"
+                  : "PENDING",
+                paidAmount: 0,
+                invoiceNumber: await nextInvoiceNumber(period.end),
+              },
+            });
+            const claim = await tx.commissionRecord.updateMany({
+              where: { id: { in: group.map((r) => r.id) }, billId: null },
+              data: { billId: bill.id },
+            });
+            if (claim.count !== group.length)
+              throw userInputError(
+                "These orders were billed by another request. Refresh the list.",
+              );
+            bills.push(bill);
+          }
+          return bills;
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          timeout: 20000,
+        },
+      );
+    } catch (error) {
+      if (attempt < 2 && (error as { code?: string }).code === "P2034")
+        continue;
+      throw error;
+    }
   }
-  return created;
+  return [];
 }
-
-/**
- * Close every commission period that has fully ended (leaving the current one
- * open). Called on a schedule from `src/scheduler.ts`. Safe to run any number of
- * times — nothing happens until a period boundary is crossed with unbilled
- * records behind it.
- */
 export async function autoCloseCompletedPeriods(): Promise<CommissionBill[]> {
-  const cycle = await billingCycle();
-  const { start } = currentPeriod(cycle);
-  return closeCommissionBills({ before: start });
+  return closeCommissionBills({
+    before: currentPeriod(await billingCycle()).start,
+  });
 }

@@ -1,3 +1,4 @@
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 // Core
 import { Form, Formik, FormikHelpers } from 'formik';
 
@@ -258,13 +259,14 @@ export default function ZoneAddForm({
                         )}
 
                         <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-dark-600">
-                          <button
+                          <ActionButton
+                            variant="secondary"
                             type="button"
                             onClick={onHide}
                             className="h-10 rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
                           >
                             {t('Cancel')}
-                          </button>
+                          </ActionButton>
                           <CustomButton
                             className="h-10 w-fit border border-primary-color bg-primary-color px-8 text-white"
                             label={zone ? t('Update zone') : t('Create zone')}

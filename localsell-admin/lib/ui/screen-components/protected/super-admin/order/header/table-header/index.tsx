@@ -13,7 +13,7 @@ export default function OrderSuperAdminTableHeader(
     <div className="orders-toolbar management-toolbar">
       <label className="orders-search">
         <i className="pi pi-search" aria-hidden="true" />
-        <input
+        <input className="ls-field"
           aria-label="Search orders"
           placeholder="Search by order ID or customer"
           value={props.globalFilterValue}

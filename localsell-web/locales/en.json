@@ -181,6 +181,8 @@
   "phone_verification": "Phone Verification",
   "Missing_Phone_number": " Missing Phone number",
   "Phone_number_is_missing": "Phone number is missing",
+  "Sign_in_required": "Sign in required",
+  "Please_sign_in_first_to_place_an_order": "Please sign in first to place an order.",
   "phone_otp_error": "Phone OTP Error",
   "error_sending_otp_to_phone": "An error occurred while sending the OTP to phone.",
   "toast_success": "Success",

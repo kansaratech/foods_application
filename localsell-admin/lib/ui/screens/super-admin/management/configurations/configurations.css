@@ -401,3 +401,137 @@
     font-size: 13px;
   }
 }
+
+/* Message activity */
+.configuration-message-log .configuration-card-heading {
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--app-border);
+}
+.configuration-log-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.configuration-log-icon,
+.configuration-log-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--highlight-bg);
+  color: var(--highlight-text-color);
+  font-size: 21px;
+}
+.configuration-log-title p {
+  margin-top: 3px;
+  color: var(--app-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.configuration-log-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--app-text);
+  background: var(--app-surface);
+}
+.configuration-log-toggle:hover {
+  background: var(--app-hover);
+}
+.configuration-message-log .configuration-card-body {
+  padding: 24px;
+}
+.configuration-log-filters {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr)) minmax(300px, 2.5fr);
+  align-items: end;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.configuration-log-filters > label,
+.configuration-log-filters > form {
+  min-width: 0;
+}
+.configuration-log-filters label {
+  gap: 8px;
+}
+.configuration-message-log select,
+.configuration-message-log input {
+  height: 42px;
+  border-radius: 8px;
+  padding-inline: 12px;
+}
+.configuration-message-log select:focus-visible,
+.configuration-message-log input:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+.configuration-message-log .configuration-log-search button {
+  height: 42px;
+}
+.configuration-log-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  gap: 12px;
+  padding: 36px 20px;
+  text-align: center;
+  border: 1px dashed var(--app-border);
+  border-radius: 10px;
+  background: var(--app-bg);
+}
+.configuration-log-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 24px;
+}
+.configuration-log-empty h3 {
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.configuration-log-empty p {
+  max-width: 360px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--app-text-muted);
+}
+.configuration-message-log .configuration-log-pager {
+  padding-top: 16px;
+  border-top: 1px solid var(--app-border);
+}
+@container (max-width: 1100px) {
+  .configuration-log-filters {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .configuration-log-filters > form {
+    grid-column: 1 / -1;
+  }
+}
+@container (max-width: 540px) {
+  .configuration-message-log .configuration-card-heading,
+  .configuration-message-log .configuration-card-body {
+    padding: 16px;
+  }
+  .configuration-log-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+  }
+  .configuration-log-title {
+    align-items: flex-start;
+  }
+  .configuration-log-empty {
+    min-height: 240px;
+  }
+}

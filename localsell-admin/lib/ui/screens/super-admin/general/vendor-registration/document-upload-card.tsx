@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 import { useContext, useRef } from 'react';
 import { useMutation } from '@apollo/client';
@@ -11,7 +12,12 @@ import { ToastContext } from '@/lib/context/global/toast.context';
 import { getGraphQLErrorMessage } from '@/lib/utils/methods';
 import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'application/pdf',
+];
 
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -84,7 +90,13 @@ export default function DocumentUploadCard({
     <div className="rounded-lg border border-slate-200 p-4 dark:border-dark-600">
       <p className="text-sm font-semibold text-slate-900 dark:text-white">
         {label}
-        {required ? <span className="text-red-500"> *</span> : <span className="ml-1 text-xs font-normal text-slate-400">({t('optional')})</span>}
+        {required ? (
+          <span className="text-red-500"> *</span>
+        ) : (
+          <span className="ml-1 text-xs font-normal text-slate-400">
+            ({t('optional')})
+          </span>
+        )}
       </p>
       <p className="mt-0.5 text-xs text-slate-500">{helperText}</p>
 
@@ -107,22 +119,34 @@ export default function DocumentUploadCard({
             >
               {t('Upload')}
             </button>
-            <button type="button" onClick={onRemove} className="text-xs font-medium text-slate-400 underline">
+            <button
+              type="button"
+              onClick={onRemove}
+              className="text-xs font-medium text-slate-400 underline"
+            >
               {t('Remove')}
             </button>
           </>
         ) : (
-          <button
+          <ActionButton
+            variant="primary"
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={loading}
             className="flex h-9 items-center gap-1.5 rounded-md border border-primary px-3 text-sm font-medium text-primary transition hover:bg-primary-light disabled:opacity-50 dark:hover:bg-dark-900"
           >
-            {loading ? <CustomLoader size="14px" /> : <FontAwesomeIcon icon={faUpload} />}
+            {loading ? (
+              <CustomLoader size="14px" />
+            ) : (
+              <FontAwesomeIcon icon={faUpload} />
+            )}
             {t('Upload file')}
-          </button>
+          </ActionButton>
         )}
-        <span className="text-xs text-slate-400">{t('JPG, PNG or PDF, up to')} {Math.round(maxSizeBytes / (1024 * 1024))}MB</span>
+        <span className="text-xs text-slate-400">
+          {t('JPG, PNG or PDF, up to')}{' '}
+          {Math.round(maxSizeBytes / (1024 * 1024))}MB
+        </span>
       </div>
 
       <input

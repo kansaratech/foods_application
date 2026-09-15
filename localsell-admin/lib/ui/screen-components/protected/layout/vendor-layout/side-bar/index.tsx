@@ -20,7 +20,6 @@ import {
   faStore,
   faPercent,
   faChartLine,
-  faMoneyBillWave,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Components
@@ -85,7 +84,7 @@ export default function MakeVendorSidebar() {
       isClickable: true,
     },
     {
-      text: t('Commission'),
+      text: 'Bills & payments',
       route: '/admin/vendor/commission',
       isParent: true,
       icon: faPercent,
@@ -96,13 +95,6 @@ export default function MakeVendorSidebar() {
       route: '/admin/vendor/performance',
       isParent: true,
       icon: faChartLine,
-      isClickable: true,
-    },
-    {
-      text: t('My Payouts'),
-      route: '/admin/vendor/payouts',
-      isParent: true,
-      icon: faMoneyBillWave,
       isClickable: true,
     },
   ];

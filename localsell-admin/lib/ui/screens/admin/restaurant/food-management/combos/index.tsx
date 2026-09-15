@@ -1,4 +1,6 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
+import Select from '@/lib/ui/useable-components/custom-dropdown/select';
 
 import { useContext, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
@@ -325,18 +327,20 @@ export default function CombosScreen() {
             propertyName: 'actions',
             body: (c: Combo) => (
               <span className="flex gap-1">
-                <button
+                <ActionButton
+                  variant="secondary"
                   onClick={() => startEdit(c)}
                   className="rounded border px-2 py-0.5 text-xs dark:border-dark-600"
                 >
                   {t('Edit')}
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
+                  variant="secondary"
                   onClick={() => remove(c)}
                   className="rounded border px-2 py-0.5 text-xs text-red-600 dark:border-dark-600"
                 >
                   {t('Delete')}
-                </button>
+                </ActionButton>
               </span>
             ),
           },
@@ -382,11 +386,9 @@ export default function CombosScreen() {
             </label>
             <label className="flex flex-col">
               <span className="mb-1 text-gray-500">{t('Category')}</span>
-              <select
+              <Select
                 value={form.categoryId}
-                onChange={(e) =>
-                  setForm({ ...form, categoryId: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, categoryId: e.value })}
                 className="ls-field w-full"
               >
                 {categories.map((c) => (
@@ -394,7 +396,7 @@ export default function CombosScreen() {
                     {c.title}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="flex flex-col">
               <span className="mb-1 text-gray-500">{t('Combo price')} (₹)</span>
@@ -456,10 +458,10 @@ export default function CombosScreen() {
                   key={idx}
                   className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-surface-border bg-surface-ground p-3"
                 >
-                  <select
+                  <Select
                     value={row.foodId}
                     onChange={(e) =>
-                      setRow(idx, { foodId: e.target.value, variationId: '' })
+                      setRow(idx, { foodId: e.value, variationId: '' })
                     }
                     aria-label={t('Select item')}
                     className="ls-field min-w-0 basis-full sm:flex-1 sm:basis-40"
@@ -470,13 +472,11 @@ export default function CombosScreen() {
                         {f.title}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {(food?.variations.length ?? 0) > 1 && (
-                    <select
+                    <Select
                       value={row.variationId}
-                      onChange={(e) =>
-                        setRow(idx, { variationId: e.target.value })
-                      }
+                      onChange={(e) => setRow(idx, { variationId: e.value })}
                       aria-label={t('Variations')}
                       className="ls-field min-w-0 flex-1"
                     >
@@ -486,7 +486,7 @@ export default function CombosScreen() {
                           {v.title}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   )}
                   <input
                     type="number"
@@ -511,12 +511,13 @@ export default function CombosScreen() {
                 </div>
               );
             })}
-            <button
+            <ActionButton
+              variant="secondary"
               onClick={addRow}
               className="rounded-lg border border-surface-border px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-hover"
             >
               + {t('Add item')}
-            </button>
+            </ActionButton>
           </div>
         </div>
       </FormDialog>

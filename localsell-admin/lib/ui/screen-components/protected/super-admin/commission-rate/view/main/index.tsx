@@ -90,7 +90,7 @@ export default function CommissionRateMain() {
   // Handlers
   const handleSave = async (restaurantId: string) => {
     const restaurant = restaurants?.find((r) => r._id === restaurantId);
-    if (!restaurant?.commissionRate) {
+    if (!restaurant || !Number.isFinite(Number(restaurant.commissionRate)) || Number(restaurant.commissionRate) < 0) {
       return showToast({
         type: 'error',
         title: t('Commission Updated'),

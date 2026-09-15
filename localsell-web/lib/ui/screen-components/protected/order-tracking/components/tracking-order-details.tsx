@@ -56,11 +56,11 @@ function TrackingOrderDetails({
     );
   };
 
-  // Check if order can be cancelled (only PENDING or ACCEPTED)
-  const canCancelOrder = () => {
-    const cancellableStatuses = ["PENDING"];
-    return cancellableStatuses.includes(orderTrackingDetails?.orderStatus);
-  };
+  // Customer self-cancel is disabled platform-wide, at every order status —
+  // once placed, only the store/admin can cancel. The API's `abortOrder`
+  // rejects unconditionally now too; this just keeps the dead-end button from
+  // ever showing.
+  const canCancelOrder = () => false;
 
   if (!orderTrackingDetails) {
     return (

@@ -256,7 +256,7 @@ const AppTopbar = () => {
             onClick={() => onRedirectToPage('/zone')}
           />
         )}
-        {shouldShow('Dispatch') && (
+        {false && shouldShow('Dispatch') && (
           <TextIconClickable
             icon={faTruck}
             title={t('Dispatch')}
@@ -457,7 +457,7 @@ const AppTopbar = () => {
                 onClick={() => onRedirectToPage('/zone')}
               />
             )}
-            {shouldShow('Dispatch') && (
+            {false && shouldShow('Dispatch') && (
               <TextIconClickable
                 className="justify-between"
                 icon={faTruck}

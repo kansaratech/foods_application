@@ -1,3 +1,4 @@
+import Select from '@/lib/ui/useable-components/custom-dropdown/select';
 import { useRouter } from 'next/navigation';
 import { IRestaurantResponse } from '@/lib/utils/interfaces';
 
@@ -166,17 +167,17 @@ export default function StoresOverview(props: Props) {
       <div className="stores-filters">
         <label className="stores-search">
           <i className="pi pi-search" aria-hidden="true" />
-          <input
+          <input className="ls-field"
             aria-label="Search stores"
             placeholder="Search by store, vendor or location..."
             value={props.search}
             onChange={(e) => props.onSearch(e.target.value)}
           />
         </label>
-        <select
+        <Select
           aria-label="Zone"
           value={props.zone}
-          onChange={(e) => props.onZone(e.target.value)}
+          onChange={(e) => props.onZone(e.value)}
         >
           <option value="">All zones</option>
           {zones.map((z) => (
@@ -184,11 +185,11 @@ export default function StoresOverview(props: Props) {
               {z.title || z._id}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Approval"
           value={props.approval}
-          onChange={(e) => props.onApproval(e.target.value)}
+          onChange={(e) => props.onApproval(e.value)}
         >
           <option value="">All approvals</option>
           {['APPROVED', 'PENDING', 'REJECTED', 'SUSPENDED'].map((s) => (
@@ -196,20 +197,20 @@ export default function StoresOverview(props: Props) {
               {s.charAt(0) + s.slice(1).toLowerCase()}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Availability"
           value={props.availability}
-          onChange={(e) => props.onAvailability(e.target.value)}
+          onChange={(e) => props.onAvailability(e.value)}
         >
           <option value="">All availability</option>
           <option value="live">Live</option>
           <option value="offline">Offline</option>
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Category"
           value={props.category}
-          onChange={(e) => props.onCategory(e.target.value)}
+          onChange={(e) => props.onCategory(e.value)}
         >
           <option value="">All categories</option>
           {categories.map((c) => (
@@ -217,7 +218,7 @@ export default function StoresOverview(props: Props) {
               {c}
             </option>
           ))}
-        </select>
+        </Select>
         <button className="stores-button clear" onClick={props.onClear}>
           Clear filters
         </button>

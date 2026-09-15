@@ -15,7 +15,7 @@ export default function CustomButton({
 }: ICustomButtonProps) {
   return (
     <Button
-      className={`${classes['btn-custom']} ${className}`}
+      className={`ls-button ${classes['btn-custom']} ${className ?? ''}`}
       label={label}
       type={type}
       {...props}

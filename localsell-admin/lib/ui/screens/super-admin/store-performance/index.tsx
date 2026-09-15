@@ -4,13 +4,9 @@ import '@/lib/ui/useable-components/management-page/management.css';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useTranslations } from 'next-intl';
-import { Calendar } from 'primereact/calendar';
+import DateRangePicker from '@/lib/ui/useable-components/custom-date-range/range-picker';
+import CustomButton from '@/lib/ui/useable-components/button';
 import { InputText } from 'primereact/inputtext';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faCalendarDays,
-  faFileArrowDown,
-} from '@fortawesome/free-solid-svg-icons';
 
 import { GET_STORE_PERFORMANCE } from '@/lib/api/graphql';
 
@@ -18,7 +14,6 @@ import Table from '@/lib/ui/useable-components/table';
 
 const money = (n: number) =>
   `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
-const iso = (d?: Date | null) => (d ? d.toISOString().slice(0, 10) : undefined);
 
 interface Row {
   _id: string;
@@ -47,13 +42,12 @@ export default function StorePerformanceScreen({
   heading = 'Store Performance',
 }: StorePerformanceScreenProps = {}) {
   const t = useTranslations();
-  const [dates, setDates] = useState<(Date | null)[] | null>(null);
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
 
-  const startDate = iso(dates?.[0]);
-  const endDate = iso(dates?.[1]);
+  const { startDate, endDate } = dateRange;
 
   const { data, loading } = useQuery(GET_STORE_PERFORMANCE, {
     variables: {
@@ -83,7 +77,6 @@ export default function StorePerformanceScreen({
       'Commission',
       'Rating',
       'Reviews',
-      'Wallet',
     ];
     const body = rows.map((r) =>
       [
@@ -99,7 +92,6 @@ export default function StorePerformanceScreen({
         r.commissionEarned,
         r.avgRating ?? '',
         r.reviewCount,
-        r.walletBalance,
       ]
         .map(esc)
         .join(',')
@@ -110,7 +102,7 @@ export default function StorePerformanceScreen({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `store-performance_${startDate ?? 'all'}_${endDate ?? 'now'}.csv`;
+    a.download = `store-performance_${startDate || 'all'}_${endDate || 'now'}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -119,9 +111,7 @@ export default function StorePerformanceScreen({
     <div className="management-page management-store-performance">
       <div className="management-heading">
         <div>
-          <div className="management-breadcrumb">
-            {t(breadcrumb)}
-          </div>
+          <div className="management-breadcrumb">{t(breadcrumb)}</div>
           <h1>{t(heading)}</h1>
           <p className="mt-1 text-xs text-slate-400">
             {result
@@ -131,38 +121,28 @@ export default function StorePerformanceScreen({
               : t('Loading') + '…'}
           </p>
         </div>
-        <button
+        <CustomButton
           type="button"
           onClick={downloadCsv}
           disabled={!rows.length}
-          className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary disabled:opacity-50 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
-        >
-          <FontAwesomeIcon icon={faFileArrowDown} />
-          {t('Download CSV')}
-        </button>
+          outlined
+          label={t('Download CSV')}
+          icon="pi pi-download"
+        />
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 dark:border-dark-600 dark:bg-dark-900">
-        <span className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 px-3 dark:border-dark-600">
-          <FontAwesomeIcon
-            icon={faCalendarDays}
-            className="text-sm text-slate-400"
-          />
-          <Calendar
-            value={dates as Date[] | null}
-            onChange={(e) => {
-              setDates(e.value as (Date | null)[]);
-              setPage(1);
-            }}
-            selectionMode="range"
-            readOnlyInput
-            placeholder="All time"
-            dateFormat="dd M yy"
-            showButtonBar
-            className="w-[190px] text-sm"
-            pt={{ input: { className: 'border-0 p-0 text-sm shadow-none' } }}
-          />
-        </span>
+      <div className="ls-filter-toolbar">
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          placeholder="All time"
+          showLabel={false}
+          allowClear
+          onChange={(startDate, endDate) => {
+            setDateRange({ startDate, endDate });
+            setPage(1);
+          }}
+        />
         <InputText
           value={search}
           onChange={(e) => {
@@ -170,15 +150,17 @@ export default function StorePerformanceScreen({
             setPage(1);
           }}
           placeholder={t('Search') + '…'}
-          className="h-10 w-56 text-sm"
+          className="ls-field ls-filter-search"
+          aria-label={t('Search')}
         />
       </div>
 
-      <div className="mt-4 rounded-xl border border-slate-200 bg-white dark:border-dark-600 dark:bg-dark-900">
+      <div className="ls-table-section">
         <Table
           data={loading ? [] : rows}
           loading={loading}
           moduleName="StorePerformance"
+          minWidth="76rem"
           scrollable={false}
           totalRecords={result?.total ?? 0}
           currentPage={page}
@@ -188,7 +170,11 @@ export default function StorePerformanceScreen({
             setLimit(r);
           }}
           columns={[
-            { headerName: t('Store'), propertyName: 'name' },
+            {
+              headerName: t('Store'),
+              propertyName: 'name',
+              style: { minWidth: '17rem' },
+            },
             {
               headerName: t('Approval'),
               propertyName: 'approvalStatus',
@@ -248,11 +234,7 @@ export default function StorePerformanceScreen({
               body: (r: Row) =>
                 r.avgRating != null ? `${r.avgRating} (${r.reviewCount})` : '—',
             },
-            {
-              headerName: t('Wallet'),
-              propertyName: 'walletBalance',
-              body: (r: Row) => money(r.walletBalance),
-            },
+
           ]}
         />
       </div>

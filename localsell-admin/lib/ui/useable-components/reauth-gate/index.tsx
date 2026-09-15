@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 import { useContext, useState } from 'react';
 import { useMutation } from '@apollo/client';
@@ -69,8 +70,7 @@ export default function ReauthGate({
       dismissableMask={false}
     >
       <p className="mb-4 text-sm text-slate-500 dark:text-slate-300">
-        {description ??
-          t('for_security_reenter_your_password_to_make_this')}
+        {description ?? t('for_security_reenter_your_password_to_make_this')}
       </p>
       <form
         onSubmit={(e) => {
@@ -84,16 +84,17 @@ export default function ReauthGate({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder={t('Password')}
-          className="mb-4 h-10 w-full rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:border-dark-600 dark:bg-dark-950 dark:text-white"
+          className="ls-field mb-4 h-10 w-full rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:border-dark-600 dark:bg-dark-950 dark:text-white"
         />
         <div className="flex justify-end gap-2">
-          <button
+          <ActionButton
+            variant="secondary"
             type="button"
             onClick={onCancel}
             className="h-9 rounded-md border border-gray-300 px-4 text-sm text-slate-700 dark:border-dark-600 dark:text-white"
           >
             {t('Cancel')}
-          </button>
+          </ActionButton>
           <CustomButton
             type="submit"
             label={t('Confirm')}

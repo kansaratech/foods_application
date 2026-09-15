@@ -9,6 +9,7 @@ import PwaRegister from './PwaRegister';
 // Styles — global.css @imports the PrimeReact theme, the generated dark theme
 // and the design tokens in order, then the Tailwind layers.
 import './global.css';
+import './ui-system.css';
 
 export const metadata = {
   title: 'LocalSell Admin',
@@ -36,7 +37,10 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="LS Admin" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <FontawesomeConfig />
         {/* Microsoft Clarity */}
         <Script id="microsoft-clarity" strategy="afterInteractive">

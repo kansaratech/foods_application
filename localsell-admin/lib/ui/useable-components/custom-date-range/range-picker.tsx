@@ -1,50 +1,60 @@
 'use client';
 import { useEffect, useId, useState } from 'react';
-import { Calendar } from 'primereact/calendar';
+import { Calendar, dateString, dateValue } from '../date-input/calendar';
+import FieldShell from '../form/field-shell';
 import './range-picker.css';
 
 type Props = {
   startDate: string;
   endDate: string;
   onChange: (start: string, end: string) => void;
+  label?: string;
+  showLabel?: boolean;
+  placeholder?: string;
+  allowClear?: boolean;
 };
-const parse = (value: string) => (value ? new Date(`${value}T00:00:00`) : null);
-const format = (date: Date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 export default function DateRangePicker({
   startDate,
   endDate,
   onChange,
+  label = 'Date range',
+  showLabel = true,
+  placeholder = 'Select date range',
+  allowClear = false,
 }: Props) {
   const id = useId();
   const [draft, setDraft] = useState<(Date | null)[]>([
-    parse(startDate),
-    parse(endDate),
+    dateValue(startDate),
+    dateValue(endDate),
   ]);
   useEffect(() => {
-    setDraft([parse(startDate), parse(endDate)]);
+    setDraft([dateValue(startDate), dateValue(endDate)]);
   }, [startDate, endDate]);
   return (
-    <div className="shared-date-range">
-      <label htmlFor={id}>Date range</label>
+    <FieldShell
+      htmlFor={id}
+      label={label}
+      showLabel={showLabel}
+      className="shared-date-range"
+    >
       <Calendar
         inputId={id}
-        value={draft}
+        ariaLabel={label}
+        value={draft[0] ? draft : null}
         selectionMode="range"
-        readOnlyInput
-        showIcon
-        dateFormat="dd M yy"
-        placeholder="Select date range"
-        panelClassName="shared-date-range-panel"
+        placeholder={placeholder}
         hideOnRangeSelection
+        showButtonBar={allowClear}
         onChange={(event) => {
           const next = (event.value ?? []) as (Date | null)[];
           setDraft(next);
-          if (next[0] && next[1]) onChange(format(next[0]), format(next[1]));
+          if (next[0] && next[1])
+            onChange(dateString(next[0]), dateString(next[1]));
+          else if (!next[0] && allowClear) onChange('', '');
         }}
-        onHide={() => setDraft([parse(startDate), parse(endDate)])}
+        onHide={() => setDraft([dateValue(startDate), dateValue(endDate)])}
       />
-    </div>
+    </FieldShell>
   );
 }

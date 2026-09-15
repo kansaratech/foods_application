@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client';
 
 const FALLBACK_COMMISSION_RATE = 20;
@@ -12,7 +13,7 @@ export function resolveCommissionRate(
   defaultCommissionRate: number | null | undefined,
 ): number {
   if (storeCommissionRate && storeCommissionRate > 0) return storeCommissionRate;
-  if (defaultCommissionRate && defaultCommissionRate > 0) return defaultCommissionRate;
+  if (defaultCommissionRate != null && defaultCommissionRate >= 0) return defaultCommissionRate;
   return FALLBACK_COMMISSION_RATE;
 }
 
@@ -31,20 +32,17 @@ export function orderFoodSubtotal(order: {
  * order is first marked DELIVERED. Safe to call again for the same order — the
  * unique `orderId` makes a repeat a no-op.
  */
-/**
- * Whether the platform already keeps this order's commission through the money
- * flow itself (so it must never be invoiced): online payments and
- * COD-fleet-delivery (where the rider deposits the full cash). When the store
- * holds the cash — COD **pickup** or COD **self-delivery** — the commission is
- * owed on a bill.
- */
+/** Direct-to-store payments owe commission regardless of payment method.
+ * Historical platform fleet orders retain their original classification. */
 export function isCommissionSelfCollected(order: {
   paymentMethod: string;
   isPickedUp: boolean;
   deliveryMode?: string | null;
 }): boolean {
   const storeHoldsCash = order.isPickedUp || order.deliveryMode === 'SELF';
-  return !(order.paymentMethod === 'COD' && storeHoldsCash);
+  // MVP: both cash and digital customer payments go directly to the store.
+  // Historical fleet orders retain their original collection classification.
+  return !storeHoldsCash;
 }
 
 export async function recordOrderCommission(order: {
@@ -59,13 +57,13 @@ export async function recordOrderCommission(order: {
   tipping: number;
   taxationAmount: number;
   deliveredAt: Date | null;
-}): Promise<void> {
-  const existing = await prisma.commissionRecord.findUnique({ where: { orderId: order.id } });
+}, db: Prisma.TransactionClient = prisma): Promise<void> {
+  const existing = await db.commissionRecord.findUnique({ where: { orderId: order.id } });
   if (existing) return;
 
   const [restaurant, config] = await Promise.all([
-    prisma.restaurant.findUnique({ where: { id: order.restaurantId } }),
-    prisma.configuration.findFirst(),
+    db.restaurant.findUnique({ where: { id: order.restaurantId } }),
+    db.configuration.findFirst(),
   ]);
   if (!restaurant) return;
 
@@ -73,7 +71,7 @@ export async function recordOrderCommission(order: {
   const foodSubtotal = Math.max(0, orderFoodSubtotal(order));
   const commissionAmount = Math.round(foodSubtotal * (rate / 100) * 100) / 100;
 
-  await prisma.commissionRecord.create({
+  await db.commissionRecord.create({
     data: {
       orderId: order.id,
       orderNumber: order.orderId,
@@ -107,12 +105,12 @@ export async function recordRiderCash(order: {
   deliveryCharges: number;
   tipping: number;
   deliveredAt: Date | null;
-}): Promise<void> {
+}, db: Prisma.TransactionClient = prisma): Promise<void> {
   if (order.paymentMethod !== 'COD' || !order.riderId) return;
-  const existing = await prisma.riderCashEntry.findUnique({ where: { orderId: order.id } });
+  const existing = await db.riderCashEntry.findUnique({ where: { orderId: order.id } });
   if (existing) return;
 
-  await prisma.riderCashEntry.create({
+  await db.riderCashEntry.create({
     data: {
       orderId: order.id,
       orderNumber: order.orderId,

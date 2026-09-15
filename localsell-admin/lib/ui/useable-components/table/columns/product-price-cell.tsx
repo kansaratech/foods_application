@@ -69,7 +69,7 @@ export default function ProductPriceCell({
               )}
             </div>
             <div className="overflow-x-auto rounded-xl border border-surface-border">
-              <table className="w-full text-left text-sm">
+              <table className="ls-native-table w-full text-left text-sm">
                 <thead className="bg-surface-ground text-xs text-content-muted">
                   <tr>
                     {[

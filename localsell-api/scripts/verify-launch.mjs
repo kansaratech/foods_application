@@ -69,6 +69,49 @@ const admin = (await gql(`mutation { ownerLogin(email:"admin@localsell.in", pass
 admin ? pass('admin login') : fail('admin login — is the API up + seeded?');
 if (!admin) finish();
 
+// The launch seed (prisma/seed-data.json) ships 0 customers and 0 demo orders
+// on purpose — it's real launch data, not a demo marketplace — so there is
+// nothing pre-billed for the checks below to find. Pick an active restaurant
+// with a menu, get (or sign up) a customer, and place+deliver one COD-pickup
+// order (commission-billable) up front so closeCommissionPeriod has something
+// real to close. The COD-delivery / bill-preview checks further down assume a
+// PLATFORM-fleet store (a SELF-delivery store holds its own COD cash, so its
+// commission IS billed — different, correct path), so prefer one.
+const anyR = (await gql(`{ restaurants { _id isActive isAvailable deliveryProvider } }`, {}, admin)).data?.restaurants || [];
+let RID, food;
+for (const p of ['platform', 'any']) {
+  for (const r of anyR) {
+    if (!r.isActive || !r.isAvailable) continue;
+    if (p === 'platform' && (r.deliveryProvider ?? 'PLATFORM') !== 'PLATFORM') continue;
+    const rr = (await gql(`{ restaurant(id:"${r._id}"){ minimumOrder categories { foods { _id variations { _id price addons } } } } }`, {}, admin)).data?.restaurant;
+    // Skip anything whose first variation carries an add-on group — this
+    // order flow only sends variation + quantity, no addon selections, and a
+    // required group would reject it (Variation.addons is a list of Addon ids).
+    const f = rr?.categories?.flatMap((c) => c.foods)
+      .find((x) => x.variations?.length && !x.variations[0].addons?.length);
+    if (f) { RID = r._id; food = f; break; }
+  }
+  if (RID) break;
+}
+// Prefer a real seeded customer if one exists (older/demo seeds); the launch
+// seed has none, so sign one up the same way a real customer would.
+const custEmail = `verify-launch-${Date.now()}@localsell.in`;
+const cust = (await gql(`mutation { login(email:"deogarh-diner@padharo.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token
+  || (await gql(`mutation { login(email:"customer@localsell.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token
+  || (await gql(`mutation($e:String!){ createUser(userInput:{ email:$e, password:"Customer@123", name:"Verify Customer" }){ token } }`, { e: custEmail })).data?.createUser?.token;
+const near = { label: 'Home', deliveryAddress: 'Near', latitude: '25.536', longitude: '73.901' };
+const far = { label: 'Home', deliveryAddress: 'Far', latitude: '19.076', longitude: '72.8777' };
+const items = RID && food ? [{ food: food._id, quantity: 8, variation: food.variations[0]._id }] : [];
+const mk = (pickup) => `mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"COD",tipping:${pickup ? 0 : 15},taxationAmount:12,deliveryCharges:${pickup ? 0 : 20},isPickedUp:${pickup},orderDate:"2026-09-03",address:$a){ _id orderId orderAmount } }`;
+if (RID && food && cust) {
+  await gql(`mutation { updateDeliveryBoundsAndLocation(id:"${RID}", boundType:"radius", location:{latitude:25.534, longitude:73.899}, circleBounds:{radius:7}) { data { deliveryDistance } } }`, {}, admin);
+  const boot = (await gql(mk(true), { i: items, a: near }, cust)).data?.placeOrder;
+  if (boot?._id) {
+    await gql(`mutation { updateOrderStatus(id:"${boot._id}", status:"ACCEPTED"){ _id } }`, {}, admin);
+    await gql(`mutation { updateOrderStatus(id:"${boot._id}", status:"DELIVERED"){ _id } }`, {}, admin);
+  }
+}
+
 const prev = (await gql(`{ commissionPeriodPreview { unbilledOrderCount unbilledCommissionTotal rows { vendor { name } } } }`, {}, admin)).data?.commissionPeriodPreview;
 prev ? pass('commissionPeriodPreview', `${prev.rows.length} vendors · ${prev.unbilledOrderCount} unbilled orders · ₹${prev.unbilledCommissionTotal}`) : fail('commissionPeriodPreview');
 
@@ -105,31 +148,10 @@ const vTok = aVendorEmail
 const sum = (await gql(`{ myCommissionSummary { cycle outstandingTotal bills { _id } } }`, {}, vTok)).data?.myCommissionSummary;
 sum ? pass('myCommissionSummary (vendor view data)', `${sum.cycle} · ${sum.bills.length} bills · ₹${sum.outstandingTotal} outstanding`) : fail('myCommissionSummary');
 
-// accrual — pick an active restaurant with a menu. The COD-delivery / bill-preview
-// checks below assume a PLATFORM-fleet store (a SELF-delivery store holds its own
-// COD cash, so its commission IS billed — different, correct path), so prefer one.
-const anyR = (await gql(`{ restaurants { _id isActive isAvailable deliveryProvider } }`, {}, admin)).data?.restaurants || [];
-let RID, food;
-for (const pass of ['platform', 'any']) {
-  for (const r of anyR) {
-    if (!r.isActive || !r.isAvailable) continue;
-    if (pass === 'platform' && (r.deliveryProvider ?? 'PLATFORM') !== 'PLATFORM') continue;
-    const rr = (await gql(`{ restaurant(id:"${r._id}"){ minimumOrder categories { foods { _id variations { _id price } } } } }`, {}, admin)).data?.restaurant;
-    const f = rr?.categories?.flatMap((c) => c.foods).find((x) => x.variations?.length);
-    if (f) { RID = r._id; food = f; break; }
-  }
-  if (RID) break;
-}
-const cust = (await gql(`mutation { login(email:"deogarh-diner@padharo.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token
-  || (await gql(`mutation { login(email:"customer@localsell.in", password:"Customer@123", type:"default"){ token } }`)).data?.login?.token;
+// RID/food/cust/items/mk/near/far were already resolved above (bootstrap order).
 if (RID && food && cust) {
-  await gql(`mutation { updateDeliveryBoundsAndLocation(id:"${RID}", boundType:"radius", location:{latitude:25.534, longitude:73.899}, circleBounds:{radius:7}) { data { deliveryDistance } } }`, {}, admin);
   const dd = (await gql(`{ getRestaurantDeliveryZoneInfo(id:"${RID}"){ circleBounds { radius } } }`, {}, admin)).data?.getRestaurantDeliveryZoneInfo;
-  const items = [{ food: food._id, quantity: 8, variation: food.variations[0]._id }];
-  const mk = (pickup) => `mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"COD",tipping:${pickup ? 0 : 15},taxationAmount:12,deliveryCharges:${pickup ? 0 : 20},isPickedUp:${pickup},orderDate:"2026-09-03",address:$a){ _id orderId orderAmount } }`;
   const P = mk(false);
-  const near = { label: 'Home', deliveryAddress: 'Near', latitude: '25.536', longitude: '73.901' };
-  const far = { label: 'Home', deliveryAddress: 'Far', latitude: '19.076', longitude: '72.8777' };
   const aRider = (await gql(`{ riders { _id } }`, {}, admin)).data?.riders?.[0]?._id;
   const storeW = async () => (await gql(`{ restaurant(id:"${RID}"){ currentWalletAmount } }`, {}, admin)).data.restaurant.currentWalletAmount;
 
@@ -256,6 +278,15 @@ if (RID && food && cust) {
       { i: items2, a: near },
       cust,
     );
+  const nonCod = await gql(
+    `mutation P($i:[OrderItemInput!]!,$a:AddressInput!){ placeOrder(restaurant:"${RID}",orderInput:$i,paymentMethod:"STRIPE",tipping:0,taxationAmount:0,deliveryCharges:20,isPickedUp:false,orderDate:"2026-09-03",address:$a){ _id } }`,
+    { i: items2, a: near },
+    cust,
+  );
+  /cash on delivery only/i.test(nonCod.errors?.[0]?.message || '')
+    ? pass('placeOrder rejects a non-COD payment method', nonCod.errors[0].message.slice(0, 55))
+    : fail('placeOrder should reject non-COD payment method', JSON.stringify(nonCod));
+
   const o1 = (await mkOrder()).data?.placeOrder;
   if (o1?._id) {
     const base = o1.orderAmount - o1.deliveryCharges;
@@ -263,8 +294,14 @@ if (RID && food && cust) {
     r?.isPickedUp === true && r.deliveryCharges === 0 && Math.abs(r.orderAmount - base) < 0.02
       ? pass('modifyOrder → pickup zeroes the fee + recomputes total', `total ₹${r.orderAmount}`)
       : fail('modifyOrder pickup wrong', JSON.stringify(r));
-    const pm = (await gql(`mutation { modifyOrder(id:"${o1._id}", paymentMethod:"STRIPE"){ paymentMethod } }`, {}, cust)).data?.modifyOrder;
-    pm?.paymentMethod === 'STRIPE' ? pass('modifyOrder switches the payment method') : fail('modifyOrder payment switch');
+    const pm = await gql(`mutation { modifyOrder(id:"${o1._id}", paymentMethod:"STRIPE"){ paymentMethod } }`, {}, cust);
+    /cash on delivery only/i.test(pm.errors?.[0]?.message || '')
+      ? pass('modifyOrder rejects switching away from COD', pm.errors[0].message.slice(0, 55))
+      : fail('modifyOrder should reject non-COD payment method', JSON.stringify(pm));
+    const abort = await gql(`mutation { abortOrder(id:"${o1._id}") { _id } }`, {}, cust);
+    /cannot be cancelled/i.test(abort.errors?.[0]?.message || '')
+      ? pass('abortOrder rejects customer self-cancel', abort.errors[0].message.slice(0, 55))
+      : fail('abortOrder should always reject', JSON.stringify(abort));
   } else fail('modifyOrder — place test order', JSON.stringify(o1));
 
   const o2 = (await mkOrder()).data?.placeOrder;

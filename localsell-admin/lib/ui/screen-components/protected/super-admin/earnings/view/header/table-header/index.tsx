@@ -1,5 +1,6 @@
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 import { InputText } from 'primereact/inputtext';
-import { Calendar } from 'primereact/calendar';
+import DateRangePicker from '@/lib/ui/useable-components/custom-date-range/range-picker';
 import { Dropdown } from 'primereact/dropdown';
 import {
   IQueryResult,
@@ -25,7 +26,6 @@ export default function EarningTableHeader({
   setDateFilters,
   onClearFilters,
 }: IEarningTableHeaderProps) {
-  const [errors, setErrors] = useState({ startDate: '', endDate: '' });
   const [userType, setUserType] = useState<UserTypeEnum>();
   // Hooks
   const t = useTranslations();
@@ -72,41 +72,9 @@ export default function EarningTableHeader({
   ];
 
   // Handlers
-  const handleStartDateChange = (e: { value: Date | null }) => {
-    const newStartDate = e.value ? e.value.toISOString() : '';
-    if (
-      dateFilters.endingDate &&
-      new Date(newStartDate) > new Date(dateFilters.endingDate)
-    ) {
-      setErrors((prev) => ({
-        ...prev,
-        startDate: t('Start date cannot be after the end date'),
-      }));
-      return;
-    }
-    setErrors((prev) => ({ ...prev, startDate: '' }));
-    setDateFilters((prev) => ({ ...prev, startingDate: newStartDate }));
-  };
-
-  const handleEndDateChange = (e: { value: Date | null }) => {
-    const newEndDate = e.value ? e.value.toISOString() : '';
-    if (
-      dateFilters.startingDate &&
-      new Date(newEndDate) < new Date(dateFilters.startingDate)
-    ) {
-      setErrors((prev) => ({
-        ...prev,
-        endDate: t('End date cannot be before the start date'),
-      }));
-      return;
-    }
-    setErrors((prev) => ({ ...prev, endDate: '' }));
-    setDateFilters((prev) => ({ ...prev, endingDate: newEndDate }));
-  };
-
   return (
     <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between  ">
-      <div className="flex flex-wrap gap-4">
+      <div className="ls-filter-group">
         <span className="p-input-icon-left w-full md:w-auto">
           <i className="pi pi-search pl-2" />
           <InputText
@@ -116,42 +84,16 @@ export default function EarningTableHeader({
             placeholder={t('Search')}
           />
         </span>
-        <div className="flex flex-col">
-          <Calendar
-            className="w-[14rem] h-10 border-[1px] border-gray-300 rounded-[0.3rem] pl-3 pr-3 text-sm"
-            placeholder={t('Start Date')}
-            value={
-              dateFilters.startingDate
-                ? new Date(dateFilters.startingDate)
-                : null
-            }
-            onChange={(e) => handleStartDateChange(e as { value: Date | null })}
-            dateFormat="dd/mm/yy"
-            showIcon
-          />
-          {errors.startDate && (
-            <small className="mt-1 text-xs text-red-500">
-              {errors.startDate}
-            </small>
-          )}
-        </div>
-        <div className="flex flex-col">
-          <Calendar
-            className="w-[14rem] h-10 border-[1px] border-gray-300 rounded-[0.3rem] pl-3 pr-3 text-sm"
-            placeholder={t('End Date')}
-            value={
-              dateFilters.endingDate ? new Date(dateFilters.endingDate) : null
-            }
-            onChange={(e) => handleEndDateChange(e as { value: Date | null })}
-            dateFormat="dd/mm/yy"
-            showIcon
-          />
-          {errors.endDate && (
-            <small className="mt-1 text-xs text-red-500">
-              {errors.endDate}
-            </small>
-          )}
-        </div>
+        <DateRangePicker
+          startDate={dateFilters.startingDate || ''}
+          endDate={dateFilters.endingDate || ''}
+          showLabel={false}
+          allowClear
+          placeholder="All time"
+          onChange={(startingDate, endingDate) =>
+            setDateFilters((prev) => ({ ...prev, startingDate, endingDate }))
+          }
+        />
         <Dropdown
           className="w-[14rem] h-10 border-[1px] border-gray-300 rounded-[0.3rem] pl-3 pr-3 text-sm"
           options={userTypes}
@@ -169,7 +111,7 @@ export default function EarningTableHeader({
           }}
           placeholder={`${t('Select')} ${t('User')} ${t('Type')}`}
         />
-        
+
         {userType !== undefined && userType !== 'ALL' && (
           <Dropdown
             className="w-[14rem] h-10 border-[1px] border-gray-300 rounded-[0.3rem] pl-3 pr-3 text-sm"
@@ -182,7 +124,6 @@ export default function EarningTableHeader({
           />
         )}
 
-
         <Dropdown
           className="w-[14rem] h-10 border-[1px] border-gray-300 rounded-[0.3rem] pl-3 pr-3 text-sm"
           options={orderTypes}
@@ -192,7 +133,7 @@ export default function EarningTableHeader({
           }
           placeholder={`${t('Select')} ${t('Order')} ${t('Type')}`}
         />
-        
+
         <Dropdown
           className="w-[14rem] h-10 border-[1px] border-gray-300 rounded-[0.3rem] pl-3 pr-3 text-sm"
           options={paymentTypes}
@@ -202,13 +143,14 @@ export default function EarningTableHeader({
           }
           placeholder={t(`${t('Select')} ${t('Payment Method')}`)}
         />
-         <button
-        onClick={onClearFilters}
-        className="max-w-32 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded h-10 transition-colors "
-        type="button"
-      >
-        {t('Reset')}
-      </button>
+        <ActionButton
+          variant="secondary"
+          onClick={onClearFilters}
+          className="max-w-32 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded h-10 transition-colors "
+          type="button"
+        >
+          {t('Reset')}
+        </ActionButton>
       </div>
     </div>
   );

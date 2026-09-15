@@ -382,7 +382,7 @@ export default function TicketChatModal({
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder={t('type_your_message_here')}
-                className="flex-1 p-3 border border-gray-300 dark:text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-dark resize-none"
+                className="ls-field flex-1 p-3 border border-gray-300 dark:text-white rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary-dark resize-none"
                 rows={2}
                 disabled={isSending}
               />

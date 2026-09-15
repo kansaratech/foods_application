@@ -5,14 +5,37 @@ export const NodeMailerValidationSchema = Yup.object().shape({
   emailName: Yup.string()
     .max(35, 'Email name must be at most 35 characters')
     .required('Email name is required'),
-  password: Yup.string().test(
-    'password-length',
-    'Password must be at least 8 characters',
-    (value) => !value || value.length >= 8
-  ),
+  password: Yup.string()
+    .test(
+      'password-length',
+      'Password must be at least 8 characters',
+      (value) => !value || !value.trim() || value.length >= 8
+    )
+    .test(
+      'gmail-app-password',
+      'Use a 16-character Google App Password',
+      function (value) {
+        const host = this.parent.smtpHost?.trim().toLowerCase();
+        return (
+          (host && host !== 'smtp.gmail.com') ||
+          !value?.trim() ||
+          /^[a-zA-Z]{16}$/.test(value.replace(/\s/g, ''))
+        );
+      }
+    ),
   enableEmail: Yup.boolean(),
   smtpHost: Yup.string().nullable(),
-  smtpPort: Yup.number().nullable(),
+  smtpPort: Yup.number()
+    .nullable()
+    .integer()
+    .min(1)
+    .max(65535)
+    .test('gmail-port', 'Gmail requires port 465 or 587', function (value) {
+      const host = this.parent.smtpHost?.trim().toLowerCase();
+      return (
+        (host && host !== 'smtp.gmail.com') || value === 465 || value === 587
+      );
+    }),
   smtpSecure: Yup.boolean().nullable(),
   smtpUser: Yup.string().nullable(),
 });

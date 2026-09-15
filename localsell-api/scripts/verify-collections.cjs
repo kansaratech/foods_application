@@ -1,0 +1,73 @@
+require('dotenv').config();
+const assert=require('node:assert/strict');
+const {randomUUID}=require('node:crypto');
+const {prisma}=require('../dist/prisma/client');
+const {collectCommission,billOutstanding,paymentAmount,reportDates}=require('../dist/services/collections.service');
+const {closeCommissionBills,currentPeriod}=require('../dist/services/commission.service');
+const {isCommissionSelfCollected,resolveCommissionRate}=require('../dist/utils/commission');
+const {collectionsResolvers}=require('../dist/graphql/resolvers/collections.resolvers');
+const {commissionResolvers}=require('../dist/graphql/resolvers/commission.resolvers');
+require('../dist/services/order-notify').notifyOrderEvent=()=>{}; // Never send test notifications.
+const {orderResolvers}=require('../dist/graphql/resolvers/order.resolvers');
+const tag=`collection-qa-${randomUUID()}`;
+let passed=0;
+async function test(name,fn){await fn();passed++;console.log('PASS',name);}
+async function main(){
+ for(const paymentMethod of ['COD','UPI','STRIPE'])for(const isPickedUp of [false,true])await test(`Store ${paymentMethod} pickup=${isPickedUp}`,()=>assert.equal(isCommissionSelfCollected({paymentMethod,isPickedUp,deliveryMode:'SELF'}),false));
+ await test('Zero default rate',()=>assert.equal(resolveCommissionRate(0,0),0));
+ await test('India billing boundary',()=>assert.equal(currentPeriod('MONTHLY',new Date('2026-08-31T19:00:00Z')).start.toISOString(),'2026-08-31T18:30:00.000Z'));
+ for(const amount of [-1,0,NaN,Infinity,0.001,101])await test(`Invalid amount ${amount}`,()=>assert.throws(()=>paymentAmount(amount,100)));
+ for(const dates of [['2026-02-30','2026-03-01'],['2026-09-01'],['2026-09-15','2026-09-01']])await test('Invalid range '+dates,()=>assert.throws(()=>reportDates(...dates)));
+ const fixture=await prisma.commissionBill.create({data:{vendorId:tag,periodStart:new Date(),periodEnd:new Date(),cycle:'MONTHLY',commissionTotal:100,grossFoodSubtotal:500,orderCount:1,invoiceNumber:tag}});
+ const input={billId:fixture.id,amount:30,method:'UPI',reference:'TEST-ONLY',receivedAt:new Date(Date.now()-1000).toISOString(),idempotencyKey:tag+'-1'};
+ const receipt=await collectCommission(input,tag);
+ let bill=await prisma.commissionBill.findUnique({where:{id:fixture.id}});
+ await test('Partial leaves 70 due',()=>{assert.equal(bill.paidAmount,30);assert.equal(bill.status,'PENDING');assert.equal(billOutstanding(bill),70)});
+ await test('Idempotent retry',async()=>assert.equal((await collectCommission(input,tag)).id,receipt.id));
+ for(const [name,patch] of [['Changed retry',{amount:31}],['Overpay',{amount:71,idempotencyKey:tag+'-over'}],['Missing reference',{reference:'',idempotencyKey:tag+'-ref'}],['Future date',{receivedAt:'2099-01-01',idempotencyKey:tag+'-date'}]])await test(name,()=>assert.rejects(()=>collectCommission({...input,...patch},tag)));
+ const attempts=await Promise.allSettled([1,2].map(i=>collectCommission({...input,amount:50,idempotencyKey:tag+'-parallel-'+i},tag)));
+ await test('Concurrent collectors cannot overpay',()=>assert.equal(attempts.filter(r=>r.status==='fulfilled').length,1));
+ bill=await prisma.commissionBill.findUnique({where:{id:fixture.id}});
+ await collectCommission({...input,amount:billOutstanding(bill),method:'CASH',reference:'',idempotencyKey:tag+'-final'},tag);
+ bill=await prisma.commissionBill.findUnique({where:{id:fixture.id}});
+ await test('Final payment settles bill',()=>{assert.equal(bill.status,'PAID');assert.equal(bill.paidAmount,100);assert.equal(billOutstanding(bill),0)});
+ await test('Receipts sum to paid balance',async()=>assert.equal((await prisma.commissionPayment.aggregate({where:{billId:fixture.id},_sum:{amount:true}}))._sum.amount,100));
+ await test('Settled bill rejects extra',()=>assert.rejects(()=>collectCommission({...input,amount:1,idempotencyKey:tag+'-extra'},tag)));
+ const ctx={user:{id:tag,userType:'VENDOR'}};
+ await test('Vendor cannot record payment',()=>assert.rejects(async()=>collectionsResolvers.Mutation.recordCommissionPayment(null,input,ctx)));
+ await test('Vendor cannot view other bill',()=>assert.rejects(()=>commissionResolvers.Query.commissionBill(null,{id:fixture.id},{user:{id:tag+'other',userType:'VENDOR'}})));
+ await test('Vendor sees own receipts',async()=>assert.equal((await collectionsResolvers.Query.commissionPayments(null,{},ctx)).payments.length,3));
+ await test('Vendor cannot request other receipts',()=>assert.rejects(()=>collectionsResolvers.Query.commissionPayments(null,{vendorId:tag+'other'},ctx)));
+ assert.equal(await prisma.commissionRecord.count({where:{orderDeliveredAt:{gte:new Date('2098-01-01'),lte:new Date('2098-05-01')}}}),0,'QA date window must be empty');
+ // Isolated future dates exclude real business orders. Exact IDs are cleaned in finally.
+ for(const [i,date] of ['2098-01-15','2098-02-15','2098-04-15'].entries())await prisma.commissionRecord.create({data:{orderId:tag+'-'+i,orderNumber:tag+'-'+i,vendorId:tag,restaurantId:tag,foodSubtotal:100,commissionRate:20,commissionAmount:20,selfCollected:false,orderDeliveredAt:new Date(date+'T12:00:00Z')}});
+ const dateOptions={periodStart:'2098-01-01',periodEnd:'2098-02-28'};
+ const bills=await closeCommissionBills(dateOptions);
+ await test('Bill date filter',()=>assert.equal(bills.reduce((n,b)=>n+b.orderCount,0),2));
+ await test('Bill amounts',()=>assert.equal(bills.reduce((n,b)=>n+b.commissionTotal,0),40));
+ await test('Repeated billing adds no bills',async()=>assert.equal((await closeCommissionBills(dateOptions)).length,0));
+ await test('Outside order stays unbilled',async()=>assert.equal((await prisma.commissionRecord.findUnique({where:{orderId:tag+'-2'}})).billId,null));
+ await prisma.commissionRecord.create({data:{orderId:tag+'-zero',orderNumber:tag+'-zero',vendorId:tag,restaurantId:tag,foodSubtotal:100,commissionRate:0,commissionAmount:0,selfCollected:false,orderDeliveredAt:new Date('2098-03-15T12:00:00Z')}});
+ const zeroBills=await closeCommissionBills({periodStart:'2098-03-01',periodEnd:'2098-03-31'});
+ await test('Zero commission bill has nothing to collect',()=>{assert.equal(zeroBills.length,1);assert.equal(zeroBills[0].status,'PAID');assert.equal(billOutstanding(zeroBills[0]),0)});
+ const owner=await prisma.user.create({data:{id:tag,userType:'VENDOR',name:'Collection QA only',isOrderNotification:false,isOfferNotification:false}});
+ const store=await prisma.restaurant.create({data:{id:tag,ownerId:owner.id,name:'Collection QA only',slug:tag,commissionRate:20,deliveryProvider:'SELF',isActive:false}});
+ const order=await prisma.order.create({data:{id:tag,orderId:tag,userId:owner.id,restaurantId:store.id,paymentMethod:'COD',deliveryMode:'SELF',orderStatus:'PICKED',orderAmount:120,deliveryCharges:20}});
+ await Promise.all([1,2].map(()=>orderResolvers.Mutation.updateOrderStatus(null,{id:order.id,status:'DELIVERED'},{user:{id:tag,userType:'ADMIN'}})));
+ const updatedStore=await prisma.restaurant.findUnique({where:{id:tag}});
+ await test('Delivery adds no platform payable',()=>assert.equal(updatedStore.currentWalletAmount,0));
+ await test('Concurrent completion counts earnings once',()=>assert.equal(updatedStore.totalWalletAmount,100));
+ await test('Delivery commission recorded once',async()=>assert.equal(await prisma.commissionRecord.count({where:{orderId:tag}}),1));
+ await test('Store delivery creates no rider cash',async()=>assert.equal(await prisma.riderCashEntry.count({where:{orderId:tag}}),0));
+ console.log(`Completed ${passed} checks`);
+}
+main().catch(e=>{console.error(e);process.exitCode=1}).finally(async()=>{
+ await prisma.commissionPayment.deleteMany({where:{vendorId:tag}});
+ await prisma.commissionRecord.deleteMany({where:{vendorId:tag}});
+ await prisma.commissionBill.deleteMany({where:{vendorId:tag}});
+ await prisma.auditLog.deleteMany({where:{actorId:tag}});
+ await prisma.order.deleteMany({where:{id:tag}});
+ await prisma.restaurant.deleteMany({where:{id:tag}});
+ await prisma.user.deleteMany({where:{id:tag}});
+ await prisma.$disconnect();
+});

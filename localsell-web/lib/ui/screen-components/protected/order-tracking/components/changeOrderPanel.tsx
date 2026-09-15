@@ -19,8 +19,9 @@ interface Props {
 
 /**
  * Shown only while the order is PENDING (before the store accepts). Lets the
- * customer flip delivery ↔ pickup and cash ↔ pay-online. The server recomputes
- * the delivery fee + total and re-checks the delivery area.
+ * customer flip delivery ↔ pickup. The server recomputes the delivery fee +
+ * total and re-checks the delivery area. Payment method is COD-only
+ * platform-wide and never presented as changeable here.
  */
 export default function ChangeOrderPanel({ order, onChanged }: Props) {
   const t = useTranslations();
@@ -38,7 +39,6 @@ export default function ChangeOrderPanel({ order, onChanged }: Props) {
   if ((order.orderStatus || "PENDING") !== "PENDING") return null;
 
   const isPickup = !!order.isPickedUp;
-  const isCod = (order.paymentMethod || "COD") === "COD";
 
   const Btn = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
     <button
@@ -73,16 +73,8 @@ export default function ChangeOrderPanel({ order, onChanged }: Props) {
           </Btn>
         </div>
 
-        {/* Online payment is paused platform-wide for now (checkout only
-            offers COD too) — nothing to switch to, so no toggle here. */}
-        {!isCod && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-wide text-gray-400">{t("Payment")}</span>
-            <Btn active={isCod} onClick={() => modifyOrder({ variables: { id: order._id, paymentMethod: "COD" } })}>
-              {t("Cash")}
-            </Btn>
-          </div>
-        )}
+        {/* Payment is cash-on-delivery only, platform-wide, and that's not
+            presented as a choice anywhere — nothing to switch, so no toggle. */}
       </div>
     </div>
   );

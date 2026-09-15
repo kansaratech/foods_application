@@ -38,7 +38,9 @@ export default function FieldShell({
   if (isLoading) return <InputSkeleton />;
 
   return (
-    <div className={`flex w-full flex-col gap-y-1 ${className ?? ''}`}>
+    <div
+      className={`ls-field-shell flex w-full flex-col gap-y-1 ${className ?? ''}`}
+    >
       {showLabel && label != null && label !== '' && (
         <label
           htmlFor={htmlFor}

@@ -1,3 +1,4 @@
+import { collectionsResolvers } from './collections.resolvers';
 import { IResolvers } from '@graphql-tools/utils';
 import { GraphQLContext } from '../../context';
 import { commonResolvers } from './common.resolvers';
@@ -63,6 +64,7 @@ export const resolvers = mergeResolvers([
   compatResolvers,
   serviceabilityResolvers,
   commissionResolvers,
+  collectionsResolvers,
   financeOpsResolvers,
   storeDocsResolvers,
   storeDeliveryResolvers,

@@ -1,4 +1,6 @@
 import { IDateTextField } from '@/lib/utils/interfaces';
+import { useId } from 'react';
+import { Calendar, dateString, dateValue } from './calendar';
 import { twMerge } from 'tailwind-merge';
 import FieldShell from '../form/field-shell';
 
@@ -13,7 +15,8 @@ const CustomDateInput = ({
   onChange,
   ...props
 }: IDateTextField & { name?: string; error?: string }) => {
-  const id = name ?? 'date-input';
+  const generatedId = useId();
+  const id = name ?? generatedId;
   return (
     <FieldShell
       htmlFor={id}
@@ -22,13 +25,13 @@ const CustomDateInput = ({
       error={error}
       isLoading={isLoading}
     >
-      <input
-        id={id}
+      <Calendar
+        inputId={id}
+        ariaLabel={placeholder || name || 'Choose date'}
         name={name}
-        type="date"
         className={twMerge('ls-field', error && 'ls-field-invalid', className)}
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value)}
+        value={dateValue(value)}
+        onChange={(e) => onChange(dateString(e.value as Date | null))}
         {...props}
       />
     </FieldShell>

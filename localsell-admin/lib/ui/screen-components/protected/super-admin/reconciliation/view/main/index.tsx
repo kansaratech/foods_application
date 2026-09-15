@@ -32,7 +32,7 @@ export default function ReconciliationMain() {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="h-9 rounded-lg border border-slate-300 px-2 dark:border-dark-600 dark:bg-dark-950"
+            className="ls-field h-9 rounded-lg border border-slate-300 px-2 dark:border-dark-600 dark:bg-dark-950"
           />
         </label>
         <label className="flex flex-col text-sm">
@@ -41,7 +41,7 @@ export default function ReconciliationMain() {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="h-9 rounded-lg border border-slate-300 px-2 dark:border-dark-600 dark:bg-dark-950"
+            className="ls-field h-9 rounded-lg border border-slate-300 px-2 dark:border-dark-600 dark:bg-dark-950"
           />
         </label>
         {loading && (
@@ -105,7 +105,7 @@ export default function ReconciliationMain() {
               {t('Each row should balance to ₹0 — a mismatch means money is unaccounted for.')}
             </p>
             <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-dark-600 dark:bg-dark-900">
-              <table className="w-full border-collapse text-sm">
+              <table className="ls-native-table w-full border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:border-dark-600 dark:bg-dark-950">
                     <th className="px-4 py-2">{t('Check')}</th>

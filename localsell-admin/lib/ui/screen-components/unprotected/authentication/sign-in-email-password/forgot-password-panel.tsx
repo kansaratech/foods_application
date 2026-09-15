@@ -124,7 +124,7 @@ export default function ForgotPasswordPanel({
             <label htmlFor="forgot-email">Work email</label>
             <div className={styles.inputWrap}>
               <i className="pi pi-envelope" aria-hidden="true" />
-              <input
+              <input className="ls-field"
                 id="forgot-email"
                 type="email"
                 autoComplete="username"
@@ -139,7 +139,7 @@ export default function ForgotPasswordPanel({
             <label htmlFor="forgot-otp">Reset code</label>
             <div className={styles.inputWrap}>
               <i className="pi pi-hashtag" aria-hidden="true" />
-              <input
+              <input className="ls-field"
                 id="forgot-otp"
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -152,7 +152,7 @@ export default function ForgotPasswordPanel({
             <label htmlFor="forgot-password">New password</label>
             <div className={styles.inputWrap}>
               <i className="pi pi-lock" aria-hidden="true" />
-              <input
+              <input className="ls-field"
                 id="forgot-password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
@@ -177,7 +177,7 @@ export default function ForgotPasswordPanel({
             <label htmlFor="forgot-confirm">Confirm new password</label>
             <div className={styles.inputWrap}>
               <i className="pi pi-lock" aria-hidden="true" />
-              <input
+              <input className="ls-field"
                 id="forgot-confirm"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"

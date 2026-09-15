@@ -1,3 +1,5 @@
+> **MVP update:** The fleet/payout model below is historical reference. The active direct-to-store commission and receipt workflow is documented in [MVP_FINANCE_REDESIGN.md](MVP_FINANCE_REDESIGN.md). New pickup and store-delivery orders owe commission regardless of cash or digital payment.
+
 # Padharo — Platform money model
 
 How the platform earns, how COD cash settles, and how delivery areas are

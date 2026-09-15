@@ -120,10 +120,7 @@ export const storeDeliveryResolvers: IResolvers<unknown, GraphQLContext> = {
         if (!agent.isActive) throw userInputError('That delivery person is inactive.');
         data = { storeDeliveryAgentId: agent.id, deliveryMode: 'SELF', riderId: null };
       } else {
-        // Hand back to the LocalSell fleet. The store's deliveryProvider is a
-        // default for new orders, not a per-order lock — an explicit tap here
-        // always wins.
-        data = { storeDeliveryAgentId: null, deliveryMode: 'PLATFORM' };
+        data = { storeDeliveryAgentId: null, deliveryMode: 'SELF', riderId: null };
       }
 
       const updated = await prisma.order.update({ where: { id: order.id }, data });

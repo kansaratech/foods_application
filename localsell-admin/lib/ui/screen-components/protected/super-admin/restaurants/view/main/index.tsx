@@ -1,4 +1,6 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
+import Select from '@/lib/ui/useable-components/custom-dropdown/select';
 
 // Core
 import { useContext, useState } from 'react';
@@ -181,7 +183,8 @@ export default function RestaurantsMain() {
       showToast({
         type: 'error',
         title: t('Store Delete'),
-        message: getGraphQLErrorMessage(err as Error) ?? t(`Store delete failed`),
+        message:
+          getGraphQLErrorMessage(err as Error) ?? t(`Store delete failed`),
       });
       setDeleteId('');
     }
@@ -397,9 +400,9 @@ export default function RestaurantsMain() {
           </p>
           <label className="flex flex-col">
             <span className="mb-1 text-gray-500">{t('Target store')}</span>
-            <select
+            <Select
               value={cloneTargetId}
-              onChange={(e) => setCloneTargetId(e.target.value)}
+              onChange={(e) => setCloneTargetId(e.value)}
               className="h-10 rounded border border-gray-300 px-2 dark:bg-dark-950"
             >
               <option value="">{t('Select')}…</option>
@@ -410,7 +413,7 @@ export default function RestaurantsMain() {
                     {s.name}
                   </option>
                 ))}
-            </select>
+            </Select>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -422,7 +425,8 @@ export default function RestaurantsMain() {
               'Replace the target menu (deactivates items with order history)'
             )}
           </label>
-          <button
+          <ActionButton
+            variant="primary"
             onClick={() =>
               cloneTargetId &&
               cloneMenu({
@@ -437,7 +441,7 @@ export default function RestaurantsMain() {
             className="mt-1 h-10 rounded bg-black text-white disabled:opacity-50"
           >
             {cloning ? t('Cloning') : t('Clone menu')}
-          </button>
+          </ActionButton>
         </div>
       </Dialog>
     </div>

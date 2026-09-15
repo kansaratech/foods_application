@@ -1,15 +1,26 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 import { useQuery } from '@apollo/client';
 import { useTranslations } from 'next-intl';
 
 import { GET_MY_PAYOUT_HISTORY } from '@/lib/api/graphql';
 import Table from '@/lib/ui/useable-components/table';
-import { IMyPayoutHistoryResponse, IPayoutRunItemRow } from '@/lib/utils/interfaces';
+import {
+  IMyPayoutHistoryResponse,
+  IPayoutRunItemRow,
+} from '@/lib/utils/interfaces';
 
-const money = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const money = (n: number) =>
+  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const day = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d
+    ? new Date(d).toLocaleDateString(undefined, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '—';
 const statusClass: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-700',
   PAID: 'bg-green-100 text-green-700',
@@ -18,10 +29,13 @@ const statusClass: Record<string, string> = {
 
 export default function MyPayoutsMain() {
   const t = useTranslations();
-  const { data, loading } = useQuery<IMyPayoutHistoryResponse>(GET_MY_PAYOUT_HISTORY, {
-    variables: { limit: 50 },
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data, loading } = useQuery<IMyPayoutHistoryResponse>(
+    GET_MY_PAYOUT_HISTORY,
+    {
+      variables: { limit: 50 },
+      fetchPolicy: 'cache-and-network',
+    }
+  );
   const items = data?.myPayoutHistory?.items ?? [];
 
   const printStatement = (item: IPayoutRunItemRow) => {
@@ -29,7 +43,8 @@ export default function MyPayoutsMain() {
     if (!s) return;
     const w = window.open('', '_blank', 'width=800,height=900');
     if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>${s.statementNumber}</title>
+    w.document
+      .write(`<!doctype html><html><head><title>${s.statementNumber}</title>
       <style>body{font:13px/1.5 system-ui,sans-serif;padding:40px;color:#111}h1{font-size:20px;margin:0 0 4px}
       .muted{color:#666}.tot{font-weight:700;font-size:15px}.row{display:flex;justify-content:space-between;gap:40px;margin-top:20px}
       table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}</style>
@@ -68,19 +83,24 @@ export default function MyPayoutsMain() {
           {
             headerName: t('Period'),
             propertyName: 'periodStart',
-            body: (i: IPayoutRunItemRow) => `${day(i.periodStart)} – ${day(i.periodEnd)}`,
+            body: (i: IPayoutRunItemRow) =>
+              `${day(i.periodStart)} – ${day(i.periodEnd)}`,
           },
           { headerName: t('Run'), propertyName: 'runLabel' },
           {
             headerName: t('Amount'),
             propertyName: 'amount',
-            body: (i: IPayoutRunItemRow) => <span className="font-semibold">{money(i.amount)}</span>,
+            body: (i: IPayoutRunItemRow) => (
+              <span className="font-semibold">{money(i.amount)}</span>
+            ),
           },
           {
             headerName: t('Status'),
             propertyName: 'status',
             body: (i: IPayoutRunItemRow) => (
-              <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass[i.status] ?? ''}`}>
+              <span
+                className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass[i.status] ?? ''}`}
+              >
                 {t(i.status)}
               </span>
             ),
@@ -93,12 +113,13 @@ export default function MyPayoutsMain() {
           {
             propertyName: 'actions',
             body: (i: IPayoutRunItemRow) => (
-              <button
+              <ActionButton
+                variant="secondary"
                 onClick={() => printStatement(i)}
                 className="rounded border px-3 py-1 text-xs dark:border-dark-600"
               >
                 {t('Print statement')}
-              </button>
+              </ActionButton>
             ),
           },
         ]}

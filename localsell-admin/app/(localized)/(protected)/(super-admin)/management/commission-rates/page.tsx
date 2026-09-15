@@ -1,7 +1,2 @@
-'use client';
-// Screens
-import CommissionRateScreen from '@/lib/ui/screens/super-admin/management/commission-rates';
-
-export default function CommissionratePage() {
-  return <CommissionRateScreen />;
-}
+import { redirect } from 'next/navigation';
+export default function Page(){redirect('/management/finance/settings');}

@@ -257,8 +257,9 @@ docker compose --env-file deploy/localsell.env exec api npm run db:deploy
 
 #    Demo data — config-driven, defined by localsell-api/prisma/seed-data.json.
 #    WIPES every data table and rebuilds the marketplace (Hot Pizza Corner,
-#    Devshree Kitchen, Deogarh Mahal Rasoi, Shrinath Sweets & Namkeen). Infra
-#    secrets on Configuration (Maps / Stripe / SMTP keys) are preserved.
+#    Devshree Kitchen, Deogarh Daily Mart, Shrinath Sweets & Breakfast Corner —
+#    0 customers, 4 fully-configured stores). Infra secrets on Configuration
+#    (Maps / Stripe / SMTP keys) are preserved.
 #    NEVER run this against a marketplace with real vendors/orders.
 docker compose --env-file deploy/localsell.env exec api npm run seed
 
@@ -272,11 +273,13 @@ docker compose --env-file deploy/localsell.env restart api
 
 `db:deploy -- --demo` runs `npm run seed` — the config-driven marketplace seed
 (`prisma/seed-data.json`). Default logins: admin `admin@localsell.in` /
-`Admin@123`; vendor `<slug>-owner@localsell.in` / `Vendor@123`; store app
+`Admin@123`; vendor `<vendor-email>@localsell.in` / `Vendor@123` (e.g.
+`hot-pizza-corner-owner@localsell.in`); store app
 `<slug>@store.localsell.in` / `Store@123` (e.g.
-`hot-pizza-corner@store.localsell.in`); customer `customer@localsell.in` /
-`Customer@123`; rider `rider1` / `Rider@123`. The seed also sets `Configuration`
-to INR / ₹, commission 20% / MONTHLY, map centre Deogarh.
+`hot-pizza-corner@store.localsell.in`); rider `rider1`/`rider2`/`rider3` /
+`Rider@123`. **0 customers** in this seed — the marketplace launches empty of
+customer accounts, real signups start from zero. The seed also sets
+`Configuration` to INR / ₹, commission 20% / MONTHLY, map centre Deogarh.
 
 **On every later redeploy after a schema change:** just
 `docker compose … exec api npm run db:deploy` (no `--demo`).

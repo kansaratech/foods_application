@@ -1,3 +1,4 @@
+import { billOutstanding, reportDates } from '../../services/collections.service';
 import { IResolvers } from '@graphql-tools/utils';
 import { CommissionBill, CommissionRecord, RiderCashEntry, RiderCashRemittance } from '@prisma/client';
 import { prisma } from '../../prisma/client';
@@ -89,7 +90,7 @@ async function settleRiderCash(input: {
 
 function periodLabel(start: Date, end: Date): string {
   const fmt = (d: Date) =>
-    d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
@@ -163,13 +164,16 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
 
     commissionBills: async (
       _parent,
-      args: { status?: string; vendorId?: string; page?: number; limit?: number },
+      args: { status?: string; vendorId?: string; page?: number; limit?: number; search?: string; startDate?: string; endDate?: string },
       context,
     ) => {
       requireRole(context, ['ADMIN']);
       const page = args.page && args.page > 0 ? args.page : 1;
       const limit = args.limit && args.limit > 0 ? args.limit : 25;
+      const matchingVendors = args.search ? await prisma.user.findMany({where:{OR:[{name:{contains:args.search}},{email:{contains:args.search}}]},select:{id:true}}) : [];
       const where = {
+        ...(args.search ? {OR:[{invoiceNumber:{contains:args.search}},{vendorId:{in:matchingVendors.map(v=>v.id)}}]} : {}),
+        createdAt: reportDates(args.startDate,args.endDate),
         ...(args.status ? { status: args.status } : {}),
         ...(args.vendorId ? { vendorId: args.vendorId } : {}),
       };
@@ -219,7 +223,7 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const outstandingTotal = bills
         .filter((b) => b.status === 'PENDING')
-        .reduce((s, b) => s + b.commissionTotal, 0);
+        .reduce((s, b) => s + billOutstanding(b), 0);
 
       return {
         cycle,
@@ -347,7 +351,7 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
         .reduce((s, b) => s + (b.paidAmount ?? b.commissionTotal), 0);
       const commissionOutstanding = bills
         .filter((b) => b.status === 'PENDING')
-        .reduce((s, b) => s + b.commissionTotal, 0);
+        .reduce((s, b) => s + billOutstanding(b), 0);
 
       const codCashCollected = cashEntries.reduce((s, e) => s + e.owedToPlatform, 0);
       const codCashRemitted = remittances.reduce((s, r) => s + r.amount, 0);
@@ -475,18 +479,17 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       const existing = await prisma.commissionBill.findUnique({ where: { id: args.id } });
       if (!existing) throw notFoundError('Commission bill not found');
 
+      if (status === existing.status && status !== 'PENDING') return existing;
+      if (existing.status !== 'PENDING') throw userInputError('Settled bills cannot be reopened.');
+      if (status === 'PAID') throw userInputError('Use Record payment to collect commission and issue a receipt.');
+      if (status === 'WAIVED' && !args.note?.trim()) throw userInputError('Enter a reason for waiving the remaining commission.');
       const settling = status !== 'PENDING' && existing.status === 'PENDING';
-      const updated = await prisma.commissionBill.update({
-        where: { id: args.id },
-        data: {
-          status,
-          note: args.note ?? undefined,
-          ...(status === 'PAID'
-            ? { paidAt: settling ? new Date() : existing.paidAt, paidAmount: args.paidAmount ?? existing.commissionTotal }
-            : {}),
-          ...(status === 'WAIVED' && settling ? { paidAt: new Date(), paidAmount: 0 } : {}),
-        },
+      const claim = await prisma.commissionBill.updateMany({
+        where: { id: args.id, status: existing.status, paidAmount: existing.paidAmount },
+        data: { status, note: args.note ?? undefined, ...(status === 'WAIVED' && settling ? { paidAt: new Date() } : {}) },
       });
+      if (claim.count !== 1) throw userInputError('The bill changed. Refresh before changing its status.');
+      const updated = await prisma.commissionBill.findUniqueOrThrow({where:{id:args.id}});
       await recordAudit(context, {
         action: `commission.bill.${status.toLowerCase()}`,
         targetType: 'CommissionBill',

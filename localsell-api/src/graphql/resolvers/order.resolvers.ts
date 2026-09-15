@@ -140,9 +140,9 @@ async function finalizeDelivery(
   restaurant: { id: string; commissionRate: number },
   confirmedBy: 'OTP' | 'MANUAL',
 ): Promise<Order> {
-  const alreadyDelivered = order.orderStatus === 'DELIVERED';
-  const updated = await prisma.order.update({
-    where: { id: order.id },
+  const {updated,changed} = await prisma.$transaction(async(tx)=>{
+  const claimed = await tx.order.updateMany({
+    where: { id: order.id, orderStatus: { not: 'DELIVERED' } },
     data: {
       orderStatus: 'DELIVERED',
       status: 'COMPLETED',
@@ -153,8 +153,9 @@ async function finalizeDelivery(
     },
   });
 
-  if (!alreadyDelivered) {
-    const config = await prisma.configuration.findFirst();
+  const updated = await tx.order.findUniqueOrThrow({where:{id:order.id}});
+  if (claimed.count) {
+    const config = await tx.configuration.findFirst();
     const rate = resolveCommissionRate(restaurant.commissionRate, config?.defaultCommissionRate);
     const foodAmount = order.orderAmount - order.deliveryCharges - order.tipping - order.taxationAmount;
     const commission = Math.round(foodAmount * (rate / 100) * 100) / 100;
@@ -162,16 +163,17 @@ async function finalizeDelivery(
     const storeEarning =
       foodAmount - commission + order.taxationAmount +
       (selfDelivered ? order.deliveryCharges + order.tipping : 0);
-    await prisma.restaurant.update({
+    await tx.restaurant.update({
       where: { id: restaurant.id },
       data: {
-        currentWalletAmount: { increment: storeEarning },
+        // Store-managed orders are already paid directly to the store: no platform payable.
+        ...(order.deliveryMode === 'PLATFORM' ? { currentWalletAmount: { increment: storeEarning } } : {}),
         totalWalletAmount: { increment: storeEarning },
       },
     });
-    if (order.riderId) {
+    if (order.riderId && order.deliveryMode === 'PLATFORM') {
       const riderEarning = order.deliveryCharges + order.tipping;
-      await prisma.riderProfile.update({
+      await tx.riderProfile.update({
         where: { userId: order.riderId },
         data: {
           currentWalletAmount: { increment: riderEarning },
@@ -179,12 +181,15 @@ async function finalizeDelivery(
         },
       });
     }
-    await recordOrderCommission({ ...order, deliveredAt: updated.deliveredAt });
-    await recordRiderCash({ ...order, deliveredAt: updated.deliveredAt });
+    await recordOrderCommission({ ...order, deliveredAt: updated.deliveredAt }, tx);
+    if (order.deliveryMode === 'PLATFORM') await recordRiderCash({ ...order, deliveredAt: updated.deliveredAt }, tx);
   }
 
+    return {updated,changed:claimed.count>0};
+  });
+
   await publishOrderUpdate(updated);
-  if (!alreadyDelivered) notifyOrderEvent(updated.id, 'DELIVERED');
+  if (changed) notifyOrderEvent(updated.id, 'DELIVERED');
   return updated;
 }
 
@@ -694,6 +699,14 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
   Mutation: {
     placeOrder: async (_parent, args: PlaceOrderArgs, context) => {
       const currentUser = requireAuth(context);
+      // Online payment is paused platform-wide (COD only) — modifyOrder already
+      // rejects switching to anything else on an existing order, but placeOrder
+      // itself never validated this, so an older/unpatched client screen still
+      // offering Stripe/PayPal could create an order that can never actually be
+      // marked paid. Reject at creation time instead.
+      if (args.paymentMethod !== 'COD') {
+        throw userInputError('Online payment is currently unavailable — cash on delivery only.');
+      }
       const restaurant = await prisma.restaurant.findUnique({ where: { id: args.restaurant } });
       if (!restaurant || !restaurant.isActive) throw userInputError('Restaurant not found or unavailable');
       if (restaurant.approvalStatus && restaurant.approvalStatus !== 'APPROVED') {
@@ -751,13 +764,9 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const orderAmount = itemsTotal - discountAmount + deliveryCharges + args.tipping + gst.taxationAmount;
 
       // Fulfilment: pickup → PICKUP; a self-delivery-only store → SELF; anything
-      // else (PLATFORM or BOTH) defaults to the LocalSell fleet, and the store
+      // MVP delivery is handled by the store; historical fleet orders retain their mode. The store
       // can move a BOTH order to its own person after accepting it.
-      const deliveryMode = args.isPickedUp
-        ? 'PICKUP'
-        : restaurant.deliveryProvider === 'SELF'
-          ? 'SELF'
-          : 'PLATFORM';
+      const deliveryMode = args.isPickedUp ? 'PICKUP' : 'SELF';
 
       const order = await prisma.order.create({
         data: {
@@ -863,8 +872,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
           data.deliveryMode = 'PICKUP';
           data.storeDeliveryAgentId = null;
         } else {
-          const rest = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
-          data.deliveryMode = rest?.deliveryProvider === 'SELF' ? 'SELF' : 'PLATFORM';
+          data.deliveryMode = 'SELF';
         }
       }
       if (addressId !== order.addressId) data.addressId = addressId;
@@ -883,19 +891,17 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       return updated;
     },
 
+    // Customer self-cancel is disabled platform-wide, at every status
+    // (including PENDING) — once placed, an order can only be cancelled by
+    // the store/admin (see the separate role-gated `cancelOrder` mutation).
+    // Kept as a resolver (rather than removed from the schema) so an older
+    // client build still gets a clear, friendly rejection instead of a raw
+    // GraphQL schema error.
     abortOrder: async (_parent, args: { id: string }, context) => {
       const currentUser = requireAuth(context);
       const order = await prisma.order.findUnique({ where: { id: args.id } });
       if (!order || order.userId !== currentUser.id) throw notFoundError('Order not found');
-      if (order.orderStatus !== 'PENDING') {
-        throw userInputError('Only pending orders can be cancelled');
-      }
-      const updated = await prisma.order.update({
-        where: { id: args.id },
-        data: { orderStatus: 'CANCELLED', status: 'CANCELLED', cancelledAt: new Date() },
-      });
-      await publishOrderUpdate(updated);
-      return updated;
+      throw userInputError('This order cannot be cancelled. Please contact the store for help.');
     },
 
     updateOrderStatus: (_parent, args: { id: string; status: string }, context) =>

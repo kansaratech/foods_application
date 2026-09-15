@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 // Core
 import { ErrorMessage, Form, Formik, FormikErrors } from 'formik';
 
@@ -146,9 +147,13 @@ const RestaurantTiming = ({
   return (
     <div className="flex flex-col gap-2 rounded dark:bg-dark-950 dark:text-white">
       <div className="mb-3 flex flex-col">
-        <span className="text-lg font-semibold text-slate-900 dark:text-white">{t('Store Timing')}</span>
-        <span className="mt-1 text-sm text-slate-500">{t('Set opening hours for each day of the week')}</span>
-      </div> 
+        <span className="text-lg font-semibold text-slate-900 dark:text-white">
+          {t('Store Timing')}
+        </span>
+        <span className="mt-1 text-sm text-slate-500">
+          {t('Set opening hours for each day of the week')}
+        </span>
+      </div>
       <Formik
         initialValues={initialValues}
         validationSchema={TimingSchema}
@@ -159,26 +164,40 @@ const RestaurantTiming = ({
           <Form className="flex flex-col gap-3">
             <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-900 dark:bg-blue-950/30">
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">{t('Weekly schedule')}</p>
-                <p className="text-xs text-slate-500">{t('Copy Monday hours to quickly fill the complete week')}</p>
+                <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  {t('Weekly schedule')}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {t('Copy Monday hours to quickly fill the complete week')}
+                </p>
               </div>
-              <button
+              <ActionButton
+                variant="secondary"
                 type="button"
                 disabled={!values[0]?.times?.length}
                 onClick={() => {
-                  const mondayTimes = values[0].times.map((slot) => ({ ...slot }));
+                  const mondayTimes = values[0].times.map((slot) => ({
+                    ...slot,
+                  }));
                   values.forEach((_, index) => {
-                    if (index > 0) setFieldValue(`${index}.times`, mondayTimes.map((slot) => ({ ...slot })));
+                    if (index > 0)
+                      setFieldValue(
+                        `${index}.times`,
+                        mondayTimes.map((slot) => ({ ...slot }))
+                      );
                   });
                 }}
                 className="h-9 rounded-lg border border-primary-color bg-white px-4 text-sm font-semibold text-primary-color disabled:cursor-not-allowed disabled:opacity-40 dark:bg-dark-900"
               >
                 {t('Copy Monday to all')}
-              </button>
+              </ActionButton>
             </div>
             {values?.map((value, dayIndex) => {
               return (
-                <div key={dayIndex} className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-dark-600 dark:bg-dark-900 md:grid-cols-[120px_minmax(0,1fr)_110px]">
+                <div
+                  key={dayIndex}
+                  className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-white p-4 dark:border-dark-600 dark:bg-dark-900 md:grid-cols-[120px_minmax(0,1fr)_110px]"
+                >
                   {/* left side */}
                   <div className="flex items-center gap-3 self-start pt-2">
                     <Toggle
@@ -196,7 +215,9 @@ const RestaurantTiming = ({
                       }}
                       checked={value?.times?.length > 0}
                     />
-                    <span className="w-10 text-sm font-semibold text-slate-700 dark:text-slate-200">{value.day}</span>
+                    <span className="w-10 text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      {value.day}
+                    </span>
                   </div>
 
                   {/* center */}
@@ -246,7 +267,9 @@ const RestaurantTiming = ({
                                 </ErrorMessage>
                               </div>
 
-                              <span className="self-center text-xs text-slate-400">to</span>
+                              <span className="self-center text-xs text-slate-400">
+                                to
+                              </span>
 
                               <div className="max-w-4min-w-44 relative flex w-full min-w-44 flex-col">
                                 <CustomTimeInput
@@ -323,32 +346,39 @@ const RestaurantTiming = ({
                       </span>
                     </div>
                   )}
-                  <button
+                  <ActionButton
+                    variant="secondary"
                     type="button"
                     disabled={!value.times.length}
                     onClick={() => {
-                      const copiedTimes = value.times.map((slot) => ({ ...slot }));
+                      const copiedTimes = value.times.map((slot) => ({
+                        ...slot,
+                      }));
                       values.forEach((_, index) => {
-                        if (index !== dayIndex) setFieldValue(`${index}.times`, copiedTimes.map((slot) => ({ ...slot })));
+                        if (index !== dayIndex)
+                          setFieldValue(
+                            `${index}.times`,
+                            copiedTimes.map((slot) => ({ ...slot }))
+                          );
                       });
                     }}
                     className="h-9 self-start rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-dark-600 dark:text-slate-300 dark:hover:bg-dark-950"
                   >
                     {t('Copy to all')}
-                  </button>
+                  </ActionButton>
                 </div>
               );
             })}
 
             <div className="mt-3 flex justify-end border-t border-slate-200 pt-5 dark:border-dark-600">
               <CustomButton
-              className="flex h-11 rounded-md border border-primary-color bg-primary-color px-10 text-white"
-              label={t('Save')}
-              rounded={false}
-              disabled={loading}
-              type="submit"
-              loading={mutationLoading}
-            />
+                className="flex h-11 rounded-md border border-primary-color bg-primary-color px-10 text-white"
+                label={t('Save')}
+                rounded={false}
+                disabled={loading}
+                type="submit"
+                loading={mutationLoading}
+              />
             </div>
           </Form>
         )}

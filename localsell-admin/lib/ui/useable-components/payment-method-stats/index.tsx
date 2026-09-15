@@ -178,7 +178,7 @@ export default function PaymentMethodStats({
 
           {/* Pickup vs Delivery comparison */}
           <div className="overflow-x-auto p-4">
-            <table className="w-full min-w-[420px] text-sm">
+            <table className="ls-native-table w-full min-w-[420px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
                   <th className="pb-2 font-medium">{t('Metric')}</th>

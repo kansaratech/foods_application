@@ -299,8 +299,11 @@ function OrderDetail(props) {
 
   const subTotal = total - tip - tax - deliveryCharges
 
-  const isOrderPending = order?.orderStatus === ORDER_STATUS_ENUM.PENDING
-  const isOrderCancelable = isOrderPending
+  // Customer self-cancel is disabled platform-wide, at every order status —
+  // once placed, only the store/admin can cancel. The API's `abortOrder`
+  // rejects unconditionally now too; this just keeps the dead-end button
+  // from ever showing.
+  const isOrderCancelable = false
 
   if (!connect) return <ErrorView refetchFunctions={[]} />
 
@@ -478,9 +481,11 @@ function OrderDetail(props) {
 
         <PriceRow theme={currentTheme} title={t('total')} currency={configuration.currencySymbol} price={total.toFixed(2)} />
 
-        <View style={{ margin: scale(20) }}>
-          <Button disabled={isOrderCancelable ? false : true} text={t('cancelOrder')} buttonProps={{ onPress: cancelModalToggle }} buttonStyles={styles().cancelButtonContainer(currentTheme)} textProps={{ textColor: currentTheme.red600 }} textStyles={{ ...alignment.Pmedium }} />
-        </View>
+        {isOrderCancelable && (
+          <View style={{ margin: scale(20) }}>
+            <Button disabled={false} text={t('cancelOrder')} buttonProps={{ onPress: cancelModalToggle }} buttonStyles={styles().cancelButtonContainer(currentTheme)} textProps={{ textColor: currentTheme.red600 }} textStyles={{ ...alignment.Pmedium }} />
+          </View>
+        )}
 
       </View>
       <CancelModal theme={currentTheme} modalVisible={cancelModalVisible} setModalVisible={cancelModalToggle} cancelOrder={cancelOrder} loading={loadingCancel} orderStatus={order?.orderStatus} />

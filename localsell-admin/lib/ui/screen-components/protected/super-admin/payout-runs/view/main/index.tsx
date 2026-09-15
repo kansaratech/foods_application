@@ -1,4 +1,6 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
+import Select from '@/lib/ui/useable-components/custom-dropdown/select';
 
 import { useContext, useState } from 'react';
 import { useMutation, useQuery, useApolloClient } from '@apollo/client';
@@ -23,9 +25,16 @@ import {
   IPayoutRunsResponse,
 } from '@/lib/utils/interfaces';
 
-const money = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const money = (n: number) =>
+  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const day = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d
+    ? new Date(d).toLocaleDateString(undefined, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+    : '—';
 
 const statusChip: Record<string, string> = {
   OPEN: 'bg-amber-100 text-amber-700',
@@ -49,26 +58,38 @@ export default function PayoutRunsMain() {
   const [method, setMethod] = useState('bank');
   const [reference, setReference] = useState('');
 
-  const { data, loading, refetch } = useQuery<IPayoutRunsResponse>(GET_PAYOUT_RUNS, {
-    variables: { limit: 50 },
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data, loading, refetch } = useQuery<IPayoutRunsResponse>(
+    GET_PAYOUT_RUNS,
+    {
+      variables: { limit: 50 },
+      fetchPolicy: 'cache-and-network',
+    }
+  );
   const runs = data?.payoutRuns?.runs ?? [];
 
-  const { data: runData, refetch: refetchRun } = useQuery<IPayoutRunResponse>(GET_PAYOUT_RUN, {
-    variables: { id: openRunId },
-    skip: !openRunId,
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data: runData, refetch: refetchRun } = useQuery<IPayoutRunResponse>(
+    GET_PAYOUT_RUN,
+    {
+      variables: { id: openRunId },
+      skip: !openRunId,
+      fetchPolicy: 'cache-and-network',
+    }
+  );
   const run = runData?.payoutRun;
 
   const [createRun, { loading: creating }] = useMutation(CREATE_PAYOUT_RUN);
   const [markPaid, { loading: paying }] = useMutation(MARK_PAYOUT_ITEM_PAID);
   const [skipItem] = useMutation(SKIP_PAYOUT_ITEM);
-  const [completeRun, { loading: completing }] = useMutation(COMPLETE_PAYOUT_RUN);
+  const [completeRun, { loading: completing }] =
+    useMutation(COMPLETE_PAYOUT_RUN);
 
   const err = (e: unknown) =>
-    showToast({ type: 'error', title: t('Error'), message: (e as Error).message || t('Something went wrong'), duration: 2800 });
+    showToast({
+      type: 'error',
+      title: t('Error'),
+      message: (e as Error).message || t('Something went wrong'),
+      duration: 2800,
+    });
 
   const doCreate = async () => {
     try {
@@ -83,7 +104,12 @@ export default function PayoutRunsMain() {
       await refetch();
       const id = res.data?.createPayoutRun?._id;
       if (id) setOpenRunId(id);
-      showToast({ type: 'success', title: t('Payouts'), message: t('Payout run created'), duration: 2000 });
+      showToast({
+        type: 'success',
+        title: t('Payouts'),
+        message: t('Payout run created'),
+        duration: 2000,
+      });
     } catch (e) {
       err(e);
     }
@@ -92,11 +118,18 @@ export default function PayoutRunsMain() {
   const doMarkPaid = async () => {
     if (!payItem) return;
     try {
-      await markPaid({ variables: { id: payItem._id, method, reference: reference || null } });
+      await markPaid({
+        variables: { id: payItem._id, method, reference: reference || null },
+      });
       setPayItem(null);
       setReference('');
       refetchRun();
-      showToast({ type: 'success', title: t('Payouts'), message: t('Marked paid'), duration: 1800 });
+      showToast({
+        type: 'success',
+        title: t('Payouts'),
+        message: t('Marked paid'),
+        duration: 1800,
+      });
     } catch (e) {
       err(e);
     }
@@ -117,7 +150,12 @@ export default function PayoutRunsMain() {
       await completeRun({ variables: { id: run._id } });
       refetchRun();
       refetch();
-      showToast({ type: 'success', title: t('Payouts'), message: t('Run completed'), duration: 1800 });
+      showToast({
+        type: 'success',
+        title: t('Payouts'),
+        message: t('Run completed'),
+        duration: 1800,
+      });
     } catch (e) {
       err(e);
     }
@@ -128,7 +166,8 @@ export default function PayoutRunsMain() {
     if (!s) return;
     const w = window.open('', '_blank', 'width=800,height=900');
     if (!w) return;
-    w.document.write(`<!doctype html><html><head><title>${s.statementNumber}</title>
+    w.document
+      .write(`<!doctype html><html><head><title>${s.statementNumber}</title>
       <style>body{font:13px/1.5 system-ui,sans-serif;padding:40px;color:#111}h1{font-size:20px;margin:0 0 4px}
       .muted{color:#666}.tot{font-weight:700;font-size:15px}.row{display:flex;justify-content:space-between;gap:40px;margin-top:20px}
       table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ddd;padding:6px 8px;text-align:left}</style>
@@ -153,7 +192,11 @@ export default function PayoutRunsMain() {
 
   const downloadCsv = async () => {
     if (!run) return;
-    const res = await client.query({ query: GET_PAYOUT_RUN_CSV, variables: { id: run._id }, fetchPolicy: 'network-only' });
+    const res = await client.query({
+      query: GET_PAYOUT_RUN_CSV,
+      variables: { id: run._id },
+      fetchPolicy: 'network-only',
+    });
     const csv: string = res.data?.payoutRunCsv ?? '';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -168,59 +211,98 @@ export default function PayoutRunsMain() {
     <div className="p-3">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm text-gray-500">{t('payout_runs_help')}</p>
-        <button onClick={() => setShowCreate(true)} className="rounded bg-black px-4 py-2 text-sm text-white">
+        <ActionButton
+          variant="primary"
+          onClick={() => setShowCreate(true)}
+          className="rounded bg-black px-4 py-2 text-sm text-white"
+        >
           {t('New payout run')}
-        </button>
+        </ActionButton>
       </div>
 
       <Table
         data={loading ? [] : runs}
         loading={loading}
         moduleName="PayoutRuns"
-        handleRowClick={(e) => setOpenRunId((e.data as IPayoutRun)?._id ?? null)}
+        handleRowClick={(e) =>
+          setOpenRunId((e.data as IPayoutRun)?._id ?? null)
+        }
         columns={[
           { headerName: t('Run'), propertyName: 'label' },
           {
             headerName: t('Period'),
             propertyName: 'periodStart',
-            body: (r: IPayoutRun) => `${day(r.periodStart)} – ${day(r.periodEnd)}`,
+            body: (r: IPayoutRun) =>
+              `${day(r.periodStart)} – ${day(r.periodEnd)}`,
           },
           { headerName: t('Payees'), propertyName: 'itemCount' },
-          { headerName: t('Gross'), propertyName: 'grossTotal', body: (r: IPayoutRun) => money(r.grossTotal) },
-          { headerName: t('Paid'), propertyName: 'paidTotal', body: (r: IPayoutRun) => money(r.paidTotal) },
+          {
+            headerName: t('Gross'),
+            propertyName: 'grossTotal',
+            body: (r: IPayoutRun) => money(r.grossTotal),
+          },
+          {
+            headerName: t('Paid'),
+            propertyName: 'paidTotal',
+            body: (r: IPayoutRun) => money(r.paidTotal),
+          },
           {
             headerName: t('Status'),
             propertyName: 'status',
             body: (r: IPayoutRun) => (
-              <span className={`rounded px-2 py-0.5 text-xs ${statusChip[r.status] ?? ''}`}>{r.status}</span>
+              <span
+                className={`rounded px-2 py-0.5 text-xs ${statusChip[r.status] ?? ''}`}
+              >
+                {r.status}
+              </span>
             ),
           },
         ]}
       />
 
       {/* Create dialog */}
-      <Dialog header={t('New payout run')} visible={showCreate} onHide={() => setShowCreate(false)} style={{ width: '28rem', maxWidth: '95vw' }}>
+      <Dialog
+        header={t('New payout run')}
+        visible={showCreate}
+        onHide={() => setShowCreate(false)}
+        style={{ width: '28rem', maxWidth: '95vw' }}
+      >
         <div className="flex flex-col gap-3 text-sm">
           <label className="flex flex-col">
-            <span className="mb-1 text-gray-500">{t('Minimum balance to include')}</span>
+            <span className="mb-1 text-gray-500">
+              {t('Minimum balance to include')}
+            </span>
             <input
               type="number"
               value={minAmount}
               onChange={(e) => setMinAmount(e.target.value)}
-              className="h-10 rounded border border-gray-300 px-2 dark:bg-dark-950"
+              className="ls-field h-10 rounded border border-gray-300 px-2 dark:bg-dark-950"
             />
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={includeStores} onChange={(e) => setIncludeStores(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={includeStores}
+              onChange={(e) => setIncludeStores(e.target.checked)}
+            />
             {t('Include stores')}
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={includeRiders} onChange={(e) => setIncludeRiders(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={includeRiders}
+              onChange={(e) => setIncludeRiders(e.target.checked)}
+            />
             {t('Include riders')} ({t('net of held COD cash')})
           </label>
-          <button onClick={doCreate} disabled={creating} className="mt-2 h-10 rounded bg-black text-white disabled:opacity-50">
+          <ActionButton
+            variant="primary"
+            onClick={doCreate}
+            disabled={creating}
+            className="mt-2 h-10 rounded bg-black text-white disabled:opacity-50"
+          >
             {creating ? t('Creating') : t('Create run')}
-          </button>
+          </ActionButton>
         </div>
       </Dialog>
 
@@ -234,22 +316,39 @@ export default function PayoutRunsMain() {
         {run && (
           <div className="flex flex-col gap-3 text-sm">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-              <span><b>{t('Gross')}:</b> {money(run.grossTotal)}</span>
-              <span><b>{t('Paid')}:</b> {money(run.paidTotal)}</span>
-              <span className={`rounded px-2 py-0.5 text-xs ${statusChip[run.status] ?? ''}`}>{run.status}</span>
+              <span>
+                <b>{t('Gross')}:</b> {money(run.grossTotal)}
+              </span>
+              <span>
+                <b>{t('Paid')}:</b> {money(run.paidTotal)}
+              </span>
+              <span
+                className={`rounded px-2 py-0.5 text-xs ${statusChip[run.status] ?? ''}`}
+              >
+                {run.status}
+              </span>
               <div className="ml-auto flex gap-2">
-                <button onClick={downloadCsv} className="rounded border px-3 py-1 text-xs dark:border-dark-600">
+                <ActionButton
+                  variant="secondary"
+                  onClick={downloadCsv}
+                  className="rounded border px-3 py-1 text-xs dark:border-dark-600"
+                >
                   {t('Download CSV')}
-                </button>
+                </ActionButton>
                 {run.status === 'OPEN' && (
-                  <button onClick={doComplete} disabled={completing} className="rounded bg-green-600 px-3 py-1 text-xs text-white disabled:opacity-50">
+                  <ActionButton
+                    variant="success"
+                    onClick={doComplete}
+                    disabled={completing}
+                    className="rounded bg-green-600 px-3 py-1 text-xs text-white disabled:opacity-50"
+                  >
                     {t('Complete run')}
-                  </button>
+                  </ActionButton>
                 )}
               </div>
             </div>
 
-            <table className="w-full border-collapse text-xs">
+            <table className="ls-native-table w-full border-collapse text-xs">
               <thead>
                 <tr className="border-b text-left text-gray-500">
                   <th className="py-1">{t('Payee')}</th>
@@ -267,28 +366,50 @@ export default function PayoutRunsMain() {
                   <tr key={i._id} className="border-b border-dashed">
                     <td className="py-1">{i.payeeName}</td>
                     <td className="py-1">{i.subjectType}</td>
-                    <td className="py-1 text-right">{money(i.walletBalance)}</td>
-                    <td className="py-1 text-right">{i.heldCash ? money(i.heldCash) : '—'}</td>
-                    <td className="py-1 text-right font-semibold">{money(i.amount)}</td>
+                    <td className="py-1 text-right">
+                      {money(i.walletBalance)}
+                    </td>
+                    <td className="py-1 text-right">
+                      {i.heldCash ? money(i.heldCash) : '—'}
+                    </td>
+                    <td className="py-1 text-right font-semibold">
+                      {money(i.amount)}
+                    </td>
                     <td className="py-1">
-                      <span className={`rounded px-1.5 py-0.5 ${statusChip[i.status] ?? ''}`}>{i.status}</span>
+                      <span
+                        className={`rounded px-1.5 py-0.5 ${statusChip[i.status] ?? ''}`}
+                      >
+                        {i.status}
+                      </span>
                     </td>
                     <td className="py-1">{i.reference || '—'}</td>
                     <td className="py-1 text-right">
                       <span className="flex justify-end gap-1">
                         {i.status === 'PENDING' && (
                           <>
-                            <button onClick={() => setPayItem(i)} className="rounded bg-black px-2 py-0.5 text-white">
+                            <ActionButton
+                              variant="primary"
+                              onClick={() => setPayItem(i)}
+                              className="rounded bg-black px-2 py-0.5 text-white"
+                            >
                               {t('Pay')}
-                            </button>
-                            <button onClick={() => doSkip(i)} className="rounded border px-2 py-0.5 dark:border-dark-600">
+                            </ActionButton>
+                            <ActionButton
+                              variant="secondary"
+                              onClick={() => doSkip(i)}
+                              className="rounded border px-2 py-0.5 dark:border-dark-600"
+                            >
                               {t('Skip')}
-                            </button>
+                            </ActionButton>
                           </>
                         )}
-                        <button onClick={() => printStatement(i)} className="rounded border px-2 py-0.5 dark:border-dark-600">
+                        <ActionButton
+                          variant="secondary"
+                          onClick={() => printStatement(i)}
+                          className="rounded border px-2 py-0.5 dark:border-dark-600"
+                        >
                           {t('Print statement')}
-                        </button>
+                        </ActionButton>
                       </span>
                     </td>
                   </tr>
@@ -300,7 +421,12 @@ export default function PayoutRunsMain() {
       </Dialog>
 
       {/* Mark paid dialog */}
-      <Dialog header={t('Record payment')} visible={!!payItem} onHide={() => setPayItem(null)} style={{ width: '24rem', maxWidth: '95vw' }}>
+      <Dialog
+        header={t('Record payment')}
+        visible={!!payItem}
+        onHide={() => setPayItem(null)}
+        style={{ width: '24rem', maxWidth: '95vw' }}
+      >
         {payItem && (
           <div className="flex flex-col gap-3 text-sm">
             <p>
@@ -308,19 +434,34 @@ export default function PayoutRunsMain() {
             </p>
             <label className="flex flex-col">
               <span className="mb-1 text-gray-500">{t('Method')}</span>
-              <select value={method} onChange={(e) => setMethod(e.target.value)} className="h-10 rounded border border-gray-300 px-2 dark:bg-dark-950">
+              <Select
+                value={method}
+                onChange={(e) => setMethod(e.value)}
+                className="h-10 rounded border border-gray-300 px-2 dark:bg-dark-950"
+              >
                 <option value="bank">{t('Bank')}</option>
                 <option value="upi">UPI</option>
                 <option value="cash">{t('Cash')}</option>
-              </select>
+              </Select>
             </label>
             <label className="flex flex-col">
-              <span className="mb-1 text-gray-500">{t('Reference')} ({t('optional')})</span>
-              <input value={reference} onChange={(e) => setReference(e.target.value)} className="h-10 rounded border border-gray-300 px-2 dark:bg-dark-950" />
+              <span className="mb-1 text-gray-500">
+                {t('Reference')} ({t('optional')})
+              </span>
+              <input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                className="ls-field h-10 rounded border border-gray-300 px-2 dark:bg-dark-950"
+              />
             </label>
-            <button onClick={doMarkPaid} disabled={paying} className="mt-1 h-10 rounded bg-green-600 text-white disabled:opacity-50">
+            <ActionButton
+              variant="success"
+              onClick={doMarkPaid}
+              disabled={paying}
+              className="mt-1 h-10 rounded bg-green-600 text-white disabled:opacity-50"
+            >
               {t('Confirm payment')}
-            </button>
+            </ActionButton>
           </div>
         )}
       </Dialog>

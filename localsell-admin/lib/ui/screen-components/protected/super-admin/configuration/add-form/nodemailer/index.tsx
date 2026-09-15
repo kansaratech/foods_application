@@ -43,9 +43,9 @@ const NodeMailerAddForm = () => {
     password: '',
     emailName: EMAIL_NAME,
     enableEmail: ENABLE_EMAIL,
-    smtpHost: SMTP_HOST,
-    smtpPort: SMTP_PORT ?? null,
-    smtpSecure: SMTP_SECURE,
+    smtpHost: SMTP_HOST || 'smtp.gmail.com',
+    smtpPort: SMTP_PORT ?? 465,
+    smtpSecure: SMTP_SECURE ?? true,
     smtpUser: SMTP_USER,
   };
 
@@ -57,7 +57,12 @@ const NodeMailerAddForm = () => {
   );
 
   const handleSubmit = (values: INodeMailerForm) => {
-    const password = values.password?.trim();
+    const gmail =
+      !values.smtpHost?.trim() ||
+      values.smtpHost.trim().toLowerCase() === 'smtp.gmail.com';
+    const password = gmail
+      ? values.password?.replace(/\s/g, '')
+      : values.password?.trim();
     mutate({
       variables: {
         configurationInput: {
@@ -66,7 +71,7 @@ const NodeMailerAddForm = () => {
           enableEmail: values.enableEmail,
           smtpHost: values.smtpHost,
           smtpPort: values.smtpPort,
-          smtpSecure: values.smtpSecure,
+          smtpSecure: gmail ? values.smtpPort === 465 : values.smtpSecure,
           smtpUser: values.smtpUser,
           ...(password ? { password } : {}),
         },
@@ -75,7 +80,7 @@ const NodeMailerAddForm = () => {
         showToast({
           type: 'success',
           title: 'Success!',
-          message: 'NodeMailer Configurations Updated',
+          message: 'Email settings saved',
           duration: 3000,
         });
       },
@@ -112,10 +117,13 @@ const NodeMailerAddForm = () => {
           handleChange,
           setFieldValue,
         }) => {
+          const gmail =
+            !values.smtpHost?.trim() ||
+            values.smtpHost.trim().toLowerCase() === 'smtp.gmail.com';
           return (
             <Form onSubmit={handleSubmit}>
               <ConfigCard
-                cardTitle={'NodeMailer Email'}
+                cardTitle={gmail ? 'Google / Gmail SMTP' : 'SMTP Email'}
                 buttonLoading={mutationLoading}
                 toggleLabel={'Status'}
                 toggleOnChange={() => {
@@ -128,7 +136,7 @@ const NodeMailerAddForm = () => {
                     type="text"
                     name="email"
                     placeholder="Email"
-                    maxLength={35}
+                    maxLength={254}
                     value={values.email}
                     onChange={handleChange}
                     showLabel={true}
@@ -152,13 +160,14 @@ const NodeMailerAddForm = () => {
                   />
 
                   <CustomPasswordTextField
-                    placeholder="Password"
+                    placeholder={gmail ? 'Google App Password' : 'Password'}
                     name="password"
                     feedback={false}
-                    maxLength={20}
+                    maxLength={128}
                     value={values.password}
                     showLabel={true}
                     onChange={handleChange}
+                    error={touched.password ? errors.password : undefined}
                     style={{
                       borderColor:
                         errors.password && touched.password ? 'red' : '',
@@ -180,13 +189,15 @@ const NodeMailerAddForm = () => {
                   />
 
                   <CustomNumberField
-                    min={0}
+                    min={1}
+                    max={65535}
                     placeholder="SMTP Port"
                     name="smtpPort"
                     showLabel={true}
                     value={values.smtpPort}
                     useGrouping={false}
                     onChange={setFieldValue}
+                    error={touched.smtpPort ? errors.smtpPort : undefined}
                     style={{
                       borderColor:
                         errors.smtpPort && touched.smtpPort ? 'red' : '',
@@ -207,20 +218,46 @@ const NodeMailerAddForm = () => {
                     }}
                   />
 
-                  <div className="flex items-center gap-3">
-                    <CustomInputSwitch
-                      label="SMTP Secure (TLS)"
-                      isActive={!!values.smtpSecure}
-                      onChange={() =>
-                        setFieldValue('smtpSecure', !values.smtpSecure)
-                      }
-                    />
-                  </div>
+                  {gmail ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {values.smtpPort === 587
+                        ? 'STARTTLS encryption (port 587)'
+                        : 'SSL/TLS encryption (port 465)'}{' '}
+                      — configured automatically.
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <CustomInputSwitch
+                        label="Implicit SSL/TLS (port 465)"
+                        isActive={!!values.smtpSecure}
+                        onChange={() =>
+                          setFieldValue('smtpSecure', !values.smtpSecure)
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
                 <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
-                  Leave the password blank to keep the current value. Leave
-                  SMTP Host empty to send via Gmail using the Email + Password
-                  above instead of a custom SMTP server.
+                  {gmail ? (
+                    <>
+                      Use smtp.gmail.com with port 465 (SSL/TLS) or 587
+                      (STARTTLS). Enable 2-Step Verification on your Google
+                      account, then create a{' '}
+                      <a
+                        className="underline"
+                        href="https://myaccount.google.com/apppasswords"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        16-character App Password
+                      </a>
+                      . Enter that app password here, not your Google account
+                      password. Use your full Google email address as the SMTP
+                      username. Spaces in app passwords are removed
+                      automatically.{' '}
+                    </>
+                  ) : null}
+                  Leave the password blank to keep the saved password.
                 </p>
               </ConfigCard>
             </Form>

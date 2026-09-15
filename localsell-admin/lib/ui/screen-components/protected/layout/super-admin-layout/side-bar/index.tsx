@@ -70,7 +70,7 @@ export default function MakeSidebar() {
     {
       text: 'My Website',
       label: t('My Website'),
-      route: 'https://padharo.kansaratech.com/',
+      route: 'https://localsell.in/',
       isParent: true,
       icon: faUpRightFromSquare,
       isClickable: true,
@@ -101,12 +101,6 @@ export default function MakeSidebar() {
           text: 'Stores',
           label: t('Stores'),
           route: '/general/stores',
-          isParent: false,
-        },
-        {
-          text: 'Riders',
-          label: t('Riders'),
-          route: '/general/riders',
           isParent: false,
         },
         {
@@ -182,12 +176,6 @@ export default function MakeSidebar() {
           isParent: false,
         },
         {
-          text: 'Finance',
-          label: t('Finance'),
-          route: '/management/finance',
-          isParent: false,
-        },
-        {
           text: 'Store Performance',
           label: t('Store Performance'),
           route: '/management/store-performance',
@@ -218,37 +206,49 @@ export default function MakeSidebar() {
       },
     },
     {
-      text: 'Wallet',
-      label: t('Wallet'),
-      route: '/wallet',
+      text: 'Finance',
+      label: t('Finance'),
+      route: '/management/finance',
       isParent: true,
       icon: faWallet,
       subMenu: useCheckAllowedRoutes([
         {
-          text: t('Transaction History'),
-          label: t('Transaction History'),
-          route: '/wallet/transaction-history',
+          text: 'Finance',
+          label: 'Overview',
+          route: '/management/finance',
           isParent: false,
         },
         {
-          text: 'Withdrawal Request',
-          label: t('Withdrawal Request'),
-          route: '/wallet/withdraw-requests',
+          text: 'Finance',
+          label: 'Collect commission',
+          route: '/management/finance/collections',
           isParent: false,
         },
         {
-          text: t('Earnings'),
-          label: t('Earnings'),
-          route: '/wallet/earnings',
+          text: 'Finance',
+          label: 'Generate bills',
+          route: '/management/finance/billing',
+          isParent: false,
+        },
+        {
+          text: 'Finance',
+          label: 'Receipts',
+          route: '/management/finance/receipts',
+          isParent: false,
+        },
+        {
+          text: 'Finance',
+          label: 'Commission settings',
+          route: '/management/finance/settings',
           isParent: false,
         },
       ]),
       shouldShow: function () {
-        return this.subMenu ? this.subMenu.length > 0 : false;
+        return Boolean(this.subMenu?.length);
       },
     },
     {
-      text: 'CustomerSupport',  
+      text: 'CustomerSupport',
       label: t('CustomerSupport'),
       route: '/customerSupport',
       icon: faHeadset,
@@ -263,7 +263,9 @@ export default function MakeSidebar() {
     const active = groupItems.find(
       (g) =>
         !!g.subMenu?.some(
-          (s) => s.route && (pathname === s.route || pathname.startsWith(`${s.route}/`))
+          (s) =>
+            s.route &&
+            (pathname === s.route || pathname.startsWith(`${s.route}/`))
         )
     );
     if (active) setOpenGroup(active.text);

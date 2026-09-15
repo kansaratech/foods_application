@@ -2,6 +2,7 @@
 
 // Core
 import { createContext, useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 // Interface
 import { IProvider } from '@/lib/utils/interfaces';
@@ -22,6 +23,21 @@ export const LayoutProvider = ({ children }: IProvider) => {
     useState<boolean>(true);
   const [isVendorSidebarVisible, setVendorShowSidebar] =
     useState<boolean>(true);
+
+  const pathname = usePathname();
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const closeMobile = () => {
+      if (media.matches) {
+        setShowSuperAdminSidebar(false);
+        setRestaurantShowSidebar(false);
+        setVendorShowSidebar(false);
+      }
+    };
+    closeMobile();
+    media.addEventListener('change', closeMobile);
+    return () => media.removeEventListener('change', closeMobile);
+  }, [pathname]);
 
   useEffect(() => {
     // Check if routeStack exists; if not, initialize it as an empty stack

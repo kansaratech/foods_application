@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -6,21 +7,22 @@ import { useContext, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
-import { Calendar } from 'primereact/calendar';
+import {
+  dateString,
+  dateValue,
+} from '@/lib/ui/useable-components/date-input/calendar';
+import SegmentedControl from '@/lib/ui/useable-components/custom-tab/segmented-control';
+import DateRangePicker from '@/lib/ui/useable-components/custom-date-range/range-picker';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowTrendUp,
   faBagShopping,
-  faCalendarDays,
   faChevronRight,
   faFileArrowDown,
   faIndianRupeeSign,
-  faMotorcycle,
-  faMoneyBillWave,
   faReceipt,
   faStore,
   faUsers,
-  faWallet,
 } from '@fortawesome/free-solid-svg-icons';
 
 import { LayoutContext } from '@/lib/context/global/layout.context';
@@ -29,7 +31,9 @@ import { useUserContext } from '@/lib/hooks/useUser';
 // Chart.js wrapper — client-only, separate chunk.
 const Chart = dynamic(() => import('@/lib/ui/useable-components/line-chart'), {
   ssr: false,
-  loading: () => <div className="h-[260px] animate-pulse rounded-lg bg-slate-100 dark:bg-dark-600" />,
+  loading: () => (
+    <div className="h-[260px] animate-pulse rounded-lg bg-slate-100 dark:bg-dark-600" />
+  ),
 });
 import {
   GET_ADMIN_OPS_SNAPSHOT,
@@ -43,11 +47,14 @@ import {
 
 const money = (v = 0) =>
   `₹${Number(v || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+const iso = dateString;
 const pctText = (curr: number, prev: number) => {
   if (!prev) return null;
   const p = ((curr - prev) / prev) * 100;
-  return { up: p >= 0, label: `${p >= 0 ? '↑' : '↓'} ${Math.abs(p).toFixed(1)}%` };
+  return {
+    up: p >= 0,
+    label: `${p >= 0 ? '↑' : '↓'} ${Math.abs(p).toFixed(1)}%`,
+  };
 };
 
 const CARD =
@@ -143,9 +150,7 @@ function BreakdownChart({
       </p>
     );
   const data = {
-    labels: rows.map((r) =>
-      r.label.charAt(0) + r.label.slice(1).toLowerCase(),
-    ),
+    labels: rows.map((r) => r.label.charAt(0) + r.label.slice(1).toLowerCase()),
     datasets: [
       {
         label: currency ? 'Revenue' : 'Orders',
@@ -193,9 +198,6 @@ export default function Home() {
 
   const [preset, setPreset] = useState('7');
   const [range, setRange] = useState<[Date, Date]>(() => rangeForPreset('7'));
-  const [rangeSelection, setRangeSelection] = useState<(Date | null)[]>(() =>
-    rangeForPreset('7'),
-  );
   const [start, end] = range;
   const [chartMode, setChartMode] = useState<'revenue' | 'orders'>('revenue');
 
@@ -233,7 +235,7 @@ export default function Home() {
   const ordersByType = ordersData?.getDashboardOrdersByType ?? [];
   const salesByType = salesData?.getDashboardSalesByType ?? [];
   const perfRows = [...(perfData?.storePerformance?.rows ?? [])].sort(
-    (a: any, b: any) => b.gmv - a.gmv,
+    (a: any, b: any) => b.gmv - a.gmv
   );
   const pendingDocs = docsData?.pendingStoreDocuments?.total ?? 0;
 
@@ -276,24 +278,6 @@ export default function Home() {
       route: '/general/stores',
       progress: s.totalStores ? (s.activeStores / s.totalStores) * 100 : 0,
     },
-    {
-      label: 'Riders online',
-      value: `${s.ridersOnline ?? 0} / ${s.totalRiders ?? 0}`,
-      icon: faMotorcycle,
-      tone: 'sky',
-      route: '/general/riders',
-      progress: s.totalRiders ? (s.ridersOnline / s.totalRiders) * 100 : 0,
-    },
-    {
-      label: 'Pending payouts',
-      value: money(s.pendingPayoutAmount),
-      icon: faWallet,
-      tone: 'amber',
-      route: '/management/finance',
-      delta: s.pendingPayouts
-        ? { up: false, label: `${s.pendingPayouts} to review` }
-        : null,
-    },
   ];
 
   const stakeholders = [
@@ -318,13 +302,6 @@ export default function Home() {
       route: '/general/stores',
       icon: faStore,
     },
-    {
-      label: 'Riders',
-      value: users.ridersCount ?? 0,
-      pct: change.ridersPercent,
-      route: '/general/riders',
-      icon: faMotorcycle,
-    },
   ];
 
   const attention = [
@@ -336,13 +313,6 @@ export default function Home() {
       route: '/management/store-documents',
     },
     {
-      icon: faWallet,
-      title: 'Payouts to review',
-      sub: money(s.pendingPayoutAmount) + ' pending',
-      count: s.pendingPayouts ?? 0,
-      route: '/management/finance',
-    },
-    {
       icon: faStore,
       title: 'Offline stores',
       sub: 'Live stores that are currently unavailable',
@@ -350,20 +320,12 @@ export default function Home() {
       route: '/general/stores',
     },
     {
-      icon: faMoneyBillWave,
-      title: 'COD held by riders',
-      sub: 'Cash collected, not yet remitted',
-      count: s.codCashOutstanding ?? 0,
-      money: true,
-      route: '/management/rider-cash',
-    },
-    {
       icon: faReceipt,
       title: 'Unbilled commission',
-      sub: 'COD-pickup commission not yet billed',
+      sub: 'Delivered-order commission not yet billed',
       count: s.unbilledCommission ?? 0,
       money: true,
-      route: '/management/commission-bills',
+      route: '/management/finance/billing',
     },
     {
       icon: faUsers,
@@ -383,7 +345,7 @@ export default function Home() {
       'Avg. order value',
       money(s.ordersToday ? (s.gmvToday || 0) / s.ordersToday : 0),
     ],
-    ['Pending payout', money(s.pendingPayoutAmount)],
+    ['Unbilled commission', money(s.unbilledCommission)],
   ];
 
   const onPreset = (v: string) => {
@@ -391,7 +353,6 @@ export default function Home() {
     if (v !== 'custom') {
       const nextRange = rangeForPreset(v);
       setRange(nextRange);
-      setRangeSelection(nextRange);
     }
   };
 
@@ -404,20 +365,16 @@ export default function Home() {
       ...metrics.map((m) => `${esc(m.label)},${esc(m.value)}`),
       '',
       'Stakeholder,Count,Change %',
-      ...stakeholders.map(
-        (k) => `${esc(k.label)},${k.value},${k.pct ?? ''}`,
-      ),
+      ...stakeholders.map((k) => `${esc(k.label)},${k.value},${k.pct ?? ''}`),
       '',
       'Top stores (by GMV),Orders,GMV,Cancel %,Rating',
       ...perfRows.map(
         (r: any) =>
-          `${esc(r.name)},${r.orders},${r.gmv},${r.cancelRate},${r.avgRating ?? ''}`,
+          `${esc(r.name)},${r.orders},${r.gmv},${r.cancelRate},${r.avgRating ?? ''}`
       ),
       '',
       'Attention needed,Count',
-      ...attention.map(
-        (a) => `${esc(a.title)},${a.money ? a.count : a.count}`,
-      ),
+      ...attention.map((a) => `${esc(a.title)},${a.money ? a.count : a.count}`),
       '',
       `${chartMode === 'revenue' ? 'Revenue' : 'Orders'} by type,Value`,
       ...chartRows.map((r: any) => `${esc(r.label)},${r.value}`),
@@ -459,67 +416,56 @@ export default function Home() {
                 })}
               </p>
             </div>
-            <button
+            <ActionButton
+              variant="secondary"
               type="button"
               onClick={exportCsv}
               className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-dark-600 dark:bg-dark-900 dark:text-white"
             >
               <FontAwesomeIcon icon={faFileArrowDown} />
               Export CSV
-            </button>
+            </ActionButton>
           </div>
 
-          <div className={`${CARD} flex flex-col gap-3 p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between`}>
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1 text-sm dark:bg-dark-700 sm:grid-cols-4">
-              {PRESETS.filter((p) => p.value !== 'custom').map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  onClick={() => onPreset(p.value)}
-                  aria-pressed={preset === p.value}
-                  className={`rounded-md px-4 py-2 font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                    preset === p.value
-                      ? 'bg-white text-primary shadow-sm dark:bg-dark-900'
-                      : 'text-slate-600 hover:bg-white/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-dark-600'
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+          <div
+            className={`${CARD} flex flex-col gap-3 p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between`}
+          >
+            <SegmentedControl
+              label="Reporting period"
+              options={PRESETS.filter((p) => p.value !== 'custom').map(
+                (p) => p.value
+              )}
+              selectedTab={preset}
+              setSelectedTab={onPreset}
+              renderLabel={(value) =>
+                PRESETS.find((p) => p.value === value)?.label ?? value
+              }
+            />
 
             <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">Custom range</span>
-              <Calendar
-                value={rangeSelection}
-                onChange={(e) => {
-                  const selected = (e.value ?? []) as (Date | null)[];
-                  setRangeSelection(selected);
-                  if (selected[0] && selected[1]) {
-                    const from = new Date(selected[0]);
-                    const to = new Date(selected[1]);
-                    from.setHours(0, 0, 0, 0);
+              <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Custom range
+              </span>
+              <DateRangePicker
+                startDate={dateString(range[0])}
+                endDate={dateString(range[1])}
+                showLabel={false}
+                label="Reporting dates"
+                onChange={(start, end) => {
+                  const from = dateValue(start),
+                    to = dateValue(end);
+                  if (from && to) {
                     to.setHours(23, 59, 59, 999);
                     setRange([from, to]);
                     setPreset('custom');
                   }
                 }}
-                selectionMode="range"
-                maxDate={new Date()}
-                dateFormat="d M yy"
-                showIcon
-                readOnlyInput
-                hideOnRangeSelection
-                icon={<FontAwesomeIcon icon={faCalendarDays} />}
-                placeholder="Select start and end dates"
-                inputClassName="h-10 w-full cursor-pointer border-slate-200 px-3 text-sm font-medium text-slate-700 dark:border-dark-600 dark:bg-dark-900 dark:text-white"
-                className="w-full sm:w-[18rem]"
               />
             </div>
           </div>
         </header>
 
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
           {metrics.map((m) => (
             <MetricCard
               key={m.label}
@@ -552,13 +498,13 @@ export default function Home() {
                 ))}
               </div>
             </div>
-            <BreakdownChart rows={chartRows} currency={chartMode === 'revenue'} />
+            <BreakdownChart
+              rows={chartRows}
+              currency={chartMode === 'revenue'}
+            />
             <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 text-center dark:border-dark-600 dark:bg-dark-600 sm:grid-cols-4">
               {summary.map(([label, val]) => (
-                <div
-                  key={label}
-                  className="bg-white py-3 dark:bg-dark-900"
-                >
+                <div key={label} className="bg-white py-3 dark:bg-dark-900">
                   <small className="block text-[10px] uppercase tracking-wide text-slate-400">
                     {label}
                   </small>

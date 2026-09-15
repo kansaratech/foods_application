@@ -125,8 +125,8 @@ export default function OrderCheckoutScreen() {
     restaurant: restaurantId,
     clearCart,
     profile,
-    fetchProfile,
     loadingProfile,
+    logout,
   } = useUser();
 
   const { userAddress } = useUserAddress();
@@ -706,22 +706,20 @@ export default function OrderCheckoutScreen() {
       return false;
     }
 
-    // Check if profile exists
+    // authToken exists but the profile came back empty — the session is
+    // stale/expired rather than genuinely unauthenticated (a true "no token"
+    // customer never reaches here, onPlaceOrder catches that earlier). Treat
+    // it the same way: clear the dead session and ask them to sign in again,
+    // instead of a scary "profile couldn't load" error on a broken page.
     if (!profile) {
+      logout();
       showToast({
-        title: "Missing Profile",
-        message:
-          "Your profile information couldn't be loaded. Please try again or login again.",
-        type: "error",
+        title: t("Sign_in_required"),
+        message: t("Please_sign_in_first_to_place_an_order"),
+        type: "warn",
       });
-
-      // Force fetch the profile
-      fetchProfile();
-
-      setTimeout(() => {
-        router.replace("/profile");
-      }, 1000);
-
+      setActivePanel(0);
+      setIsAuthModalVisible(true);
       return false;
     }
 

@@ -56,7 +56,9 @@ export default function SidebarItem({
   shouldOpenInNewTab, // <-- add this prop
   groupOpen,
   onGroupToggle,
+  activeOverride,
 }: ISidebarMenuItem & {
+  activeOverride?: boolean;
   groupOpen?: boolean;
   onGroupToggle?: () => void;
 }) {
@@ -69,20 +71,22 @@ export default function SidebarItem({
   const isControlled = typeof onGroupToggle === 'function';
 
   // Is the current page this exact item, or (for a parent) one of its children?
-  const selfActive = isRouteActive(pathname, route);
+  const selfActive = !subMenu?.length && isRouteActive(pathname, route);
   const containsActiveRoute = useMemo(
     () => !!subMenu?.some((item) => isRouteActive(pathname, item.route)),
     [subMenu, pathname]
   );
-  const isActive = selfActive || containsActiveRoute;
+  const isActive = activeOverride ?? (selfActive || containsActiveRoute);
+
+  const activeChildRoute = subMenu
+    ?.filter((item) => isRouteActive(pathname, item.route))
+    .sort((a, b) => (b.route?.length ?? 0) - (a.route?.length ?? 0))[0]?.route;
 
   // States — a parent that owns the active route starts expanded so the user
   // can immediately see where they are (e.g. after a full page reload).
   const [localExpand, setLocalExpand] = useState(containsActiveRoute);
   const expandSubMenu = isControlled ? !!groupOpen && expanded : localExpand;
-  const setExpandSubMenu = (
-    next: boolean | ((curr: boolean) => boolean)
-  ) => {
+  const setExpandSubMenu = (next: boolean | ((curr: boolean) => boolean)) => {
     if (isControlled) {
       onGroupToggle?.();
       return;
@@ -175,13 +179,13 @@ export default function SidebarItem({
               className={`text-primary-500 invisible absolute left-full ml-6 -translate-x-3 rounded-md bg-indigo-100 px-2 py-1 text-sm opacity-20 transition-all group-hover:visible group-hover:translate-x-0 group-hover:opacity-100 dark:bg-dark-950 dark:border dark:border-dark-600 dark:text-white`}
             >
               {!subMenu
-                ? (label || text)
+                ? label || text
                 : subMenu.map((item, index) => (
                     <HoveredSubMenuItem
                       key={index}
                       text={item.label || item.text}
                       icon={item.icon}
-                      active={isRouteActive(pathname, item.route)}
+                      active={item.route === activeChildRoute}
                     />
                   ))}
             </div>
@@ -198,13 +202,17 @@ export default function SidebarItem({
           (!isControlled &&
             onUseLocalStorage('get', SELECTED_SIDEBAR_MENU) === text)) &&
           subMenu?.map((item, index) => {
-            const childActive = isRouteActive(pathname, item.route);
+            const childActive = item.route === activeChildRoute;
             return (
               <li key={index} className="relative">
                 {childActive && (
                   <div className="absolute -left-[0.26rem] top-1/2 z-10 h-2 w-2 -translate-y-1/2 transform rounded-full bg-primary-dark"></div>
                 )}
-                <SidebarItem {...item} expanded={expanded} />
+                <SidebarItem
+                  {...item}
+                  expanded={expanded}
+                  activeOverride={childActive}
+                />
               </li>
             );
           })}

@@ -31,6 +31,9 @@ function Payment(props) {
   const inset = useSafeAreaInsets()
   const themeContext = useContext(ThemeContext)
   const currentTheme = theme[themeContext.ThemeValue]
+  // Online payment is paused platform-wide (COD only) — placeOrder itself now
+  // rejects anything else server-side too, so Stripe/PayPal are never offered
+  // here rather than letting a customer pick a method that can't be used.
   const iconArray = [
     {
       payment: 'COD',
@@ -38,21 +41,7 @@ function Payment(props) {
       index: 2,
       icon: 'cash',
       iconFamily: 'material-community'
-    },
-    {
-      payment: 'STRIPE',
-      label: t('creditCart'),
-      index: 0,
-      icon: 'credit-card'
-      // icon1: require('../../assets/images/visaIcon.png')
-    },
-    {
-      payment: 'PAYPAL',
-      label: t('paypal'),
-      index: 1,
-      icon: 'paypal'
-    },
-    
+    }
   ]
 
   useFocusEffect(() => {

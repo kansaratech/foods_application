@@ -11,18 +11,31 @@
     "Passwords here are the literal login passwords; they are hashed on seed.",
     "images: a food's `image` is either a full https URL or a key into `images`.",
     "addons: a food's `addons` entry is either a key into `addonGroups` or an",
-    "inline group object { title, min?, max, options: [{title, price}] }."
+    "inline group object { title, min?, max, options: [{title, price}] }.",
+    "",
+    "gstRegistrationType (vendor and/or store level, store overrides vendor):",
+    "  REGULAR      — charges GST, `salesTax` on the store applies.",
+    "  COMPOSITION  — GST-registered but legally cannot charge tax separately",
+    "                 (Sec 10 CGST Act) — set salesTax 0, it's ignored anyway.",
+    "  UNREGISTERED — below the GST threshold, no GSTIN, no tax charged.",
+    "  GSTINs below are fictional 15-char placeholders for demo data only.",
+    "",
+    "UOM convention used throughout: weight (g/kg) and volume (ml/L) items use",
+    "`variations` for the different pack sizes; discrete items state the piece",
+    "count in the title/desc (e.g. '2 pcs', '4 Slice'); a dish served as one",
+    "portion (a burger, a dosa, a cup of coffee) needs no extra annotation."
   ],
-
   "marketplace": {
     "town": "Deogarh",
     "district": "Rajsamand",
     "state": "Rajasthan",
     "postCode": "313331",
-    "center": { "lat": 25.534, "lng": 73.899 },
+    "center": {
+      "lat": 25.534,
+      "lng": 73.899
+    },
     "storeSpreadKm": 1.5
   },
-
   "configuration": {
     "currency": "INR",
     "currencySymbol": "₹",
@@ -36,15 +49,13 @@
     "skipMobileVerification": true,
     "skipWhatsAppOTP": true,
     "testOtp": "1234",
-
-    "_whatsapp": "Meta WhatsApp Cloud API for phone OTP. Non-secret IDs live here; the access token is NOT here — seed reads WHATSAPP_ACCESS_TOKEN from the env, else keeps whatever is on the Configuration row. Set whatsappCloudEnabled true once the token + a Meta-approved OTP template are in place.",
-    "whatsappCloudEnabled": false,
+    "_whatsapp": "Meta WhatsApp Cloud API for phone OTP. Non-secret IDs live here; the access token is NOT here — seed reads WHATSAPP_ACCESS_TOKEN from the env, else keeps whatever is on the Configuration row. All 8 templates are Meta-approved and the access token is set on the server, so this now defaults on for a fresh install; an already-deployed server keeps whatever the admin toggle is set to (see seed-from-config.ts).",
+    "whatsappCloudEnabled": true,
     "whatsappPhoneNumberId": "551380631388343",
     "whatsappWabaId": "567424539778633",
     "whatsappApiVersion": "v22.0",
     "whatsappOtpTemplate": "localsell_otp",
     "whatsappOtpLang": "en_US",
-
     "_email": "SMTP for transactional email (partner-application alerts, etc). The password is NOT here — seed reads SMTP_PASSWORD from the env (localsell-api/.env locally, deploy/localsell.env on the server), else keeps whatever is already on the Configuration row.",
     "enableEmail": true,
     "email": "localsell.dgh@gmail.com",
@@ -57,12 +68,16 @@
     "termsAndConditions": "LocalSell — Terms of Service. By placing an order you agree to pay the listed price plus applicable delivery fee and taxes. Orders are prepared and fulfilled by independent partner stores; LocalSell operates the marketplace and (where selected) the delivery. Cash-on-delivery orders must be paid in full to the delivery partner. Edit this text in Admin → Configuration.",
     "privacyPolicy": "LocalSell — Privacy Policy. We collect your name, phone, delivery address and order history to fulfil orders and provide support. We share the minimum necessary details with the partner store and the delivery partner assigned to your order. We do not sell your data. Edit this text in Admin → Configuration."
   },
-
   "shopTypes": [
-    { "name": "Restaurant", "slug": "restaurant" },
-    { "name": "Grocery", "slug": "grocery" }
+    {
+      "name": "Restaurant",
+      "slug": "restaurant"
+    },
+    {
+      "name": "Grocery",
+      "slug": "grocery"
+    }
   ],
-
   "zones": [
     {
       "title": "Deogarh Town",
@@ -70,29 +85,12 @@
       "radiusKm": 7
     }
   ],
-
   "admin": {
     "email": "admin@localsell.in",
     "name": "LocalSell Admin",
     "password": "Admin@123"
   },
-
-  "customers": [
-    {
-      "email": "customer@localsell.in",
-      "name": "Deogarh Diner",
-      "phone": "+919829000001",
-      "password": "Customer@123",
-      "address": {
-        "label": "Home",
-        "line": "Station Road, Deogarh, Rajsamand, Rajasthan 313331",
-        "details": "Near Bus Stand",
-        "lat": 25.534,
-        "lng": 73.899
-      }
-    }
-  ],
-
+  "customers": [],
   "riders": [
     {
       "username": "rider1",
@@ -111,67 +109,129 @@
       "vehicleType": "MOTORCYCLE",
       "available": true,
       "zone": "Deogarh Town"
+    },
+    {
+      "username": "rider3",
+      "name": "Bhagwan Das",
+      "phone": "+919829111103",
+      "password": "Rider@123",
+      "vehicleType": "MOTORCYCLE",
+      "available": true,
+      "zone": "Deogarh Town"
     }
   ],
-
   "demoOrders": {
-    "enabled": true,
+    "enabled": false,
     "perStoreDeliveredOrders": 5,
-    "note": "A handful of DELIVERED + reviewed orders per store so ratings, earnings, commission and reports have data. Set enabled=false for an empty ledger."
+    "note": "0 customers in this seed, so there is no one to place a demo order under — demo orders are off. Add a customer above and flip enabled=true to get sample DELIVERED orders, ratings, commission and reports again. When it does run, every demo order is COD (see seed-from-config.ts)."
   },
-
   "images": {
     "pizzaShop": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=70",
     "pizzaMargherita": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=70",
     "pizzaFarmhouse": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=70",
-    "pizzaPaneer": "https://images.unsplash.com/photo-1594007654729-407eedc4be65?auto=format&fit=crop&w=800&q=70",
+    "pizzaPaneer": "https://images.unsplash.com/photo-1573821663912-569905455b1c?auto=format&fit=crop&w=800&q=70",
     "pizzaChicken": "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&w=800&q=70",
-    "garlicBread": "https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?auto=format&fit=crop&w=800&q=70",
+    "garlicBread": "https://images.unsplash.com/photo-1573140401552-3fab0b24306f?auto=format&fit=crop&w=800&q=70",
     "sandwich": "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=70",
     "clubSandwich": "https://images.unsplash.com/photo-1567234669003-dce7a7a88821?auto=format&fit=crop&w=800&q=70",
     "burger": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=70",
     "fries": "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=800&q=70",
-    "manchurian": "https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=800&q=70",
+    "manchurian": "https://images.unsplash.com/photo-1779134380239-767048f5ccf5?auto=format&fit=crop&w=800&q=70",
     "chilliPaneer": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=70",
     "noodles": "https://images.unsplash.com/photo-1612929633738-8fe44f7ec841?auto=format&fit=crop&w=800&q=70",
     "friedRice": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=70",
     "coffeeHot": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=70",
-    "coffeeCold": "https://images.unsplash.com/photo-1461023058943-07fb0f1ff6a4?auto=format&fit=crop&w=800&q=70",
+    "coffeeCold": "https://images.unsplash.com/photo-1559496417-e7f25cb247f3?auto=format&fit=crop&w=800&q=70",
     "coldDrink": "https://images.unsplash.com/photo-1581636625402-29b2a704ef13?auto=format&fit=crop&w=800&q=70",
     "thali": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=70",
-    "dalMakhani": "https://images.unsplash.com/photo-1626500155537-92d8f37c8c9c?auto=format&fit=crop&w=800&q=70",
+    "dalMakhani": "https://images.unsplash.com/photo-1626500155537-93690c24099e?auto=format&fit=crop&w=800&q=70",
     "kadhai": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=800&q=70",
-    "laalMaas": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70",
-    "dalBaati": "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=70",
-    "roti": "https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=800&q=70",
-    "gulabJamun": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70",
-    "kaju": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=70",
-    "ghewar": "https://images.unsplash.com/photo-1666181593796-3e7c1e02b2b0?auto=format&fit=crop&w=800&q=70",
-    "besan": "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?auto=format&fit=crop&w=800&q=70",
+    "dalBaati": "https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?auto=format&fit=crop&w=800&q=70",
+    "roti": "https://images.unsplash.com/photo-1780907084884-ded9fddbb474?auto=format&fit=crop&w=800&q=70",
+    "gulabJamun": "https://images.unsplash.com/photo-1666190092159-3171cf0fbb12?auto=format&fit=crop&w=800&q=70",
+    "kaju": "https://images.unsplash.com/photo-1615485925873-7ecbbe90a866?auto=format&fit=crop&w=800&q=70",
+    "ghewar": "https://images.unsplash.com/photo-1695568181440-aca4dac18650?auto=format&fit=crop&w=800&q=70",
+    "besan": "https://images.unsplash.com/photo-1595414902678-862fe51c9f27?auto=format&fit=crop&w=800&q=70",
     "bhujia": "https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=70",
-    "mixBox": "https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=800&q=70",
+    "mixBox": "https://images.unsplash.com/photo-1758910536889-43ce7b3199fd?auto=format&fit=crop&w=800&q=70",
     "groceryShop": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=70",
-    "atta": "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?auto=format&fit=crop&w=800&q=70",
+    "atta": "https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&w=800&q=70",
     "rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=70",
     "milk": "https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=70",
     "oil": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=70",
     "vegetables": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=70",
     "eggs": "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=70",
-    "snacks": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=800&q=70"
+    "snacks": "https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&w=800&q=70",
+    "poha": "https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=70",
+    "idliSambar": "https://images.unsplash.com/photo-1626500155537-93690c24099e?auto=format&fit=crop&w=800&q=70",
+    "masalaDosa": "https://images.unsplash.com/photo-1780907084884-ded9fddbb474?auto=format&fit=crop&w=800&q=70",
+    "sweetLassi": "https://images.unsplash.com/photo-1675064982913-067b64880f5f?auto=format&fit=crop&w=800&q=70",
+    "spices": "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=800&q=70",
+    "dryFruits": "https://images.unsplash.com/photo-1598371624473-4d95aca694e3?auto=format&fit=crop&w=800&q=70",
+    "detergent": "https://images.unsplash.com/photo-1704650312191-005ab02786f5?auto=format&fit=crop&w=800&q=70",
+    "soap": "https://images.unsplash.com/photo-1474625121024-7595bfbc57ac?auto=format&fit=crop&w=800&q=70",
+    "pickle": "https://images.unsplash.com/photo-1562346816-9d0bdd559ec1?auto=format&fit=crop&w=800&q=70",
+    "bakery": "https://images.unsplash.com/photo-1547033999-d7a819ea1e85?auto=format&fit=crop&w=800&q=70",
+    "iceCream": "https://images.unsplash.com/photo-1588195539297-f0b4efdb5472?auto=format&fit=crop&w=800&q=70",
+    "_note_new_grocery_images": "spices/dryFruits/detergent/soap/pickle/bakery/iceCream added for the Deogarh Daily Mart expansion — each verified live (WebFetch) before use, one representative photo shared across every item in its category.",
+    "dalCooked": "https://images.unsplash.com/photo-1626500155537-93690c24099e?auto=format&fit=crop&w=800&q=70",
+    "mixedBeans": "https://images.unsplash.com/photo-1564894809611-1742fc40ed80?auto=format&fit=crop&w=800&q=70",
+    "kabuliChanaRaw": "https://images.unsplash.com/photo-1644432757699-bb5a01e8fb0e?auto=format&fit=crop&w=800&q=70",
+    "gheeJar": "https://images.unsplash.com/photo-1707425197195-240b7ad69047?auto=format&fit=crop&w=800&q=70",
+    "namkeenMix": "https://images.unsplash.com/photo-1675280735161-febe15d7ffae?auto=format&fit=crop&w=800&q=70",
+    "sugarGranulated": "https://images.unsplash.com/photo-1610219171722-87b3f4170557?auto=format&fit=crop&w=800&q=70",
+    "saltFlake": "https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?auto=format&fit=crop&w=800&q=70",
+    "rockSaltCrystal": "https://images.unsplash.com/photo-1604697976327-4f28ff459803?auto=format&fit=crop&w=800&q=70",
+    "honeyDrip": "https://images.unsplash.com/photo-1587049352851-8d4e89133924?auto=format&fit=crop&w=800&q=70",
+    "jaggeryMaking": "https://images.unsplash.com/photo-1576394435759-02a2674ff6e0?auto=format&fit=crop&w=800&q=70",
+    "paneerCurry": "https://images.unsplash.com/photo-1588166524941-3bf61a9c41db?auto=format&fit=crop&w=800&q=70",
+    "poojaDiya": "https://images.unsplash.com/photo-1606285461069-80ba562575dd?auto=format&fit=crop&w=800&q=70",
+    "stationeryNotebook": "https://images.unsplash.com/photo-1471107340929-a87cd0f5b5f3?auto=format&fit=crop&w=800&q=70",
+    "aaBatteries": "https://images.unsplash.com/photo-1619641805634-b867f535071c?auto=format&fit=crop&w=800&q=70",
+    "poojaIncense": "https://images.unsplash.com/photo-1541795083-1b160cf4f3d7?auto=format&fit=crop&w=800&q=70",
+    "mosquitoCoil": "https://images.unsplash.com/photo-1608465343292-800ef1936b26?auto=format&fit=crop&w=800&q=70",
+    "matchboxOpen": "https://images.unsplash.com/photo-1590020015953-9110153f4b7d?auto=format&fit=crop&w=800&q=70",
+    "garbageBagBlack": "https://images.unsplash.com/photo-1611830696076-462acd8aa9e9?auto=format&fit=crop&w=800&q=70",
+    "cleaningSponge": "https://images.unsplash.com/photo-1778178965223-e5a29e612504?auto=format&fit=crop&w=800&q=70",
+    "fruitsMixed": "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?auto=format&fit=crop&w=800&q=70",
+    "babyCare": "https://images.unsplash.com/photo-1552511762-898bfd9fb837?auto=format&fit=crop&w=800&q=70",
+    "hygieneGrooming": "https://images.unsplash.com/photo-1559591937-abc5678da6ad?auto=format&fit=crop&w=800&q=70",
+    "sanitaryPads": "https://images.unsplash.com/photo-1589395937921-fddc324ccdd2?auto=format&fit=crop&w=800&q=70",
+    "_note_replaced_mismatched_images": "2026-09-14: fixed ~37 items that were showing the wrong product entirely (dals/beans/sugar/salt on the wheat-flour photo, ghee on the cooking-oil photo, honey/jaggery on the gram-flour photo, Shahi Paneer on a pizza photo, namkeen on a samosa photo) — each new photo above verified live (downloaded + visually checked) before use."
   },
-
   "addonGroups": {
     "EXTRA_TOPPINGS": {
       "title": "Extra Toppings",
       "max": 6,
       "options": [
-        { "title": "Extra Cheese", "price": 60 },
-        { "title": "Paneer", "price": 70 },
-        { "title": "Mushroom", "price": 50 },
-        { "title": "Onion & Capsicum", "price": 30 },
-        { "title": "Sweet Corn", "price": 35 },
-        { "title": "Jalapeño", "price": 40 },
-        { "title": "Black Olives", "price": 45 }
+        {
+          "title": "Extra Cheese",
+          "price": 60
+        },
+        {
+          "title": "Paneer",
+          "price": 70
+        },
+        {
+          "title": "Mushroom",
+          "price": 50
+        },
+        {
+          "title": "Onion & Capsicum",
+          "price": 30
+        },
+        {
+          "title": "Sweet Corn",
+          "price": 35
+        },
+        {
+          "title": "Jalapeño",
+          "price": 40
+        },
+        {
+          "title": "Black Olives",
+          "price": 45
+        }
       ]
     },
     "PIZZA_CRUST": {
@@ -179,10 +239,22 @@
       "min": 1,
       "max": 1,
       "options": [
-        { "title": "Hand Tossed", "price": 0 },
-        { "title": "Thin Crust", "price": 0 },
-        { "title": "Cheese Burst", "price": 90 },
-        { "title": "Wheat Base", "price": 20 }
+        {
+          "title": "Hand Tossed",
+          "price": 0
+        },
+        {
+          "title": "Thin Crust",
+          "price": 0
+        },
+        {
+          "title": "Cheese Burst",
+          "price": 90
+        },
+        {
+          "title": "Wheat Base",
+          "price": 20
+        }
       ]
     },
     "SPICE_LEVEL": {
@@ -190,27 +262,46 @@
       "min": 1,
       "max": 1,
       "options": [
-        { "title": "Mild", "price": 0 },
-        { "title": "Medium", "price": 0 },
-        { "title": "Extra Spicy", "price": 0 }
+        {
+          "title": "Mild",
+          "price": 0
+        },
+        {
+          "title": "Medium",
+          "price": 0
+        },
+        {
+          "title": "Extra Spicy",
+          "price": 0
+        }
       ]
     },
     "SANDWICH_ADDON": {
       "title": "Make it better",
       "max": 3,
       "options": [
-        { "title": "Extra Cheese Slice", "price": 25 },
-        { "title": "Grilled", "price": 15 },
-        { "title": "Peri Peri Sprinkle", "price": 10 }
+        {
+          "title": "Extra Cheese Slice",
+          "price": 25
+        },
+        {
+          "title": "Grilled",
+          "price": 15
+        },
+        {
+          "title": "Peri Peri Sprinkle",
+          "price": 10
+        }
       ]
     }
   },
-
   "vendors": [
     {
       "name": "Hot Pizza Corner Owner",
       "email": "hot-pizza-corner-owner@localsell.in",
       "password": "Vendor@123",
+      "gstRegistrationType": "COMPOSITION",
+      "gstin": "08AAHCP1234K1ZR",
       "stores": [
         {
           "name": "Hot Pizza Corner",
@@ -218,18 +309,43 @@
           "tagline": "Wood-fired pizzas, sandwiches, Indo-Chinese & shakes",
           "area": "Station Road",
           "image": "pizzaShop",
-          "cuisines": ["Pizza", "Fast Food"],
+          "cuisines": [
+            "Pizza",
+            "Fast Food"
+          ],
           "deliveryTime": 30,
           "minOrder": 149,
-          "salesTax": 5,
+          "salesTax": 0,
+          "gstRegistrationType": "COMPOSITION",
+          "gstin": "08AAHCP1234K1ZR",
           "commissionRate": 20,
           "rating": 4.4,
           "deliveryProvider": "BOTH",
-          "hours": { "open": "09", "close": "23" },
-          "storeLogin": { "username": "hot-pizza-corner@store.localsell.in", "password": "Store@123" },
+          "hours": {
+            "open": "09",
+            "close": "23"
+          },
+          "storeLogin": {
+            "username": "hot-pizza-corner@store.localsell.in",
+            "password": "Store@123"
+          },
           "deliveryAgents": [
-            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
-            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+            {
+              "name": "Ramesh Choudhary",
+              "phone": "+919829210001"
+            },
+            {
+              "name": "Dinesh Suthar",
+              "phone": "+919829210002"
+            },
+            {
+              "name": "Vikram Rawal",
+              "phone": "+919829210003"
+            },
+            {
+              "name": "Ajay Regar",
+              "phone": "+919829210004"
+            }
           ],
           "categories": [
             {
@@ -240,44 +356,92 @@
                   "desc": "Classic 100% real mozzarella on our signature sauce",
                   "image": "pizzaMargherita",
                   "variations": [
-                    { "title": "Regular 7\"", "price": 149 },
-                    { "title": "Medium 10\"", "price": 279 },
-                    { "title": "Large 12\"", "price": 429 }
+                    {
+                      "title": "Regular 7\"",
+                      "price": 149
+                    },
+                    {
+                      "title": "Medium 10\"",
+                      "price": 279
+                    },
+                    {
+                      "title": "Large 12\"",
+                      "price": 429
+                    }
                   ],
-                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                  "addons": [
+                    "PIZZA_CRUST",
+                    "EXTRA_TOPPINGS"
+                  ]
                 },
                 {
                   "title": "Farmhouse Pizza",
                   "desc": "Onion, capsicum, tomato, grilled mushroom & corn",
                   "image": "pizzaFarmhouse",
                   "variations": [
-                    { "title": "Regular 7\"", "price": 199 },
-                    { "title": "Medium 10\"", "price": 359 },
-                    { "title": "Large 12\"", "price": 529 }
+                    {
+                      "title": "Regular 7\"",
+                      "price": 199
+                    },
+                    {
+                      "title": "Medium 10\"",
+                      "price": 359
+                    },
+                    {
+                      "title": "Large 12\"",
+                      "price": 529
+                    }
                   ],
-                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                  "addons": [
+                    "PIZZA_CRUST",
+                    "EXTRA_TOPPINGS"
+                  ]
                 },
                 {
                   "title": "Peppy Paneer Pizza",
                   "desc": "Paneer, crisp capsicum and red paprika",
                   "image": "pizzaPaneer",
                   "variations": [
-                    { "title": "Regular 7\"", "price": 219 },
-                    { "title": "Medium 10\"", "price": 389 },
-                    { "title": "Large 12\"", "price": 569 }
+                    {
+                      "title": "Regular 7\"",
+                      "price": 219
+                    },
+                    {
+                      "title": "Medium 10\"",
+                      "price": 389
+                    },
+                    {
+                      "title": "Large 12\"",
+                      "price": 569
+                    }
                   ],
-                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                  "addons": [
+                    "PIZZA_CRUST",
+                    "EXTRA_TOPPINGS"
+                  ]
                 },
                 {
                   "title": "Chicken Tikka Pizza",
                   "desc": "Tandoori chicken tikka, onion and mint mayo drizzle",
                   "image": "pizzaChicken",
                   "variations": [
-                    { "title": "Regular 7\"", "price": 259 },
-                    { "title": "Medium 10\"", "price": 449 },
-                    { "title": "Large 12\"", "price": 649 }
+                    {
+                      "title": "Regular 7\"",
+                      "price": 259
+                    },
+                    {
+                      "title": "Medium 10\"",
+                      "price": 449
+                    },
+                    {
+                      "title": "Large 12\"",
+                      "price": 649
+                    }
                   ],
-                  "addons": ["PIZZA_CRUST", "EXTRA_TOPPINGS"]
+                  "addons": [
+                    "PIZZA_CRUST",
+                    "EXTRA_TOPPINGS"
+                  ]
                 },
                 {
                   "title": "Cheesy Garlic Bread",
@@ -285,10 +449,20 @@
                   "image": "garlicBread",
                   "price": 129,
                   "addons": [
-                    { "title": "Dip", "max": 2, "options": [
-                      { "title": "Cheese Dip", "price": 25 },
-                      { "title": "Peri Peri Dip", "price": 25 }
-                    ] }
+                    {
+                      "title": "Dip",
+                      "max": 2,
+                      "options": [
+                        {
+                          "title": "Cheese Dip",
+                          "price": 25
+                        },
+                        {
+                          "title": "Peri Peri Dip",
+                          "price": 25
+                        }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -301,20 +475,36 @@
                   "desc": "Aloo, beetroot, cucumber, tomato & chutney, grilled",
                   "image": "sandwich",
                   "variations": [
-                    { "title": "2 Slice", "price": 89 },
-                    { "title": "4 Slice Club", "price": 149 }
+                    {
+                      "title": "2 Slice",
+                      "price": 89
+                    },
+                    {
+                      "title": "4 Slice Club",
+                      "price": 149
+                    }
                   ],
-                  "addons": ["SANDWICH_ADDON"]
+                  "addons": [
+                    "SANDWICH_ADDON"
+                  ]
                 },
                 {
                   "title": "Paneer Tikka Sandwich",
                   "desc": "Masala paneer, onion and mint mayo",
                   "image": "clubSandwich",
                   "variations": [
-                    { "title": "2 Slice", "price": 119 },
-                    { "title": "4 Slice Club", "price": 189 }
+                    {
+                      "title": "2 Slice",
+                      "price": 119
+                    },
+                    {
+                      "title": "4 Slice Club",
+                      "price": 189
+                    }
                   ],
-                  "addons": ["SANDWICH_ADDON"]
+                  "addons": [
+                    "SANDWICH_ADDON"
+                  ]
                 },
                 {
                   "title": "Aloo Tikki Burger",
@@ -322,10 +512,20 @@
                   "image": "burger",
                   "price": 79,
                   "addons": [
-                    { "title": "Upgrade", "max": 2, "options": [
-                      { "title": "Add Cheese Slice", "price": 20 },
-                      { "title": "Double Patty", "price": 40 }
-                    ] }
+                    {
+                      "title": "Upgrade",
+                      "max": 2,
+                      "options": [
+                        {
+                          "title": "Add Cheese Slice",
+                          "price": 20
+                        },
+                        {
+                          "title": "Double Patty",
+                          "price": 40
+                        }
+                      ]
+                    }
                   ]
                 },
                 {
@@ -333,8 +533,14 @@
                   "desc": "Crispy fries tossed in peri peri seasoning",
                   "image": "fries",
                   "variations": [
-                    { "title": "Regular", "price": 69 },
-                    { "title": "Large", "price": 109 }
+                    {
+                      "title": "Regular (150 g)",
+                      "price": 69
+                    },
+                    {
+                      "title": "Large (250 g)",
+                      "price": 109
+                    }
                   ]
                 }
               ]
@@ -347,15 +553,32 @@
                   "desc": "Fried veg dumplings in spicy-sweet garlic gravy",
                   "image": "manchurian",
                   "variations": [
-                    { "title": "Half", "price": 119 },
-                    { "title": "Full", "price": 189 }
+                    {
+                      "title": "Half",
+                      "price": 119
+                    },
+                    {
+                      "title": "Full",
+                      "price": 189
+                    }
                   ],
                   "addons": [
                     "SPICE_LEVEL",
-                    { "title": "Style", "min": 1, "max": 1, "options": [
-                      { "title": "Gravy", "price": 0 },
-                      { "title": "Dry", "price": 0 }
-                    ] }
+                    {
+                      "title": "Style",
+                      "min": 1,
+                      "max": 1,
+                      "options": [
+                        {
+                          "title": "Gravy",
+                          "price": 0
+                        },
+                        {
+                          "title": "Dry",
+                          "price": 0
+                        }
+                      ]
+                    }
                   ]
                 },
                 {
@@ -363,25 +586,52 @@
                   "desc": "Paneer cubes, bell pepper, onion in chilli soy toss",
                   "image": "chilliPaneer",
                   "variations": [
-                    { "title": "Half", "price": 149 },
-                    { "title": "Full", "price": 239 }
+                    {
+                      "title": "Half",
+                      "price": 149
+                    },
+                    {
+                      "title": "Full",
+                      "price": 239
+                    }
                   ],
-                  "addons": ["SPICE_LEVEL"]
+                  "addons": [
+                    "SPICE_LEVEL"
+                  ]
                 },
                 {
                   "title": "Veg Hakka Noodles",
                   "desc": "Wok-tossed noodles with julienne vegetables",
                   "image": "noodles",
                   "variations": [
-                    { "title": "Half", "price": 99 },
-                    { "title": "Full", "price": 159 }
+                    {
+                      "title": "Half",
+                      "price": 99
+                    },
+                    {
+                      "title": "Full",
+                      "price": 159
+                    }
                   ],
                   "addons": [
-                    { "title": "Add-on", "max": 3, "options": [
-                      { "title": "Add Manchurian (2 pc)", "price": 40 },
-                      { "title": "Add Paneer", "price": 50 },
-                      { "title": "Add Egg", "price": 25 }
-                    ] }
+                    {
+                      "title": "Add-on",
+                      "max": 3,
+                      "options": [
+                        {
+                          "title": "Add Manchurian (2 pc)",
+                          "price": 40
+                        },
+                        {
+                          "title": "Add Paneer",
+                          "price": 50
+                        },
+                        {
+                          "title": "Add Egg",
+                          "price": 25
+                        }
+                      ]
+                    }
                   ]
                 },
                 {
@@ -389,8 +639,14 @@
                   "desc": "Basmati rice tossed with vegetables and soy",
                   "image": "friedRice",
                   "variations": [
-                    { "title": "Half", "price": 99 },
-                    { "title": "Full", "price": 159 }
+                    {
+                      "title": "Half",
+                      "price": 99
+                    },
+                    {
+                      "title": "Full",
+                      "price": 159
+                    }
                   ]
                 }
               ]
@@ -399,7 +655,7 @@
               "title": "Beverages",
               "foods": [
                 {
-                  "title": "Filter Coffee",
+                  "title": "Filter Coffee (150 ml)",
                   "desc": "South-Indian style strong filter coffee",
                   "image": "coffeeHot",
                   "price": 40
@@ -409,14 +665,30 @@
                   "desc": "Thick blended cold coffee with ice cream",
                   "image": "coffeeCold",
                   "variations": [
-                    { "title": "Regular", "price": 90 },
-                    { "title": "Large", "price": 130 }
+                    {
+                      "title": "Regular (200 ml)",
+                      "price": 90
+                    },
+                    {
+                      "title": "Large (350 ml)",
+                      "price": 130
+                    }
                   ],
                   "addons": [
-                    { "title": "Add-on", "max": 2, "options": [
-                      { "title": "Extra Ice Cream Scoop", "price": 30 },
-                      { "title": "Chocolate Shot", "price": 20 }
-                    ] }
+                    {
+                      "title": "Add-on",
+                      "max": 2,
+                      "options": [
+                        {
+                          "title": "Extra Ice Cream Scoop",
+                          "price": 30
+                        },
+                        {
+                          "title": "Chocolate Shot",
+                          "price": 20
+                        }
+                      ]
+                    }
                   ]
                 },
                 {
@@ -431,30 +703,56 @@
         }
       ]
     },
-
     {
       "name": "Devshree Kitchen Owner",
       "email": "devshree-kitchen-owner@localsell.in",
       "password": "Vendor@123",
+      "gstRegistrationType": "REGULAR",
+      "gstin": "08AADCK5678L1ZQ",
       "stores": [
         {
           "name": "Devshree Kitchen",
           "slug": "devshree-kitchen",
-          "tagline": "Home-style North Indian, pizzas & build-your-own thali",
+          "tagline": "Home-style North Indian thalis, rice, sabzi & fast food",
           "area": "Rajmahal Road",
           "image": "thali",
-          "cuisines": ["North Indian", "Thali"],
+          "cuisines": [
+            "North Indian",
+            "Thali"
+          ],
           "deliveryTime": 35,
           "minOrder": 120,
           "salesTax": 5,
+          "gstRegistrationType": "REGULAR",
+          "gstin": "08AADCK5678L1ZQ",
           "commissionRate": 20,
           "rating": 4.5,
-          "deliveryProvider": "SELF",
-          "hours": { "open": "09", "close": "23" },
-          "storeLogin": { "username": "devshree-kitchen@store.localsell.in", "password": "Store@123" },
+          "deliveryProvider": "BOTH",
+          "hours": {
+            "open": "09",
+            "close": "23"
+          },
+          "storeLogin": {
+            "username": "devshree-kitchen@store.localsell.in",
+            "password": "Store@123"
+          },
           "deliveryAgents": [
-            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
-            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+            {
+              "name": "Mahesh Prajapat",
+              "phone": "+919829220001"
+            },
+            {
+              "name": "Naresh Bhati",
+              "phone": "+919829220002"
+            },
+            {
+              "name": "Rajendra Sain",
+              "phone": "+919829220003"
+            },
+            {
+              "name": "Ghanshyam Meena",
+              "phone": "+919829220004"
+            }
           ],
           "categories": [
             {
@@ -465,17 +763,31 @@
                   "desc": "Pick your breads and sabzis — we plate it fresh. Price updates with your choices.",
                   "image": "thali",
                   "price": 90,
-                  "combo": { "worth": 260 },
+                  "combo": {
+                    "worth": 260
+                  },
                   "addons": [
                     {
                       "title": "Choose your bread",
                       "min": 1,
                       "max": 4,
                       "options": [
-                        { "title": "Tawa Roti", "price": 12 },
-                        { "title": "Butter Roti", "price": 18 },
-                        { "title": "Missi Roti", "price": 22 },
-                        { "title": "Butter Naan", "price": 40 }
+                        {
+                          "title": "Tawa Roti",
+                          "price": 12
+                        },
+                        {
+                          "title": "Butter Roti",
+                          "price": 18
+                        },
+                        {
+                          "title": "Missi Roti",
+                          "price": 22
+                        },
+                        {
+                          "title": "Butter Naan",
+                          "price": 40
+                        }
                       ]
                     },
                     {
@@ -483,22 +795,52 @@
                       "min": 2,
                       "max": 2,
                       "options": [
-                        { "title": "Dal Fry", "price": 60 },
-                        { "title": "Aloo Matar", "price": 60 },
-                        { "title": "Gatte ki Sabzi", "price": 80 },
-                        { "title": "Paneer Butter Masala", "price": 110 },
-                        { "title": "Mix Veg", "price": 70 },
-                        { "title": "Ker Sangri", "price": 90 }
+                        {
+                          "title": "Dal Fry",
+                          "price": 60
+                        },
+                        {
+                          "title": "Aloo Matar",
+                          "price": 60
+                        },
+                        {
+                          "title": "Gatte ki Sabzi",
+                          "price": 80
+                        },
+                        {
+                          "title": "Paneer Butter Masala",
+                          "price": 110
+                        },
+                        {
+                          "title": "Mix Veg",
+                          "price": 70
+                        },
+                        {
+                          "title": "Ker Sangri",
+                          "price": 90
+                        }
                       ]
                     },
                     {
                       "title": "Add extras",
                       "max": 4,
                       "options": [
-                        { "title": "Jeera Rice", "price": 45 },
-                        { "title": "Boondi Raita", "price": 30 },
-                        { "title": "Gulab Jamun (2 pc)", "price": 40 },
-                        { "title": "Buttermilk", "price": 25 }
+                        {
+                          "title": "Jeera Rice",
+                          "price": 45
+                        },
+                        {
+                          "title": "Boondi Raita",
+                          "price": 30
+                        },
+                        {
+                          "title": "Gulab Jamun (2 pc)",
+                          "price": 40
+                        },
+                        {
+                          "title": "Buttermilk",
+                          "price": 25
+                        }
                       ]
                     }
                   ]
@@ -507,33 +849,53 @@
                   "title": "Rajasthani Special Thali",
                   "desc": "Dal-baati-churma, gatte ki sabzi, ker sangri, rice, salad",
                   "image": "dalBaati",
-                  "combo": { "worth": 320 },
+                  "combo": {
+                    "worth": 320
+                  },
                   "variations": [
-                    { "title": "Regular", "price": 240 },
-                    { "title": "Jumbo (extra baati + sweet)", "price": 320 }
+                    {
+                      "title": "Regular",
+                      "price": 240
+                    },
+                    {
+                      "title": "Jumbo (extra baati + sweet)",
+                      "price": 320
+                    }
                   ]
                 }
               ]
             },
             {
-              "title": "North Indian Mains",
+              "title": "North Indian Mains (Sabzi)",
               "foods": [
                 {
                   "title": "Dal Makhani",
                   "desc": "Slow-cooked black lentils, butter & cream",
                   "image": "dalMakhani",
                   "variations": [
-                    { "title": "Half", "price": 120 },
-                    { "title": "Full", "price": 190 }
+                    {
+                      "title": "Half",
+                      "price": 120
+                    },
+                    {
+                      "title": "Full",
+                      "price": 190
+                    }
                   ]
                 },
                 {
                   "title": "Shahi Paneer",
                   "desc": "Paneer in a rich cashew-tomato gravy",
-                  "image": "pizzaPaneer",
+                  "image": "paneerCurry",
                   "variations": [
-                    { "title": "Half", "price": 150 },
-                    { "title": "Full", "price": 230 }
+                    {
+                      "title": "Half",
+                      "price": 150
+                    },
+                    {
+                      "title": "Full",
+                      "price": 230
+                    }
                   ]
                 },
                 {
@@ -541,8 +903,14 @@
                   "desc": "Seasonal vegetables in freshly ground kadhai masala",
                   "image": "kadhai",
                   "variations": [
-                    { "title": "Half", "price": 130 },
-                    { "title": "Full", "price": 200 }
+                    {
+                      "title": "Half",
+                      "price": 130
+                    },
+                    {
+                      "title": "Full",
+                      "price": 200
+                    }
                   ]
                 },
                 {
@@ -551,7 +919,119 @@
                   "image": "roti",
                   "price": 12,
                   "addons": [
-                    { "title": "Make it", "max": 1, "options": [ { "title": "With Butter", "price": 6 } ] }
+                    {
+                      "title": "Make it",
+                      "max": 1,
+                      "options": [
+                        {
+                          "title": "With Butter",
+                          "price": 6
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Rice",
+              "foods": [
+                {
+                  "title": "Jeera Rice",
+                  "desc": "Basmati rice tempered with roasted cumin",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "Half",
+                      "price": 70
+                    },
+                    {
+                      "title": "Full",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Veg Pulao",
+                  "desc": "Basmati rice cooked with mixed vegetables & whole spices",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "Half",
+                      "price": 90
+                    },
+                    {
+                      "title": "Full",
+                      "price": 150
+                    }
+                  ]
+                },
+                {
+                  "title": "Curd Rice",
+                  "desc": "Steamed rice mixed with curd, tempered with mustard & curry leaves",
+                  "image": "rice",
+                  "price": 70
+                },
+                {
+                  "title": "Dal-Rice Combo",
+                  "desc": "Dal fry, steamed rice, papad & pickle — 1 plate",
+                  "image": "dalMakhani",
+                  "price": 110
+                }
+              ]
+            },
+            {
+              "title": "Fast Food Corner",
+              "foods": [
+                {
+                  "title": "Veg Burger",
+                  "desc": "Spiced veg patty, lettuce, tomato & burger sauce",
+                  "image": "burger",
+                  "price": 69,
+                  "addons": [
+                    {
+                      "title": "Upgrade",
+                      "max": 1,
+                      "options": [
+                        {
+                          "title": "Add Cheese Slice",
+                          "price": 20
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "title": "Cheese Sandwich",
+                  "desc": "Grilled bread, cheese, onion & tomato",
+                  "image": "sandwich",
+                  "variations": [
+                    {
+                      "title": "2 Slice",
+                      "price": 79
+                    },
+                    {
+                      "title": "4 Slice Club",
+                      "price": 139
+                    }
+                  ],
+                  "addons": [
+                    "SANDWICH_ADDON"
+                  ]
+                },
+                {
+                  "title": "Salted Fries",
+                  "desc": "Crispy salted French fries",
+                  "image": "fries",
+                  "variations": [
+                    {
+                      "title": "Regular (150 g)",
+                      "price": 59
+                    },
+                    {
+                      "title": "Large (250 g)",
+                      "price": 99
+                    }
                   ]
                 }
               ]
@@ -564,136 +1044,36 @@
                   "desc": "Mozzarella and house tomato sauce",
                   "image": "pizzaMargherita",
                   "variations": [
-                    { "title": "Regular 7\"", "price": 149 },
-                    { "title": "Large 12\"", "price": 399 }
+                    {
+                      "title": "Regular 7\"",
+                      "price": 149
+                    },
+                    {
+                      "title": "Large 12\"",
+                      "price": 399
+                    }
                   ],
-                  "addons": ["EXTRA_TOPPINGS"]
+                  "addons": [
+                    "EXTRA_TOPPINGS"
+                  ]
                 },
                 {
                   "title": "Paneer Makhani Pizza",
                   "desc": "Makhani sauce base, paneer and onion",
                   "image": "pizzaPaneer",
                   "variations": [
-                    { "title": "Regular 7\"", "price": 219 },
-                    { "title": "Large 12\"", "price": 519 }
-                  ],
-                  "addons": ["EXTRA_TOPPINGS"]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-
-    {
-      "name": "Deogarh Mahal Rasoi Owner",
-      "email": "deogarh-mahal-rasoi-owner@localsell.in",
-      "password": "Vendor@123",
-      "stores": [
-        {
-          "name": "Deogarh Mahal Rasoi",
-          "slug": "deogarh-mahal-rasoi",
-          "tagline": "Royal Mewari thalis, laal maas & heritage recipes",
-          "area": "Fort Road",
-          "image": "laalMaas",
-          "cuisines": ["Rajasthani", "Thali"],
-          "deliveryTime": 40,
-          "minOrder": 200,
-          "salesTax": 5,
-          "commissionRate": 20,
-          "rating": 4.7,
-          "deliveryProvider": "PLATFORM",
-          "hours": { "open": "09", "close": "23" },
-          "storeLogin": { "username": "deogarh-mahal-rasoi@store.localsell.in", "password": "Store@123" },
-          "categories": [
-            {
-              "title": "Royal Thali",
-              "foods": [
-                {
-                  "title": "Deogarh Mahal Thali",
-                  "desc": "Dal, baati, churma, gatte, ker sangri, kadhi, rice, 2 breads, salad, sweet",
-                  "image": "thali",
-                  "combo": { "worth": 420 },
-                  "variations": [
-                    { "title": "Veg Royal", "price": 320 },
-                    { "title": "Non-Veg (with Laal Maas)", "price": 480 }
+                    {
+                      "title": "Regular 7\"",
+                      "price": 219
+                    },
+                    {
+                      "title": "Large 12\"",
+                      "price": 519
+                    }
                   ],
                   "addons": [
-                    {
-                      "title": "Add to your thali",
-                      "max": 4,
-                      "options": [
-                        { "title": "Extra Baati (2 pc)", "price": 40 },
-                        { "title": "Extra Churma", "price": 50 },
-                        { "title": "Mawa Kachori", "price": 60 },
-                        { "title": "Chaas", "price": 25 }
-                      ]
-                    }
+                    "EXTRA_TOPPINGS"
                   ]
-                },
-                {
-                  "title": "Mini Rajasthani Thali",
-                  "desc": "1 sabzi, dal, rice, 2 roti, salad, papad, sweet",
-                  "image": "dalBaati",
-                  "combo": { "worth": 240 },
-                  "price": 190
-                }
-              ]
-            },
-            {
-              "title": "Mewari Specials",
-              "foods": [
-                {
-                  "title": "Laal Maas",
-                  "desc": "Fiery Mathania red-chilli mutton curry",
-                  "image": "laalMaas",
-                  "variations": [
-                    { "title": "Half", "price": 280 },
-                    { "title": "Full", "price": 460 }
-                  ],
-                  "addons": ["SPICE_LEVEL"]
-                },
-                {
-                  "title": "Gatte ki Sabzi",
-                  "desc": "Gram-flour dumplings in spiced yoghurt gravy",
-                  "image": "kadhai",
-                  "variations": [
-                    { "title": "Half", "price": 110 },
-                    { "title": "Full", "price": 180 }
-                  ]
-                },
-                {
-                  "title": "Ker Sangri",
-                  "desc": "Desert beans & berries tempered dry sabzi",
-                  "image": "kadhai",
-                  "price": 190
-                },
-                {
-                  "title": "Dal Baati Churma",
-                  "desc": "Panchmel dal, 3 baati, sweet churma",
-                  "image": "dalBaati",
-                  "variations": [
-                    { "title": "3 Baati", "price": 190 },
-                    { "title": "5 Baati", "price": 270 }
-                  ]
-                }
-              ]
-            },
-            {
-              "title": "Breads & Extras",
-              "foods": [
-                {
-                  "title": "Bajra Roti",
-                  "desc": "Pearl-millet roti with white butter",
-                  "image": "roti",
-                  "price": 25
-                },
-                {
-                  "title": "Churma Ladoo (2 pc)",
-                  "desc": "Ghee-rich wheat churma ladoo",
-                  "image": "besan",
-                  "price": 70
                 }
               ]
             }
@@ -701,138 +1081,12 @@
         }
       ]
     },
-
-    {
-      "name": "Shrinath Sweets & Namkeen Owner",
-      "email": "shrinath-sweets-namkeen-owner@localsell.in",
-      "password": "Vendor@123",
-      "stores": [
-        {
-          "name": "Shrinath Sweets & Namkeen",
-          "slug": "shrinath-sweets-namkeen",
-          "tagline": "Fresh mithai, ghewar & Bikaneri namkeen by weight",
-          "area": "Sadar Bazaar",
-          "image": "gulabJamun",
-          "cuisines": ["Sweets", "Namkeen"],
-          "deliveryTime": 25,
-          "minOrder": 100,
-          "salesTax": 5,
-          "commissionRate": 20,
-          "rating": 4.6,
-          "deliveryProvider": "BOTH",
-          "hours": { "open": "09", "close": "23" },
-          "storeLogin": { "username": "shrinath-sweets-namkeen@store.localsell.in", "password": "Store@123" },
-          "deliveryAgents": [
-            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
-            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
-          ],
-          "categories": [
-            {
-              "title": "Mithai (by weight)",
-              "foods": [
-                {
-                  "title": "Kaju Katli",
-                  "desc": "Cashew fudge with edible silver leaf",
-                  "image": "kaju",
-                  "variations": [
-                    { "title": "250 g", "price": 260 },
-                    { "title": "500 g", "price": 500 },
-                    { "title": "1 kg", "price": 950 }
-                  ]
-                },
-                {
-                  "title": "Gulab Jamun",
-                  "desc": "Soft khoya dumplings in cardamom syrup",
-                  "image": "gulabJamun",
-                  "variations": [
-                    { "title": "4 pc", "price": 90 },
-                    { "title": "500 g", "price": 220 },
-                    { "title": "1 kg", "price": 420 }
-                  ]
-                },
-                {
-                  "title": "Besan Chakki",
-                  "desc": "Roasted gram-flour fudge with cardamom",
-                  "image": "besan",
-                  "variations": [
-                    { "title": "250 g", "price": 130 },
-                    { "title": "500 g", "price": 250 },
-                    { "title": "1 kg", "price": 480 }
-                  ]
-                },
-                {
-                  "title": "Mawa Ghewar (seasonal)",
-                  "desc": "Disc-shaped honeycomb sweet soaked in rabri",
-                  "image": "ghewar",
-                  "variations": [
-                    { "title": "1 pc", "price": 90 },
-                    { "title": "Box of 4", "price": 340 }
-                  ]
-                }
-              ]
-            },
-            {
-              "title": "Namkeen (by weight)",
-              "foods": [
-                {
-                  "title": "Bikaneri Bhujia",
-                  "desc": "Crisp spiced moth-bean noodles",
-                  "image": "bhujia",
-                  "variations": [
-                    { "title": "250 g", "price": 70 },
-                    { "title": "500 g", "price": 130 },
-                    { "title": "1 kg", "price": 250 }
-                  ]
-                },
-                {
-                  "title": "Navratan Mixture",
-                  "desc": "Nine-ingredient sweet-and-salty namkeen mix",
-                  "image": "bhujia",
-                  "variations": [
-                    { "title": "250 g", "price": 80 },
-                    { "title": "500 g", "price": 150 },
-                    { "title": "1 kg", "price": 280 }
-                  ]
-                },
-                {
-                  "title": "Pyaaz Kachori (2 pc)",
-                  "desc": "Spiced onion kachori, served hot",
-                  "image": "besan",
-                  "price": 60
-                }
-              ]
-            },
-            {
-              "title": "Gift Boxes",
-              "foods": [
-                {
-                  "title": "Assorted Mithai Box",
-                  "desc": "Chef's selection of 6 sweets",
-                  "image": "mixBox",
-                  "combo": { "worth": 700 },
-                  "variations": [
-                    { "title": "500 g", "price": 360 },
-                    { "title": "1 kg", "price": 690 }
-                  ]
-                },
-                {
-                  "title": "Sweet + Namkeen Hamper",
-                  "desc": "500 g Kaju Katli + 500 g Bhujia + dry fruits pack",
-                  "image": "mixBox",
-                  "combo": { "worth": 900 },
-                  "price": 780
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-
     {
       "name": "Deogarh Daily Mart Owner",
       "email": "deogarh-daily-mart-owner@localsell.in",
       "password": "Vendor@123",
+      "gstRegistrationType": "COMPOSITION",
+      "gstin": "08AAGDM9012M1ZP",
       "stores": [
         {
           "name": "Deogarh Daily Mart",
@@ -841,48 +1095,1286 @@
           "area": "Sadar Bazaar",
           "shopType": "grocery",
           "image": "groceryShop",
-          "cuisines": ["Grocery", "Staples"],
+          "cuisines": [
+            "Grocery",
+            "Staples"
+          ],
           "deliveryTime": 35,
           "minOrder": 199,
           "salesTax": 0,
+          "gstRegistrationType": "COMPOSITION",
+          "gstin": "08AAGDM9012M1ZP",
           "commissionRate": 12,
           "rating": 4.3,
-          "deliveryProvider": "PLATFORM",
-          "hours": { "open": "07", "close": "22" },
-          "storeLogin": { "username": "deogarh-daily-mart@store.localsell.in", "password": "Store@123" },
+          "deliveryProvider": "BOTH",
+          "hours": {
+            "open": "07",
+            "close": "22"
+          },
+          "storeLogin": {
+            "username": "deogarh-daily-mart@store.localsell.in",
+            "password": "Store@123"
+          },
           "deliveryAgents": [
-            { "name": "Ramesh (store rider)", "phone": "+919829200001" },
-            { "name": "Dinesh (store rider)", "phone": "+919829200002" }
+            {
+              "name": "Kishore Gurjar",
+              "phone": "+919829230001"
+            },
+            {
+              "name": "Bhanwar Lal",
+              "phone": "+919829230002"
+            },
+            {
+              "name": "Om Prakash",
+              "phone": "+919829230003"
+            },
+            {
+              "name": "Hari Singh",
+              "phone": "+919829230004"
+            }
           ],
           "categories": [
             {
-              "title": "Atta, Rice & Dal",
+              "title": "Atta, Flours & Grains",
               "foods": [
                 {
                   "title": "Whole Wheat Atta",
                   "desc": "Chakki-fresh whole wheat flour",
                   "image": "atta",
                   "variations": [
-                    { "title": "5 kg", "price": 245 },
-                    { "title": "10 kg", "price": 470 }
+                    {
+                      "title": "5 kg",
+                      "price": 245
+                    },
+                    {
+                      "title": "10 kg",
+                      "price": 470
+                    }
                   ]
                 },
+                {
+                  "title": "Multigrain Atta",
+                  "desc": "Wheat blended with ragi, jowar, bajra & oats",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "5 kg",
+                      "price": 285
+                    },
+                    {
+                      "title": "10 kg",
+                      "price": 545
+                    }
+                  ]
+                },
+                {
+                  "title": "Besan (Gram Flour)",
+                  "desc": "Roasted-aroma gram flour for pakoda & sweets",
+                  "image": "besan",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 65
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 125
+                    }
+                  ]
+                },
+                {
+                  "title": "Maida (Refined Flour)",
+                  "desc": "Fine refined wheat flour for bakery & snacks",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 55
+                    },
+                    {
+                      "title": "5 kg",
+                      "price": 250
+                    }
+                  ]
+                },
+                {
+                  "title": "Sooji / Rava",
+                  "desc": "Semolina for upma, halwa & rava dosa",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 45
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 85
+                    }
+                  ]
+                },
+                {
+                  "title": "Rolled Oats",
+                  "desc": "Whole-grain rolled oats for breakfast porridge",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 110
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 205
+                    }
+                  ]
+                },
+                {
+                  "title": "Instant Oats (Masala)",
+                  "desc": "Ready-in-2-minutes masala oats",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Daliya (Broken Wheat)",
+                  "desc": "Cracked wheat for daliya khichdi & porridge",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 50
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 95
+                    }
+                  ]
+                },
+                {
+                  "title": "Corn Flour",
+                  "desc": "Fine maize starch for thickening & baking",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 35
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 75
+                    }
+                  ]
+                },
+                {
+                  "title": "Ragi Flour (Finger Millet)",
+                  "desc": "Stone-ground ragi atta, iron-rich",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 70
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Bajra Flour",
+                  "desc": "Pearl-millet flour for winter roti",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 60
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 110
+                    }
+                  ]
+                },
+                {
+                  "title": "Jowar Flour",
+                  "desc": "Sorghum flour, gluten-free roti staple",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 65
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Poha (Flattened Rice)",
+                  "desc": "Thick poha for breakfast & chivda",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 45
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 85
+                    }
+                  ]
+                },
+                {
+                  "title": "Vermicelli (Seviyan)",
+                  "desc": "Roasted vermicelli for upma & kheer",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 30
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Custard Powder",
+                  "desc": "Vanilla custard powder",
+                  "image": "atta",
+                  "price": 55
+                },
+                {
+                  "title": "Baking Soda",
+                  "desc": "Food-grade baking soda",
+                  "image": "atta",
+                  "price": 20
+                }
+              ]
+            },
+            {
+              "title": "Rice & Rice Products",
+              "foods": [
                 {
                   "title": "Sona Masoori Rice",
                   "desc": "Lightweight everyday raw rice",
                   "image": "rice",
                   "variations": [
-                    { "title": "5 kg", "price": 360 },
-                    { "title": "25 kg bag", "price": 1690 }
+                    {
+                      "title": "5 kg",
+                      "price": 360
+                    },
+                    {
+                      "title": "25 kg bag",
+                      "price": 1690
+                    }
                   ]
                 },
                 {
+                  "title": "Basmati Rice (Everyday)",
+                  "desc": "Aged basmati, everyday cooking grade",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 130
+                    },
+                    {
+                      "title": "5 kg",
+                      "price": 610
+                    }
+                  ]
+                },
+                {
+                  "title": "Basmati Rice (Premium, Aged 2yr)",
+                  "desc": "Extra-long grain, aromatic aged basmati",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 195
+                    },
+                    {
+                      "title": "5 kg",
+                      "price": 920
+                    }
+                  ]
+                },
+                {
+                  "title": "Kolam Rice",
+                  "desc": "Short-grain rice, everyday household staple",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "5 kg",
+                      "price": 340
+                    },
+                    {
+                      "title": "10 kg",
+                      "price": 650
+                    }
+                  ]
+                },
+                {
+                  "title": "Idli Rice",
+                  "desc": "Parboiled rice for idli & dosa batter",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 55
+                    },
+                    {
+                      "title": "5 kg",
+                      "price": 260
+                    }
+                  ]
+                },
+                {
+                  "title": "Brown Rice",
+                  "desc": "Unpolished whole-grain brown rice",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 95
+                    },
+                    {
+                      "title": "5 kg",
+                      "price": 440
+                    }
+                  ]
+                },
+                {
+                  "title": "Rice Flour",
+                  "desc": "Fine rice flour for dosa & rangoli",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 40
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 75
+                    }
+                  ]
+                },
+                {
+                  "title": "Puffed Rice (Murmura)",
+                  "desc": "Light puffed rice for bhel & chivda",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 25
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 50
+                    }
+                  ]
+                },
+                {
+                  "title": "Flattened Rice (Thin Poha)",
+                  "desc": "Thin poha for chivda & snacks",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 48
+                    }
+                  ]
+                },
+                {
+                  "title": "Ambemohar Rice",
+                  "desc": "Fragrant short-grain rice",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "5 kg",
+                      "price": 380
+                    }
+                  ]
+                },
+                {
+                  "title": "Kala Namak Rice",
+                  "desc": "Aromatic black-salt heirloom rice",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 145
+                    }
+                  ]
+                },
+                {
+                  "title": "Rice Poha Papad",
+                  "desc": "Thin rice papad, ready to fry/roast",
+                  "image": "rice",
+                  "price": 40
+                }
+              ]
+            },
+            {
+              "title": "Pulses & Dals",
+              "foods": [
+                {
                   "title": "Toor Dal (Arhar)",
                   "desc": "Polished split pigeon peas",
-                  "image": "atta",
+                  "image": "dalCooked",
                   "variations": [
-                    { "title": "500 g", "price": 95 },
-                    { "title": "1 kg", "price": 180 }
+                    {
+                      "title": "500 g",
+                      "price": 95
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Moong Dal (Split, Yellow)",
+                  "desc": "Skinned split green gram",
+                  "image": "dalCooked",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 90
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 170
+                    }
+                  ]
+                },
+                {
+                  "title": "Moong Whole (Green Gram)",
+                  "desc": "Whole green moong for sprouting",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 85
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 160
+                    }
+                  ]
+                },
+                {
+                  "title": "Chana Dal",
+                  "desc": "Split Bengal gram",
+                  "image": "dalCooked",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 75
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
+                  "title": "Urad Dal (Split, White)",
+                  "desc": "Skinned split black gram for idli/dosa",
+                  "image": "dalCooked",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 100
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 190
+                    }
+                  ]
+                },
+                {
+                  "title": "Urad Dal (Whole, Black)",
+                  "desc": "Whole black gram for dal makhani",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 95
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Masoor Dal (Red Lentil)",
+                  "desc": "Split red lentils, quick-cooking",
+                  "image": "dalCooked",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 80
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 150
+                    }
+                  ]
+                },
+                {
+                  "title": "Rajma (Kidney Beans)",
+                  "desc": "Whole red kidney beans",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 95
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Kabuli Chana (White Chickpea)",
+                  "desc": "Whole white chickpeas for chole",
+                  "image": "kabuliChanaRaw",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 85
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 160
+                    }
+                  ]
+                },
+                {
+                  "title": "Kala Chana (Black Chickpea)",
+                  "desc": "Whole black chickpeas",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 75
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Peas (Dried, Matar)",
+                  "desc": "Dried whole green peas",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 65
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Lobia (Black-Eyed Beans)",
+                  "desc": "Whole black-eyed peas",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 80
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 150
+                    }
+                  ]
+                },
+                {
+                  "title": "Moth Beans (Matki)",
+                  "desc": "Whole moth beans for usal & sprouting",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 75
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
+                  "title": "Soya Chunks",
+                  "desc": "High-protein textured soy chunks",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 35
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 80
+                    }
+                  ]
+                },
+                {
+                  "title": "Sabudana (Sago)",
+                  "desc": "Tapioca pearls for khichdi & vada",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 70
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Horse Gram (Kulthi)",
+                  "desc": "Whole horse gram, high-protein pulse",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Moong Sprouts Mix",
+                  "desc": "Sprouting-ready mixed pulses",
+                  "image": "mixedBeans",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 90
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Cooking Oil & Ghee",
+              "foods": [
+                {
+                  "title": "Refined Sunflower Oil",
+                  "desc": "Light everyday cooking oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "1 L pouch",
+                      "price": 135
+                    },
+                    {
+                      "title": "5 L can",
+                      "price": 640
+                    }
+                  ]
+                },
+                {
+                  "title": "Mustard Oil (Sarson)",
+                  "desc": "Cold-pressed pungent mustard oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 175
+                    },
+                    {
+                      "title": "5 L",
+                      "price": 820
+                    }
+                  ]
+                },
+                {
+                  "title": "Groundnut Oil",
+                  "desc": "Cold-pressed peanut oil, traditional flavour",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 195
+                    },
+                    {
+                      "title": "5 L",
+                      "price": 930
+                    }
+                  ]
+                },
+                {
+                  "title": "Soybean Oil",
+                  "desc": "Light refined soybean cooking oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "1 L pouch",
+                      "price": 130
+                    },
+                    {
+                      "title": "5 L can",
+                      "price": 615
+                    }
+                  ]
+                },
+                {
+                  "title": "Rice Bran Oil",
+                  "desc": "Light, heart-friendly everyday oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 165
+                    },
+                    {
+                      "title": "5 L",
+                      "price": 780
+                    }
+                  ]
+                },
+                {
+                  "title": "Kachi Ghani Mustard Oil",
+                  "desc": "Wood-pressed unrefined mustard oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 210
+                    }
+                  ]
+                },
+                {
+                  "title": "Cold-Pressed Coconut Oil",
+                  "desc": "Virgin cold-pressed coconut oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 195
+                    },
+                    {
+                      "title": "1 L",
+                      "price": 360
+                    }
+                  ]
+                },
+                {
+                  "title": "Olive Oil (Pure)",
+                  "desc": "Everyday cooking olive oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 380
+                    },
+                    {
+                      "title": "1 L",
+                      "price": 710
+                    }
+                  ]
+                },
+                {
+                  "title": "Extra Virgin Olive Oil",
+                  "desc": "Cold-extracted, for salads & dips",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 520
+                    }
+                  ]
+                },
+                {
+                  "title": "Pure Desi Cow Ghee",
+                  "desc": "Traditional bilona-method cow ghee",
+                  "image": "gheeJar",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 385
+                    },
+                    {
+                      "title": "1 L",
+                      "price": 720
+                    }
+                  ]
+                },
+                {
+                  "title": "Buffalo Ghee",
+                  "desc": "Rich, granular buffalo-milk ghee",
+                  "image": "gheeJar",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 340
+                    },
+                    {
+                      "title": "1 L",
+                      "price": 650
+                    }
+                  ]
+                },
+                {
+                  "title": "Vanaspati (Dalda)",
+                  "desc": "Hydrogenated vegetable cooking fat",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 85
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 160
+                    }
+                  ]
+                },
+                {
+                  "title": "Til Oil (Sesame)",
+                  "desc": "Cold-pressed sesame oil for tempering",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 165
+                    }
+                  ]
+                },
+                {
+                  "title": "Castor Oil (Cooking Grade)",
+                  "desc": "Food-grade castor oil",
+                  "image": "oil",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 60
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Sugar, Salt & Sweeteners",
+              "foods": [
+                {
+                  "title": "Sugar",
+                  "desc": "Fine-grain refined sugar",
+                  "image": "sugarGranulated",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 48
+                    },
+                    {
+                      "title": "5 kg",
+                      "price": 230
+                    }
+                  ]
+                },
+                {
+                  "title": "Boora Sugar",
+                  "desc": "Coarse-ground sugar for mithai",
+                  "image": "sugarGranulated",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 58
+                    }
+                  ]
+                },
+                {
+                  "title": "Jaggery (Gud) Block",
+                  "desc": "Traditional sugarcane jaggery block",
+                  "image": "jaggeryMaking",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 55
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 100
+                    }
+                  ]
+                },
+                {
+                  "title": "Jaggery Powder",
+                  "desc": "Fine powdered jaggery",
+                  "image": "jaggeryMaking",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Rock Sugar (Misri)",
+                  "desc": "Crystallised sugar candy",
+                  "image": "rockSaltCrystal",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Iodised Salt",
+                  "desc": "Everyday cooking salt",
+                  "image": "saltFlake",
+                  "price": 28
+                },
+                {
+                  "title": "Rock Salt (Sendha Namak)",
+                  "desc": "Fasting-friendly rock salt",
+                  "image": "rockSaltCrystal",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Honey (Pure)",
+                  "desc": "Natural multi-flora honey",
+                  "image": "honeyDrip",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 145
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 260
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Spices & Masala",
+              "foods": [
+                {
+                  "title": "Turmeric Powder (Haldi)",
+                  "desc": "Bright, high-curcumin turmeric powder",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 30
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Red Chilli Powder",
+                  "desc": "Deep-red Kashmiri-blend chilli powder",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 35
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 155
+                    }
+                  ]
+                },
+                {
+                  "title": "Coriander Powder (Dhania)",
+                  "desc": "Freshly ground coriander powder",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 25
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 110
+                    }
+                  ]
+                },
+                {
+                  "title": "Cumin Seeds (Jeera)",
+                  "desc": "Whole cumin seeds for tempering",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 40
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Cumin Powder",
+                  "desc": "Roasted ground cumin powder",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Garam Masala",
+                  "desc": "House-blend whole-spice garam masala",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Chaat Masala",
+                  "desc": "Tangy chaat masala for snacks & fruit",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Kitchen King Masala",
+                  "desc": "All-purpose sabzi masala blend",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 50
+                    }
+                  ]
+                },
+                {
+                  "title": "Black Pepper (Whole)",
+                  "desc": "Whole black peppercorns",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Black Pepper Powder",
+                  "desc": "Freshly ground black pepper",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Cloves (Laung)",
+                  "desc": "Whole aromatic cloves",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Cardamom (Elaichi)",
+                  "desc": "Whole green cardamom pods",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 145
+                    }
+                  ]
+                },
+                {
+                  "title": "Cinnamon Sticks (Dalchini)",
+                  "desc": "Whole cinnamon bark sticks",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Mustard Seeds (Rai)",
+                  "desc": "Whole black mustard seeds",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 20
+                    }
+                  ]
+                },
+                {
+                  "title": "Fennel Seeds (Saunf)",
+                  "desc": "Whole fennel seeds, mukhwas grade",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Carom Seeds (Ajwain)",
+                  "desc": "Whole carom seeds",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Fenugreek Seeds (Methi)",
+                  "desc": "Whole fenugreek seeds",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 25
+                    }
+                  ]
+                },
+                {
+                  "title": "Asafoetida (Hing)",
+                  "desc": "Compounded hing for tempering",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "25 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Bay Leaves (Tej Patta)",
+                  "desc": "Dried whole bay leaves",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "25 g",
+                      "price": 20
+                    }
+                  ]
+                },
+                {
+                  "title": "Star Anise (Chakra Phool)",
+                  "desc": "Whole star anise pods",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "25 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Sambar Masala",
+                  "desc": "South-Indian sambar spice blend",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Pav Bhaji Masala",
+                  "desc": "Mumbai-style pav bhaji spice blend",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Biryani Masala",
+                  "desc": "Whole-spice biryani masala blend",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Dry Mango Powder (Amchur)",
+                  "desc": "Tangy dried raw-mango powder",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Kasuri Methi",
+                  "desc": "Dried fenugreek leaves for gravies",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 30
+                    }
+                  ]
+                },
+                {
+                  "title": "Curry Leaves (Dried)",
+                  "desc": "Dried curry leaves",
+                  "image": "spices",
+                  "variations": [
+                    {
+                      "title": "25 g",
+                      "price": 20
+                    }
                   ]
                 }
               ]
@@ -897,58 +2389,190 @@
                   "price": 30
                 },
                 {
+                  "title": "Full Cream Milk Pouch",
+                  "desc": "Rich full-cream milk, 500 ml",
+                  "image": "milk",
+                  "price": 34
+                },
+                {
+                  "title": "Curd (Dahi)",
+                  "desc": "Fresh set curd",
+                  "image": "milk",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 25
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
                   "title": "Paneer Block",
                   "desc": "Fresh malai paneer, 200 g",
                   "image": "milk",
                   "price": 95
                 },
                 {
+                  "title": "Table Butter",
+                  "desc": "Salted table butter",
+                  "image": "milk",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 55
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 250
+                    }
+                  ]
+                },
+                {
+                  "title": "White Butter (Makhan)",
+                  "desc": "Fresh unsalted homestyle butter",
+                  "image": "milk",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Processed Cheese Slices",
+                  "desc": "10-slice cheese pack",
+                  "image": "milk",
+                  "price": 110
+                },
+                {
+                  "title": "Buttermilk (Chaas)",
+                  "desc": "Spiced chilled buttermilk, 500 ml",
+                  "image": "milk",
+                  "price": 25
+                },
+                {
+                  "title": "Condensed Milk",
+                  "desc": "Sweetened condensed milk tin",
+                  "image": "milk",
+                  "variations": [
+                    {
+                      "title": "400 g tin",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Khoya (Mawa)",
+                  "desc": "Fresh reduced-milk khoya",
+                  "image": "milk",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
                   "title": "Farm Eggs (6 pc)",
                   "desc": "Grade-A white eggs",
                   "image": "eggs",
                   "price": 48
+                },
+                {
+                  "title": "Farm Eggs (12 pc)",
+                  "desc": "Grade-A white eggs, tray of 12",
+                  "image": "eggs",
+                  "price": 90
                 }
               ]
             },
             {
-              "title": "Oil, Masala & Sugar",
+              "title": "Bread & Bakery",
               "foods": [
                 {
-                  "title": "Refined Sunflower Oil",
-                  "desc": "Light everyday cooking oil",
-                  "image": "oil",
+                  "title": "White Sandwich Bread",
+                  "desc": "Soft white sandwich loaf, 400 g",
+                  "image": "bakery",
+                  "price": 45
+                },
+                {
+                  "title": "Brown Bread",
+                  "desc": "Whole-wheat brown bread, 400 g",
+                  "image": "bakery",
+                  "price": 50
+                },
+                {
+                  "title": "Pav (6 pc)",
+                  "desc": "Soft ladi pav for vada pav & bhaji",
+                  "image": "bakery",
+                  "price": 30
+                },
+                {
+                  "title": "Burger Buns (4 pc)",
+                  "desc": "Sesame-topped soft burger buns",
+                  "image": "bakery",
+                  "price": 55
+                },
+                {
+                  "title": "Rusk (Toast Biscuit)",
+                  "desc": "Crisp elaichi rusk",
+                  "image": "bakery",
                   "variations": [
-                    { "title": "1 L pouch", "price": 135 },
-                    { "title": "5 L can", "price": 640 }
+                    {
+                      "title": "200 g",
+                      "price": 40
+                    }
                   ]
                 },
                 {
-                  "title": "Sugar",
-                  "desc": "Fine-grain refined sugar",
-                  "image": "atta",
+                  "title": "Bun Maska Bread",
+                  "desc": "Soft sweet bun for bun-maska",
+                  "image": "bakery",
+                  "price": 35
+                },
+                {
+                  "title": "Digestive Biscuits",
+                  "desc": "Wheat-fibre digestive biscuits",
+                  "image": "bakery",
                   "variations": [
-                    { "title": "1 kg", "price": 48 },
-                    { "title": "5 kg", "price": 230 }
+                    {
+                      "title": "250 g",
+                      "price": 45
+                    }
                   ]
                 },
                 {
-                  "title": "Iodised Salt",
-                  "desc": "1 kg pack",
-                  "image": "atta",
-                  "price": 28
+                  "title": "Cream Cracker Biscuits",
+                  "desc": "Light salted cracker biscuits",
+                  "image": "bakery",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 35
+                    }
+                  ]
                 }
               ]
             },
             {
-              "title": "Fresh Produce",
+              "title": "Fresh Vegetables",
               "foods": [
                 {
                   "title": "Onion",
                   "desc": "Loose, sorted",
                   "image": "vegetables",
                   "variations": [
-                    { "title": "1 kg", "price": 40 },
-                    { "title": "3 kg", "price": 110 }
+                    {
+                      "title": "1 kg",
+                      "price": 40
+                    },
+                    {
+                      "title": "3 kg",
+                      "price": 110
+                    }
                   ]
                 },
                 {
@@ -956,38 +2580,2141 @@
                   "desc": "Loose, sorted",
                   "image": "vegetables",
                   "variations": [
-                    { "title": "1 kg", "price": 35 },
-                    { "title": "3 kg", "price": 95 }
+                    {
+                      "title": "1 kg",
+                      "price": 35
+                    },
+                    {
+                      "title": "3 kg",
+                      "price": 95
+                    }
                   ]
                 },
                 {
                   "title": "Tomato",
                   "desc": "Farm fresh",
                   "image": "vegetables",
-                  "price": 45
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Garlic",
+                  "desc": "Fresh whole garlic bulbs",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Ginger",
+                  "desc": "Fresh ginger root",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Chilli",
+                  "desc": "Fresh spicy green chillies",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 25
+                    }
+                  ]
+                },
+                {
+                  "title": "Capsicum (Shimla Mirch)",
+                  "desc": "Fresh green capsicum",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Cauliflower",
+                  "desc": "Fresh whole cauliflower, per piece",
+                  "image": "vegetables",
+                  "price": 35
+                },
+                {
+                  "title": "Cabbage",
+                  "desc": "Fresh whole cabbage, per piece",
+                  "image": "vegetables",
+                  "price": 30
+                },
+                {
+                  "title": "Brinjal (Baingan)",
+                  "desc": "Fresh purple brinjal",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 30
+                    }
+                  ]
+                },
+                {
+                  "title": "Lady Finger (Bhindi)",
+                  "desc": "Fresh tender okra",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Coriander Leaves (Dhania)",
+                  "desc": "Fresh coriander bunch",
+                  "image": "vegetables",
+                  "price": 12
+                },
+                {
+                  "title": "Mint Leaves (Pudina)",
+                  "desc": "Fresh mint bunch",
+                  "image": "vegetables",
+                  "price": 10
+                },
+                {
+                  "title": "Lemon",
+                  "desc": "Fresh juicy lemons",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 25
+                    }
+                  ]
+                },
+                {
+                  "title": "Cucumber",
+                  "desc": "Fresh cucumber",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Carrot",
+                  "desc": "Fresh crunchy carrots",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 30
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Beans (French Beans)",
+                  "desc": "Fresh French beans",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Peas (Fresh, Matar)",
+                  "desc": "Fresh shelled-on-request green peas",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Spinach (Palak)",
+                  "desc": "Fresh spinach bunch",
+                  "image": "vegetables",
+                  "price": 20
+                },
+                {
+                  "title": "Fenugreek Leaves (Methi)",
+                  "desc": "Fresh methi bunch",
+                  "image": "vegetables",
+                  "price": 15
+                },
+                {
+                  "title": "Bottle Gourd (Lauki)",
+                  "desc": "Fresh bottle gourd, per piece",
+                  "image": "vegetables",
+                  "price": 25
+                },
+                {
+                  "title": "Pumpkin (Kaddu)",
+                  "desc": "Fresh pumpkin, per kg cut piece",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 30
+                    }
+                  ]
+                },
+                {
+                  "title": "Radish (Mooli)",
+                  "desc": "Fresh white radish",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 20
+                    }
+                  ]
+                },
+                {
+                  "title": "Beetroot",
+                  "desc": "Fresh beetroot",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 30
+                    }
+                  ]
                 }
               ]
             },
             {
-              "title": "Snacks & Beverages",
+              "title": "Fresh Fruits",
+              "foods": [
+                {
+                  "title": "Banana",
+                  "desc": "Ripe farm bananas",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 dozen",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Apple (Shimla)",
+                  "desc": "Crisp Himachal apples",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Orange (Nagpur)",
+                  "desc": "Juicy Nagpur oranges",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Papaya",
+                  "desc": "Ripe papaya, per piece",
+                  "image": "fruitsMixed",
+                  "price": 40
+                },
+                {
+                  "title": "Watermelon",
+                  "desc": "Sweet seasonal watermelon, per kg",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 25
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Grapes",
+                  "desc": "Seedless green grapes",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 70
+                    }
+                  ]
+                },
+                {
+                  "title": "Pomegranate (Anar)",
+                  "desc": "Sweet ruby pomegranate",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 160
+                    }
+                  ]
+                },
+                {
+                  "title": "Guava (Amrud)",
+                  "desc": "Fresh seasonal guava",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Mango (Seasonal)",
+                  "desc": "Sweet seasonal mangoes",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 110
+                    }
+                  ]
+                },
+                {
+                  "title": "Sweet Lime (Mausambi)",
+                  "desc": "Juicy sweet lime",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 70
+                    }
+                  ]
+                },
+                {
+                  "title": "Pineapple",
+                  "desc": "Ripe pineapple, per piece",
+                  "image": "fruitsMixed",
+                  "price": 55
+                },
+                {
+                  "title": "Chikoo (Sapota)",
+                  "desc": "Sweet ripe chikoo",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 50
+                    }
+                  ]
+                },
+                {
+                  "title": "Kiwi",
+                  "desc": "Imported fresh kiwi",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "4 pc",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Dates (Fresh, Kharek)",
+                  "desc": "Fresh soft dates, seasonal",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Musk Melon (Kharbuja)",
+                  "desc": "Sweet seasonal musk melon, per piece",
+                  "image": "fruitsMixed",
+                  "price": 35
+                },
+                {
+                  "title": "Custard Apple (Sitaphal)",
+                  "desc": "Sweet seasonal custard apple",
+                  "image": "fruitsMixed",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 80
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Snacks & Namkeen",
               "foods": [
                 {
                   "title": "Potato Chips (Classic Salted)",
-                  "desc": "Family pack",
+                  "desc": "150 g family pack",
                   "image": "snacks",
                   "price": 40
                 },
                 {
+                  "title": "Potato Chips (Masala Tadka)",
+                  "desc": "150 g family pack",
+                  "image": "snacks",
+                  "price": 40
+                },
+                {
+                  "title": "Banana Chips",
+                  "desc": "Kerala-style banana chips",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 50
+                    }
+                  ]
+                },
+                {
                   "title": "Marie Biscuits",
-                  "desc": "Tea-time biscuits, 250 g",
+                  "desc": "250 g tea-time biscuits",
                   "image": "snacks",
                   "price": 35
+                },
+                {
+                  "title": "Glucose Biscuits",
+                  "desc": "200 g energy glucose biscuits",
+                  "image": "snacks",
+                  "price": 25
+                },
+                {
+                  "title": "Cream Biscuits (Chocolate)",
+                  "desc": "150 g chocolate cream biscuits",
+                  "image": "snacks",
+                  "price": 30
+                },
+                {
+                  "title": "Cream Biscuits (Orange)",
+                  "desc": "150 g orange cream biscuits",
+                  "image": "snacks",
+                  "price": 30
+                },
+                {
+                  "title": "Salted Peanuts (Roasted)",
+                  "desc": "Roasted salted peanuts",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 50
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Bikaneri Bhujia",
+                  "desc": "Crisp spiced moth-bean noodles",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 70
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 130
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 250
+                    }
+                  ]
+                },
+                {
+                  "title": "Navratan Mixture",
+                  "desc": "Nine-ingredient sweet-and-salty namkeen mix",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 80
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 150
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 280
+                    }
+                  ]
+                },
+                {
+                  "title": "Aloo Bhujia",
+                  "desc": "Crisp potato-besan sev",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 65
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Moong Dal Namkeen",
+                  "desc": "Crunchy fried moong dal",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 70
+                    }
+                  ]
+                },
+                {
+                  "title": "Chana Jor Garam",
+                  "desc": "Spiced flattened chickpea snack",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Khakhra (Plain)",
+                  "desc": "Crisp Gujarati wheat khakhra",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Khakhra (Masala)",
+                  "desc": "Crisp spiced masala khakhra",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Popcorn (Butter)",
+                  "desc": "Ready-to-eat butter popcorn",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "70 g",
+                      "price": 30
+                    }
+                  ]
+                },
+                {
+                  "title": "Corn Flakes",
+                  "desc": "Breakfast corn flakes",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "475 g",
+                      "price": 165
+                    }
+                  ]
+                },
+                {
+                  "title": "Muesli",
+                  "desc": "Fruit & nut breakfast muesli",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "400 g",
+                      "price": 210
+                    }
+                  ]
+                },
+                {
+                  "title": "Rusk Toast (Elaichi)",
+                  "desc": "Cardamom-flavoured rusk toast",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "300 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Chocolate Bar (Dairy)",
+                  "desc": "Milk chocolate bar",
+                  "image": "snacks",
+                  "price": 20
+                },
+                {
+                  "title": "Wafer Biscuits (Chocolate)",
+                  "desc": "Crisp chocolate cream wafers",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "75 g",
+                      "price": 20
+                    }
+                  ]
+                },
+                {
+                  "title": "Toffees (Assorted, 100 pc jar)",
+                  "desc": "Assorted fruit toffees jar",
+                  "image": "snacks",
+                  "price": 90
+                },
+                {
+                  "title": "Mixture Sev",
+                  "desc": "Fine spiced sev",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Roasted Chana (Salted)",
+                  "desc": "Roasted salted Bengal gram",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Extruded Corn Puffs (Masala)",
+                  "desc": "Crunchy masala corn puffs",
+                  "image": "snacks",
+                  "price": 20
+                },
+                {
+                  "title": "Rice Crackers (Masala)",
+                  "desc": "Light spiced rice crackers",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "150 g",
+                      "price": 45
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Beverages, Tea & Coffee",
+              "foods": [
+                {
+                  "title": "Loose Tea (CTC)",
+                  "desc": "Everyday strong CTC tea leaves",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 90
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 170
+                    }
+                  ]
+                },
+                {
+                  "title": "Premium Assam Tea",
+                  "desc": "Long-leaf premium Assam tea",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Tea Bags",
+                  "desc": "25-bag box of green tea",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "25 bags",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Masala Chai Tea Bags",
+                  "desc": "25-bag box of spiced masala chai",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "25 bags",
+                      "price": 135
+                    }
+                  ]
+                },
+                {
+                  "title": "Instant Coffee",
+                  "desc": "Classic instant coffee granules",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 110
+                    },
+                    {
+                      "title": "100 g",
+                      "price": 210
+                    }
+                  ]
+                },
+                {
+                  "title": "Filter Coffee Powder",
+                  "desc": "South-Indian filter coffee-chicory blend",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 145
+                    }
+                  ]
+                },
+                {
+                  "title": "Drinking Chocolate / Malt Powder",
+                  "desc": "Chocolate malt health drink",
+                  "image": "coffeeCold",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 195
+                    }
+                  ]
                 },
                 {
                   "title": "Cola (750 ml)",
                   "desc": "Chilled soft drink",
                   "image": "coldDrink",
                   "price": 45
+                },
+                {
+                  "title": "Lemon Soda (750 ml)",
+                  "desc": "Chilled lemon-flavoured soda",
+                  "image": "coldDrink",
+                  "price": 40
+                },
+                {
+                  "title": "Orange Soft Drink (750 ml)",
+                  "desc": "Chilled orange-flavoured drink",
+                  "image": "coldDrink",
+                  "price": 42
+                },
+                {
+                  "title": "Mango Fruit Juice (1 L)",
+                  "desc": "Real mango fruit juice carton",
+                  "image": "coldDrink",
+                  "price": 110
+                },
+                {
+                  "title": "Mixed Fruit Juice (1 L)",
+                  "desc": "Real mixed-fruit juice carton",
+                  "image": "coldDrink",
+                  "price": 110
+                },
+                {
+                  "title": "Packaged Drinking Water (1 L)",
+                  "desc": "Sealed drinking water bottle",
+                  "image": "coldDrink",
+                  "price": 20
+                },
+                {
+                  "title": "Packaged Drinking Water (20 L Jar)",
+                  "desc": "Refill jar for water dispenser",
+                  "image": "coldDrink",
+                  "price": 60
+                },
+                {
+                  "title": "Soda Water (Club Soda)",
+                  "desc": "Plain carbonated soda, 750 ml",
+                  "image": "coldDrink",
+                  "price": 30
+                },
+                {
+                  "title": "Energy Drink (250 ml)",
+                  "desc": "Carbonated energy drink can",
+                  "image": "coldDrink",
+                  "price": 45
+                },
+                {
+                  "title": "Rose Sharbat Syrup",
+                  "desc": "Concentrated rose sharbat, 750 ml",
+                  "image": "coldDrink",
+                  "variations": [
+                    {
+                      "title": "750 ml",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
+                  "title": "Jaljeera Syrup",
+                  "desc": "Tangy jaljeera concentrate, 750 ml",
+                  "image": "coldDrink",
+                  "variations": [
+                    {
+                      "title": "750 ml",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Kashmiri Kahwa Tea",
+                  "desc": "Green tea with saffron, cardamom & almond",
+                  "image": "coffeeHot",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 160
+                    }
+                  ]
+                },
+                {
+                  "title": "Cold Coffee Premix",
+                  "desc": "Instant cold-coffee premix jar",
+                  "image": "coffeeCold",
+                  "variations": [
+                    {
+                      "title": "400 g",
+                      "price": 220
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Papad & Pickle",
+              "foods": [
+                {
+                  "title": "Urad Papad (Plain)",
+                  "desc": "Sun-dried urad-dal papad",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Urad Papad (Masala)",
+                  "desc": "Spiced urad-dal papad",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Moong Papad",
+                  "desc": "Light moong-dal papad",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Rice Papad",
+                  "desc": "Thin rice papad, roast or fry",
+                  "image": "rice",
+                  "price": 40
+                },
+                {
+                  "title": "Fryums (Sago Papad)",
+                  "desc": "Colourful sago fryums",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Mango Pickle (Aam Achar)",
+                  "desc": "Traditional spiced mango pickle",
+                  "image": "pickle",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 70
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Mixed Vegetable Pickle",
+                  "desc": "Tangy mixed-vegetable achar",
+                  "image": "pickle",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 65
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Lemon Pickle (Nimbu Achar)",
+                  "desc": "Classic tangy lemon pickle",
+                  "image": "pickle",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Green Chilli Pickle",
+                  "desc": "Spicy green chilli achar",
+                  "image": "pickle",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Garlic Pickle",
+                  "desc": "Punjabi-style garlic achar",
+                  "image": "pickle",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 70
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Instant & Ready-to-Cook",
+              "foods": [
+                {
+                  "title": "Instant Noodles (Masala)",
+                  "desc": "4-pack instant masala noodles",
+                  "image": "snacks",
+                  "price": 56
+                },
+                {
+                  "title": "Instant Noodles (Chilli Chow)",
+                  "desc": "4-pack instant chilli-chow noodles",
+                  "image": "snacks",
+                  "price": 60
+                },
+                {
+                  "title": "Macaroni Pasta",
+                  "desc": "Elbow macaroni pasta, 400 g",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "400 g",
+                      "price": 70
+                    }
+                  ]
+                },
+                {
+                  "title": "Penne Pasta",
+                  "desc": "Penne pasta, 400 g",
+                  "image": "rice",
+                  "variations": [
+                    {
+                      "title": "400 g",
+                      "price": 75
+                    }
+                  ]
+                },
+                {
+                  "title": "Instant Poha Mix",
+                  "desc": "Ready masala-poha mix, just add water",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Instant Upma Mix",
+                  "desc": "Ready upma mix, just add water",
+                  "image": "atta",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Gulab Jamun Instant Mix",
+                  "desc": "Ready mix for soft gulab jamun",
+                  "image": "besan",
+                  "variations": [
+                    {
+                      "title": "175 g",
+                      "price": 85
+                    }
+                  ]
+                },
+                {
+                  "title": "Dhokla Instant Mix",
+                  "desc": "Ready khaman-dhokla mix",
+                  "image": "besan",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 75
+                    }
+                  ]
+                },
+                {
+                  "title": "Pani Puri Kit",
+                  "desc": "Puri, masala water mix & filling masala kit",
+                  "image": "snacks",
+                  "price": 60
+                },
+                {
+                  "title": "Ready Pav Bhaji Masala Gravy",
+                  "desc": "Ready-to-heat pav bhaji base",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "300 g",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Tomato Ketchup",
+                  "desc": "Classic tomato ketchup bottle",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 95
+                    }
+                  ]
+                },
+                {
+                  "title": "Soy Sauce",
+                  "desc": "Dark soy sauce for Indo-Chinese cooking",
+                  "image": "snacks",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 65
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Dry Fruits & Nuts",
+              "foods": [
+                {
+                  "title": "Almonds (Badam)",
+                  "desc": "California almonds",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 220
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 420
+                    }
+                  ]
+                },
+                {
+                  "title": "Cashew Nuts (Kaju)",
+                  "desc": "Whole W240-grade cashews",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 280
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 540
+                    }
+                  ]
+                },
+                {
+                  "title": "Raisins (Kishmish)",
+                  "desc": "Golden seedless raisins",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 90
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 170
+                    }
+                  ]
+                },
+                {
+                  "title": "Pistachios (Pista)",
+                  "desc": "Roasted salted pistachios",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 340
+                    }
+                  ]
+                },
+                {
+                  "title": "Walnuts (Akhrot)",
+                  "desc": "Whole shelled walnut kernels",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 260
+                    }
+                  ]
+                },
+                {
+                  "title": "Dates (Dry, Chuara)",
+                  "desc": "Dried whole dates",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Dried Figs (Anjeer)",
+                  "desc": "Soft dried figs",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 240
+                    }
+                  ]
+                },
+                {
+                  "title": "Dried Apricots (Khumani)",
+                  "desc": "Sweet dried apricots",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Mixed Dry Fruits Pack",
+                  "desc": "Almond, cashew, raisin & pista mix",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 480
+                    }
+                  ]
+                },
+                {
+                  "title": "Sunflower Seeds",
+                  "desc": "Roasted sunflower seeds",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Pumpkin Seeds",
+                  "desc": "Roasted pumpkin seeds",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 120
+                    }
+                  ]
+                },
+                {
+                  "title": "Chia Seeds",
+                  "desc": "Whole chia seeds",
+                  "image": "dryFruits",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 140
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Personal Care & Toiletries",
+              "foods": [
+                {
+                  "title": "Bath Soap (Sandal)",
+                  "desc": "Sandalwood bathing soap bar",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "1 pc",
+                      "price": 40
+                    },
+                    {
+                      "title": "Pack of 4",
+                      "price": 145
+                    }
+                  ]
+                },
+                {
+                  "title": "Bath Soap (Rose)",
+                  "desc": "Rose-fragrance bathing soap bar",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "1 pc",
+                      "price": 40
+                    },
+                    {
+                      "title": "Pack of 4",
+                      "price": 145
+                    }
+                  ]
+                },
+                {
+                  "title": "Glycerine Soap",
+                  "desc": "Gentle glycerine soap bar",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "1 pc",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Shampoo Sachet",
+                  "desc": "Single-use shampoo sachet",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "1 sachet",
+                      "price": 5
+                    },
+                    {
+                      "title": "Pack of 8",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Shampoo Bottle (Anti-Dandruff)",
+                  "desc": "200 ml anti-dandruff shampoo",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 195
+                    }
+                  ]
+                },
+                {
+                  "title": "Toothpaste",
+                  "desc": "150 g everyday toothpaste",
+                  "image": "soap",
+                  "price": 60
+                },
+                {
+                  "title": "Toothbrush (Soft)",
+                  "desc": "Soft-bristle toothbrush",
+                  "image": "hygieneGrooming",
+                  "price": 25
+                },
+                {
+                  "title": "Mouthwash",
+                  "desc": "250 ml antiseptic mouthwash",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "250 ml",
+                      "price": 110
+                    }
+                  ]
+                },
+                {
+                  "title": "Hair Oil (Coconut)",
+                  "desc": "200 ml pure coconut hair oil",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 95
+                    }
+                  ]
+                },
+                {
+                  "title": "Hair Oil (Almond)",
+                  "desc": "200 ml enriched almond hair oil",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 150
+                    }
+                  ]
+                },
+                {
+                  "title": "Face Wash",
+                  "desc": "100 g everyday face wash",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Talcum Powder",
+                  "desc": "200 g cooling talcum powder",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 95
+                    }
+                  ]
+                },
+                {
+                  "title": "Deodorant Spray",
+                  "desc": "150 ml body deodorant spray",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "150 ml",
+                      "price": 200
+                    }
+                  ]
+                },
+                {
+                  "title": "Razor (Disposable, 3 pc)",
+                  "desc": "3-pack disposable razors",
+                  "image": "hygieneGrooming",
+                  "price": 60
+                },
+                {
+                  "title": "Shaving Cream",
+                  "desc": "70 g shaving cream tube",
+                  "image": "hygieneGrooming",
+                  "variations": [
+                    {
+                      "title": "70 g",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Sanitary Pads (Pack of 8)",
+                  "desc": "8-pad pack, regular flow",
+                  "image": "sanitaryPads",
+                  "price": 60
+                },
+                {
+                  "title": "Hand Sanitizer",
+                  "desc": "100 ml alcohol-based sanitizer",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "100 ml",
+                      "price": 70
+                    }
+                  ]
+                },
+                {
+                  "title": "Cotton Buds (100 pc)",
+                  "desc": "100-piece cotton buds pack",
+                  "image": "soap",
+                  "price": 40
+                },
+                {
+                  "title": "Petroleum Jelly",
+                  "desc": "100 ml moisturising jelly",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "100 ml",
+                      "price": 55
+                    }
+                  ]
+                },
+                {
+                  "title": "Comb (Wide Tooth)",
+                  "desc": "Wide-tooth detangling comb",
+                  "image": "hygieneGrooming",
+                  "price": 20
+                },
+                {
+                  "title": "Nail Cutter",
+                  "desc": "Stainless-steel nail cutter",
+                  "image": "hygieneGrooming",
+                  "price": 25
+                },
+                {
+                  "title": "Body Lotion",
+                  "desc": "200 ml daily moisturising lotion",
+                  "image": "soap",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 150
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Cleaning & Household",
+              "foods": [
+                {
+                  "title": "Detergent Powder",
+                  "desc": "Everyday laundry detergent powder",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "1 kg",
+                      "price": 110
+                    },
+                    {
+                      "title": "4 kg",
+                      "price": 400
+                    }
+                  ]
+                },
+                {
+                  "title": "Detergent Bar",
+                  "desc": "Stain-removal laundry bar, pack of 4",
+                  "image": "detergent",
+                  "price": 55
+                },
+                {
+                  "title": "Liquid Detergent",
+                  "desc": "Front-load liquid detergent, 1 L",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 220
+                    }
+                  ]
+                },
+                {
+                  "title": "Dishwash Bar",
+                  "desc": "Grease-cutting dishwashing bar",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "1 pc",
+                      "price": 15
+                    },
+                    {
+                      "title": "Pack of 3",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Dishwash Liquid Gel",
+                  "desc": "500 ml lemon dishwash gel",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 110
+                    }
+                  ]
+                },
+                {
+                  "title": "Toilet Cleaner",
+                  "desc": "500 ml disinfectant toilet cleaner",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 95
+                    }
+                  ]
+                },
+                {
+                  "title": "Floor Cleaner (Disinfectant)",
+                  "desc": "1 L pine-fresh floor cleaner",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 130
+                    }
+                  ]
+                },
+                {
+                  "title": "Glass Cleaner Spray",
+                  "desc": "500 ml streak-free glass cleaner",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "500 ml",
+                      "price": 105
+                    }
+                  ]
+                },
+                {
+                  "title": "Phenyl (White)",
+                  "desc": "1 L concentrated white phenyl",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 65
+                    }
+                  ]
+                },
+                {
+                  "title": "Naphthalene Balls",
+                  "desc": "Mothballs for wardrobe freshness",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "200 g",
+                      "price": 45
+                    }
+                  ]
+                },
+                {
+                  "title": "Mosquito Repellent Coil",
+                  "desc": "10-coil pack, 8-hour protection",
+                  "image": "mosquitoCoil",
+                  "price": 40
+                },
+                {
+                  "title": "Mosquito Repellent Liquid Refill",
+                  "desc": "45-night vaporizer refill",
+                  "image": "mosquitoCoil",
+                  "variations": [
+                    {
+                      "title": "45 ml",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Matchbox (10 pc)",
+                  "desc": "Box of 10 matchboxes",
+                  "image": "matchboxOpen",
+                  "price": 10
+                },
+                {
+                  "title": "Agarbatti (Incense Sticks)",
+                  "desc": "Sandalwood fragrance incense pack",
+                  "image": "poojaIncense",
+                  "variations": [
+                    {
+                      "title": "Pack of 20",
+                      "price": 35
+                    }
+                  ]
+                },
+                {
+                  "title": "Camphor (Kapoor) Tablets",
+                  "desc": "Pure camphor tablets for pooja",
+                  "image": "poojaDiya",
+                  "variations": [
+                    {
+                      "title": "50 g",
+                      "price": 40
+                    }
+                  ]
+                },
+                {
+                  "title": "Garbage Bags (Medium, 30 pc)",
+                  "desc": "Medium biodegradable garbage bags",
+                  "image": "garbageBagBlack",
+                  "price": 90
+                },
+                {
+                  "title": "Steel Scrubber (Pack of 3)",
+                  "desc": "Dish-scrubbing steel scrubbers",
+                  "image": "cleaningSponge",
+                  "price": 30
+                },
+                {
+                  "title": "Kitchen Cleaning Wipes (Pack of 50)",
+                  "desc": "All-purpose kitchen wipes",
+                  "image": "cleaningSponge",
+                  "price": 95
+                },
+                {
+                  "title": "Fabric Softener",
+                  "desc": "1 L fabric conditioner",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "1 L",
+                      "price": 175
+                    }
+                  ]
+                },
+                {
+                  "title": "Air Freshener Spray",
+                  "desc": "300 ml room air freshener",
+                  "image": "detergent",
+                  "variations": [
+                    {
+                      "title": "300 ml",
+                      "price": 110
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Baby Care",
+              "foods": [
+                {
+                  "title": "Baby Diapers (Small, 20 pc)",
+                  "desc": "Small-size diaper pack",
+                  "image": "babyCare",
+                  "price": 210
+                },
+                {
+                  "title": "Baby Diapers (Medium, 18 pc)",
+                  "desc": "Medium-size diaper pack",
+                  "image": "babyCare",
+                  "price": 220
+                },
+                {
+                  "title": "Baby Powder",
+                  "desc": "100 g gentle baby powder",
+                  "image": "babyCare",
+                  "variations": [
+                    {
+                      "title": "100 g",
+                      "price": 90
+                    }
+                  ]
+                },
+                {
+                  "title": "Baby Soap",
+                  "desc": "Mild glycerine baby soap bar",
+                  "image": "babyCare",
+                  "price": 45
+                },
+                {
+                  "title": "Baby Shampoo",
+                  "desc": "No-tears baby shampoo, 200 ml",
+                  "image": "babyCare",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 150
+                    }
+                  ]
+                },
+                {
+                  "title": "Baby Oil",
+                  "desc": "200 ml gentle massage oil",
+                  "image": "babyCare",
+                  "variations": [
+                    {
+                      "title": "200 ml",
+                      "price": 140
+                    }
+                  ]
+                },
+                {
+                  "title": "Baby Cerelac",
+                  "desc": "Wheat-based infant cereal, 300 g",
+                  "image": "milk",
+                  "variations": [
+                    {
+                      "title": "300 g",
+                      "price": 220
+                    }
+                  ]
+                },
+                {
+                  "title": "Baby Wipes (Pack of 80)",
+                  "desc": "Fragrance-free baby wipes",
+                  "image": "babyCare",
+                  "price": 130
+                }
+              ]
+            },
+            {
+              "title": "Frozen & Ice Cream",
+              "foods": [
+                {
+                  "title": "Vanilla Ice Cream Tub",
+                  "desc": "700 ml classic vanilla tub",
+                  "image": "iceCream",
+                  "variations": [
+                    {
+                      "title": "700 ml",
+                      "price": 180
+                    }
+                  ]
+                },
+                {
+                  "title": "Chocolate Ice Cream Tub",
+                  "desc": "700 ml rich chocolate tub",
+                  "image": "iceCream",
+                  "variations": [
+                    {
+                      "title": "700 ml",
+                      "price": 190
+                    }
+                  ]
+                },
+                {
+                  "title": "Butterscotch Ice Cream Tub",
+                  "desc": "700 ml butterscotch crunch tub",
+                  "image": "iceCream",
+                  "variations": [
+                    {
+                      "title": "700 ml",
+                      "price": 190
+                    }
+                  ]
+                },
+                {
+                  "title": "Kulfi (4 pc)",
+                  "desc": "Traditional malai kulfi sticks",
+                  "image": "iceCream",
+                  "price": 100
+                },
+                {
+                  "title": "Frozen Green Peas",
+                  "desc": "500 g frozen shelled peas",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 60
+                    }
+                  ]
+                },
+                {
+                  "title": "Frozen Mixed Vegetables",
+                  "desc": "500 g frozen mixed veg",
+                  "image": "vegetables",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 75
+                    }
+                  ]
+                },
+                {
+                  "title": "Frozen French Fries",
+                  "desc": "500 g crinkle-cut frozen fries",
+                  "image": "fries",
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 110
+                    }
+                  ]
+                },
+                {
+                  "title": "Frozen Veg Nuggets",
+                  "desc": "400 g breaded veg nuggets",
+                  "image": "fries",
+                  "variations": [
+                    {
+                      "title": "400 g",
+                      "price": 140
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Puja & Stationery Essentials",
+              "foods": [
+                {
+                  "title": "Cotton Wicks (Batti)",
+                  "desc": "Pooja cotton wicks, pack of 100",
+                  "image": "poojaDiya",
+                  "price": 20
+                },
+                {
+                  "title": "Ghee Diya (Pack of 12)",
+                  "desc": "Small clay diyas for pooja",
+                  "image": "poojaDiya",
+                  "price": 30
+                },
+                {
+                  "title": "Pooja Roli & Chawal Kit",
+                  "desc": "Roli, chawal and moli thread set",
+                  "image": "poojaDiya",
+                  "price": 35
+                },
+                {
+                  "title": "Dhoop Sticks",
+                  "desc": "Traditional dhoop sticks pack",
+                  "image": "poojaDiya",
+                  "price": 30
+                },
+                {
+                  "title": "Notebook (Single Line, 172 pg)",
+                  "desc": "Ruled long notebook",
+                  "image": "stationeryNotebook",
+                  "price": 35
+                },
+                {
+                  "title": "Ballpoint Pen (Pack of 5)",
+                  "desc": "Smooth-writing blue ballpoint pens",
+                  "image": "stationeryNotebook",
+                  "price": 25
+                },
+                {
+                  "title": "Pencil (Pack of 10)",
+                  "desc": "HB graphite pencils",
+                  "image": "stationeryNotebook",
+                  "price": 30
+                },
+                {
+                  "title": "Envelope (Pack of 25)",
+                  "desc": "Standard white envelopes",
+                  "image": "stationeryNotebook",
+                  "price": 30
+                },
+                {
+                  "title": "Cello Tape",
+                  "desc": "1-inch transparent cello tape",
+                  "image": "stationeryNotebook",
+                  "price": 15
+                },
+                {
+                  "title": "AA Batteries (Pack of 4)",
+                  "desc": "Alkaline AA batteries",
+                  "image": "aaBatteries",
+                  "price": 90
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Shrinath Sweets Owner",
+      "email": "shrinath-sweets-namkeen-owner@localsell.in",
+      "password": "Vendor@123",
+      "gstRegistrationType": "UNREGISTERED",
+      "stores": [
+        {
+          "name": "Shrinath Sweets & Breakfast Corner",
+          "slug": "shrinath-sweets-namkeen",
+          "tagline": "Mithai, namkeen by weight, and fresh nashta — poha, idli, dosa, kachori, lassi",
+          "area": "Sadar Bazaar",
+          "image": "gulabJamun",
+          "cuisines": [
+            "Sweets",
+            "Breakfast"
+          ],
+          "deliveryTime": 25,
+          "minOrder": 100,
+          "salesTax": 0,
+          "gstRegistrationType": "UNREGISTERED",
+          "commissionRate": 20,
+          "rating": 4.6,
+          "deliveryProvider": "BOTH",
+          "hours": {
+            "open": "07",
+            "close": "22"
+          },
+          "storeLogin": {
+            "username": "shrinath-sweets-namkeen@store.localsell.in",
+            "password": "Store@123"
+          },
+          "deliveryAgents": [
+            {
+              "name": "Shankar Lal",
+              "phone": "+919829240001"
+            },
+            {
+              "name": "Prakash Chandra",
+              "phone": "+919829240002"
+            },
+            {
+              "name": "Girdhari Lal",
+              "phone": "+919829240003"
+            },
+            {
+              "name": "Mangi Lal",
+              "phone": "+919829240004"
+            }
+          ],
+          "categories": [
+            {
+              "title": "Nashta (Breakfast)",
+              "foods": [
+                {
+                  "title": "Poha (1 Plate)",
+                  "desc": "Flattened rice tempered with mustard, curry leaves, peanuts & onion",
+                  "image": "poha",
+                  "price": 40
+                },
+                {
+                  "title": "Idli Sambar (4 pc)",
+                  "desc": "Steamed rice cakes with sambar & coconut chutney",
+                  "image": "idliSambar",
+                  "price": 50
+                },
+                {
+                  "title": "Masala Dosa",
+                  "desc": "Crisp rice-and-lentil crepe stuffed with spiced potato masala, served with sambar & chutney",
+                  "image": "masalaDosa",
+                  "price": 60
+                },
+                {
+                  "title": "Pyaaz Kachori (2 pc)",
+                  "desc": "Spiced onion kachori, served hot",
+                  "image": "bhujia",
+                  "price": 60
+                },
+                {
+                  "title": "Samosa (2 pc)",
+                  "desc": "Deep-fried pastry stuffed with spiced potato & peas",
+                  "image": "bhujia",
+                  "price": 30
+                },
+                {
+                  "title": "Sweet Lassi (300 ml)",
+                  "desc": "Chilled sweet yoghurt drink",
+                  "image": "sweetLassi",
+                  "price": 50
+                },
+                {
+                  "title": "Masala Chaas (300 ml)",
+                  "desc": "Spiced buttermilk, tempered with cumin & curry leaves",
+                  "image": "coldDrink",
+                  "price": 25
+                }
+              ]
+            },
+            {
+              "title": "Mithai (by weight)",
+              "foods": [
+                {
+                  "title": "Kaju Katli",
+                  "desc": "Cashew fudge with edible silver leaf",
+                  "image": "kaju",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 260
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 500
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 950
+                    }
+                  ]
+                },
+                {
+                  "title": "Gulab Jamun",
+                  "desc": "Soft khoya dumplings in cardamom syrup",
+                  "image": "gulabJamun",
+                  "variations": [
+                    {
+                      "title": "4 pc",
+                      "price": 90
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 220
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 420
+                    }
+                  ]
+                },
+                {
+                  "title": "Besan Chakki",
+                  "desc": "Roasted gram-flour fudge with cardamom",
+                  "image": "besan",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 130
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 250
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 480
+                    }
+                  ]
+                },
+                {
+                  "title": "Mawa Ghewar (seasonal)",
+                  "desc": "Disc-shaped honeycomb sweet soaked in rabri",
+                  "image": "ghewar",
+                  "variations": [
+                    {
+                      "title": "1 pc",
+                      "price": 90
+                    },
+                    {
+                      "title": "Box of 4",
+                      "price": 340
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Namkeen (by weight)",
+              "foods": [
+                {
+                  "title": "Bikaneri Bhujia",
+                  "desc": "Crisp spiced moth-bean noodles",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 70
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 130
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 250
+                    }
+                  ]
+                },
+                {
+                  "title": "Navratan Mixture",
+                  "desc": "Nine-ingredient sweet-and-salty namkeen mix",
+                  "image": "namkeenMix",
+                  "variations": [
+                    {
+                      "title": "250 g",
+                      "price": 80
+                    },
+                    {
+                      "title": "500 g",
+                      "price": 150
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 280
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "Gift Boxes",
+              "foods": [
+                {
+                  "title": "Assorted Mithai Box",
+                  "desc": "Chef's selection of 6 sweets",
+                  "image": "mixBox",
+                  "combo": {
+                    "worth": 700
+                  },
+                  "variations": [
+                    {
+                      "title": "500 g",
+                      "price": 360
+                    },
+                    {
+                      "title": "1 kg",
+                      "price": 690
+                    }
+                  ]
+                },
+                {
+                  "title": "Sweet + Namkeen Hamper",
+                  "desc": "500 g Kaju Katli + 500 g Bhujia + dry fruits pack",
+                  "image": "mixBox",
+                  "combo": {
+                    "worth": 900
+                  },
+                  "price": 780
                 }
               ]
             }
@@ -996,10 +4723,13 @@
       ]
     }
   ],
-
   "coupons": [
-    { "title": "WELCOME10", "discount": 10, "enabled": true, "lifeTimeActive": true }
+    {
+      "title": "WELCOME10",
+      "discount": 10,
+      "enabled": true,
+      "lifeTimeActive": true
+    }
   ],
-
   "banners": []
 }

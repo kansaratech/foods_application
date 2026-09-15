@@ -15,7 +15,10 @@ export interface IFilterType {
 }
 
 export interface IColumnConfig<T> extends IGlobalComponentProps {
+  style?: React.CSSProperties;
+  align?: 'left' | 'center' | 'right';
   hidden?: boolean;
+  sortable?: boolean;
   headerName?: string;
   propertyName: string;
   body?: (rowData: T) => React.ReactNode;

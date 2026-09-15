@@ -1,11 +1,13 @@
 'use client';
+import Select from '@/lib/ui/useable-components/custom-dropdown/select';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
 import { GET_USERS } from '@/lib/api/graphql/queries/user';
 import { IUsersDataResponse } from '@/lib/utils/interfaces/users.interface';
 import { USERS_TABLE_COLUMNS } from '@/lib/ui/useable-components/table/columns/user-columns';
-import { DataTable } from 'primereact/datatable';
+import { DataTable } from '@/lib/ui/useable-components/table/data-table';
+
 import { Column } from 'primereact/column';
 import { customerDate, customerMethod, customerStatus } from './utils';
 import './customers.css';
@@ -145,46 +147,45 @@ export default function UsersScreen() {
       <div className="customers-filters">
         <label className="customers-search">
           <i className="pi pi-search" aria-hidden="true" />
-          <input
+          <input className="ls-field"
             aria-label="Search customers"
             placeholder="Search by name, email or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <select
+        <Select
           aria-label="Registration method"
           value={method}
-          onChange={(e) => setMethod(e.target.value)}
+          onChange={(e) => setMethod(e.value)}
         >
           <option value="">Registration Method</option>
           {['Email', 'Google', 'Apple', 'Phone'].map((value) => (
             <option key={value}>{value}</option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           aria-label="Account status"
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          onChange={(e) => setStatus(e.value)}
         >
           <option value="">Account Status</option>
           {['Active', 'Inactive', 'Blocked'].map((value) => (
             <option key={value}>{value}</option>
           ))}
-        </select>
-        <label className="customers-date">
-          <i className="pi pi-calendar" aria-hidden="true" />
-          <select
+        </Select>
+        <div className="customers-date">
+          <Select
             aria-label="Last active"
             value={lastActive}
-            onChange={(e) => setLastActive(e.target.value)}
+            onChange={(e) => setLastActive(e.value)}
           >
             <option value="">Last active</option>
             <option value="1">Last 24 hours</option>
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
-          </select>
-        </label>
+          </Select>
+        </div>
         <button
           className="customers-clear"
           onClick={() => {

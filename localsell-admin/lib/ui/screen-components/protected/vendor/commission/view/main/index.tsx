@@ -1,98 +1,92 @@
 'use client';
-
-import { useQuery } from '@apollo/client';
-import { useTranslations } from 'next-intl';
-
-import { GET_MY_COMMISSION_SUMMARY } from '@/lib/api/graphql';
-import Table from '@/lib/ui/useable-components/table';
-import { ICommissionBill, IMyCommissionSummaryResponse } from '@/lib/utils/interfaces';
-
-const money = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
-const day = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-const statusClass: Record<string, string> = {
-  PENDING: 'bg-amber-100 text-amber-700',
-  PAID: 'bg-green-100 text-green-700',
-  WAIVED: 'bg-gray-200 text-gray-600',
-};
-
+import { gql, useQuery } from '@apollo/client';
+import { useState } from 'react';
+import {
+  FinanceFrame,
+  BillTable,
+} from '@/lib/ui/screens/super-admin/management/finance/workspace';
+import {
+  BILL_FIELDS,
+  Bill,
+  money,
+} from '@/lib/ui/screens/super-admin/management/finance/operations';
+import Select from '@/lib/ui/useable-components/custom-dropdown/select';
+const SUMMARY = gql`
+  query VendorCollectionSummary {
+    myCommissionSummary {
+      cycle
+      currentPeriodCommission
+      currentPeriodOrderCount
+      outstandingTotal
+      bills {
+        ...CollectionBill
+      }
+    }
+  }
+  ${BILL_FIELDS}
+`;
 export default function MyCommissionMain() {
-  const t = useTranslations();
-  const { data, loading } = useQuery<IMyCommissionSummaryResponse>(GET_MY_COMMISSION_SUMMARY, {
+  const { data, loading, error, refetch } = useQuery(SUMMARY, {
     fetchPolicy: 'cache-and-network',
   });
-  const s = data?.myCommissionSummary;
-
+  const summary = data?.myCommissionSummary;
+  const [status, setStatus] = useState('');
+  const bills: Bill[] = (summary?.bills ?? []).filter(
+    (b: Bill) => !status || b.status === status
+  );
   return (
-    <div className="flex flex-col gap-5 p-3">
-      <div className="rounded border p-4 text-sm dark:border-dark-600">
-        <p className="text-gray-500">
-          {t(
-            'The platform charges commission on the food total of every delivered order and invoices you each',
-          )}{' '}
-          {s?.cycle === 'YEARLY' ? t('year') : t('month')}.
+    <FinanceFrame
+      vendor
+      title="Bills & payments"
+      description="Review the commission your stores owe LocalSell and check recorded payments."
+    >
+      <div className="finance-money-flow">
+        <p>
+          <strong>Your stores receive customer payments directly.</strong> Pay
+          LocalSell the commission shown on your bills using the payment details
+          agreed with your account contact. After LocalSell records your
+          payment, the remaining balance and receipt appear on the bill.
         </p>
       </div>
-
-      {s && (
-        <>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            <div className="rounded border p-3 dark:border-dark-600">
-              <p className="text-xs uppercase text-gray-500">{t('This period so far')}</p>
-              <p className="mt-1 text-lg font-semibold">{money(s.currentPeriodCommission)}</p>
-              <p className="text-xs text-gray-400">
-                {s.currentPeriodOrderCount} {t('orders')} · {day(s.currentPeriodStart)} – {day(s.currentPeriodEnd)}
-              </p>
-            </div>
-            <div className="rounded border p-3 dark:border-dark-600">
-              <p className="text-xs uppercase text-gray-500">{t('Outstanding (unpaid bills)')}</p>
-              <p className="mt-1 text-lg font-semibold text-amber-600">{money(s.outstandingTotal)}</p>
-            </div>
-            <div className="rounded border p-3 dark:border-dark-600">
-              <p className="text-xs uppercase text-gray-500">{t('Billing cycle')}</p>
-              <p className="mt-1 text-lg font-semibold">
-                {s.cycle === 'YEARLY' ? t('Yearly') : t('Monthly')}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-gray-500">{t('Bills')}</h3>
-            <Table
-              data={loading ? [] : s.bills}
-              loading={loading}
-              moduleName="MyCommission"
-              columns={[
-                {
-                  headerName: t('Period'),
-                  propertyName: 'periodStart',
-                  body: (b: ICommissionBill) => `${day(b.periodStart)} – ${day(b.periodEnd)}`,
-                },
-                { headerName: t('Orders'), propertyName: 'orderCount' },
-                {
-                  headerName: t('Commission'),
-                  propertyName: 'commissionTotal',
-                  body: (b: ICommissionBill) => <span className="font-semibold">{money(b.commissionTotal)}</span>,
-                },
-                {
-                  headerName: t('Status'),
-                  propertyName: 'status',
-                  body: (b: ICommissionBill) => (
-                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass[b.status] ?? ''}`}>
-                      {t(b.status)}
-                    </span>
-                  ),
-                },
-                {
-                  headerName: t('Paid on'),
-                  propertyName: 'paidAt',
-                  body: (b: ICommissionBill) => day(b.paidAt),
-                },
-              ]}
-            />
-          </div>
-        </>
+      {error && (
+        <div role="alert" className="finance-error">
+          {error.message}
+          <button onClick={() => refetch()}>Retry</button>
+        </div>
       )}
-    </div>
+      <div className="finance-metrics">
+        <section>
+          <span>Outstanding commission</span>
+          <strong>{money(summary?.outstandingTotal)}</strong>
+          <small>Amount still to pay on issued bills</small>
+        </section>
+        <section>
+          <span>Unbilled commission</span>
+          <strong>{money(summary?.currentPeriodCommission)}</strong>
+          <small>
+            {summary?.currentPeriodOrderCount ?? 0} delivered orders awaiting a
+            bill
+          </small>
+        </section>
+        <section>
+          <span>Billing cycle</span>
+          <strong>{summary?.cycle === 'YEARLY' ? 'Yearly' : 'Monthly'}</strong>
+          <small>Open each bill for orders and payment receipts</small>
+        </section>
+      </div>
+      <div className="ls-filter-toolbar">
+        <Select
+          aria-label="Bill status"
+          value={status}
+          onChange={(e) => setStatus(e.value)}
+        >
+          <option value="">All bills</option>
+          <option value="PENDING">Unpaid & part paid</option>
+          <option value="PAID">Paid</option>
+          <option value="WAIVED">Waived</option>
+        </Select>
+      </div>
+      <BillTable vendor bills={bills} loading={loading && !data} />
+    </FinanceFrame>
   );
 }

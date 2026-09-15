@@ -31,6 +31,8 @@ export const commissionTypeDefs = /* GraphQL */ `
     status: String!
     paidAt: String
     paidAmount: Float
+    outstandingAmount: Float!
+    payments: [CommissionPayment!]!
     note: String
     createdAt: String!
   }
@@ -183,7 +185,7 @@ export const commissionTypeDefs = /* GraphQL */ `
 
   extend type Query {
     commissionPeriodPreview: CommissionPeriodPreview!
-    commissionBills(status: String, vendorId: ID, page: Int, limit: Int): CommissionBillsResult!
+    commissionBills(status: String, vendorId: ID, page: Int, limit: Int, search: String, startDate: String, endDate: String): CommissionBillsResult!
     commissionBill(id: ID!): CommissionBillDetail!
     myCommissionSummary: MyCommissionSummary!
     riderCashOutstanding: [RiderCashOutstandingRow!]!

@@ -6,8 +6,8 @@ import {
 
 // Prime React
 import { Column } from 'primereact/column';
+import { DataTable } from '@/lib/ui/useable-components/table/data-table';
 import {
-  DataTable,
   DataTableSelectionMultipleChangeEvent,
   DataTablePageEvent,
 } from 'primereact/datatable';
@@ -152,11 +152,13 @@ const Table = <T extends ITableExtends>({
           <Column
             key={index}
             field={col?.propertyName}
+            style={col.style}
+            align={col.align}
             header={col?.headerName}
             className="dark:text-white"
             headerClassName="dark:text-white dark:bg-dark-900"
             footerClassName="dark:text-white dark:bg-dark-900"
-            sortable={!col?.propertyName?.includes('action')}
+            sortable={col.sortable ?? (!isServerPaginated && !col?.propertyName?.includes('action'))}
             hidden={col?.hidden}
             bodyClassName="selectable-column"
             body={loading ? <DataTableColumnSkeleton /> : col.body}

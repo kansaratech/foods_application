@@ -117,11 +117,11 @@ export default function LoginEmailPasswordMain() {
             </li>
             <li>
               <i className="pi pi-shop" aria-hidden="true" />
-              Manage vendors, stores and riders
+              Manage vendors and stores
             </li>
             <li>
               <i className="pi pi-chart-bar" aria-hidden="true" />
-              Review settlements and reports
+              Review commission bills and reports
             </li>
           </ul>
         </div>
@@ -199,7 +199,7 @@ export default function LoginEmailPasswordMain() {
                 <label htmlFor="admin-email">Work email</label>
                 <div className={styles.inputWrap}>
                   <i className="pi pi-envelope" aria-hidden="true" />
-                  <input
+                  <input className="ls-field"
                     id="admin-email"
                     name="email"
                     type="email"
@@ -230,7 +230,7 @@ export default function LoginEmailPasswordMain() {
                 </div>
                 <div className={styles.inputWrap}>
                   <i className="pi pi-lock" aria-hidden="true" />
-                  <input
+                  <input className="ls-field"
                     id="admin-password"
                     name="password"
                     type={showPassword ? 'text' : 'password'}

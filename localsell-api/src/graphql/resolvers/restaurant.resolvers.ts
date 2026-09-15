@@ -111,7 +111,7 @@ function normalizeDeliveryProvider(value?: string | null): string | undefined {
   if (!DELIVERY_PROVIDERS.includes(upper)) {
     throw userInputError(`deliveryProvider must be one of ${DELIVERY_PROVIDERS.join(', ')}`);
   }
-  return upper;
+  return 'SELF';
 }
 
 function assertOwnsRestaurant(user: { id: string; userType: string }, restaurant: Restaurant) {
@@ -535,7 +535,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           commissionRate,
           latitude: input.latitude,
           longitude: input.longitude,
-          deliveryProvider: normalizeDeliveryProvider(input.deliveryProvider) ?? 'PLATFORM',
+          deliveryProvider: normalizeDeliveryProvider(input.deliveryProvider) ?? 'SELF',
           slug: slugify(input.name),
           orderPrefix: input.name.slice(0, 3).toUpperCase(),
           ownerId: owner.id,
@@ -713,6 +713,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     updateCommission: async (_parent, args: { id: string; commissionRate: number }, context) => {
       requireRole(context, ['ADMIN']);
+      if (!Number.isFinite(args.commissionRate) || args.commissionRate < 0 || args.commissionRate > 100) throw userInputError('Commission rate must be between 0 and 100.');
       const before = await prisma.restaurant.findUnique({ where: { id: args.id } });
       const updated = await prisma.restaurant.update({
         where: { id: args.id },

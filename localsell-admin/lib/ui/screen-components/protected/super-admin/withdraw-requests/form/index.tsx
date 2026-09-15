@@ -88,7 +88,7 @@ export default function WithdrawRequestForm({
                   type="text"
                   value={values.accountHolder}
                   disabled
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-gray-700"
+                  className="ls-field w-full rounded border border-gray-300 px-3 py-2 text-gray-700"
                 />
               </div>
 
@@ -100,7 +100,7 @@ export default function WithdrawRequestForm({
                   type="text"
                   value={values.iban}
                   disabled
-                  className="w-full rounded border border-gray-300 px-3 py-2 text-gray-700"
+                  className="ls-field w-full rounded border border-gray-300 px-3 py-2 text-gray-700"
                 />
               </div>
             </div>

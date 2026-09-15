@@ -584,6 +584,24 @@ model CommissionBill {
   @@index([status])
 }
 
+// Immutable receipts for commission received from stores/vendors, including partial payments.
+model CommissionPayment {
+  id             String   @id @default(cuid())
+  billId         String
+  vendorId       String
+  amount         Float
+  method         String
+  reference      String?
+  note           String?  @db.Text
+  receivedAt     DateTime
+  recordedById   String
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+
+  @@index([billId])
+  @@index([vendorId, receivedAt])
+}
+
 // Records money- and access-level admin actions: who changed a commission
 // rate, marked a bill paid, settled a payout, approved a store, edited config,
 // touched staff / permissions. Written explicitly by `recordAudit()` at those

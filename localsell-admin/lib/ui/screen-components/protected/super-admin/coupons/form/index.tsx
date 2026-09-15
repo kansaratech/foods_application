@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 // GraphQL
 import { CREATE_COUPON, EDIT_COUPON } from '@/lib/api/graphql';
 
@@ -384,7 +385,8 @@ export default function CouponForm({
                   <small className="ml-1 p-error">{errors.endDate}</small>
                 )}
 
-                <button
+                <ActionButton
+                  variant="primary"
                   className="float-end h-10 w-fit rounded-md border dark:border-dark-600 border-gray-300 bg-black px-8 text-white"
                   disabled={
                     isSubmitting || editCouponLoading || createCouponLoading
@@ -403,7 +405,7 @@ export default function CouponForm({
                   ) : (
                     t('Add')
                   )}
-                </button>
+                </ActionButton>
               </div>
             </Form>
           );

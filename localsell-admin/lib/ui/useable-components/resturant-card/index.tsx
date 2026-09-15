@@ -1,3 +1,4 @@
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 // Core
 import { useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -43,14 +44,7 @@ import UpdateRestaurantPasswordDialog from './update-password-dialog';
 
 export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   // Props
-  const {
-    _id,
-    name,
-    image,
-    address,
-    shopType,
-    isActive,
-  } = restaurant;
+  const { _id, name, image, address, shopType, isActive } = restaurant;
 
   const configuration = useContext(ConfigurationContext);
   // Hooks
@@ -234,21 +228,27 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         </div>
       </div>
       <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-4 dark:border-dark-600 lg:border-l lg:border-t-0">
-        <CustomInputSwitch loading={loading} isActive={isActive} onChange={handleCheckboxChange} />
-        <button
+        <CustomInputSwitch
+          loading={loading}
+          isActive={isActive}
+          onChange={handleCheckboxChange}
+        />
+        <ActionButton
+          variant="secondary"
           type="button"
           onClick={handleEdit}
           className="h-9 whitespace-nowrap rounded-md border border-gray-300 px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-dark-600 dark:text-white dark:hover:bg-dark-900"
         >
           {t('Edit')}
-        </button>
-        <button
+        </ActionButton>
+        <ActionButton
+          variant="primary"
           type="button"
           onClick={handleOpenPortal}
           className="h-9 whitespace-nowrap rounded-md px-3 text-sm font-semibold text-primary transition hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary/30 dark:text-white"
         >
           {t('Open Portal')}
-        </button>
+        </ActionButton>
         <button
           type="button"
           aria-label={t('Update Password')}
@@ -257,7 +257,18 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         >
           <FontAwesomeIcon icon={faKey} />
         </button>
-        {isHardDeleting ? <CustomLoader size="20px" /> : <button type="button" aria-label={t('Delete')} onClick={handleDelete} className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"><FontAwesomeIcon icon={faTrash}/></button>}
+        {isHardDeleting ? (
+          <CustomLoader size="20px" />
+        ) : (
+          <button
+            type="button"
+            aria-label={t('Delete')}
+            onClick={handleDelete}
+            className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        )}
       </div>
       <CustomDialog
         visible={confirmDeleteOpen}

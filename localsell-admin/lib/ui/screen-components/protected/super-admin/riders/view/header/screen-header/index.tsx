@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 // Components
 import HeaderText from '@/lib/ui/useable-components/header-text';
@@ -19,25 +20,42 @@ export default function RiderHeader() {
   const t = useTranslations();
   const router = useRouter();
 
-  const [fetchRiders, { loading: exporting }] = useLazyQuery<IRidersDataResponse>(GET_RIDERS, {
-    fetchPolicy: 'network-only',
-    onCompleted: (data) => {
-      const esc = (x: unknown) => `"${String(x ?? '').replace(/"/g, '""')}"`;
-      const head = ['Name', 'Username', 'Phone', 'Zone', 'Vehicle type', 'Available'];
-      const body = data.riders.map((r) =>
-        [r.name, r.username, r.phone, r.zone?.title ?? '', r.vehicleType, r.available ? 'Yes' : 'No']
-          .map(esc)
-          .join(','),
-      );
-      const blob = new Blob([[head.map(esc).join(','), ...body].join('\n')], { type: 'text/csv;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'riders.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-    },
-  });
+  const [fetchRiders, { loading: exporting }] =
+    useLazyQuery<IRidersDataResponse>(GET_RIDERS, {
+      fetchPolicy: 'network-only',
+      onCompleted: (data) => {
+        const esc = (x: unknown) => `"${String(x ?? '').replace(/"/g, '""')}"`;
+        const head = [
+          'Name',
+          'Username',
+          'Phone',
+          'Zone',
+          'Vehicle type',
+          'Available',
+        ];
+        const body = data.riders.map((r) =>
+          [
+            r.name,
+            r.username,
+            r.phone,
+            r.zone?.title ?? '',
+            r.vehicleType,
+            r.available ? 'Yes' : 'No',
+          ]
+            .map(esc)
+            .join(',')
+        );
+        const blob = new Blob([[head.map(esc).join(','), ...body].join('\n')], {
+          type: 'text/csv;charset=utf-8',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'riders.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+    });
 
   return (
     <div className="sticky top-0 z-10 w-full flex-shrink-0 bg-white p-4 shadow-sm dark:bg-dark-950">
@@ -47,10 +65,13 @@ export default function RiderHeader() {
       <div className="mt-1 flex w-full flex-wrap items-start justify-between gap-3">
         <div>
           <HeaderText className="heading" text={t('Riders')} />
-          <p className="mt-1 text-sm text-slate-500">{t('Manage delivery partners, assignments and availability')}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            {t('Manage delivery partners, assignments and availability')}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <ActionButton
+            variant="secondary"
             type="button"
             onClick={() => fetchRiders()}
             disabled={exporting}
@@ -58,15 +79,16 @@ export default function RiderHeader() {
           >
             <FontAwesomeIcon icon={faFileArrowUp} />
             {t('Export')}
-          </button>
-          <button
+          </ActionButton>
+          <ActionButton
+            variant="primary"
             type="button"
             onClick={() => router.push('/general/riders/create')}
             className="flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white transition hover:bg-primary-dark"
           >
             <FontAwesomeIcon icon={faPlus} />
             {t('Add rider')}
-          </button>
+          </ActionButton>
         </div>
       </div>
     </div>

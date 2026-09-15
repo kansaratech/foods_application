@@ -8,13 +8,14 @@ export default function CustomIconButton({
 }: IGlobalButtonProps) {
   return (
     <Button
-      className="flex items-center justify-center gap-3 rounded-md bg-black px-3 py-2 hover:bg-[#272727]"
+      className="ls-button"
+      type="button"
       onClick={() => setVisible(true)}
     >
       <span>
-        <FontAwesomeIcon icon={Icon} size="1x" color="white" />
+        <FontAwesomeIcon icon={Icon} size="1x" />
       </span>
-      <span className="text-white">{title}</span>
+      <span>{title}</span>
     </Button>
   );
 }

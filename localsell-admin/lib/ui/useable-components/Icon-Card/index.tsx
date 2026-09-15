@@ -1,3 +1,4 @@
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 import React, { useState } from 'react';
 import { Rating } from 'primereact/rating';
 import { IProfileCardProps } from '@/lib/utils/interfaces';
@@ -84,12 +85,13 @@ const ProfileCard: React.FC<IProfileCardProps> = ({
               {reviewContent}
             </p>
             <div className="absolute bottom-4 right-4">
-              <button
+              <ActionButton
+                variant="danger"
                 onClick={handleCloseModal}
                 className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors"
               >
                 Close
-              </button>
+              </ActionButton>
             </div>
           </div>
         </div>

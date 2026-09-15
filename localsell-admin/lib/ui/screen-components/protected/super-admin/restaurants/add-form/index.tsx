@@ -1,4 +1,5 @@
 'use client';
+import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 // Core imports
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -53,8 +54,12 @@ export default function RestaurantsForm() {
   const hasAppliedLock = useRef(false);
 
   // Context
-  const { activeIndex, onActiveStepChange, restaurantsContextData, onSetRestaurantsContextData } =
-    useContext(RestaurantsContext);
+  const {
+    activeIndex,
+    onActiveStepChange,
+    restaurantsContextData,
+    onSetRestaurantsContextData,
+  } = useContext(RestaurantsContext);
 
   // API
   const vendorResponse = useQueryGQL(
@@ -81,9 +86,12 @@ export default function RestaurantsForm() {
 
   // Editing an existing store locks its owner in exactly the same way a
   // ?vendorId= does — the store's own owner can't be reassigned here.
-  const resolvedVendorId = isEditMode ? restaurantProfile?.owner?._id : lockedVendorId;
+  const resolvedVendorId = isEditMode
+    ? restaurantProfile?.owner?._id
+    : lockedVendorId;
   const lockedVendor = useMemo(
-    () => vendorResponse?.data?.vendors?.find((v) => v._id === resolvedVendorId),
+    () =>
+      vendorResponse?.data?.vendors?.find((v) => v._id === resolvedVendorId),
     [vendorResponse?.data?.vendors, resolvedVendorId]
   );
   const isLocked = isEditMode || !!lockedVendorId;
@@ -98,9 +106,19 @@ export default function RestaurantsForm() {
       hasAppliedLock.current = true;
       onSetRestaurantsContextData({
         vendor: restaurantProfile.owner
-          ? { _id: { label: restaurantProfile.owner.email, code: restaurantProfile.owner._id } }
+          ? {
+              _id: {
+                label: restaurantProfile.owner.email,
+                code: restaurantProfile.owner._id,
+              },
+            }
           : { _id: null },
-        restaurant: { _id: { label: restaurantProfile.username ?? restaurantProfile.name, code: restaurantProfile._id } },
+        restaurant: {
+          _id: {
+            label: restaurantProfile.username ?? restaurantProfile.name,
+            code: restaurantProfile._id,
+          },
+        },
       } as IRestaurantsContextPropData);
       onActiveStepChange(1);
       return;
@@ -124,7 +142,10 @@ export default function RestaurantsForm() {
   useEffect(() => {
     if (isLocked || didResetForFreshEntry.current) return;
     didResetForFreshEntry.current = true;
-    onSetRestaurantsContextData({ vendor: { _id: null }, restaurant: { _id: null } } as IRestaurantsContextPropData);
+    onSetRestaurantsContextData({
+      vendor: { _id: null },
+      restaurant: { _id: null },
+    } as IRestaurantsContextPropData);
     onActiveStepChange(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLocked]);
@@ -132,7 +153,8 @@ export default function RestaurantsForm() {
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const dirty = activeIndex > (isLocked ? 1 : 0);
 
-  const exitWizard = () => router.push(resolvedVendorId ? '/general/vendors' : '/general/stores');
+  const exitWizard = () =>
+    router.push(resolvedVendorId ? '/general/vendors' : '/general/stores');
 
   // Handlers
   const onHandleStepChange = (order: number) => {
@@ -158,7 +180,9 @@ export default function RestaurantsForm() {
         { key: 'location', label: t('Location & delivery') },
         { key: 'timing', label: t('Timings & review') },
       ];
-  const currentStepVisual = isLocked ? Math.max(0, activeIndex - 1) : activeIndex;
+  const currentStepVisual = isLocked
+    ? Math.max(0, activeIndex - 1)
+    : activeIndex;
 
   return (
     <div className="store-registration-form h-full min-h-0 overflow-y-auto bg-slate-50 px-4 py-6 dark:bg-dark-950 sm:px-6 lg:px-10">
@@ -211,10 +235,16 @@ export default function RestaurantsForm() {
               .toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">{lockedVendor.name || t('Vendor')}</p>
-            <p className="truncate text-xs text-slate-500">{lockedVendor.email}</p>
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+              {lockedVendor.name || t('Vendor')}
+            </p>
+            <p className="truncate text-xs text-slate-500">
+              {lockedVendor.email}
+            </p>
           </div>
-          <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">{t('Active')}</span>
+          <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+            {t('Active')}
+          </span>
         </div>
       )}
 
@@ -228,20 +258,36 @@ export default function RestaurantsForm() {
             <StepperPanel header="Vendor">
               <VendorDetails
                 vendorsDropdown={vendorsDropdown ?? []}
-                stepperProps={{ onStepChange: onHandleStepChange, order: activeIndex }}
+                stepperProps={{
+                  onStepChange: onHandleStepChange,
+                  order: activeIndex,
+                }}
               />
             </StepperPanel>
             <StepperPanel header="Basic details">
-              <RestaurantDetailsForm stepperProps={{ onStepChange: onHandleStepChange, order: activeIndex }} />
+              <RestaurantDetailsForm
+                stepperProps={{
+                  onStepChange: onHandleStepChange,
+                  order: activeIndex,
+                }}
+              />
             </StepperPanel>
             <StepperPanel header="Location & delivery">
               <RestaurantLocation
-                stepperProps={{ onStepChange: onHandleStepChange, order: activeIndex, isLastStep: false }}
+                stepperProps={{
+                  onStepChange: onHandleStepChange,
+                  order: activeIndex,
+                  isLastStep: false,
+                }}
               />
             </StepperPanel>
             <StepperPanel header="Timings & review">
               <RestaurantTiming
-                stepperProps={{ onStepChange: onHandleStepChange, order: activeIndex, isLastStep: true }}
+                stepperProps={{
+                  onStepChange: onHandleStepChange,
+                  order: activeIndex,
+                  isLastStep: true,
+                }}
               />
             </StepperPanel>
           </Stepper>
@@ -251,18 +297,23 @@ export default function RestaurantsForm() {
       {showDiscardConfirm && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
           <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-lg dark:bg-dark-900">
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">{t('Discard changes?')}</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              {t('Discard changes?')}
+            </p>
             <p className="mt-1 text-sm text-slate-500">
-              {t('Anything not saved yet will be lost. Are you sure you want to leave?')}
+              {t(
+                'Anything not saved yet will be lost. Are you sure you want to leave?'
+              )}
             </p>
             <div className="mt-4 flex justify-end gap-2">
-              <button
+              <ActionButton
+                variant="secondary"
                 type="button"
                 onClick={() => setShowDiscardConfirm(false)}
                 className="h-9 rounded-md border border-gray-300 px-4 text-sm text-slate-700 dark:border-dark-600 dark:text-white"
               >
                 {t('Keep editing')}
-              </button>
+              </ActionButton>
               <button
                 type="button"
                 onClick={exitWizard}

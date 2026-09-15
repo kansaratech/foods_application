@@ -66,9 +66,20 @@ type StoreSeed = {
   hours?: { open: string; close: string };
   storeLogin?: { username: string; password: string };
   deliveryAgents?: Array<{ name: string; phone?: string }>;
+  /** REGULAR|COMPOSITION|UNREGISTERED. Defaults to the vendor's own type, else UNREGISTERED. */
+  gstRegistrationType?: 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED';
+  gstin?: string;
   categories: CatSeed[];
 };
-type VendorSeed = { name: string; email: string; password: string; stores: StoreSeed[] };
+type VendorSeed = {
+  name: string;
+  email: string;
+  password: string;
+  /** Vendor's own default — copied onto a store only when the store doesn't override it. */
+  gstRegistrationType?: 'REGULAR' | 'COMPOSITION' | 'UNREGISTERED';
+  gstin?: string;
+  stores: StoreSeed[];
+};
 
 type SeedConfig = {
   marketplace: {
@@ -146,6 +157,8 @@ const CONFIG_OPERATIONAL_KEYS = [
   'smtpUser', 'formEmail',
   // WhatsApp Cloud: JSON owns the non-secret IDs / template names; the access
   // token comes from env (WHATSAPP_ACCESS_TOKEN) or is kept from the row.
+  // whatsappCloudEnabled is listed here too but gets special-cased below —
+  // once a row exists, its value is preserved, not overwritten from JSON.
   'whatsappCloudEnabled', 'whatsappPhoneNumberId', 'whatsappWabaId',
   'whatsappApiVersion', 'whatsappOtpTemplate', 'whatsappOtpLang',
 ];
@@ -245,6 +258,13 @@ async function seedConfiguration(preserved: Record<string, unknown> | null) {
   // WhatsApp Cloud API token: same rule — env wins, else keep the row's value.
   const waToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();
   if (waToken) fromJson.whatsappAccessToken = waToken;
+
+  // whatsappCloudEnabled is an admin-facing toggle (admin Configuration screen),
+  // not seed data — once a real row exists, its on/off state must survive a
+  // reseed. The JSON value only seeds the initial default on a fresh install.
+  if (preserved && typeof preserved.whatsappCloudEnabled === 'boolean') {
+    fromJson.whatsappCloudEnabled = preserved.whatsappCloudEnabled;
+  }
 
   await prisma.configuration.create({ data: { ...kept, ...fromJson } as Prisma.ConfigurationCreateInput });
   const emailReady =
@@ -412,6 +432,7 @@ async function main() {
   const demoN = cfg.demoOrders?.perStoreDeliveredOrders ?? 5;
 
   for (const vendor of cfg.vendors) {
+    const vendorGstType = vendor.gstRegistrationType ?? 'UNREGISTERED';
     const owner = await prisma.user.create({
       data: {
         email: vendor.email,
@@ -419,6 +440,9 @@ async function main() {
         password: await hashPassword(vendor.password),
         userType: 'VENDOR',
         emailIsVerified: true,
+        gstRegistrationType: vendorGstType,
+        isGstRegistered: vendorGstType !== 'UNREGISTERED',
+        gstin: vendor.gstin ?? null,
       },
     });
 
@@ -447,6 +471,8 @@ async function main() {
           deliveryTime: s.deliveryTime ?? 30,
           minimumOrder: s.minOrder ?? 0,
           tax: s.salesTax ?? 5,
+          gstRegistrationType: s.gstRegistrationType ?? vendorGstType,
+          gstin: s.gstin ?? vendor.gstin ?? null,
           commissionRate: s.commissionRate ?? Number(cfg.configuration.defaultCommissionRate ?? 20),
           latitude: lat,
           longitude: lng,
@@ -573,7 +599,8 @@ async function main() {
           const tip = k % 3 === 0 ? 10 : 0;
           const tax = Math.round(food * ((s.salesTax ?? 5) / 100));
           const total = food + delivery + tip + tax;
-          const isCod = k % 2 === 0;
+          // COD-only marketplace — every demo order is COD, not just alternating ones.
+          const isCod = true;
           const daysAgo = k + 1;
           const deliveredAt = new Date(Date.now() - daysAgo * 86400000 + 3600000);
           const order = await prisma.order.create({

@@ -1,3 +1,4 @@
+import { collectionsTypeDefs } from './collections';
 import { commonTypeDefs } from './common';
 import { userTypeDefs } from './user';
 import { restaurantTypeDefs } from './restaurant';
@@ -47,6 +48,7 @@ export const typeDefs = [
   compatTypeDefs,
   serviceabilityTypeDefs,
   commissionTypeDefs,
+  collectionsTypeDefs,
   financeOpsTypeDefs,
   storeDocsTypeDefs,
   storeDeliveryTypeDefs,
