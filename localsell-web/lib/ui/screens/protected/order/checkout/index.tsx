@@ -2,7 +2,12 @@
 "use client";
 
 // Core
-import { faBicycle, faStore } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBicycle,
+  faStore,
+  faPlus,
+  faMinus,
+} from "@fortawesome/free-solid-svg-icons";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
@@ -54,6 +59,7 @@ import {
   VERIFY_COUPON,
   ORDERS,
   ORDER_PRICE_PREVIEW,
+  CREATE_CASHFREE_PAYMENT_SESSION,
 } from "@/lib/api/graphql";
 
 // Interfaces
@@ -72,6 +78,7 @@ import {
   calculateDistance,
   checkPaymentMethod,
 } from "@/lib/utils/methods";
+import { loadCashfreeSdk, cashfreeSdkMode } from "@/lib/utils/methods/cashfree";
 
 // Asets
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
@@ -86,8 +93,8 @@ const COUPON_STORAGE_KEY = "applied_coupon";
 const COUPON_TEXT_STORAGE_KEY = "coupon_text";
 const COUPON_APPLIED_STORAGE_KEY = "is_coupon_applied";
 const COUPON_RESTAURANT_KEY = "coupon_restaurant_id";
-const PENDING_STRIPE_ORDER_ID_KEY = "pending_stripe_order_id";
-const PENDING_STRIPE_STARTED_AT_KEY = "pending_stripe_started_at";
+const PENDING_CASHFREE_ORDER_ID_KEY = "pending_cashfree_order_id";
+const PENDING_CASHFREE_STARTED_AT_KEY = "pending_cashfree_started_at";
 
 export default function OrderCheckoutScreen() {
   const t = useTranslations();
@@ -97,7 +104,12 @@ export default function OrderCheckoutScreen() {
   const [deliveryType, setDeliveryType] = useState("Delivery");
   const [deliveryCharges, setDeliveryCharges] = useState(0);
   const [isPickUp, setIsPickUp] = useState(false);
-  const [selectedTip, setSelectedTip] = useState("");
+  // Persisted the same way orderInstructions is (localStorage, not just
+  // component state) — otherwise navigating away to add more items and back
+  // remounts this page and silently drops whatever tip was already chosen.
+  const [selectedTip, setSelectedTip] = useState(
+    () => localStorage.getItem("orderTip") || "",
+  );
   const [distance, setDistance] = useState("0.0");
   const [shouldLeaveAtDoor, setShouldLeaveAtDoor] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(
@@ -115,8 +127,16 @@ export default function OrderCheckoutScreen() {
 
   // Hooks
   const router = useRouter();
-  const { CURRENCY_SYMBOL, CURRENCY, DELIVERY_RATE, COST_TYPE, SERVER_URL } =
-    useConfig();
+  const {
+    CURRENCY_SYMBOL,
+    CURRENCY,
+    DELIVERY_RATE,
+    COST_TYPE,
+    SERVER_URL,
+    IS_CASHFREE_ENABLED,
+    CASHFREE_ENV,
+  } = useConfig();
+  const CASHFREE_MODE = cashfreeSdkMode(CASHFREE_ENV);
   const { authToken, setIsAuthModalVisible, setActivePanel } = useAuth();
   const { showToast } = useToast();
 
@@ -127,6 +147,7 @@ export default function OrderCheckoutScreen() {
     profile,
     loadingProfile,
     logout,
+    updateItemQuantity,
   } = useUser();
 
   const { userAddress } = useUserAddress();
@@ -399,6 +420,16 @@ export default function OrderCheckoutScreen() {
       );
   }, []);
 
+  // Keep the chosen tip alive across "Add more items" (navigate away, add to
+  // cart, come back — this page remounts and would otherwise reset it).
+  useEffect(() => {
+    if (selectedTip) {
+      localStorage.setItem("orderTip", selectedTip);
+    } else {
+      localStorage.removeItem("orderTip");
+    }
+  }, [selectedTip]);
+
   // API
   const { data: tipData } = useQuery(GET_TIPS);
   const [placeOrder, { loading: loadingOrderMutation }] = useMutation(
@@ -414,6 +445,9 @@ export default function OrderCheckoutScreen() {
     {
       onCompleted: couponCompleted,
     },
+  );
+  const [createCashfreePaymentSession] = useMutation(
+    CREATE_CASHFREE_PAYMENT_SESSION,
   );
 
   // Server-authoritative bill breakdown — same pricing.service.ts pipeline
@@ -793,7 +827,7 @@ export default function OrderCheckoutScreen() {
           instructions: localStorage.getItem("newOrderInstructions") || "",
           paymentMethod: paymentMethod,
           couponCode: isCouponApplied ? (coupon ? coupon.title : null) : null,
-          tipping: +selectedTip,
+          tipping: isPickUp ? 0 : +selectedTip,
           taxationAmount: +taxCalculation(),
           // address: {
           //   label: location?.label,
@@ -825,6 +859,7 @@ export default function OrderCheckoutScreen() {
 
   async function onCompleted(data: { placeOrder: IOrder }) {
     localStorage.removeItem("orderInstructions");
+    localStorage.removeItem("orderTip");
     if (paymentMethod === "COD") {
       clearCart();
       onUseLocalStorage("delete", COUPON_STORAGE_KEY);
@@ -839,31 +874,50 @@ export default function OrderCheckoutScreen() {
       onUseLocalStorage("delete", COUPON_APPLIED_STORAGE_KEY);
       onUseLocalStorage("delete", COUPON_RESTAURANT_KEY);
       router.replace(`/paypal?id=${data.placeOrder._id}`);
-    } else if (paymentMethod === "STRIPE") {
-      let stripeCheckoutUrl = "";
+    } else if (paymentMethod === "CASHFREE") {
+      const orderDbId = data.placeOrder._id || "";
       try {
-        stripeCheckoutUrl = new URL(
-          `stripe/create-checkout-session?id=${data?.placeOrder?.orderId}&platform=web`,
-          SERVER_URL,
-        ).toString();
+        const [{ data: sessionData }] = await Promise.all([
+          createCashfreePaymentSession({ variables: { orderId: orderDbId } }),
+          loadCashfreeSdk(),
+        ]);
+        const session = sessionData?.createCashfreePaymentSession;
+        if (!session?.success || !session?.paymentSessionId) {
+          showToast({
+            title: "Online Payment Unavailable",
+            message:
+              session?.message ||
+              "Could not start online payment. You can retry from your order.",
+            type: "error",
+          });
+          router.replace(`/order/${orderDbId}/tracking`);
+          return;
+        }
+
+        localStorage.setItem(PENDING_CASHFREE_ORDER_ID_KEY, orderDbId);
+        localStorage.setItem(
+          PENDING_CASHFREE_STARTED_AT_KEY,
+          Date.now().toString(),
+        );
+
+        // Cashfree's SDK itself performs the redirect (and the eventual
+        // return-trip back to order_meta.return_url set server-side) — we
+        // don't build/navigate a URL ourselves.
+        const cashfree = (window as any).Cashfree({ mode: CASHFREE_MODE });
+        cashfree.checkout({
+          paymentSessionId: session.paymentSessionId,
+          redirectTarget: "_self",
+        });
       } catch (error) {
         showToast({
-          title: "Checkout Configuration Error",
-          message: "Unable to start Stripe checkout. Please contact support.",
+          title: "Online Payment Unavailable",
+          message:
+            (error as Error).message ||
+            "Could not start online payment. You can retry from your order.",
           type: "error",
         });
-        return;
+        router.replace(`/order/${orderDbId}/tracking`);
       }
-
-      localStorage.setItem(
-        PENDING_STRIPE_ORDER_ID_KEY,
-        data?.placeOrder?.orderId || "",
-      );
-      localStorage.setItem(
-        PENDING_STRIPE_STARTED_AT_KEY,
-        Date.now().toString(),
-      );
-      router.replace(stripeCheckoutUrl);
     }
   }
 
@@ -941,7 +995,7 @@ export default function OrderCheckoutScreen() {
     const delivery = isPickUp ? 0 : deliveryCharges;
     total += +calculatePrice(delivery, true);
     total += +taxCalculation();
-    total += selectedTip ? Number(selectedTip) : 0;
+    total += !isPickUp && selectedTip ? Number(selectedTip) : 0;
     return total.toFixed(2);
   }
 
@@ -964,11 +1018,13 @@ export default function OrderCheckoutScreen() {
     [],
   );
 
-  // Online payment is paused platform-wide for now — COD only, regardless of
-  // a store's stripeDetailsSubmitted flag. Revert to the flag-based filter
-  // below once online payment is ready to go live again.
+  // PayPal is still paused (never got a working checkout-session + webhook
+  // on the server — see order.resolvers.ts placeOrder). CASHFREE is offered
+  // once the admin has actually configured Cashfree credentials.
   const filteredPaymentMethods = PAYMENT_METHOD_LIST.filter(
-    (method) => method.value === "COD",
+    (method) =>
+      method.value === "COD" ||
+      (method.value === "CASHFREE" && IS_CASHFREE_ENABLED),
   );
 
   // Use Effect
@@ -1116,6 +1172,10 @@ export default function OrderCheckoutScreen() {
                 onClick={() => {
                   setDeliveryType("Pickup");
                   setIsPickUp(true);
+                  // Tipping is for the delivery courier — carrying it over
+                  // into a self-pickup order would silently overcharge for
+                  // a courier that never exists.
+                  setSelectedTip("");
                 }}
               >
                 <FontAwesomeIcon
@@ -1261,8 +1321,36 @@ export default function OrderCheckoutScreen() {
                       </div>
                     </div>
 
-                    <div className="border border-secondary-color text-secondary-color py-1 px-3 rounded-lg text-xs sm:text-sm font-medium w-fit">
-                      {item.quantity}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          updateItemQuantity(item.key, -1);
+                        }}
+                        aria-label={`${t("decrease")} ${item.foodTitle}`}
+                        className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
+                        type="button"
+                      >
+                        <FontAwesomeIcon icon={faMinus} size="xs" />
+                      </button>
+
+                      <span className="text-gray-900 dark:text-gray-100 w-6 text-center text-sm font-medium">
+                        {item.quantity}
+                      </span>
+
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          updateItemQuantity(item.key, 1);
+                        }}
+                        aria-label={`${t("increase")} ${item.foodTitle}`}
+                        className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center"
+                        type="button"
+                      >
+                        <FontAwesomeIcon icon={faPlus} size="xs" />
+                      </button>
                     </div>
                   </div>
                 );

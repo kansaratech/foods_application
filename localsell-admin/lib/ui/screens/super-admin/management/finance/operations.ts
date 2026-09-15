@@ -162,6 +162,103 @@ export const RECORD_COLLECTION = gql`
   }
   ${PAYMENT_FIELDS}
 `;
+export const VENDOR_PAYABLE_FIELDS = gql`
+  fragment VendorPayableRow on VendorPayable {
+    _id
+    orderId
+    orderNumber
+    vendor {
+      _id
+      name
+      email
+      phone
+    }
+    storeName
+    orderAmount
+    commissionAmount
+    netPayable
+    status
+    orderDeliveredAt
+    createdAt
+  }
+`;
+export const VENDOR_PAYOUT_FIELDS = gql`
+  fragment VendorPayoutRow on VendorPayout {
+    _id
+    vendor {
+      _id
+      name
+      email
+    }
+    amount
+    method
+    reference
+    note
+    paidAt
+    createdAt
+  }
+`;
+export const VENDOR_PAYOUT_OVERVIEW = gql`
+  query VendorPayoutOverview {
+    vendorPayoutOverview {
+      pendingTotal
+      pendingOrderCount
+      vendorsOwed
+      recentPayouts {
+        ...VendorPayoutRow
+      }
+    }
+  }
+  ${VENDOR_PAYOUT_FIELDS}
+`;
+export const VENDOR_PAYABLES = gql`
+  query VendorPayables($vendorId: ID, $status: String, $page: Int, $limit: Int) {
+    vendorPayables(vendorId: $vendorId, status: $status, page: $page, limit: $limit) {
+      total
+      payables {
+        ...VendorPayableRow
+      }
+    }
+  }
+  ${VENDOR_PAYABLE_FIELDS}
+`;
+export const RECORD_VENDOR_PAYOUT = gql`
+  mutation RecordVendorPayout(
+    $vendorId: ID!
+    $payableIds: [ID!]!
+    $method: String!
+    $reference: String
+    $note: String
+    $paidAt: String!
+    $idempotencyKey: String!
+  ) {
+    recordVendorPayout(
+      vendorId: $vendorId
+      payableIds: $payableIds
+      method: $method
+      reference: $reference
+      note: $note
+      paidAt: $paidAt
+      idempotencyKey: $idempotencyKey
+    ) {
+      ...VendorPayoutRow
+    }
+  }
+  ${VENDOR_PAYOUT_FIELDS}
+`;
+export type VendorPayable = {
+  _id: string;
+  orderId: string;
+  orderNumber: string;
+  vendor?: Vendor;
+  storeName?: string;
+  orderAmount: number;
+  commissionAmount: number;
+  netPayable: number;
+  status: string;
+  orderDeliveredAt: string;
+  createdAt: string;
+};
 export type Vendor = { _id: string; name?: string; email?: string };
 export type Receipt = {
   _id: string;

@@ -1,5 +1,5 @@
 import { IResolvers } from '@graphql-tools/utils';
-import { Order, OrderItem, OrderItemAddon, OrderItemAddonOption, OrderStatus } from '@prisma/client';
+import { Order, OrderItem, OrderItemAddon, OrderItemAddonOption, OrderStatus, PaymentStatus } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
@@ -9,7 +9,7 @@ import { notifyOrderEvent } from '../../services/order-notify';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
-import { recordOrderCommission, recordRiderCash, resolveCommissionRate, riderOutstandingCash } from '../../utils/commission';
+import { recordOrderCommission, recordRiderCash, recordVendorPayable, resolveCommissionRate, riderOutstandingCash } from '../../utils/commission';
 import { assertRiderNotRejected } from './rider-docs.resolvers';
 import { assertRiderApproved } from './rider.resolvers';
 import { hasPriorOrder } from './coupon.resolvers';
@@ -182,6 +182,9 @@ async function finalizeDelivery(
       });
     }
     await recordOrderCommission({ ...order, deliveredAt: updated.deliveredAt }, tx);
+    if (order.paymentMethod === 'CASHFREE') {
+      await recordVendorPayable({ ...order, deliveredAt: updated.deliveredAt }, commission, tx);
+    }
     if (order.deliveryMode === 'PLATFORM') await recordRiderCash({ ...order, deliveredAt: updated.deliveredAt }, tx);
   }
 
@@ -506,6 +509,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         ending_date?: string;
         orderStatus?: string[];
         deliveryMode?: string[];
+        paymentMethod?: string[];
+        paymentStatus?: string[];
         search?: string;
         restaurantId?: string;
         riderId?: string;
@@ -521,11 +526,19 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const requestedModes = args.deliveryMode
         ?.map((m) => m.toUpperCase())
         .filter((m) => ['PICKUP', 'SELF', 'PLATFORM'].includes(m));
+      const requestedPaymentMethods = args.paymentMethod
+        ?.map((m) => m.toUpperCase())
+        .filter((m) => ['COD', 'CASHFREE'].includes(m));
+      const requestedPaymentStatuses = args.paymentStatus
+        ?.map((s) => s.toUpperCase())
+        .filter((s) => ['PENDING', 'PAID', 'FAILED'].includes(s));
       const dateRange = computeDateRange(args.dateKeyword, args.starting_date, args.ending_date);
 
       const where = {
         ...(requestedStatuses?.length ? { orderStatus: { in: requestedStatuses } } : {}),
         ...(requestedModes?.length ? { deliveryMode: { in: requestedModes } } : {}),
+        ...(requestedPaymentMethods?.length ? { paymentMethod: { in: requestedPaymentMethods } } : {}),
+        ...(requestedPaymentStatuses?.length ? { paymentStatus: { in: requestedPaymentStatuses as PaymentStatus[] } } : {}),
         ...(args.restaurantId ? { restaurantId: args.restaurantId } : {}),
         ...(args.riderId ? { riderId: args.riderId } : {}),
         ...(dateRange ? { createdAt: dateRange } : {}),
@@ -703,13 +716,12 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
   Mutation: {
     placeOrder: async (_parent, args: PlaceOrderArgs, context) => {
       const currentUser = requireAuth(context);
-      // Online payment is paused platform-wide (COD only) — modifyOrder already
-      // rejects switching to anything else on an existing order, but placeOrder
-      // itself never validated this, so an older/unpatched client screen still
-      // offering Stripe/PayPal could create an order that can never actually be
-      // marked paid. Reject at creation time instead.
-      if (args.paymentMethod !== 'COD') {
-        throw userInputError('Online payment is currently unavailable — cash on delivery only.');
+      // COD and CASHFREE (Cashfree Payment Gateway) are the only payment
+      // methods actually wired up end-to-end. Stripe/PayPal are half-built
+      // and never got a working checkout-session/webhook on this server, so
+      // still reject anything else here — modifyOrder mirrors this check.
+      if (args.paymentMethod !== 'COD' && args.paymentMethod !== 'CASHFREE') {
+        throw userInputError('Unsupported payment method — choose Cash on Delivery or online payment.');
       }
       const restaurant = await prisma.restaurant.findUnique({ where: { id: args.restaurant } });
       if (!restaurant || !restaurant.isActive) throw userInputError('Restaurant not found or unavailable');
@@ -834,11 +846,8 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       const data: Record<string, unknown> = {};
 
       if (args.paymentMethod && args.paymentMethod !== order.paymentMethod) {
-        // Online payment is paused platform-wide for now (COD only) — reject
-        // switching to it here even though checkout also no longer offers it,
-        // so the mutation can't be used to bypass that.
-        if (args.paymentMethod !== 'COD') {
-          throw userInputError('Online payment is currently unavailable — cash on delivery only.');
+        if (args.paymentMethod !== 'COD' && args.paymentMethod !== 'CASHFREE') {
+          throw userInputError('Unsupported payment method — choose Cash on Delivery or online payment.');
         }
         data.paymentMethod = args.paymentMethod;
       }
@@ -920,6 +929,14 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
     assignRider: async (_parent, args: { id: string; riderId: string }, context) => {
       requireRole(context, ['ADMIN', 'VENDOR']);
+      const order = await prisma.order.findUnique({ where: { id: args.id } });
+      if (!order) throw notFoundError('Order not found');
+      // Once a rider has picked the order up (or it's reached a terminal
+      // state) the handoff is done — reassigning would silently yank it away
+      // from whoever is already carrying it.
+      if (order.orderStatus !== 'ACCEPTED' && order.orderStatus !== 'ASSIGNED') {
+        throw userInputError('This order can no longer be reassigned to a different rider');
+      }
       const rider = await prisma.user.findUnique({ where: { id: args.riderId } });
       if (!rider || rider.userType !== 'RIDER') throw userInputError('Rider not found');
       await assertRiderApproved(args.riderId);

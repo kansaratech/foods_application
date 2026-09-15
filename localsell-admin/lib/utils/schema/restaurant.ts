@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import { IDropdownSelectItem } from '../interfaces';
 import { isValidEmail } from '../methods';
+import { isValidIndianMobile } from '../methods/phone';
 
 // Stricter than Yup's `.email()` (which accepts `x@gmail`) — see #41.
 const emailRule = Yup.string()
@@ -64,7 +65,9 @@ export const makeRestaurantSchema = (requirePassword: boolean) =>
 
 image: Yup.string().matches(/^http/, 'Invalid image URL').required('Required'),
 logo: Yup.string().matches(/^http/, 'Invalid logo URL').required('Required'),
-  phoneNumber: Yup.string().required('Required').min(5,"Minimum 5 Numbers are Required"),
+  phoneNumber: Yup.string()
+    .required('Required')
+    .test('valid-phone', 'Enter a valid 10-digit phone number', (value) => isValidIndianMobile(value)),
   password: Yup.string()
     .test(
       'strong-password',

@@ -32,16 +32,22 @@ export function orderFoodSubtotal(order: {
  * order is first marked DELIVERED. Safe to call again for the same order — the
  * unique `orderId` makes a repeat a no-op.
  */
-/** Direct-to-store payments owe commission regardless of payment method.
- * Historical platform fleet orders retain their original classification. */
+/**
+ * CASHFREE orders are always self-collected: the platform's own Cashfree
+ * account holds 100% of the money, and its commission is netted out via
+ * `VendorPayable` (see recordVendorPayable) — never invoiced through
+ * CommissionBill, which would double-charge the vendor for the same
+ * commission. For everything else (COD), a store that holds the cash
+ * directly (pickup, or its own SELF delivery) owes commission and gets
+ * billed; historical PLATFORM-fleet orders keep their original classification.
+ */
 export function isCommissionSelfCollected(order: {
   paymentMethod: string;
   isPickedUp: boolean;
   deliveryMode?: string | null;
 }): boolean {
+  if (order.paymentMethod === 'CASHFREE') return true;
   const storeHoldsCash = order.isPickedUp || order.deliveryMode === 'SELF';
-  // MVP: both cash and digital customer payments go directly to the store.
-  // Historical fleet orders retain their original collection classification.
   return !storeHoldsCash;
 }
 
@@ -83,6 +89,40 @@ export async function recordOrderCommission(order: {
       paymentMethod: order.paymentMethod,
       isPickedUp: order.isPickedUp,
       selfCollected: isCommissionSelfCollected(order),
+      orderDeliveredAt: order.deliveredAt ?? new Date(),
+    },
+  });
+}
+
+/**
+ * Write the immutable per-order vendor-payable ledger row for a CASHFREE
+ * order — the platform's single Cashfree account holds the full amount, so
+ * unlike COD (where the store already has the cash), the platform owes the
+ * vendor their net share here. Called once, alongside `recordOrderCommission`,
+ * when a CASHFREE order is first marked DELIVERED. Idempotent on order id.
+ */
+export async function recordVendorPayable(order: {
+  id: string;
+  orderId: string;
+  restaurantId: string;
+  orderAmount: number;
+  deliveredAt: Date | null;
+}, commissionAmount: number, db: Prisma.TransactionClient = prisma): Promise<void> {
+  const existing = await db.vendorPayable.findUnique({ where: { orderId: order.id } });
+  if (existing) return;
+
+  const restaurant = await db.restaurant.findUnique({ where: { id: order.restaurantId } });
+  if (!restaurant) return;
+
+  await db.vendorPayable.create({
+    data: {
+      orderId: order.id,
+      orderNumber: order.orderId,
+      restaurantId: restaurant.id,
+      vendorId: restaurant.ownerId,
+      orderAmount: order.orderAmount,
+      commissionAmount,
+      netPayable: Math.round((order.orderAmount - commissionAmount) * 100) / 100,
       orderDeliveredAt: order.deliveredAt ?? new Date(),
     },
   });

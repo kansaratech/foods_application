@@ -191,11 +191,11 @@ export default function ForgotPasswordModal({
               <TextInput
                 className="h-12 rounded-xl border px-4 text-base"
                 style={fieldStyle}
-                placeholder={t("6-digit code")}
+                placeholder={t("4-digit code")}
                 placeholderTextColor={appTheme.fontSecondColor}
                 keyboardType="number-pad"
                 value={otp}
-                onChangeText={(v) => setOtp(v.replace(/\D/g, "").slice(0, 6))}
+                onChangeText={(v) => setOtp(v.replace(/\D/g, "").slice(0, 4))}
               />
               <TextInput
                 className="h-12 rounded-xl border px-4 text-base"

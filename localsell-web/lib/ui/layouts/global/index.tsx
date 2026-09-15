@@ -13,7 +13,7 @@ import { IProvider } from "@/lib/utils/interfaces";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 import { GoogleMapsProvider } from "@/lib/context/global/google-maps.context";
 import AuthModal from "@/lib/ui/screen-components/un-protected/authentication";
-import StripeOrderRecovery from "../../screens/protected/order/stripe-order-recovery";
+import CashfreeOrderRecovery from "../../screens/protected/order/cashfree-order-recovery";
 
 // Search Context
 import { useSearchUI } from "@/lib/context/search/search.context";
@@ -50,7 +50,7 @@ const AppLayout = ({ children }: IProvider) => {
         className={`layout-main-container ${isSearchFocused && "blur-md overflow-hidden h-screen "}`}
       >
         <div className="layout-main min-h-screen w-full min-w-0 flex-col dark:bg-gray-900">
-          <StripeOrderRecovery />
+          <CashfreeOrderRecovery />
           {children}
         </div>
       </div>

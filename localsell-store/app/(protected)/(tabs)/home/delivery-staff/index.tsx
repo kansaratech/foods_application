@@ -59,11 +59,20 @@ export default function DeliveryStaffScreen() {
       showMessage({ message: t("Enter a name"), type: "warning" });
       return;
     }
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (!phoneDigits) {
+      showMessage({ message: t("Enter a phone number"), type: "warning" });
+      return;
+    }
+    if (!/^[6-9]\d{9}$/.test(phoneDigits)) {
+      showMessage({ message: t("Enter a valid 10-digit phone number"), type: "warning" });
+      return;
+    }
     if (editing) {
-      await updateAgent({ variables: { id: editing._id, name: name.trim(), phone: phone.trim() || null } });
+      await updateAgent({ variables: { id: editing._id, name: name.trim(), phone: phoneDigits } });
       showMessage({ message: t("Delivery person updated"), type: "success" });
     } else {
-      await createAgent({ variables: { storeId, name: name.trim(), phone: phone.trim() || null } });
+      await createAgent({ variables: { storeId, name: name.trim(), phone: phoneDigits } });
       showMessage({ message: t("Delivery person added"), type: "success" });
     }
     resetForm();
@@ -128,12 +137,13 @@ export default function DeliveryStaffScreen() {
           />
           <TextInput
             className="h-12 rounded-xl border px-4 mb-3"
-            placeholder={t("Phone (optional)")}
+            placeholder={t("Phone")}
             placeholderTextColor={appTheme.fontSecondColor}
             keyboardType="phone-pad"
+            maxLength={10}
             style={{ color: appTheme.fontMainColor, borderColor: appTheme.borderLineColor }}
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(val) => setPhone(val.replace(/\D/g, ""))}
           />
           <View className="flex-row gap-3">
             {editing && (

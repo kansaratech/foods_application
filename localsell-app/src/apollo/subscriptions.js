@@ -45,6 +45,7 @@ export const orderStatusChanged = `subscription OrderStatusChanged($userId:Strin
         description
         image
         quantity
+        price
         variation{
           _id
           id

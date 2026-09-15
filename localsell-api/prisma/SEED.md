@@ -11,7 +11,7 @@ It **wipes every data table** (users, stores, menus, add-ons, options, orders,
 commission / payout / rider-cash ledgers, reviews, riders, customers, zones,
 cuisines, the Configuration row) and rebuilds the whole marketplace from the
 JSON. The one thing it keeps: **infra secrets** already on the Configuration row
-(Google Maps / Stripe / PayPal / Sentry / Cloudinary / Firebase keys) are
+(Google Maps / Cashfree / PayPal / Sentry / Cloudinary / Firebase keys) are
 read back before the wipe and merged into the fresh Configuration, so a reseed
 never loses your API keys.
 

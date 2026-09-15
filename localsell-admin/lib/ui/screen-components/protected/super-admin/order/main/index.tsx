@@ -56,6 +56,9 @@ export default function OrderSuperAdminMain() {
     string | null
   >(null);
   const [selectedRiderId, setSelectedRiderId] = useState<string | null>(null);
+  const [selectedPaymentStatuses, setSelectedPaymentStatuses] = useState<
+    string[]
+  >([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<IExtendedOrder | null>(
     null
@@ -90,6 +93,8 @@ export default function OrderSuperAdminMain() {
     ending_date:
       dateFilter.dateKeyword === 'Custom' ? dateFilter.endDate : undefined,
     orderStatus: selectedActions.length > 0 ? selectedActions : undefined,
+    paymentStatus:
+      selectedPaymentStatuses.length > 0 ? selectedPaymentStatuses : undefined,
     search: debouncedSearch,
     restaurantId: selectedRestaurantId ?? undefined,
     riderId: selectedRiderId ?? undefined,
@@ -160,6 +165,7 @@ export default function OrderSuperAdminMain() {
     dateFilter,
     debouncedSearch,
     selectedActions,
+    selectedPaymentStatuses,
     selectedRestaurantId,
     selectedRiderId,
   ]);
@@ -315,6 +321,8 @@ export default function OrderSuperAdminMain() {
             selectedRiderId={selectedRiderId}
             setSelectedRestaurantId={setSelectedRestaurantId}
             setSelectedRiderId={setSelectedRiderId}
+            selectedPaymentStatuses={selectedPaymentStatuses}
+            setSelectedPaymentStatuses={setSelectedPaymentStatuses}
           />
           <DashboardDateFilter
             dateFilter={dateFilter}

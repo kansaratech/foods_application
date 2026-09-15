@@ -10,6 +10,7 @@ import { normalizeIndianPhone } from '../../utils/phone';
 import { recordAudit } from '../../utils/audit';
 import { assertGstinRequiredFor, normalizeGstRegistrationType } from '../../utils/gst';
 import { purgeRestaurant } from './restaurant.resolvers';
+import { sendEmail, sendPhoneMessage } from '../../utils/notifications';
 
 /** Friendly "phone already in use" — never let the raw `User_phone_key`
  *  Prisma error reach the client. */
@@ -345,11 +346,14 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         });
       }
 
-      if (sendingInvite) {
-        // No email provider is wired up yet (see forgotPassword/resetPassword,
-        // which log their OTP the same way) — this stands in for the email
-        // until one exists.
-        console.log(`[dev] Account setup invitation for ${vendor.email}: use Forgot Password with this email to set a password.`);
+      if (sendingInvite && vendor.email) {
+        const message =
+          `Welcome to LocalSell! Your vendor account (${vendor.email}) has been created. ` +
+          `Use "Forgot Password" on the vendor login page with this email to set your password and get started.`;
+        await sendEmail(vendor.email, 'Set up your LocalSell vendor account', message);
+        if (vendor.phone) {
+          await sendPhoneMessage(vendor.phone, message);
+        }
       }
 
       return vendor;

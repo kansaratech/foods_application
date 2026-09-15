@@ -869,20 +869,33 @@ export default function RestaurantDetailsScreen() {
                             : meal.description}
                         </p>
                         <div className="mt-auto flex items-center justify-between gap-2 pe-10 pt-3">
-                          <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#16293f] dark:text-primary-color">
-                            <span>
-                              {CURRENCY_SYMBOL}
-                              {meal.variations[0].price}
-                            </span>
-                            {meal.isCombo &&
-                              meal.compareAtPrice &&
-                              meal.compareAtPrice > meal.variations[0].price && (
-                                <span className="text-[11px] font-semibold text-slate-400 line-through">
+                          {(() => {
+                            const basePrice = meal.variations[0].price;
+                            const discounted = meal.variations[0].discounted;
+                            const hasVariationDiscount =
+                              discounted != null && discounted > 0 && discounted < basePrice;
+                            const displayPrice = hasVariationDiscount ? discounted : basePrice;
+                            const strikePrice =
+                              meal.isCombo && meal.compareAtPrice && meal.compareAtPrice > displayPrice
+                                ? meal.compareAtPrice
+                                : hasVariationDiscount
+                                  ? basePrice
+                                  : null;
+                            return (
+                              <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#16293f] dark:text-primary-color">
+                                <span>
                                   {CURRENCY_SYMBOL}
-                                  {meal.compareAtPrice}
+                                  {displayPrice}
                                 </span>
-                              )}
-                          </span>
+                                {strikePrice != null && (
+                                  <span className="text-[11px] font-semibold text-slate-400 line-through">
+                                    {CURRENCY_SYMBOL}
+                                    {strikePrice}
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })()}
                           {meal.isOutOfStock && (
                             <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">
                               {t("out_of_stock_label")}

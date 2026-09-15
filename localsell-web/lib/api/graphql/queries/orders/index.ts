@@ -59,6 +59,7 @@ export const ORDERS = gql`
         description
         quantity
         image
+        price
         variation {
           _id
           id
@@ -153,6 +154,7 @@ export const GET_USERS_PAST_ORDERS = gql`
         description
         quantity
         image
+        price
         variation {
           _id
           id
@@ -247,6 +249,7 @@ export const GET_USERS_ACTIVE_ORDERS = gql`
         description
         quantity
         image
+        price
         variation {
           _id
           id

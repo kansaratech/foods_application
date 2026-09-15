@@ -26,7 +26,10 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
-  "form-action 'self'",
+  // Cashfree's checkout() SDK call submits a real HTML form to its hosted
+  // checkout page (both sandbox and production hosts) as part of the
+  // redirect — 'self' alone blocks that submission outright.
+  "form-action 'self' https://sandbox.cashfree.com https://payments.cashfree.com https://api.cashfree.com",
   `img-src 'self' data: blob: https:${devImgSrc}`,
   "font-src 'self' data: https:",
   "style-src 'self' 'unsafe-inline' https:",

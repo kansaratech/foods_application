@@ -40,8 +40,8 @@ export const NodeMailerValidationSchema = Yup.object().shape({
   smtpUser: Yup.string().nullable(),
 });
 
-export const StripeValidationSchema = Yup.object().shape({
-  publishableKey: Yup.string().required('required'),
+export const CashfreeValidationSchema = Yup.object().shape({
+  appId: Yup.string().required('required'),
   secretKey: Yup.string(),
 });
 

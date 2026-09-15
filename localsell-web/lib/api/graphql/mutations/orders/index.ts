@@ -50,6 +50,7 @@ export const PLACE_ORDER = gql`
         food
         description
         quantity
+        price
         variation {
           _id
           title
@@ -133,6 +134,7 @@ export const ADD_REVIEW_ORDER = gql`
         food
         description
         quantity
+        price
         variation {
           _id
           title
@@ -196,6 +198,17 @@ export const MODIFY_ORDER = gql`
       paymentMethod
       deliveryCharges
       orderAmount
+    }
+  }
+`;
+
+export const CREATE_CASHFREE_PAYMENT_SESSION = gql`
+  mutation CreateCashfreePaymentSession($orderId: ID!) {
+    createCashfreePaymentSession(orderId: $orderId) {
+      success
+      message
+      paymentSessionId
+      cfOrderId
     }
   }
 `;

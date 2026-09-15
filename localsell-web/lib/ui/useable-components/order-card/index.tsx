@@ -243,7 +243,7 @@ const OrderCard: FC<IOrderCardProps> = ({
           // Add item variation price + addon total, multiplied by quantity
           return (
             sum +
-            ((item.variation?.price ?? 0) + addonTotal) * (item.quantity ?? 0)
+            ((item.price ?? item.variation?.price ?? 0) + addonTotal) * (item.quantity ?? 0)
           );
         }, 0)
         .toFixed(2) ?? "0.00"
@@ -398,7 +398,7 @@ const OrderCard: FC<IOrderCardProps> = ({
                     },
                     0,
                   );
-                  const itemTotal = (item.variation?.price ?? 0) + addonTotal;
+                  const itemTotal = (item.price ?? item.variation?.price ?? 0) + addonTotal;
                   return (
                     <li
                       key={id}

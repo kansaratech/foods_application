@@ -13,7 +13,9 @@ export const GET_CONFIGURATION = gql`
       smtpUser
       clientId
       sandbox
-      publishableKey
+      cashfreeAppId
+      cashfreeEnv
+      cashfreeSecretKeySet
       currency
       currencySymbol
       deliveryRate

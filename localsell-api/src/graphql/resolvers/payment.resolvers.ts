@@ -3,10 +3,12 @@ import { Prisma, Transaction, UserType, WithdrawRequest } from '@prisma/client';
 import { customAlphabet } from 'nanoid';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
-import { requireRole } from '../../middleware/auth';
+import { requireAuth, requireRole } from '../../middleware/auth';
 import { forbiddenError, notFoundError, userInputError } from '../../utils/errors';
 import { riderOutstandingCash } from '../../utils/commission';
 import { recordAudit } from '../../utils/audit';
+import { env } from '../../config/env';
+import { getCashfreeCredentials, createCashfreeOrder } from '../../services/cashfree.service';
 
 const nanoid = customAlphabet('0123456789', 8);
 type CurrentUser = { id: string; userType: string };
@@ -500,6 +502,41 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
         changes: { status: [existing.status, args.status] },
       });
       return { success: true, message: 'Withdraw request updated', data: updated };
+    },
+
+    createCashfreePaymentSession: async (_parent, args: { orderId: string }, context) => {
+      const currentUser = requireAuth(context);
+      const order = await prisma.order.findUnique({ where: { id: args.orderId } });
+      if (!order) throw notFoundError('Order not found');
+      if (order.userId !== currentUser.id && currentUser.userType !== 'ADMIN') throw forbiddenError();
+      if (order.paymentMethod !== 'CASHFREE') {
+        throw userInputError('This order is not set up for online payment');
+      }
+      if (order.paymentStatus === 'PAID') {
+        return { success: false, message: 'This order has already been paid for', paymentSessionId: null, cfOrderId: null };
+      }
+
+      const creds = await getCashfreeCredentials();
+      if (!creds) {
+        return { success: false, message: 'Online payment is not configured yet — pay with cash on delivery instead.', paymentSessionId: null, cfOrderId: null };
+      }
+
+      const customer = await prisma.user.findUnique({ where: { id: order.userId } });
+      try {
+        const session = await createCashfreeOrder(creds, {
+          orderId: order.id,
+          orderAmount: order.orderAmount,
+          customerId: order.userId,
+          customerPhone: customer?.phone || '',
+          customerEmail: customer?.email,
+          customerName: customer?.name,
+          returnUrl: `${env.webClientUrl}/order/cashfree/return?order_id=${order.id}`,
+        });
+        return { success: true, message: 'Payment session created', paymentSessionId: session.paymentSessionId, cfOrderId: session.cfOrderId };
+      } catch (err) {
+        console.error('[cashfree] order creation failed:', (err as Error).message);
+        return { success: false, message: (err as Error).message || 'Could not start online payment', paymentSessionId: null, cfOrderId: null };
+      }
     },
   },
 

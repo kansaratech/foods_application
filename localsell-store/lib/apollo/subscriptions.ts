@@ -31,6 +31,7 @@ export const SUBSCRIBE_PLACE_ORDER = gql`
           description
           image
           quantity
+          price
           variation {
             _id
             title

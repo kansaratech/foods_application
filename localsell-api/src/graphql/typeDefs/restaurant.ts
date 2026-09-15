@@ -54,7 +54,6 @@ export const restaurantTypeDefs = /* GraphQL */ `
     currentWalletAmount: Float
     totalWalletAmount: Float
     withdrawnWalletAmount: Float
-    stripeDetailsSubmitted: Boolean
     deliveryBounds: ZoneLocation
     city: String
     state: String

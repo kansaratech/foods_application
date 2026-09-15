@@ -32,7 +32,7 @@ const ItemDetails = ({
 
   const itemAmount = useMemo(() => {
     return order?.items?.reduce((sum, item) => {
-      return sum + item.quantity * (item.variation.price + addonsTotalFor(item));
+      return sum + item.quantity * ((item.price ?? item.variation.price) + addonsTotalFor(item));
     }, 0);
   }, [order?.items]);
 
@@ -105,7 +105,7 @@ const ItemDetails = ({
                     <View className="flex-row items-center">
                       <Text style={{ color: appTheme.fontMainColor }}>{item?.variation?.title}</Text>
                       <Text className="ml-2" style={{ color: appTheme.fontMainColor }}>
-                        {formatCurrency(item?.variation?.price)}
+                        {formatCurrency(item?.price ?? item?.variation?.price)}
                       </Text>
                     </View>
                   )}
@@ -144,7 +144,7 @@ const ItemDetails = ({
                   style={{ color: appTheme.fontMainColor }}
                 >
                   {formatCurrency(
-                    ((item.variation?.price ?? 0) + addonsTotalFor(item)) *
+                    ((item.price ?? item.variation?.price ?? 0) + addonsTotalFor(item)) *
                       (item.quantity ?? 1),
                   )}
                 </Text>

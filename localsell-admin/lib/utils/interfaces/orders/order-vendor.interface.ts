@@ -14,6 +14,7 @@ export interface IMenuItem extends IGlobalComponentProps {
 }
 
 export interface Items {
+  price: number;
   variation: {
     price: number;
   };
@@ -47,6 +48,7 @@ export interface IOrder extends IGlobalComponentProps {
 export interface IExtendedOrder extends IOrder {
   paidAmount?: number;
   paymentMethod?: ReactNode;
+  paymentGatewayRef?: string | null;
   deliveryCharges?: number;
   tipping?: number;
   discountAmount?: number;

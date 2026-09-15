@@ -4,7 +4,7 @@
     "",
     "It WIPES every data table (users, stores, menus, orders, ledgers, riders,",
     "customers, zones, config) and rebuilds the marketplace from this file.",
-    "Infra secrets on the Configuration row (Google Maps / Stripe / PayPal /",
+    "Infra secrets on the Configuration row (Google Maps / Cashfree / PayPal /",
     "SMTP / Sentry keys) are read back and preserved — only the operational",
     "fields below are reset.",
     "",

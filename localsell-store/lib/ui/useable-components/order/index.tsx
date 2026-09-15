@@ -282,7 +282,7 @@ const Order = ({
                 ),
               0,
             );
-            const itemPrice = (variation.price ?? 0) + addonsTotal;
+            const itemPrice = (item.price ?? variation.price ?? 0) + addonsTotal;
             const itemTotal = itemPrice * (item.quantity ?? 1);
 
             return (
@@ -390,7 +390,7 @@ const Order = ({
                                     fontWeight: "600",
                                   }}
                                 >
-                                  {`${configuration?.currencySymbol}${variation.price}`}
+                                  {`${configuration?.currencySymbol}${item.price ?? variation.price}`}
                                 </Text>
                               </View>
                             </View>

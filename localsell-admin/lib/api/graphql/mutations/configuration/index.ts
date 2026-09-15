@@ -173,13 +173,15 @@ export const SAVE_PAYPAL_CONFIGURATION = gql`
   }
 `;
 
-export const SAVE_STRIPE_CONFIGURATION = gql`
-  mutation SAVE_STRIPE_CONFIGURATION(
-    $configurationInput: StripeConfigurationInput!
+export const SAVE_CASHFREE_CONFIGURATION = gql`
+  mutation SAVE_CASHFREE_CONFIGURATION(
+    $configurationInput: CashfreeConfigurationInput!
   ) {
-    saveStripeConfiguration(configurationInput: $configurationInput) {
+    saveCashfreeConfiguration(configurationInput: $configurationInput) {
       _id
-      publishableKey
+      cashfreeAppId
+      cashfreeEnv
+      cashfreeSecretKeySet
     }
   }
 `;

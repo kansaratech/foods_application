@@ -9,7 +9,7 @@
  * the Configuration row) and rebuilds the whole marketplace from the JSON.
  *
  * The one thing it keeps: infra secrets already on the Configuration row —
- * Google Maps / Stripe / PayPal / SMTP / Sentry / Cloudinary / Firebase keys —
+ * Google Maps / Cashfree / PayPal / SMTP / Sentry / Cloudinary / Firebase keys —
  * are read back before the wipe and merged into the fresh Configuration so a
  * reseed never loses your API keys. Everything else is defined by the JSON.
  *

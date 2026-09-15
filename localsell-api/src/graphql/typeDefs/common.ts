@@ -42,7 +42,9 @@ export const commonTypeDefs = /* GraphQL */ `
     clientId: String
     sandbox: Boolean
 
-    publishableKey: String
+    cashfreeAppId: String
+    cashfreeEnv: String
+    cashfreeSecretKeySet: Boolean
 
     twilioAccountSid: String
     twilioPhoneNumber: String
@@ -199,9 +201,11 @@ export const commonTypeDefs = /* GraphQL */ `
     clientSecret: String
   }
 
-  input StripeConfigurationInput {
-    publishableKey: String
+  input CashfreeConfigurationInput {
+    appId: String
     secretKey: String
+    "Either TEST (sandbox) or PRODUCTION (live)."
+    env: String
   }
 
   input TwilioConfigurationInput {
@@ -405,7 +409,7 @@ export const commonTypeDefs = /* GraphQL */ `
     saveAppConfigurations(configurationInput: AppConfigurationsInput!): Configuration!
     saveDeliveryRateConfiguration(configurationInput: DeliveryCostConfigurationInput!): Configuration!
     savePaypalConfiguration(configurationInput: PaypalConfigurationInput!): Configuration!
-    saveStripeConfiguration(configurationInput: StripeConfigurationInput!): Configuration!
+    saveCashfreeConfiguration(configurationInput: CashfreeConfigurationInput!): Configuration!
     saveTwilioConfiguration(configurationInput: TwilioConfigurationInput!): Configuration!
     saveWhatsAppConfiguration(configurationInput: WhatsAppConfigurationInput!): Configuration!
     syncWhatsappTemplates: WhatsappTemplateSyncResult!

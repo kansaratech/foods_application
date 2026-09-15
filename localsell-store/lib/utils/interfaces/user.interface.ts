@@ -56,7 +56,6 @@ export interface IStoreProfile {
   isAvailable: boolean;
   openingTimes: ITimingResponseGQL[];
   slug: string;
-  stripeDetailsSubmitted: string;
   commissionRate: string;
   owner: {
     email: string;

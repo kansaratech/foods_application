@@ -1,5 +1,5 @@
 import * as Yup from 'yup';
-import { MAX_PRICE, MIN_PRICE } from '../constants';
+import { MAX_PRICE } from '../constants';
 import { IDropdownSelectItem } from '../interfaces';
 
 export const VariationSchema = Yup.object({
@@ -13,7 +13,7 @@ export const VariationSchema = Yup.object({
           .matches(/\S/, 'Name cannot be only spaces')
           .required('Required'),
         price: Yup.number()
-          .min(MIN_PRICE, 'Minimum value must be greater than 0')
+          .moreThan(0, 'Price must be greater than 0')
           .max(MAX_PRICE)
           .required('Required'),
         // Optional — 0/empty means no discount. When set, it's the actual

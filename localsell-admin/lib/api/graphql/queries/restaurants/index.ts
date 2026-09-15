@@ -243,7 +243,6 @@ export const GET_RESTAURANT_PROFILE = gql`
       gstin
       commissionRate
       isAvailable
-      stripeDetailsSubmitted
       openingTimes {
         day
         times {

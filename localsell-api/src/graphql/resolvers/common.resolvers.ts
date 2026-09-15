@@ -375,11 +375,20 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
         ...(args.configurationInput.clientSecret ? { paypalClientSecret: args.configurationInput.clientSecret } : {}),
       }),
 
-    saveStripeConfiguration: (_parent, args: { configurationInput: { publishableKey?: string; secretKey?: string } }, context) =>
-      saveConfiguration(context, {
-        stripePublishableKey: args.configurationInput.publishableKey,
-        ...(args.configurationInput.secretKey ? { stripeSecretKey: args.configurationInput.secretKey } : {}),
-      }),
+    saveCashfreeConfiguration: (
+      _parent,
+      args: { configurationInput: { appId?: string; secretKey?: string; env?: string } },
+      context,
+    ) => {
+      if (args.configurationInput.env !== undefined && !['TEST', 'PRODUCTION'].includes(args.configurationInput.env)) {
+        throw userInputError('env must be "TEST" or "PRODUCTION"');
+      }
+      return saveConfiguration(context, {
+        cashfreeAppId: args.configurationInput.appId,
+        cashfreeEnv: args.configurationInput.env,
+        ...(args.configurationInput.secretKey ? { cashfreeSecretKey: args.configurationInput.secretKey } : {}),
+      });
+    },
 
     saveTwilioConfiguration: (
       _parent,
@@ -480,7 +489,8 @@ export const commonResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: { id: string }) => parent.id,
     clientId: (parent: { paypalClientId?: string | null }) => parent.paypalClientId ?? null,
     sandbox: (parent: { paypalSandbox?: boolean }) => parent.paypalSandbox ?? null,
-    publishableKey: (parent: { stripePublishableKey?: string | null }) => parent.stripePublishableKey ?? null,
+    // Never expose the secret key itself — just whether one is stored.
+    cashfreeSecretKeySet: (parent: { cashfreeSecretKey?: string | null }) => Boolean(parent.cashfreeSecretKey),
     // Never expose the token itself — just whether one is stored (env or DB).
     whatsappAccessTokenSet: (parent: { whatsappAccessToken?: string | null }) =>
       Boolean(process.env.WHATSAPP_ACCESS_TOKEN || parent.whatsappAccessToken),

@@ -115,7 +115,7 @@ export interface ISelectedVariation {
   _id: string;
   title: string;
   price: number;
-  discounted: boolean;
+  discounted?: number | null;
   addons: {
     _id: string;
     options?: {

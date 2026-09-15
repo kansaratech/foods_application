@@ -13,6 +13,21 @@ async function assertOwnsRestaurant(context: GraphQLContext, restaurantId: strin
   if (!restaurant || restaurant.ownerId !== currentUser.id) throw notFoundError('Restaurant not found');
 }
 
+// `restaurant(id)` is the one query both the customer storefront (web/app)
+// and the store's own dashboard (localsell-store) call to read the menu —
+// there's no separate "customer view" vs "management view" query. So the
+// isActive filter has to happen here, keyed off who's asking: the owning
+// vendor/admin needs to see (and toggle) hidden items to manage them; anyone
+// else — a shopper, a guest, an unrelated account — must never see them.
+async function canManageRestaurant(context: GraphQLContext, restaurantId: string): Promise<boolean> {
+  const user = context.user;
+  if (!user) return false;
+  if (user.userType === 'ADMIN' || user.userType === 'STAFF') return true;
+  if (user.userType !== 'VENDOR') return false;
+  const restaurant = await prisma.restaurant.findUnique({ where: { id: restaurantId } });
+  return !!restaurant && restaurant.ownerId === user.id;
+}
+
 interface VariationInputArgs {
   _id?: string;
   title: string;
@@ -36,6 +51,14 @@ function sanitizeDiscounted(price: number, discounted?: number | null): number |
 // Same rule as sanitizeDiscounted, applied on read for display resolvers.
 function effectivePrice(price: number, discounted: number | null | undefined): number {
   return discounted != null && discounted > 0 && discounted < price ? discounted : price;
+}
+
+// A ₹0 (or negative) variation can never be charged for and quietly breaks
+// commission/GST math downstream (0% of 0), so it's rejected at the same
+// boundary as every other write, not left to the client's own validation.
+function assertPositivePrices(variations: VariationInputArgs[]): void {
+  const bad = variations.find((v) => !(v.price > 0));
+  if (bad) throw userInputError(`"${bad.title || 'Variation'}" needs a price greater than 0`);
 }
 
 interface ComboItemInputArgs {
@@ -240,6 +263,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     createFood: async (_parent, args: { foodInput: FoodInputArgs }, context) => {
       await assertOwnsRestaurant(context, args.foodInput.restaurant);
       const input = args.foodInput;
+      assertPositivePrices(input.variations);
 
       await prisma.food.create({
         data: {
@@ -271,6 +295,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       await assertOwnsRestaurant(context, args.foodInput.restaurant);
       const input = args.foodInput;
       if (!input._id) throw notFoundError('Food _id is required to edit');
+      assertPositivePrices(input.variations);
 
       await prisma.food.update({
         where: { id: input._id },
@@ -613,7 +638,12 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
 
   Category: {
     _id: (parent: Category) => parent.id,
-    foods: (parent: Category) => prisma.food.findMany({ where: { categoryId: parent.id } }),
+    foods: async (parent: Category, _args: unknown, context: GraphQLContext) => {
+      const canManage = await canManageRestaurant(context, parent.restaurantId);
+      return prisma.food.findMany({
+        where: { categoryId: parent.id, ...(canManage ? {} : { isActive: true }) },
+      });
+    },
   },
   Food: {
     _id: (parent: Food) => parent.id,

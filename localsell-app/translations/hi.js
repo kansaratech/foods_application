@@ -93,6 +93,7 @@ export const hi = {
     creditCart: 'क्रेडिट/डेबिट कार्ड',
     paypal: 'पेपैल',
     cod: 'नकद',
+    cashfree: 'ऑनलाइन (UPI / कार्ड / नेट बैंकिंग)',
     thankYou: 'धन्यवाद!',
     orderConfirmed: 'आपका ऑर्डर पुष्टि हो गया है',
     orderId: 'आपका ऑर्डर आईडी',

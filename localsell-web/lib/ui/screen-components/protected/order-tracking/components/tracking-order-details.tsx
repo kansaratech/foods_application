@@ -30,7 +30,11 @@ function TrackingOrderDetails({
   }
 
   const calculateItemTotal = (item: any) => {
-    const variationPrice = item.variation.price || 0;
+    // Use the order's snapshotted unit price (already discount-applied at
+    // order time), not the live variation's price — the variation's own
+    // price can change later or simply be the pre-discount price, which
+    // would make the displayed total drift from orderAmount.
+    const variationPrice = item.price ?? item.variation?.price ?? 0;
     const addonsPrice =
       item.addons?.reduce((sum: number, addon: any) => {
         return (

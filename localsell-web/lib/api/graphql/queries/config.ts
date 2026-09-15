@@ -13,7 +13,8 @@ export const GET_CONFIG = gql`
       googleMapLibraries
       googleColor
       webSentryUrl
-      publishableKey
+      cashfreeAppId
+      cashfreeEnv
       clientId
       skipEmailVerification
       skipMobileVerification

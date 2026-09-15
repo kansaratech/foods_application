@@ -4,7 +4,9 @@ export interface IConfigProps {
   GOOGLE_CLIENT_ID: string;
   /** True only when a valid Google web client id is configured. */
   IS_GOOGLE_LOGIN_ENABLED: boolean;
-  STRIPE_PUBLIC_KEY: string;
+  CASHFREE_APP_ID: string;
+  CASHFREE_ENV: string;
+  IS_CASHFREE_ENABLED: boolean;
   PAYPAL_KEY: string;
   GOOGLE_MAPS_KEY: string;
   AMPLITUDE_API_KEY: string;

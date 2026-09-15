@@ -189,6 +189,30 @@
   font-size: 13px;
   font-weight: 700;
 }
+.admin-order-dialog .payment-status {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fff0cb;
+  color: #dd8500;
+}
+.admin-order-dialog .payment-status.paid {
+  background: #d5fae9;
+  color: #009c65;
+}
+.admin-order-dialog .payment-status.failed {
+  background: #ffe0e3;
+  color: #d72d3d;
+}
+.admin-order-dialog .payment-gateway-ref {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #7d91b1;
+}
 .admin-order-dialog .paid-amount {
   padding-top: 14px;
   border-top: 1px solid #e2e8f0;

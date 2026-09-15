@@ -51,7 +51,6 @@ export const UPDATE_WITHDRAW_REQUEST = gql`
           address
           username
           slug
-          stripeDetailsSubmitted
           commissionRate
           bussinessDetails {
             bankName

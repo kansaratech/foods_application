@@ -71,6 +71,8 @@ export const orderTypeDefs = /* GraphQL */ `
     orderStatus: String!
     status: String!
     paymentStatus: String!
+    "Cashfree's payment id once a webhook confirms this order — null for COD or a still-pending/failed online payment."
+    paymentGatewayRef: String
     isActive: Boolean!
     isPickedUp: Boolean!
     createdAt: String
@@ -196,6 +198,8 @@ export const orderTypeDefs = /* GraphQL */ `
       ending_date: String
       orderStatus: [String]
       deliveryMode: [String]
+      paymentMethod: [String]
+      paymentStatus: [String]
       search: String
       restaurantId: ID
       riderId: ID

@@ -14,6 +14,7 @@ export interface IOrder {
   orderId: string;
   paymentMethod?: string;
   items: Array<{
+    price: number;
     variation: {
       price: number;
       title: string;

@@ -324,25 +324,26 @@ export default function AppHeader() {
             </span>
           </button>
 
-          {isLoggedIn && (
-            <button
-              type="button"
-              onClick={() => setIsCartOpen(true)}
-              aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
-              className="relative flex items-center gap-1.5 transition hover:text-[#16293f] dark:hover:text-blue-300"
-            >
-              <Icon icon={faCartShopping} size={16} />
-              <span className="hidden sm:inline">Cart</span>
-              {cartCount > 0 && (
-                <span
-                  className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white sm:static sm:ml-0.5 sm:h-5 sm:min-w-[20px]"
-                  style={{ backgroundColor: ORANGE }}
-                >
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          )}
+          {/* Cart is visible/openable for guests too — login is only required
+              at checkout (see checkout/index.tsx onPlaceOrder), so a guest's
+              cart shouldn't be hidden away before then. */}
+          <button
+            type="button"
+            onClick={() => setIsCartOpen(true)}
+            aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
+            className="relative flex items-center gap-1.5 transition hover:text-[#16293f] dark:hover:text-blue-300"
+          >
+            <Icon icon={faCartShopping} size={16} />
+            <span className="hidden sm:inline">Cart</span>
+            {cartCount > 0 && (
+              <span
+                className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white sm:static sm:ml-0.5 sm:h-5 sm:min-w-[20px]"
+                style={{ backgroundColor: ORANGE }}
+              >
+                {cartCount}
+              </span>
+            )}
+          </button>
 
           {isLoggedIn ? (
             <>

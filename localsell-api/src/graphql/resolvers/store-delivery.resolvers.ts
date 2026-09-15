@@ -6,6 +6,16 @@ import { requireRole } from '../../middleware/auth';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { publishOrderUpdate } from './order.resolvers';
 
+// A store's own delivery person must be reachable by phone — it's the only
+// way the customer (or the store) can contact them mid-delivery.
+function assertValidAgentPhone(phone?: string | null): string {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  if (!/^[6-9]\d{9}$/.test(digits)) {
+    throw userInputError('Enter a valid 10-digit phone number');
+  }
+  return digits;
+}
+
 /** The store must exist and be owned by the caller (admins pass through). */
 async function assertOwnsStore(context: GraphQLContext, restaurantId: string) {
   const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
@@ -57,8 +67,9 @@ export const storeDeliveryResolvers: IResolvers<unknown, GraphQLContext> = {
       await assertOwnsStore(context, args.storeId);
       const name = args.name.trim();
       if (!name) throw userInputError('A name is required');
+      const phone = assertValidAgentPhone(args.phone);
       const agent = await prisma.storeDeliveryAgent.create({
-        data: { restaurantId: args.storeId, name, phone: args.phone?.trim() || null },
+        data: { restaurantId: args.storeId, name, phone },
       });
       return shape(agent);
     },
@@ -75,7 +86,7 @@ export const storeDeliveryResolvers: IResolvers<unknown, GraphQLContext> = {
         where: { id: args.id },
         data: {
           ...(args.name !== undefined ? { name: args.name.trim() } : {}),
-          ...(args.phone !== undefined ? { phone: args.phone?.trim() || null } : {}),
+          ...(args.phone !== undefined ? { phone: assertValidAgentPhone(args.phone) } : {}),
           ...(args.isActive !== undefined ? { isActive: args.isActive } : {}),
         },
       });

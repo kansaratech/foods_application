@@ -194,6 +194,7 @@ export const RIDER_ORDERS = gql`
         description
         image
         quantity
+        price
         variation {
           _id
           title

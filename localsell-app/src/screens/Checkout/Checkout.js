@@ -8,9 +8,9 @@ import { AntDesign, EvilIcons, Feather, FontAwesome, MaterialCommunityIcons } fr
 import { Placeholder, PlaceholderLine, Fade } from 'rn-placeholder'
 import { Modalize } from 'react-native-modalize'
 import { getTipping, getOrderPricePreview } from '../../apollo/queries'
-import { applyCoupon, placeOrder } from '../../apollo/mutations'
+import { applyCoupon, placeOrder, createCashfreePaymentSession } from '../../apollo/mutations'
 import { scale } from '../../utils/scaling'
-import { stripeCurrencies, paypalCurrencies } from '../../utils/currencies'
+import { paypalCurrencies } from '../../utils/currencies'
 import { theme } from '../../utils/themeColors'
 import MapView, { PROVIDER_DEFAULT } from 'react-native-maps'
 import ThemeContext from '../../ui/ThemeContext/ThemeContext'
@@ -51,6 +51,9 @@ import ErrorView from '../../components/ErrorView/ErrorView'
 // Constants
 const PLACEORDER = gql`
   ${placeOrder}
+`
+const CREATE_CASHFREE_PAYMENT_SESSION = gql`
+  ${createCashfreePaymentSession}
 `
 const TIPPING = gql`
   ${getTipping}
@@ -210,6 +213,7 @@ function Checkout(props) {
     onCompleted,
     onError
   })
+  const [createCashfreeSession] = useMutation(CREATE_CASHFREE_PAYMENT_SESSION)
 
   const COD_PAYMENT = {
     payment: 'COD',
@@ -412,7 +416,7 @@ function Checkout(props) {
     )
   }
 
-  function onCompleted(data) {
+  async function onCompleted(data) {
     const placedOrder = data?.placeOrder
     setOrderConfirmedTime(new Date())
     reFetchOrders()
@@ -456,13 +460,30 @@ function Checkout(props) {
         _id: data?.placeOrder.orderId,
         currency: configuration.currency
       })
-    } else if (paymentMode === 'STRIPE') {
-      props?.navigation.replace('StripeCheckout', {
-        _id: data?.placeOrder.orderId,
-        amount: data?.placeOrder.orderAmount,
-        email: data?.placeOrder.user.email,
-        currency: configuration.currency
-      })
+    } else if (paymentMode === 'CASHFREE') {
+      const orderDbId = data?.placeOrder?._id
+      const orderDisplayId = data?.placeOrder?.orderId
+      try {
+        const { data: sessionData } = await createCashfreeSession({ variables: { orderId: orderDbId } })
+        const session = sessionData?.createCashfreePaymentSession
+        if (!session?.success || !session?.paymentSessionId) {
+          FlashMessage({
+            message: session?.message || 'Could not start online payment. You can retry from your order.'
+          })
+          props.navigation.dispatch(StackActions.popToTop())
+          props.navigation.navigate('OrderDetail', { _id: orderDbId, order: data?.placeOrder })
+          return
+        }
+        props?.navigation.replace('CashfreeCheckout', {
+          _id: orderDbId,
+          orderId: orderDisplayId,
+          paymentSessionId: session.paymentSessionId
+        })
+      } catch (error) {
+        FlashMessage({ message: error?.message || 'Could not start online payment.' })
+        props.navigation.dispatch(StackActions.popToTop())
+        props.navigation.navigate('OrderDetail', { _id: orderDbId, order: data?.placeOrder })
+      }
     }
   }
   function onError(error) {
@@ -558,9 +579,6 @@ function Checkout(props) {
   }
 
   function checkPaymentMethod(currency) {
-    if (paymentMode === 'STRIPE') {
-      return stripeCurrencies.find((val) => val.currency === currency)
-    }
     if (paymentMode === 'PAYPAL') {
       return paypalCurrencies.find((val) => val.currency === currency)
     }
@@ -822,14 +840,14 @@ function Checkout(props) {
                             setPaymentMode('PAYPAL')
                           }}
                         /> */}
-                        {restaurant?.stripeDetailsSubmitted && (
+                        {configuration?.cashfreeAppId && (
                           <PaymentModeOption
-                            title={t('Stripe')}
+                            title={t('cashfree')}
                             icon={'credit-card'}
-                            selected={paymentMode === 'STRIPE'}
+                            selected={paymentMode === 'CASHFREE'}
                             theme={currentTheme}
                             onSelect={() => {
-                              setPaymentMode('STRIPE')
+                              setPaymentMode('CASHFREE')
                             }}
                           />
                         )}

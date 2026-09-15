@@ -307,7 +307,6 @@ export const restaurantFragment = gql`
           isActive
           isAvailable
           slug
-          stripeDetailsSubmitted
           tax
           notificationToken
           enableNotification
@@ -347,7 +346,6 @@ export const restaurantFragment = gql`
       }
     }
     slug
-    stripeDetailsSubmitted
     owner {
       _id
       email
@@ -456,6 +454,7 @@ export const order = `query Order($id:String!){
       description
       image
       quantity
+      price
       variation{
         title
         price
@@ -515,6 +514,7 @@ export const myOrders = `query Orders($offset:Int){
       description
       quantity
       image
+      price
       variation{
         _id
         id
@@ -606,6 +606,7 @@ const ordersFieldsBody = `
       description
       quantity
       image
+      price
       variation{
         _id
         id
@@ -694,6 +695,8 @@ export const getConfiguration = `query Configuration{
     skipEmailVerification
     costType
     publishableKey
+    cashfreeAppId
+    cashfreeEnv
     enableCustomerDemoMode
     customerDemoZoneId
   }
@@ -924,7 +927,6 @@ export const restaurant = `query Restaurant($id:String){
     phone
     restaurantUrl
     cuisines
-    stripeDetailsSubmitted
     shopType
   }
 }`
@@ -1064,6 +1066,7 @@ export const orderFragment = `fragment NewOrder on Order {
     food
     description
     quantity
+    price
     variation{
       _id
       title

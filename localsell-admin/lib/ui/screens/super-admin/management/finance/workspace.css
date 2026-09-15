@@ -3,7 +3,8 @@
   min-width: 0;
   padding: 24px;
   max-width: 1680px;
-  margin: auto;
+  /* Center horizontally without distributing spare height above the page. */
+  margin: 0 auto;
   color: var(--app-text);
 }
 .finance-breadcrumb {

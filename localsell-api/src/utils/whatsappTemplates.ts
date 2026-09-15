@@ -48,6 +48,17 @@ export const WA_TEMPLATES: WaTemplateDef[] = [
     bodyVars: ['customerName', 'orderNumber', 'storeName', 'orderTotal'],
   },
   {
+    // Fires from the Cashfree webhook once an online payment is confirmed —
+    // not at order placement, and not for COD (nothing to confirm there).
+    key: 'payment_confirmed',
+    metaName: 'localsell_payment_confirmed',
+    language: 'en_US',
+    category: 'UTILITY',
+    audience: 'CUSTOMER',
+    purpose: 'ORDER_UPDATE',
+    bodyVars: ['customerName', 'paidAmount', 'orderNumber', 'storeName'],
+  },
+  {
     key: 'order_confirmed',
     metaName: 'localsell_order_confirmed',
     language: 'en_US',

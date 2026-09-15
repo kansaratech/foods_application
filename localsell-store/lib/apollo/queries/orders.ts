@@ -31,6 +31,7 @@ export const GET_ORDERS = gql`
         description
         image
         quantity
+        price
         specialInstructions
 
         variation {
@@ -167,6 +168,7 @@ export const ORDERS_BY_REST_ID = gql`
           _id
           title
           quantity
+          price
           variation {
             _id
             title

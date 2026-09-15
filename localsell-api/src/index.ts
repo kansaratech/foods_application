@@ -14,6 +14,7 @@ import { env } from './config/env';
 import { mapsRouter } from './routes/maps';
 import { clientLogsRouter } from './routes/client-logs';
 import { whatsappWebhookRouter } from './routes/whatsapp-webhook';
+import { cashfreeWebhookRouter } from './routes/cashfree-webhook';
 import { typeDefs } from './graphql/typeDefs';
 import { resolvers } from './graphql/resolvers';
 import { buildHttpContext, buildWsContext, GraphQLContext } from './context';
@@ -120,6 +121,9 @@ async function main() {
   // Meta WhatsApp webhook — needs the raw body for signature checking, so it
   // brings its own body parser and must not sit behind express.json().
   app.use('/webhooks/whatsapp', whatsappWebhookRouter);
+
+  // Cashfree payment webhook — same raw-body-for-signature requirement.
+  app.use('/webhooks/cashfree', cashfreeWebhookRouter);
 
   app.use(
     '/graphql',

@@ -118,13 +118,22 @@ prev ? pass('commissionPeriodPreview', `${prev.rows.length} vendors · ${prev.un
 const closed = (await gql(`mutation { closeCommissionPeriod { _id status } }`, {}, admin)).data?.closeCommissionPeriod;
 Array.isArray(closed) ? pass('closeCommissionPeriod', `${closed.length} bill(s) generated`) : fail('closeCommissionPeriod');
 
-const list = (await gql(`{ commissionBills(limit:200) { total bills { _id status } } }`, {}, admin)).data?.commissionBills;
+const list = (await gql(`{ commissionBills(limit:200) { total bills { _id status commissionTotal } } }`, {}, admin)).data?.commissionBills;
 list?.total > 0 ? pass('commissionBills', `${list.total} bills`) : fail('commissionBills');
 
 const pending = list?.bills?.find((b) => b.status === 'PENDING');
 if (pending) {
-  const paid = (await gql(`mutation($id:ID!){ updateCommissionBillStatus(id:$id, status:"PAID"){ status paidAt paidAmount } }`, { id: pending._id }, admin)).data?.updateCommissionBillStatus;
-  paid?.status === 'PAID' && paid.paidAt ? pass('mark bill PAID', `paidAt set · ₹${paid.paidAmount}`) : fail('mark paid');
+  // updateCommissionBillStatus deliberately refuses a direct PAID flip now —
+  // recordCommissionPayment (collections.service.collectCommission) is the
+  // real "Record payment" flow: it writes a CommissionPayment receipt and
+  // settles the bill once paidAmount reaches commissionTotal.
+  const receipt = (await gql(
+    `mutation($billId:ID!,$amount:Float!,$key:String!){ recordCommissionPayment(billId:$billId, amount:$amount, method:"UPI", reference:"VERIFY-UTR", receivedAt:"2026-09-15T00:00:00+05:30", idempotencyKey:$key){ _id amount billId } }`,
+    { billId: pending._id, amount: pending.commissionTotal, key: `verify-launch-${pending._id}` },
+    admin,
+  )).data?.recordCommissionPayment;
+  const afterPay = (await gql(`query($id:ID!){ commissionBill(id:$id){ bill { status paidAmount } } }`, { id: pending._id }, admin)).data?.commissionBill?.bill;
+  receipt && afterPay?.status === 'PAID' ? pass('mark bill PAID', `receipt ₹${receipt.amount} · paidAmount ₹${afterPay.paidAmount}`) : fail('mark paid');
   const det = (await gql(`query($id:ID!){ commissionBill(id:$id){ records { commissionRate commissionAmount } } }`, { id: pending._id }, admin)).data?.commissionBill;
   det?.records?.length ? pass('bill line items', `${det.records.length} order(s) @ ${[...new Set(det.records.map((r) => r.commissionRate))].join('/')}%`) : fail('line items');
 } else pass('mark bill PAID', 'skipped — no PENDING bill');
@@ -152,39 +161,28 @@ sum ? pass('myCommissionSummary (vendor view data)', `${sum.cycle} · ${sum.bill
 if (RID && food && cust) {
   const dd = (await gql(`{ getRestaurantDeliveryZoneInfo(id:"${RID}"){ circleBounds { radius } } }`, {}, admin)).data?.getRestaurantDeliveryZoneInfo;
   const P = mk(false);
-  const aRider = (await gql(`{ riders { _id } }`, {}, admin)).data?.riders?.[0]?._id;
-  const storeW = async () => (await gql(`{ restaurant(id:"${RID}"){ currentWalletAmount } }`, {}, admin)).data.restaurant.currentWalletAmount;
 
-  // --- COD delivery: tax to store, rider owes 100%, commission NOT billable ---
+  // --- COD, store's own SELF delivery: store holds the cash directly (same
+  // as pickup) → commission IS billable. LocalSell's own rider fleet
+  // (deliveryMode PLATFORM — a rider collects 100% of the cash and owes it
+  // to the platform) is out of MVP scope: placeOrder only ever sets PICKUP
+  // or SELF now, so there's nothing to assign a fleet rider to here anymore.
   const billBefore = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
-  const cashBefore = (await gql(`{ platformFinanceReport { codCashOutstanding } }`, {}, admin)).data.platformFinanceReport.codCashOutstanding;
-  const sw0 = await storeW();
   const o = (await gql(P, { i: items, a: near }, cust)).data?.placeOrder;
   if (o?._id) {
     await gql(`mutation { updateOrderStatus(id:"${o._id}", status:"ACCEPTED"){ _id } }`, {}, admin);
-    if (aRider) await gql(`mutation { assignRider(id:"${o._id}", riderId:"${aRider}"){ _id } }`, {}, admin);
     await gql(`mutation { updateOrderStatus(id:"${o._id}", status:"DELIVERED"){ _id } }`, {}, admin);
-
-    const sw1 = await storeW();
-    sw1 > sw0 ? pass('store wallet credited (food − commission + tax)', `+₹${(sw1 - sw0).toFixed(2)}`) : fail('store wallet not credited');
 
     const billAfter = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
-    billAfter === billBefore
-      ? pass('COD-delivery commission is self-collected (not billed)', `preview unchanged at ${billAfter}`)
-      : fail('COD-delivery wrongly added to bill preview', `${billBefore} → ${billAfter}`);
+    billAfter === billBefore + 1
+      ? pass('COD self-delivery commission IS billable', `preview ${billBefore} → ${billAfter}`)
+      : fail('COD self-delivery not added to bill preview', `${billBefore} → ${billAfter}`);
 
-    if (aRider) {
-      const rc = (await gql(`{ riderCashSummary(riderId:"${aRider}"){ entries { orderNumber owedToPlatform } } }`, {}, admin)).data.riderCashSummary;
-      const ent = rc.entries.find((e) => e.orderNumber === o.orderId);
-      ent && Math.abs(ent.owedToPlatform - o.orderAmount) < 0.02
-        ? pass('rider owes the FULL order amount', `₹${ent.owedToPlatform} = order total`)
-        : fail('rider cash amount wrong', `owed ${ent?.owedToPlatform} vs order ${o.orderAmount}`);
-    }
     await gql(`mutation { updateOrderStatus(id:"${o._id}", status:"DELIVERED"){ _id } }`, {}, admin);
-    const cAfter2 = (await gql(`{ platformFinanceReport { codCashOutstanding } }`, {}, admin)).data.platformFinanceReport.codCashOutstanding;
-    Math.abs(cAfter2 - cashBefore - (aRider ? o.orderAmount : 0)) < 0.02 || cAfter2 >= cashBefore
+    const billAfter2 = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
+    billAfter2 === billAfter
       ? pass('accrual idempotent', 're-deliver = no duplicate')
-      : fail('accrual duplicated on re-deliver');
+      : fail('accrual duplicated on re-deliver', `${billAfter} → ${billAfter2}`);
 
     // --- COD pickup: store owes commission → billable ---
     const pb0 = (await gql(`{ commissionPeriodPreview { unbilledOrderCount } }`, {}, admin)).data.commissionPeriodPreview.unbilledOrderCount;
@@ -283,7 +281,7 @@ if (RID && food && cust) {
     { i: items2, a: near },
     cust,
   );
-  /cash on delivery only/i.test(nonCod.errors?.[0]?.message || '')
+  /unsupported payment method/i.test(nonCod.errors?.[0]?.message || '')
     ? pass('placeOrder rejects a non-COD payment method', nonCod.errors[0].message.slice(0, 55))
     : fail('placeOrder should reject non-COD payment method', JSON.stringify(nonCod));
 
@@ -295,7 +293,7 @@ if (RID && food && cust) {
       ? pass('modifyOrder → pickup zeroes the fee + recomputes total', `total ₹${r.orderAmount}`)
       : fail('modifyOrder pickup wrong', JSON.stringify(r));
     const pm = await gql(`mutation { modifyOrder(id:"${o1._id}", paymentMethod:"STRIPE"){ paymentMethod } }`, {}, cust);
-    /cash on delivery only/i.test(pm.errors?.[0]?.message || '')
+    /unsupported payment method/i.test(pm.errors?.[0]?.message || '')
       ? pass('modifyOrder rejects switching away from COD', pm.errors[0].message.slice(0, 55))
       : fail('modifyOrder should reject non-COD payment method', JSON.stringify(pm));
     const abort = await gql(`mutation { abortOrder(id:"${o1._id}") { _id } }`, {}, cust);

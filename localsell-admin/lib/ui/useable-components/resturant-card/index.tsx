@@ -44,7 +44,7 @@ import UpdateRestaurantPasswordDialog from './update-password-dialog';
 
 export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
   // Props
-  const { _id, name, image, address, shopType, isActive } = restaurant;
+  const { _id, name, image, address, shopType, isActive, deliveryInfo } = restaurant;
 
   const configuration = useContext(ConfigurationContext);
   // Hooks
@@ -214,7 +214,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
           <CarSVG width="24" height="24" />
           <span>
-            {CURRENT_SYMBOL} {deliveryRate}
+            {CURRENT_SYMBOL} {deliveryInfo?.deliveryFee ?? deliveryRate}
           </span>
         </div>
 

@@ -158,6 +158,16 @@
   background: #ffe0e3;
   color: #d72d3d;
 }
+/* Payment status reuses the same badge look — "pending" is shared with
+   orderStatus above, "paid"/"failed" are payment-specific additions. */
+.orders-status.paid {
+  background: #d5fae9;
+  color: #009c65;
+}
+.orders-status.failed {
+  background: #ffe0e3;
+  color: #d72d3d;
+}
 .orders-row-action {
   display: grid;
   place-items: center;

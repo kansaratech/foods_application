@@ -25,6 +25,12 @@ export const ORDER_COLUMNS = () => {
     {
       headerName: t('Payment'),
       propertyName: 'paymentMethod',
+      body: (rowData: IExtendedOrder) => (
+        <span>
+          {rowData.paymentMethod}
+          {rowData.paymentMethod === 'CASHFREE' ? ` (${rowData.paymentStatus})` : ''}
+        </span>
+      ),
     },
     {
       headerName: t('Order Status'),

@@ -7,7 +7,9 @@ export interface IConfiguration {
   _id: string;
   pushToken?: string;
   webClientID?: string;
-  publishableKey?: string;
+  cashfreeAppId?: string;
+  cashfreeEnv?: string;
+  cashfreeSecretKeySet?: boolean;
   clientId?: string;
   googleApiKey?: string;
   webAmplitudeApiKey?: string;
@@ -59,7 +61,6 @@ export interface IConfiguration {
   smtpUser?: string;
   clientSecret?: string;
   sandbox?: boolean;
-  secretKey?: string;
   formEmail?: string;
   sendGridApiKey?: string;
   sendGridEnabled?: boolean;

@@ -1,7 +1,4 @@
-import {
-  PAYPAL_ALLOWED_CURRENCIES,
-  STRIPE_ALLOWED_CURRENCIES,
-} from "../constants/currencies";
+import { PAYPAL_ALLOWED_CURRENCIES } from "../constants/currencies";
 import { OrderStatus } from "../interfaces";
 import emailjs from "emailjs-com";
 import { onUseLocalStorage } from "./local-storage";
@@ -154,9 +151,6 @@ export const formatDateForCreatedAt = (timestamp: string) => {
 };
 
 export function checkPaymentMethod(currency: string, paymentMethod: string) {
-  if (paymentMethod === "STRIPE") {
-    return STRIPE_ALLOWED_CURRENCIES.find((val) => val.currency === currency);
-  }
   if (paymentMethod === "PAYPAL") {
     return PAYPAL_ALLOWED_CURRENCIES.find((val) => val.currency === currency);
   }

@@ -23,4 +23,6 @@ export interface IOrderSuperAdminHeaderProps extends IGlobalComponentProps {
   selectedRiderId: string | null;
   setSelectedRestaurantId: (value: string | null) => void;
   setSelectedRiderId: (value: string | null) => void;
+  selectedPaymentStatuses: string[];
+  setSelectedPaymentStatuses: React.Dispatch<React.SetStateAction<string[]>>;
 }

@@ -148,7 +148,6 @@ query Restaurants($latitude:Float,$longitude:Float,$shopType:String){
       isActive
       isAvailable
       slug
-      stripeDetailsSubmitted
       commissionRate
       tax
       notificationToken

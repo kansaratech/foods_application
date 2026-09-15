@@ -946,10 +946,26 @@ export default function StoreDetailsScreen() {
                                   {meal.description}
                                 </p>
                                 <div className="mt-auto flex items-center justify-between pt-2">
-                                  <span className="text-[15px] font-black text-[#16293f] dark:text-primary-color">
-                                    {CURRENCY_SYMBOL}
-                                    {meal.variations[0].price}
-                                  </span>
+                                  {(() => {
+                                    const basePrice = meal.variations[0].price;
+                                    const discounted = meal.variations[0].discounted;
+                                    const hasDiscount =
+                                      discounted != null && discounted > 0 && discounted < basePrice;
+                                    return (
+                                      <span className="flex items-baseline gap-1.5">
+                                        <span className="text-[15px] font-black text-[#16293f] dark:text-primary-color">
+                                          {CURRENCY_SYMBOL}
+                                          {hasDiscount ? discounted : basePrice}
+                                        </span>
+                                        {hasDiscount && (
+                                          <span className="text-xs font-medium text-slate-400 line-through dark:text-gray-500">
+                                            {CURRENCY_SYMBOL}
+                                            {basePrice}
+                                          </span>
+                                        )}
+                                      </span>
+                                    );
+                                  })()}
                                   {meal.isOutOfStock && (
                                     <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">
                                       {t("out_of_stock_label")}

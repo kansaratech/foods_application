@@ -355,9 +355,21 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
       const user = args.email ? await prisma.user.findUnique({ where: { email: args.email } }) : null;
       if (!user || !user.otpCode || user.otpCode !== args.otp) throw userInputError('Invalid OTP');
       if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) throw userInputError('OTP has expired');
+      const newHash = await hashPassword(args.password);
       await prisma.user.update({
         where: { id: user.id },
-        data: { password: await hashPassword(args.password), otpCode: null, otpExpiresAt: null, tokenVersion: { increment: 1 } },
+        data: { password: newHash, otpCode: null, otpExpiresAt: null, tokenVersion: { increment: 1 } },
+      });
+      // A VENDOR's actual login for the store app/portal is `Restaurant.password`
+      // (restaurantLogin matches on the store's own username+password, not the
+      // owning User row — see restaurant.resolvers.ts #59), a separate hash from
+      // the one above. Without this, "forgot password" resets a credential the
+      // store login never checks, so the email arrives but signing in with the
+      // new password still fails. Reset-as-recovery should restore access
+      // everywhere, so every store this user owns gets the same new password.
+      await prisma.restaurant.updateMany({
+        where: { ownerId: user.id, password: { not: null } },
+        data: { password: newHash },
       });
       return { result: 'Password reset' };
     },

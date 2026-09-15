@@ -9,6 +9,7 @@ import { sendWhatsAppTemplateAsync } from '../utils/notifications';
 
 export type OrderNotifyEvent =
   | 'PLACED'
+  | 'PAYMENT_CONFIRMED'
   | 'CONFIRMED'
   | 'OUT_FOR_DELIVERY'
   | 'DELIVERED'
@@ -51,16 +52,22 @@ async function run(orderDbId: string, event: OrderNotifyEvent): Promise<void> {
 
   switch (event) {
     case 'PLACED': {
-      sendWhatsAppTemplateAsync('order_placed', customer?.phone, [
-        firstName(customer?.name), num, storeName, money(order.orderAmount),
-      ], { purpose: 'ORDER_UPDATE', userId: customer?.id, userType: 'CUSTOMER' });
-
+      // Customer gets no "order received" message at placement — the store's
+      // own new-order alert below is the only immediate ping. The customer's
+      // next WhatsApp message is either payment_confirmed (CASHFREE, once the
+      // webhook lands) or order_confirmed (when the vendor accepts).
       const itemCount = order.items.reduce((n, i) => n + i.quantity, 0);
       sendWhatsAppTemplateAsync('vendor_new_order', store?.owner?.phone, [
         num, String(itemCount), money(order.orderAmount), paymentLabel(order.paymentMethod),
       ], { purpose: 'ORDER_UPDATE', userId: store?.owner?.id, userType: 'VENDOR' });
       return;
     }
+    case 'PAYMENT_CONFIRMED':
+      sendWhatsAppTemplateAsync('payment_confirmed', customer?.phone, [
+        firstName(customer?.name), money(order.paidAmount ?? order.orderAmount), num, storeName,
+      ], { purpose: 'ORDER_UPDATE', userId: customer?.id, userType: 'CUSTOMER' });
+      return;
+
     case 'CONFIRMED':
       sendWhatsAppTemplateAsync('order_confirmed', customer?.phone, [
         firstName(customer?.name), num, storeName, order.preparationTime || '30',

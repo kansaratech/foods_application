@@ -54,6 +54,7 @@ export default function VendorsLayoutRestaurantCard({
     shopType,
     isActive,
     unique_restaurant_id,
+    deliveryInfo,
   } = restaurant;
 
   // Hooks
@@ -223,7 +224,7 @@ export default function VendorsLayoutRestaurantCard({
         <div className="flex items-center gap-2 rounded-lg border border-gray-300 dark:border-dark-600 p-2 mb-2 text-sm">
           <CarSVG width="24" height="24" />
           <span>
-            {'₪'} {deliveryRate}
+            {'₪'} {deliveryInfo?.deliveryFee ?? deliveryRate}
           </span>
         </div>
 

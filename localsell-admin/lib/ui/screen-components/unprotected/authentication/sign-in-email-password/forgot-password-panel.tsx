@@ -68,7 +68,7 @@ export default function ForgotPasswordPanel({
   const submitReset = async () => {
     setError(null);
     if (!otp.trim()) {
-      setError('Enter the 6-digit code from your email.');
+      setError('Enter the 4-digit code from your email.');
       return;
     }
     if (!strongEnough(password)) {
@@ -143,9 +143,9 @@ export default function ForgotPasswordPanel({
                 id="forgot-otp"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="6-digit code"
+                placeholder="4-digit code"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
               />
             </div>
 

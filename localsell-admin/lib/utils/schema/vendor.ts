@@ -162,7 +162,11 @@ export const VendorSchema = Yup.object().shape({
   image: Yup.string().required('Image is required'),
   phoneNumber: Yup.string()
     .required('Required')
-    .min(5, 'Minimum 5 Numbers are Required'),
+    .test(
+      'is-valid-indian-mobile',
+      'Enter a valid 10-digit mobile number',
+      (value) => isValidIndianMobile(value)
+    ),
 });
 
 // Creating separate schema for store vendor form
@@ -211,7 +215,11 @@ export const VendorEditSchema = Yup.object().shape({
   image: Yup.string().required(),
   phoneNumber: Yup.string()
     .required('Required')
-    .min(5, 'Minimum 5 Numbers are Required'),
+    .test(
+      'is-valid-indian-mobile',
+      'Enter a valid 10-digit mobile number',
+      (value) => isValidIndianMobile(value)
+    ),
   firstName: Yup.string()
     .trim()
     .matches(/\S/, 'First Name cannot be only spaces')
@@ -262,5 +270,9 @@ export const VendorSchemaOnStoreCreate = Yup.object().shape({
   image: Yup.string().notRequired(),
   phoneNumber: Yup.string()
     .required('Required')
-    .min(5, 'Minimum 5 Numbers are Required'),
+    .test(
+      'is-valid-indian-mobile',
+      'Enter a valid 10-digit mobile number',
+      (value) => isValidIndianMobile(value)
+    ),
 });

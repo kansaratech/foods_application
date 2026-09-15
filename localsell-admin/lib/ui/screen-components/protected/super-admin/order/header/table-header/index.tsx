@@ -66,6 +66,24 @@ export default function OrderSuperAdminTableHeader(
         />
       </label>
       <label className="orders-filter-field">
+        <span>Payment</span>
+        <MultiSelect
+          inputId="orders-payment-status-filter"
+          panelClassName="orders-filter-panel orders-status-panel"
+          aria-label="Payment status"
+          value={props.selectedPaymentStatuses}
+          options={['PENDING', 'PAID', 'FAILED'].map((value) => ({
+            label: value.charAt(0) + value.slice(1).toLowerCase(),
+            value,
+          }))}
+          onChange={(e) => props.setSelectedPaymentStatuses(e.value)}
+          placeholder="Payment status"
+          maxSelectedLabels={1}
+          selectedItemsLabel="{0} statuses"
+          showClear
+        />
+      </label>
+      <label className="orders-filter-field">
         <span>Restaurant</span>
         <Dropdown
           inputId="orders-restaurant-filter"

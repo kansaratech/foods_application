@@ -40,8 +40,11 @@ export default function Detail({ theme, from, orderNo, deliveryAddress, items, c
 
       <View style={styles.itemsContainer}>
         {items?.map((item) => {
-          // Calculate total price including addons
-          const basePrice = item.variation.price
+          // Calculate total price including addons. Use the order's
+          // snapshotted unit price (already discount-applied at order
+          // time), not the live variation's price, so this matches the
+          // total the customer actually paid.
+          const basePrice = item.price ?? item.variation.price
           const addonPrice = item.addons.reduce((total, addon) => {
             return total + addon.options.reduce((addonTotal, option) => {
               return addonTotal + (option.price || 0)

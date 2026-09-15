@@ -22,6 +22,7 @@ import { chatResolvers } from './chat.resolvers';
 import { compatResolvers } from './compat.resolvers';
 import { serviceabilityResolvers } from './serviceability.resolvers';
 import { commissionResolvers } from './commission.resolvers';
+import { vendorPayoutResolvers } from './vendor-payout.resolvers';
 import { financeOpsResolvers } from './finance-ops.resolvers';
 import { storeDocsResolvers } from './store-docs.resolvers';
 import { storeDeliveryResolvers } from './store-delivery.resolvers';
@@ -65,6 +66,7 @@ export const resolvers = mergeResolvers([
   serviceabilityResolvers,
   commissionResolvers,
   collectionsResolvers,
+  vendorPayoutResolvers,
   financeOpsResolvers,
   storeDocsResolvers,
   storeDeliveryResolvers,

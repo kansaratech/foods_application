@@ -93,11 +93,6 @@ export default function MakeSidebar() {
           route: '/admin/store/general/location',
           isParent: false,
         },
-        {
-          text: t('Payment'),
-          route: '/admin/store/general/payment',
-          isParent: false,
-        },
       ],
     },
 

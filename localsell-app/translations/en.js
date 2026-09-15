@@ -93,6 +93,7 @@ export const en = {
   creditCart: 'Credit/Debit Card',
   paypal: 'Paypal',
   cod: 'Cash',
+  cashfree: 'Online (UPI / Card / Netbanking)',
   thankYou: 'Thank You!',
   orderConfirmed: 'Your Order is confirmed',
   orderId: 'Your Order Id',

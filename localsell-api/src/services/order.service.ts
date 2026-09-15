@@ -99,6 +99,12 @@ export async function buildOrderItems(
       throw userInputError(`A variation must be selected for food "${food.title}"`);
     }
 
+    // Belt-and-suspenders: createFood/editFood reject a ₹0 price outright now,
+    // but this also catches any item that predates that check.
+    if (!(unitPrice > 0)) {
+      throw userInputError(`"${food.title}" is not available for order right now`);
+    }
+
     let addonsTotal = 0;
     const addonsData: Prisma.OrderItemAddonCreateWithoutOrderItemInput[] = [];
     const selectedCountByAddonId = new Map<string, number>();

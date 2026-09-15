@@ -510,10 +510,15 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       // editable per store since a multi-store vendor can hold a different
       // GSTIN per state. Validated here regardless of source — never trust
       // client-side form validation alone.
+      //
+      // The wizard's "Use vendor's default" option sends an empty string,
+      // not null/undefined — `??` treats '' as present and would lock every
+      // such store to UNREGISTERED regardless of the vendor's real KYC
+      // status, so this must fall back on falsy-ness (`||`), not nullishness.
       const gstRegistrationType = normalizeGstRegistrationType(
-        input.gstRegistrationType ?? owner.gstRegistrationType,
+        input.gstRegistrationType || owner.gstRegistrationType,
       );
-      const gstin = gstRegistrationType === 'UNREGISTERED' ? null : (input.gstin ?? owner.gstin ?? null);
+      const gstin = gstRegistrationType === 'UNREGISTERED' ? null : (input.gstin || owner.gstin || null);
       assertGstinRequiredFor(gstRegistrationType, gstin);
 
       const restaurant = await prisma.restaurant.create({

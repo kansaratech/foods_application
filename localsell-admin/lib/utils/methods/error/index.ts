@@ -31,7 +31,16 @@ export const getGraphQLErrorMessage = (
       const netErr = error.networkError as Error & {
         statusCode?: number;
         bodyText?: string;
+        result?: { errors?: Array<{ message?: string }> };
       };
+      // Apollo Server returns a non-2xx HTTP status for a GraphQL response
+      // that contains `errors` (e.g. a plain userInputError like "GSTIN is
+      // required"), but Apollo Client's HttpLink buckets ANY non-2xx status
+      // as a networkError instead of graphQLErrors — even though the body it
+      // already parsed (`result`) still carries the real GraphQL error
+      // message. Surface that instead of a generic "Request failed (400)".
+      const gqlMessage = netErr.result?.errors?.map((e) => e.message).filter(Boolean).join(', ');
+      if (gqlMessage) return gqlMessage;
       if (netErr.statusCode === 413) {
         return 'That file is too large for the server to accept. Please upload a smaller file.';
       }

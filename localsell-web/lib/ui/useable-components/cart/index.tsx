@@ -126,9 +126,6 @@ export default function Cart({ onClose }: CartProps) {
     }
   };
 
-  // Slice related items to max 3
-  const slicedRelatedItems = (relatedItemsData?.relatedItems || []).slice(0, 3);
-
   // Merchant-curated "frequently bought together": pull the pairedFoods off every
   // food currently in the cart, drop anything already in the cart / out of stock,
   // and de-dupe. Falls back to `relatedItems` when the merchant set none.
@@ -136,6 +133,13 @@ export default function Cart({ onClose }: CartProps) {
     (c: { foods: IFood[] }) => c.foods,
   );
   const cartFoodIds = new Set(cart.map((c) => c._id));
+
+  // Same exclusion as the merchant-curated list above — otherwise an item
+  // the shopper just added stays pinned in "Recommended for you" forever,
+  // since `relatedItemsData` doesn't change when the cart does.
+  const slicedRelatedItems = (relatedItemsData?.relatedItems || [])
+    .filter((id: string) => !cartFoodIds.has(id))
+    .slice(0, 3);
   const fbtMap = new Map<string, IFood>();
   for (const cartItem of cart) {
     const menuFood = menuFoods.find((f) => f._id === cartItem._id);

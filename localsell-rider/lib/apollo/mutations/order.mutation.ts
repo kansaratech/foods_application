@@ -70,6 +70,7 @@ export const reviewOrder = gql`
         food
         description
         quantity
+        price
         variation {
           _id
           title

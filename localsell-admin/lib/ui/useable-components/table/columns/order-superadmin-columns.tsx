@@ -32,7 +32,21 @@ export const ORDER_SUPER_ADMIN_COLUMNS = () => {
         </span>
       ),
     },
-    { headerName: 'Payment', propertyName: 'paymentMethod' },
+    {
+      headerName: 'Payment',
+      propertyName: 'paymentMethod',
+      body: (row: IExtendedOrder) => {
+        const labels: Record<string, string> = { PENDING: 'Pending', PAID: 'Paid', FAILED: 'Failed' };
+        return (
+          <div className="orders-cell">
+            <strong>{row.paymentMethod}</strong>
+            <span className={`orders-status ${row.paymentStatus?.toLowerCase()}`}>
+              {labels[row.paymentStatus] || row.paymentStatus}
+            </span>
+          </div>
+        );
+      },
+    },
     {
       headerName: 'Status',
       propertyName: 'orderStatus',

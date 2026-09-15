@@ -60,6 +60,7 @@ export interface Item {
   description?: string;
   image: string;
   quantity: number;
+  price?: number;
   variation: Variation;
   addons: Addon[];
   specialInstructions?: string;

@@ -25,8 +25,11 @@ import {
   COLLECTION_DETAIL,
   COLLECTION_RECEIPTS,
   RECORD_COLLECTION,
+  VENDOR_PAYABLES,
+  RECORD_VENDOR_PAYOUT,
   Bill,
   Receipt,
+  VendorPayable,
   money,
   day,
 } from './operations';
@@ -53,6 +56,7 @@ const pages = [
   ['Overview', base],
   ['Collect commission', `${base}/collections`],
   ['Generate bills', `${base}/billing`],
+  ['Vendor payables', `${base}/payables`],
   ['Receipts', `${base}/receipts`],
   ['Commission settings', `${base}/settings`],
 ];
@@ -707,8 +711,8 @@ export function FinanceBilling() {
           <span>Ready to bill</span>
           <strong>{money(preview?.unbilledCommissionTotal)}</strong>
           <small>
-            {preview?.unbilledOrderCount ?? 0} delivered orders ? {rows.length}{' '}
-            vendors ? {preview?.cycle === 'YEARLY' ? 'Yearly' : 'Monthly'}{' '}
+            {preview?.unbilledOrderCount ?? 0} delivered orders · {rows.length}{' '}
+            vendors · {preview?.cycle === 'YEARLY' ? 'Yearly' : 'Monthly'}{' '}
             billing
           </small>
         </div>
@@ -797,6 +801,254 @@ export function FinanceBilling() {
           </ActionButton>
         </div>
       </FormDialog>
+    </FinanceFrame>
+  );
+}
+function PayoutDialog({
+  vendorId,
+  payables,
+  onHide,
+  onSaved,
+}: {
+  vendorId: string;
+  payables: VendorPayable[];
+  onHide: () => void;
+  onSaved: () => void;
+}) {
+  const total = payables.reduce((s, p) => s + p.netPayable, 0);
+  const [method, setMethod] = useState('UPI'),
+    [reference, setReference] = useState(''),
+    [note, setNote] = useState(''),
+    [date, setDate] = useState(dateString(new Date())),
+    [error, setError] = useState('');
+  const [requestKey] = useState(() => crypto.randomUUID());
+  const [record, { loading }] = useMutation(RECORD_VENDOR_PAYOUT);
+  const { showToast } = useToast();
+  return (
+    <FormDialog
+      visible={payables.length > 0}
+      onHide={() => {
+        if (!loading) onHide();
+      }}
+      title="Pay out vendor"
+      subtitle="Record money you've already sent the vendor for these CASHFREE orders. This does not initiate a transfer."
+      size="md"
+    >
+      <form
+        className="finance-form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setError('');
+          try {
+            await record({
+              variables: {
+                vendorId,
+                payableIds: payables.map((p) => p._id),
+                method,
+                reference: reference.trim(),
+                note,
+                paidAt: `${date}T00:00:00+05:30`,
+                idempotencyKey: requestKey,
+              },
+            });
+            showToast({
+              type: 'success',
+              title: 'Payout recorded',
+              message: 'The selected orders are marked paid out.',
+            });
+            onSaved();
+            onHide();
+          } catch (err) {
+            setError((err as Error).message);
+          }
+        }}
+      >
+        <div className="finance-callout">
+          <strong>{payables[0]?.vendor?.name || payables[0]?.vendor?.email}</strong>
+          <span>{payables.length} order(s)</span>
+          <span>
+            Net payable <b>{money(total)}</b>
+          </span>
+        </div>
+        <div className="finance-form-grid">
+          <FieldShell htmlFor="payout-method" label="Payout method">
+            <Select
+              inputId="payout-method"
+              value={method}
+              onChange={(e) => setMethod(e.value)}
+            >
+              <option value="UPI">UPI</option>
+              <option value="BANK_TRANSFER">Bank transfer</option>
+              <option value="CASH">Cash</option>
+            </Select>
+          </FieldShell>
+          <CustomDateInput
+            name="payout-date"
+            placeholder="Paid on"
+            showLabel
+            value={date}
+            onChange={setDate}
+          />
+          <FieldShell
+            htmlFor="payout-reference"
+            label={
+              method === 'CASH' ? 'Reference (optional)' : 'Transaction reference'
+            }
+            required={method !== 'CASH'}
+          >
+            <InputText
+              id="payout-reference"
+              className="ls-field"
+              required={method !== 'CASH'}
+              maxLength={150}
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+            />
+          </FieldShell>
+        </div>
+        <FieldShell htmlFor="payout-note" label="Note (optional)">
+          <textarea
+            id="payout-note"
+            className="ls-field p-inputtextarea"
+            rows={3}
+            maxLength={1000}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </FieldShell>
+        {error && (
+          <p className="finance-error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="finance-form-actions">
+          <ActionButton
+            type="button"
+            variant="secondary"
+            onClick={onHide}
+            disabled={loading}
+          >
+            Cancel
+          </ActionButton>
+          <ActionButton type="submit" disabled={loading}>
+            {loading ? 'Saving...' : 'Save payout'}
+          </ActionButton>
+        </div>
+      </form>
+    </FormDialog>
+  );
+}
+export function FinanceVendorPayouts() {
+  const [page, setPage] = useState(1),
+    [limit, setLimit] = useState(25),
+    [selected, setSelected] = useState<VendorPayable[]>([]),
+    [confirming, setConfirming] = useState(false);
+  const { data, loading, error, refetch } = useQuery(VENDOR_PAYABLES, {
+    variables: { status: 'PENDING', page, limit },
+    fetchPolicy: 'cache-and-network',
+  });
+  const payables: VendorPayable[] = data?.vendorPayables.payables ?? [];
+  const mixedVendors =
+    selected.length > 1 && new Set(selected.map((p) => p.vendor?._id)).size > 1;
+  return (
+    <FinanceFrame
+      title="Vendor payables"
+      description="CASHFREE orders are collected into LocalSell's own account, so unlike COD the platform owes the vendor their net share (order total minus commission). Select a vendor's orders and record the payout once you've sent the money."
+    >
+      <div className="finance-money-flow">
+        <i className="pi pi-info-circle" />
+        <p>
+          <strong>Online (CASHFREE) orders only.</strong> COD orders are
+          unaffected — the store already holds that cash and is billed
+          commission separately under Collect commission.
+        </p>
+      </div>
+      <Failure error={error} retry={refetch} />
+      {mixedVendors && (
+        <p className="finance-error" role="alert">
+          Select orders from a single vendor to pay out together.
+        </p>
+      )}
+      <Table
+        data={payables}
+        loading={loading && !data}
+        isSelectable
+        selectedData={selected}
+        setSelectedData={setSelected}
+        minWidth="56rem"
+        rowsPerPage={limit}
+        currentPage={page}
+        totalRecords={data?.vendorPayables.total ?? 0}
+        onPageChange={(p, l) => {
+          setPage(p);
+          setLimit(l);
+        }}
+        columns={[
+          {
+            propertyName: 'orderNumber',
+            headerName: 'Order',
+            body: (p: VendorPayable) => (
+              <div>
+                <strong>{p.orderNumber}</strong>
+                <small>{p.storeName}</small>
+              </div>
+            ),
+          },
+          {
+            propertyName: 'vendor',
+            headerName: 'Vendor',
+            body: (p: VendorPayable) => (
+              <div>
+                <strong>{p.vendor?.name || 'Vendor'}</strong>
+                <small>{p.vendor?.email}</small>
+              </div>
+            ),
+          },
+          {
+            propertyName: 'orderDeliveredAt',
+            headerName: 'Delivered',
+            body: (p: VendorPayable) => day(p.orderDeliveredAt),
+          },
+          {
+            propertyName: 'orderAmount',
+            headerName: 'Order total',
+            align: 'right',
+            body: (p: VendorPayable) => money(p.orderAmount),
+          },
+          {
+            propertyName: 'commissionAmount',
+            headerName: 'Commission',
+            align: 'right',
+            body: (p: VendorPayable) => money(p.commissionAmount),
+          },
+          {
+            propertyName: 'netPayable',
+            headerName: 'Net payable',
+            align: 'right',
+            body: (p: VendorPayable) => <strong>{money(p.netPayable)}</strong>,
+          },
+        ]}
+      />
+      <div className="finance-form-actions">
+        <ActionButton
+          disabled={selected.length === 0 || mixedVendors}
+          onClick={() => setConfirming(true)}
+        >
+          Record payout{selected.length ? ` (${selected.length})` : ''}
+        </ActionButton>
+      </div>
+      {confirming && selected.length > 0 && !mixedVendors && (
+        <PayoutDialog
+          key={selected.map((p) => p._id).join(',')}
+          vendorId={selected[0].vendor!._id}
+          payables={selected}
+          onHide={() => setConfirming(false)}
+          onSaved={() => {
+            setSelected([]);
+            void refetch();
+          }}
+        />
+      )}
     </FinanceFrame>
   );
 }

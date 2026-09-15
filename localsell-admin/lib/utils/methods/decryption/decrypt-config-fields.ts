@@ -15,8 +15,6 @@ export const decryptConfigFields = async (
     'password',
     'clientId',
     'clientSecret',
-    'publishableKey',
-    'secretKey',
     'currency',
     'currencySymbol',
     'twilioAccountSid',

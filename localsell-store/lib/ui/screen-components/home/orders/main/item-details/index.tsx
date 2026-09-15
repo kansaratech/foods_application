@@ -25,7 +25,7 @@ const ItemDetails = ({ orderData: order }: ItemDetailsProps) => {
 
   const itemAmount = useMemo(() => {
     return order?.items?.reduce((sum: number, item: Item) => {
-      return sum + (item.variation?.price ?? 0) * (item.quantity ?? 0);
+      return sum + (item.price ?? item.variation?.price ?? 0) * (item.quantity ?? 0);
     }, 0);
   }, [order?.items]);
 
@@ -86,7 +86,7 @@ const ItemDetails = ({ orderData: order }: ItemDetailsProps) => {
                   style={{ color: appTheme.fontMainColor }}
                 >
                   {configuration?.currencySymbol}
-                  {item.variation?.price}
+                  {item.price ?? item.variation?.price}
                 </Text>
               </View>
             </View>

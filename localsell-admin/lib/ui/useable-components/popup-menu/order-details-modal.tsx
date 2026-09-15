@@ -19,7 +19,7 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
   const calculateSubtotal = (items: Items[]) => {
     let Subtotal = 0;
     for (let i = 0; i < items.length; i++) {
-      let itemTotal = items[i].variation?.price ?? 0;
+      let itemTotal = items[i].price ?? items[i].variation?.price ?? 0;
       if (items[i]?.addons) {
         items[i].addons?.forEach((addon) => {
           addon.options.forEach((option) => {
@@ -104,7 +104,7 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
                     <span className="item-name">{item.title}</span>
                     <span className="item-price">
                       {item.quantity} &times; {CURRENT_SYMBOL}
-                      {(item.variation?.price ?? 0).toFixed(2)}
+                      {(item.price ?? item.variation?.price ?? 0).toFixed(2)}
                     </span>
                   </div>
                   {item.addons
@@ -199,6 +199,16 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
                 <span className="payment-type">
                   {restaurantData.paymentMethod}
                 </span>
+                <span
+                  className={`payment-status ${restaurantData.paymentStatus?.toLowerCase() ?? ''}`}
+                >
+                  {restaurantData.paymentStatus}
+                </span>
+                {restaurantData.paymentGatewayRef && (
+                  <span className="payment-gateway-ref">
+                    Cashfree ref: {restaurantData.paymentGatewayRef}
+                  </span>
+                )}
               </div>
               <div className="paid-amount">
                 <span className="paid-label">Paid Amount</span>

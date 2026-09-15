@@ -10,6 +10,7 @@ import { normalizeIndianPhone } from '../../utils/phone';
 import { pubsub, TOPICS } from '../../utils/pubsub';
 import { recordAudit } from '../../utils/audit';
 import { RIDER_REQUIRED_DOC_KINDS, assertRiderNotRejected } from './rider-docs.resolvers';
+import { sendEmail, sendPhoneMessage } from '../../utils/notifications';
 
 type RiderParent = User & { riderProfile: (RiderProfile & { zone: Zone | null }) | null };
 
@@ -403,11 +404,11 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       if (sendingInvite) {
-        // No email/SMS provider is wired up yet — this stands in until one
-        // exists (same placeholder used by createVendor's invite path).
-        console.log(
-          `[dev] Account setup invitation for rider ${rider.username ?? rider.email ?? rider.phone}: use Forgot Password to set a password.`,
-        );
+        const message =
+          `Welcome to LocalSell! Your rider account has been created. ` +
+          `Use "Forgot Password" on the rider app${rider.email ? ` with ${rider.email}` : rider.phone ? ` with ${rider.phone}` : ''} to set your password and get started.`;
+        if (rider.email) await sendEmail(rider.email, 'Set up your LocalSell rider account', message);
+        if (rider.phone) await sendPhoneMessage(rider.phone, message);
       }
 
       await pubsub.publish('RIDER_UPDATED', { riderUpdated: { _id: rider.id } });

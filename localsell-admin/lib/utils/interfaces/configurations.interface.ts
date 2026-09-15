@@ -19,9 +19,10 @@ export interface INodeMailerForm {
   smtpUser: string | undefined;
 }
 
-export interface IStripeForm {
-  publishableKey: string | undefined;
+export interface ICashfreeForm {
+  appId: string | undefined;
   secretKey: string | undefined;
+  env: IDropdownSelectItem;
 }
 
 export interface IPaypalForm {

@@ -42,6 +42,7 @@ export const GET_ACTIVE_ORDERS = gql`
           description
           image
           quantity
+          price
           variation {
             _id
             title
@@ -141,6 +142,7 @@ export const GET_ORDER_BY_RESTAURANT = gql`
           description
           image
           quantity
+          price
           variation {
             _id
             title
@@ -178,6 +180,7 @@ export const GET_ORDER_BY_RESTAURANT = gql`
         orderStatus
         status
         paymentStatus
+        paymentGatewayRef
         isActive
         createdAt
         deliveryCharges
@@ -213,6 +216,7 @@ export const GET_ORDER_BY_RESTAURANT_WITHOUT_PAGINATION = gql`
         description
         image
         quantity
+        price
         variation {
           _id
           title
@@ -287,6 +291,7 @@ export const GET_ORDERS = gql`
         description
         image
         quantity
+        price
         variation {
           _id
           title
@@ -347,6 +352,8 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
     $ending_date: String
     $orderStatus: [String]
     $deliveryMode: [String]
+    $paymentMethod: [String]
+    $paymentStatus: [String]
     $search: String
     $restaurantId: ID
     $riderId: ID
@@ -359,6 +366,8 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
       ending_date: $ending_date
       orderStatus: $orderStatus
       deliveryMode: $deliveryMode
+      paymentMethod: $paymentMethod
+      paymentStatus: $paymentStatus
       search: $search
       restaurantId: $restaurantId
       riderId: $riderId
@@ -395,6 +404,7 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
           description
           image
           quantity
+          price
           variation {
             _id
             id
@@ -435,6 +445,7 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         orderStatus
         status
         paymentStatus
+        paymentGatewayRef
         isActive
         isPickedUp
         deliveryMode
@@ -514,6 +525,7 @@ export const GET_ORDERS_WITHOUT_PAGINATION = gql`
         description
         image
         quantity
+        price
         variation {
           _id
           title

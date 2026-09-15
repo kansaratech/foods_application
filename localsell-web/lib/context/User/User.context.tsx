@@ -271,8 +271,15 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
         const variationTitle = variationItem.title;
         const title = `${foodTitle}(${variationTitle})`;
 
-        // Calculate price
-        let totalPrice = variationItem.price;
+        // Calculate price — prefer the discounted price when one is actually
+        // set and cheaper than the base price (mirrors the API's
+        // effectivePrice, which is what placeOrder ultimately charges), so
+        // the cart/checkout display matches what the customer will pay.
+        const discounted = variationItem.discounted;
+        let totalPrice =
+          discounted != null && discounted > 0 && discounted < variationItem.price
+            ? discounted
+            : variationItem.price;
 
         // Process addons and create optionTitles
         let optionTitles: string[] = [];

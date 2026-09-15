@@ -20,8 +20,9 @@ export const useConfiguration = () => {
   const GOOGLE_CLIENT_ID_ANDRIOD = configuration?.androidClientID;
   const GOOGLE_CLIENT_ID_IOS = configuration?.iOSClientID;
   const GOOGLE_CLIENT_ID_EXPO = configuration?.expoClientID;
-  const STRIPE_PUBLIC_KEY = configuration?.publishableKey;
-  const STRIPE_SECRET_KEY = configuration?.secretKey;
+  const CASHFREE_APP_ID = configuration?.cashfreeAppId;
+  const CASHFREE_ENV = configuration?.cashfreeEnv || 'TEST';
+  const CASHFREE_SECRET_KEY_SET = configuration?.cashfreeSecretKeySet;
   const PAYPAL_KEY = configuration?.clientId;
   const PAYPAL_SECRET = configuration?.clientSecret;
   const PAYPAL_SANDBOX = configuration?.sandbox;
@@ -104,9 +105,10 @@ export const useConfiguration = () => {
     SMTP_SECURE,
     SMTP_USER,
 
-    // STRIPE
-    STRIPE_PUBLIC_KEY,
-    STRIPE_SECRET_KEY,
+    // CASHFREE
+    CASHFREE_APP_ID,
+    CASHFREE_ENV,
+    CASHFREE_SECRET_KEY_SET,
 
     // PAYPAL
     PAYPAL_KEY,

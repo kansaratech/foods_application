@@ -20,7 +20,7 @@ import Payment from '../screens/Payment/Payment'
 import Help from '../screens/Help/Help'
 import CustomerSupport from '../screens/CustomerSupport/CustomerSupport'
 import Paypal from '../screens/Paypal/Paypal'
-import StripeCheckout from '../screens/Stripe/StripeCheckout'
+import CashfreeCheckout from '../screens/Cashfree/CashfreeCheckout'
 import Profile from '../screens/Profile/Profile'
 import Addresses from '../screens/Addresses/Addresses'
 import NewAddress from '../screens/NewAddress/NewAddress'
@@ -216,7 +216,7 @@ function MainNavigator() {
       <NavigationStack.Screen name='Paypal' component={Paypal} />
       <NavigationStack.Screen name='RateAndReview' component={RateAndReview} />
 
-      <NavigationStack.Screen name='StripeCheckout' component={StripeCheckout} />
+      <NavigationStack.Screen name='CashfreeCheckout' component={CashfreeCheckout} />
 
       {/* Authentication Login */}
       <NavigationStack.Screen name='CreateAccount' component={CreateAccount} />

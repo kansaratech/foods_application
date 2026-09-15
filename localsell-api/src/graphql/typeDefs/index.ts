@@ -19,6 +19,7 @@ import { chatTypeDefs } from './chat';
 import { compatTypeDefs } from './compat';
 import { serviceabilityTypeDefs } from './serviceability';
 import { commissionTypeDefs } from './commission';
+import { vendorPayoutTypeDefs } from './vendor-payout';
 import { financeOpsTypeDefs } from './finance-ops';
 import { storeDocsTypeDefs } from './store-docs';
 import { storeDeliveryTypeDefs } from './store-delivery';
@@ -49,6 +50,7 @@ export const typeDefs = [
   serviceabilityTypeDefs,
   commissionTypeDefs,
   collectionsTypeDefs,
+  vendorPayoutTypeDefs,
   financeOpsTypeDefs,
   storeDocsTypeDefs,
   storeDeliveryTypeDefs,

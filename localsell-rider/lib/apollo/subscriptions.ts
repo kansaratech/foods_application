@@ -57,6 +57,7 @@ export const SUBSCRIPTION_ZONE_ORDERS = gql`
           food
           description
           quantity
+          price
           variation {
             _id
             title
@@ -134,6 +135,7 @@ export const SUBSCRIPTION_ASSIGNED_RIDER = gql`
           food
           description
           quantity
+          price
           variation {
             _id
             title

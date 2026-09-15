@@ -14,7 +14,7 @@ import AppVersionAddForm from '../../add-form/app-versions';
 
 // Optional services are grouped in the Integrations tab.
 import NodeMailerAddForm from '../../add-form/nodemailer';
-import StripeAddForm from '../../add-form/stripe';
+import CashfreeAddForm from '../../add-form/cashfree';
 import PayPalAddForm from '../../add-form/paypal';
 import TwilioAddForm from '../../add-form/twilio';
 import SentryAddForm from '../../add-form/sentry-config';
@@ -160,7 +160,7 @@ const ConfigMain = () => {
                 <>
                   <GoogleApiAddForm />
                   <NodeMailerAddForm />
-                  <StripeAddForm />
+                  <CashfreeAddForm />
                   <PayPalAddForm />
                   <TwilioAddForm />
                   <SentryAddForm />

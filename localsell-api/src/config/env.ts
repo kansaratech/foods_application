@@ -32,4 +32,10 @@ export const env = {
   // Signature verification is skipped when the secret is unset.
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN ?? 'localsell-whatsapp',
   whatsappAppSecret: process.env.WHATSAPP_APP_SECRET ?? '',
+
+  // Base URL of the customer web app — used only to build the `return_url`
+  // Cashfree sends the customer back to after hosted checkout. Cashfree
+  // credentials themselves are NOT here; like Stripe/PayPal they live in the
+  // Configuration table, editable from the admin UI.
+  webClientUrl: (process.env.WEB_CLIENT_URL ?? 'http://localhost:3000').replace(/\/+$/, ''),
 };

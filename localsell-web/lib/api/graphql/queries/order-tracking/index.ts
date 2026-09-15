@@ -1,5 +1,20 @@
 import { gql } from "@apollo/client";
 
+// Lightweight poll target for the Cashfree return page — just enough to know
+// whether the webhook has flipped paymentStatus yet, without the full
+// tracking payload ORDER_TRACKING pulls (items/restaurant/address/etc).
+export const ORDER_PAYMENT_STATUS = gql`
+  query OrderPaymentStatus($orderDetailsId: String!) {
+    orderDetails(id: $orderDetailsId) {
+      _id
+      orderId
+      paymentMethod
+      paymentStatus
+      orderStatus
+    }
+  }
+`;
+
 export const ORDER_TRACKING = gql`
   query OrderDetails($orderDetailsId: String!) {
     orderDetails(id: $orderDetailsId) {
@@ -32,6 +47,7 @@ export const ORDER_TRACKING = gql`
         description
         quantity
         image
+        price
         variation {
           _id
           title

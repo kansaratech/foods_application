@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import useUser from "@/lib/hooks/useUser";
-import { useAuth } from "@/lib/context/auth/auth.context";
-import useToast from "@/lib/hooks/useToast";
 
 // Interface
 import {
@@ -34,8 +32,6 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
   const { CURRENCY_SYMBOL } = useConfig();
   const { id, slug }: { id: string; slug: string } = useParams();
   const locale = useLocale();
-  const { authToken, setIsAuthModalVisible, setActivePanel } = useAuth();
-  const { showToast } = useToast();
 
   // Map locale to direction - same logic as DirectionHandler.tsx (SSR-safe)
   const isRTL = ["ar", "he", "fa", "ur"].includes(locale);
@@ -166,16 +162,9 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
   const handleAddToCart = () => {
     if (!isFormValid() || !foodItem || !selectedVariation) return;
 
-    if (!authToken) {
-      setActivePanel(0);
-      setIsAuthModalVisible(true);
-      showToast({
-        type: "info",
-        title: "Login required",
-        message: "Please log in first to add items to your order.",
-      });
-      return;
-    }
+    // Guests can add to cart freely — login is only required at checkout
+    // (see checkout/index.tsx onPlaceOrder). Cart persists across login
+    // (User.context.tsx cart state is not user-namespaced).
 
     // Check if we need to clear the cart (different restaurant)
     const needsClear =
@@ -298,11 +287,23 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
     );
   };
 
+  // The effective unit price for the selected variation — the discounted
+  // price when one is set and actually cheaper (mirrors the API's
+  // effectivePrice), so what the customer sees here matches what they'll
+  // be charged.
+  const effectiveVariationPrice = (variation: typeof selectedVariation) => {
+    if (!variation) return 0;
+    const discounted = variation.discounted;
+    return discounted != null && discounted > 0 && discounted < variation.price
+      ? discounted
+      : variation.price;
+  };
+
   // Calculate total price
   const calculateTotalPrice = () => {
     if (!selectedVariation) return 0;
 
-    let totalPrice = selectedVariation.price;
+    let totalPrice = effectiveVariationPrice(selectedVariation);
 
     // Add prices for selected addons
     Object.entries(selectedAddonOptions).forEach(([, selected]) => {
@@ -378,9 +379,18 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
         <h2 className="font-inter font-bold text-[#111827] dark:text-white text-[16px] md:text-[18px] lg:text-[19px] leading-[22px] md:leading-[24px]">
           {foodItem?.title}
         </h2>
-        <p className="text-secondary-color font-[600] text-[14px] md:text-[15px] lg:text-[16px] mb-2">
-          {CURRENCY_SYMBOL}
-          {selectedVariation?.price.toFixed(2)}
+        <p className="text-secondary-color font-[600] text-[14px] md:text-[15px] lg:text-[16px] mb-2 flex items-baseline gap-1.5">
+          <span>
+            {CURRENCY_SYMBOL}
+            {effectiveVariationPrice(selectedVariation).toFixed(2)}
+          </span>
+          {selectedVariation &&
+            effectiveVariationPrice(selectedVariation) < selectedVariation.price && (
+              <span className="text-xs font-medium text-slate-400 line-through">
+                {CURRENCY_SYMBOL}
+                {selectedVariation.price.toFixed(2)}
+              </span>
+            )}
         </p>
         <p className="font-inter font-normal text-gray-500 dark:text-gray-300 text-[12px] md:text-[13px] lg:text-[14px] leading-[18px] md:leading-[20px]">
           {foodItem?.description}

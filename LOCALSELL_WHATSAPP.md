@@ -225,8 +225,8 @@ Codes live in the `PhoneVerification` table (5-min expiry, 30-sec resend cooldow
 | Code key | Meta template | Trigger | Recipient |
 |---|---|---|---|
 | `otp_verify` | `localsell_otp` | signup / login / password reset | customer |
-| `order_placed` | `localsell_order_placed` | `placeOrder` | customer |
 | `vendor_new_order` | `localsell_vendor_new_order` | `placeOrder` | store owner |
+| `payment_confirmed` | `localsell_payment_confirmed` | Cashfree webhook, `PAYMENT_SUCCESS_WEBHOOK` | customer |
 | `order_confirmed` | `localsell_order_confirmed` | `acceptOrder` | customer |
 | `order_out_for_delivery` | `localsell_order_out_for_delivery` | order → `PICKED` | customer (code stays in-app) |
 | `order_delivered` | `localsell_order_delivered` | delivery confirmed | customer |

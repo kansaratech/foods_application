@@ -370,6 +370,17 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         setError(t("Every variation needs a title"));
         return;
       }
+      if (variations.some((v) => !((v.price ?? 0) > 0))) {
+        setError(t("Every variation needs a price greater than 0"));
+        return;
+      }
+      const invalidDiscount = variations.find(
+        (v) => v.discounted != null && v.discounted > 0 && v.discounted >= (v.price ?? 0),
+      );
+      if (invalidDiscount) {
+        setError(t("Discounted price must be less than the selling price"));
+        return;
+      }
       const foodInput = {
         _id: editingId ?? undefined,
         restaurant: restaurantId,
@@ -911,20 +922,34 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
             )}
           </View>
 
-          <View className="gap-2">
-            <Text className="text-sm" style={{ color: appTheme.fontMainColor }}>
-              {t("GST Rate Override (%)")}
-            </Text>
-            <TextInput
-              className="rounded-lg border border-gray-300 p-3"
-              value={gstRatePercent}
-              placeholder={t("Leave blank to use the store's default rate")}
-              placeholderTextColor={appTheme.fontSecondColor}
-              style={{ color: appTheme.fontMainColor }}
-              onChangeText={setGstRatePercent}
-              keyboardType="decimal-pad"
-            />
-          </View>
+          {dataProfile?.gstRegistrationType === "REGULAR" ? (
+            <View className="gap-2">
+              <Text className="text-sm" style={{ color: appTheme.fontMainColor }}>
+                {t("GST Rate Override (%)")}
+              </Text>
+              <TextInput
+                className="rounded-lg border border-gray-300 p-3"
+                value={gstRatePercent}
+                placeholder={t("Leave blank to use the store's default rate")}
+                placeholderTextColor={appTheme.fontSecondColor}
+                style={{ color: appTheme.fontMainColor }}
+                onChangeText={setGstRatePercent}
+                keyboardType="decimal-pad"
+              />
+            </View>
+          ) : (
+            // GST can only be charged separately by a REGULAR-registered store
+            // (Composition dealers are legally barred from itemizing tax, and
+            // Unregistered stores don't charge it at all) — showing a rate
+            // field here would promise a tax line that never actually applies.
+            <View className="gap-1 rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+              <Text className="text-sm" style={{ color: appTheme.fontSecondColor }}>
+                {t(
+                  "GST rate override is only available for stores registered as GST Regular. Update the store's GST registration in Store Profile to enable this.",
+                )}
+              </Text>
+            </View>
+          )}
 
           <View
             className="flex-row justify-between items-center rounded-xl p-4"
@@ -1078,7 +1103,17 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
                         >
                           {t("Discounted price (optional)")}
                         </Text>
-                        <View className="flex-row items-center rounded-lg border border-gray-300 px-2">
+                        <View
+                          className="flex-row items-center rounded-lg border px-2"
+                          style={{
+                            borderColor:
+                              variation.discounted != null &&
+                              variation.discounted > 0 &&
+                              variation.discounted >= (variation.price ?? 0)
+                                ? "red"
+                                : "#d1d5db",
+                          }}
+                        >
                           <Text style={{ color: appTheme.fontSecondColor }}>
                             ₹
                           </Text>

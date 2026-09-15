@@ -142,7 +142,7 @@ export const formatReceiptOld = (order) => {
       const addonsSection = addonsText ? `\n     + ${addonsText}` : "";
 
       const itemPrice =
-        item.variation.price +
+        (item.price ?? item.variation.price) +
         item.addons
           .map((addon) =>
             addon.options.reduce(
@@ -230,7 +230,7 @@ export const formatReceipt = (order) => {
       const addonsSection = addonsText ? `\n - ${addonsText}` : "";
 
       const itemPrice =
-        item.variation.price +
+        (item.price ?? item.variation.price) +
         item.addons
           .map((addon) =>
             addon.options.reduce(

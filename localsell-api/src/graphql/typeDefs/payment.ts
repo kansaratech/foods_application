@@ -12,7 +12,16 @@ export const paymentTypeDefs = /* GraphQL */ `
   enum PaymentMethodEnum {
     COD
     PAYPAL
-    STRIPE
+    CASHFREE
+  }
+
+  type CashfreePaymentSessionResult {
+    success: Boolean!
+    message: String
+    "Pass to the Cashfree JS SDK's checkout({ paymentSessionId }) call on the client."
+    paymentSessionId: String
+    "Cashfree's own order id for this payment attempt (== our Order._id)."
+    cfOrderId: String
   }
 
   input MoneyPaginationInput {
@@ -220,5 +229,7 @@ export const paymentTypeDefs = /* GraphQL */ `
   extend type Mutation {
     createWithdrawRequest(requestAmount: Float!, restaurant: String, userId: String): WithdrawRequest!
     updateWithdrawReqStatus(id: ID!, status: String!): WithdrawRequestMutationResult!
+    "Creates (or re-creates) a Cashfree hosted-checkout session for a CASHFREE order that's still PENDING. Call right after placeOrder/modifyOrder sets paymentMethod to CASHFREE."
+    createCashfreePaymentSession(orderId: ID!): CashfreePaymentSessionResult!
   }
 `;

@@ -43,7 +43,11 @@ export const ConfigurationProvider = ({
   // Gate the "Sign in with Google" UI on a real client id so we never show a
   // button that can only fail with "social login is not configured".
   const IS_GOOGLE_LOGIN_ENABLED = GOOGLE_CLIENT_ID !== "not_found";
-  const STRIPE_PUBLIC_KEY = configuration.publishableKey;
+  const CASHFREE_APP_ID = configuration.cashfreeAppId;
+  const CASHFREE_ENV = configuration.cashfreeEnv || "TEST";
+  // Only offer the CASHFREE radio once an admin has actually saved an App ID —
+  // otherwise createCashfreePaymentSession would just fail at checkout time.
+  const IS_CASHFREE_ENABLED = Boolean(CASHFREE_APP_ID);
   const PAYPAL_KEY = configuration.clientId;
   const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   const AMPLITUDE_API_KEY = configuration.webAmplitudeApiKey;
@@ -75,7 +79,9 @@ export const ConfigurationProvider = ({
       value={{
         GOOGLE_CLIENT_ID,
         IS_GOOGLE_LOGIN_ENABLED,
-        STRIPE_PUBLIC_KEY,
+        CASHFREE_APP_ID,
+        CASHFREE_ENV,
+        IS_CASHFREE_ENABLED,
         PAYPAL_KEY,
         GOOGLE_MAPS_KEY,
         AMPLITUDE_API_KEY,

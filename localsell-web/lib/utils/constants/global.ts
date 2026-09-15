@@ -1,9 +1,9 @@
 import {
   faCheck,
-  faCreditCard,
   faDollar,
   faExclamationTriangle,
   faInfoCircle,
+  faMobileScreenButton,
   faXmarkCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { ISeverityStyles } from "../interfaces/toast.interface";
@@ -60,9 +60,9 @@ export const PAYMENT_METHOD_LIST = [
     icon: faDollar,
   },
   {
-    label: "card",
-    value: "STRIPE",
-    icon: faCreditCard,
+    label: "online (UPI / Card / Netbanking)",
+    value: "CASHFREE",
+    icon: faMobileScreenButton,
   },
 ];
 

@@ -62,15 +62,15 @@ model User {
   // Vendor registration business details (Localsell vendor registration spec).
   // Store-level fields (address, delivery zone, timings, etc.) stay on
   // Restaurant and are deliberately not duplicated here.
-  businessName    String?
-  businessTypeId  String?
-  isGstRegistered Boolean @default(false)
-  gstin           String?
+  businessName        String?
+  businessTypeId      String?
+  isGstRegistered     Boolean @default(false)
+  gstin               String?
   // Vendor-level default, copied onto each new Restaurant on creation (and
   // editable per-store after, since a multi-store vendor can hold different
   // GSTINs per state). REGULAR | COMPOSITION | UNREGISTERED. `isGstRegistered`
   // is kept in sync (`!== UNREGISTERED`) so existing reads of it still work.
-  gstRegistrationType String @default("UNREGISTERED")
+  gstRegistrationType String  @default("UNREGISTERED")
 
   addresses         Address[]
   restaurants       Restaurant[]       @relation("RestaurantOwner")
@@ -132,76 +132,75 @@ model Cuisine {
 }
 
 model Restaurant {
-  id                     String    @id @default(cuid())
-  ownerId                String
-  name                   String
-  description            String?   @db.Text
-  image                  String?
-  logo                   String?
-  address                String?   @db.Text
-  phone                  String?
+  id                    String    @id @default(cuid())
+  ownerId               String
+  name                  String
+  description           String?   @db.Text
+  image                 String?
+  logo                  String?
+  address               String?   @db.Text
+  phone                 String?
   // Store dashboard login. Not globally unique — one vendor can run several
   // outlets under the same login email, each with its own password, and
   // `restaurantLogin` matches on username + password (#59).
-  username               String?
-  password               String?
-  slug                   String    @unique
-  orderPrefix            String?
-  deliveryTime           Int       @default(30)
-  minimumOrder           Float     @default(0)
+  username              String?
+  password              String?
+  slug                  String    @unique
+  orderPrefix           String?
+  deliveryTime          Int       @default(30)
+  minimumOrder          Float     @default(0)
   // Default GST rate %, meaningful only when gstRegistrationType = REGULAR.
   // COMPOSITION/UNREGISTERED stores never charge tax regardless of this value
   // (composition dealers are legally barred from collecting tax separately —
   // Section 10 CGST Act). If REGULAR and left at 0, the pricing engine falls
   // back to 5% (standard restaurant GST rate) rather than silently charging none.
-  tax                    Float     @default(0)
+  tax                   Float     @default(0)
   // REGULAR | COMPOSITION | UNREGISTERED — drives the tax engine in
   // order.service.ts / pricing.service.ts. Defaults from the owning vendor's
   // User.gstRegistrationType when a store is created, editable per store.
-  gstRegistrationType    String    @default("UNREGISTERED")
-  gstin                  String?
-  commissionRate         Float     @default(0)
-  isActive               Boolean   @default(true)
-  isAvailable            Boolean   @default(true)
+  gstRegistrationType   String    @default("UNREGISTERED")
+  gstin                 String?
+  commissionRate        Float     @default(0)
+  isActive              Boolean   @default(true)
+  isAvailable           Boolean   @default(true)
   // Onboarding gate. A store created by a VENDOR starts PENDING and is invisible
   // to customers until an admin approves it. Stores created by an ADMIN, and
   // every store that predates this column, are APPROVED.
-  approvalStatus         String    @default("APPROVED") // PENDING | APPROVED | REJECTED | SUSPENDED
-  approvalNote           String?   @db.Text
-  approvedAt             DateTime?
-  approvedById           String?
-  latitude               Float?
-  longitude              Float?
-  shopTypeId             String?
-  openingTimes           Json?
-  bussinessDetails       Json?
-  currentWalletAmount    Float     @default(0)
-  totalWalletAmount      Float     @default(0)
-  withdrawnWalletAmount  Float     @default(0)
-  deliveryBounds         Json?
-  circleBounds           Json?
-  boundType              String?
-  stripeDetailsSubmitted Boolean   @default(false)
-  city                   String?
-  state                  String?
-  postCode               String?
-  pickup                 Boolean   @default(true)
-  delivery               Boolean   @default(true)
+  approvalStatus        String    @default("APPROVED") // PENDING | APPROVED | REJECTED | SUSPENDED
+  approvalNote          String?   @db.Text
+  approvedAt            DateTime?
+  approvedById          String?
+  latitude              Float?
+  longitude             Float?
+  shopTypeId            String?
+  openingTimes          Json?
+  bussinessDetails      Json?
+  currentWalletAmount   Float     @default(0)
+  totalWalletAmount     Float     @default(0)
+  withdrawnWalletAmount Float     @default(0)
+  deliveryBounds        Json?
+  circleBounds          Json?
+  boundType             String?
+  city                  String?
+  state                 String?
+  postCode              String?
+  pickup                Boolean   @default(true)
+  delivery              Boolean   @default(true)
   // Who fulfils a delivery order for this store. Only meaningful when
   // `delivery = true`; "pickup only" is `delivery = false`.
   //   PLATFORM — the LocalSell hyperlocal rider fleet (zone dispatch)
   //   SELF     — the store delivers with its own people (StoreDeliveryAgent)
   //   BOTH     — store decides per order after accepting it
-  deliveryProvider       String    @default("PLATFORM")
-  minDeliveryFee         Float?
-  deliveryDistance       Float?
+  deliveryProvider      String    @default("PLATFORM")
+  minDeliveryFee        Float?
+  deliveryDistance      Float?
   // "per_km"  — deliveryFee is a per-km rate, multiplied by ceil(distanceKm), floored by minDeliveryFee
   // "fixed"   — deliveryFee is a flat lump-sum charge regardless of distance
-  deliveryFeeType        String    @default("per_km")
-  deliveryFee            Float?
-  clonedFromId           String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  deliveryFeeType       String    @default("per_km")
+  deliveryFee           Float?
+  clonedFromId          String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   owner            User                 @relation("RestaurantOwner", fields: [ownerId], references: [id])
   shopType         ShopType?            @relation(fields: [shopTypeId], references: [id])
@@ -451,9 +450,10 @@ model Configuration {
   paypalSandbox      Boolean @default(true)
   paypalClientSecret String? // secret, never returned over GraphQL
 
-  // Stripe
-  stripePublishableKey String?
-  stripeSecretKey      String? // secret, never returned over GraphQL
+  // Cashfree Payment Gateway (India — UPI/cards/netbanking/wallets)
+  cashfreeAppId     String? // non-secret, safe to expose over GraphQL
+  cashfreeSecretKey String? // secret, never returned over GraphQL
+  cashfreeEnv       String  @default("TEST") // "TEST" | "PRODUCTION" — picks sandbox vs live Cashfree API host
 
   // Twilio
   twilioAccountSid     String?
@@ -605,6 +605,47 @@ model CommissionPayment {
   @@index([vendorId, receivedAt])
 }
 
+// CASHFREE's mirror of CommissionRecord: the platform's single Cashfree
+// merchant account collects 100% of these orders, so — unlike COD, where the
+// store already holds the cash and owes the platform commission — here the
+// platform holds the cash and owes the vendor their net share. Written once,
+// when a CASHFREE order is first marked DELIVERED (see recordVendorPayable).
+model VendorPayable {
+  id               String   @id @default(cuid())
+  orderId          String   @unique
+  orderNumber      String
+  restaurantId     String
+  vendorId         String
+  orderAmount      Float
+  commissionAmount Float
+  netPayable       Float
+  status           String   @default("PENDING") // PENDING | PAID
+  payoutId         String?
+  orderDeliveredAt DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([vendorId])
+  @@index([restaurantId])
+  @@index([status])
+  @@index([payoutId])
+}
+
+// Immutable receipts for money paid out to vendors against their VendorPayables.
+model VendorPayout {
+  id             String   @id @default(cuid())
+  vendorId       String
+  amount         Float
+  method         String
+  reference      String?
+  note           String?  @db.Text
+  paidAt         DateTime
+  recordedById   String
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+
+  @@index([vendorId, paidAt])
+}
+
 // Records money- and access-level admin actions: who changed a commission
 // rate, marked a bill paid, settled a payout, approved a store, edited config,
 // touched staff / permissions. Written explicitly by `recordAudit()` at those
@@ -747,6 +788,12 @@ model Order {
   addressId            String?
   paymentMethod        String
   paymentStatus        PaymentStatus @default(PENDING)
+  // Cashfree's own payment id for this order, set once the webhook reports a
+  // terminal outcome — useful for support/refund lookups. Null for COD and
+  // for a CASHFREE order still awaiting the webhook. Order.id itself is
+  // reused as Cashfree's order_id at creation time, so no separate mapping
+  // column is needed to find the order from a webhook payload.
+  paymentGatewayRef    String?
   orderStatus          OrderStatus   @default(PENDING)
   status               String        @default("ACTIVE")
   paidAmount           Float         @default(0)

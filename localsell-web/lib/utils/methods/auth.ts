@@ -17,8 +17,8 @@ const SESSION_STORAGE_KEYS = [
   "userToken",
   "userAddress",
   "searchedKeywords",
-  "pending_stripe_order_id",
-  "pending_stripe_started_at",
+  "pending_cashfree_order_id",
+  "pending_cashfree_started_at",
 ] as const;
 
 export function setAuthTokens(payload: {

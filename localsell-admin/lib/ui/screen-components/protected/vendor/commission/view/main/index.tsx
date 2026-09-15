@@ -7,10 +7,14 @@ import {
 } from '@/lib/ui/screens/super-admin/management/finance/workspace';
 import {
   BILL_FIELDS,
+  VENDOR_PAYABLE_FIELDS,
   Bill,
+  VendorPayable,
   money,
+  day,
 } from '@/lib/ui/screens/super-admin/management/finance/operations';
 import Select from '@/lib/ui/useable-components/custom-dropdown/select';
+import Table from '@/lib/ui/useable-components/table';
 const SUMMARY = gql`
   query VendorCollectionSummary {
     myCommissionSummary {
@@ -25,6 +29,84 @@ const SUMMARY = gql`
   }
   ${BILL_FIELDS}
 `;
+const MY_PAYABLES = gql`
+  query MyVendorPayables($status: String) {
+    vendorPayables(status: $status, limit: 100) {
+      total
+      payables {
+        ...VendorPayableRow
+      }
+    }
+  }
+  ${VENDOR_PAYABLE_FIELDS}
+`;
+function PayoutsSection() {
+  const { data: pendingData, loading: pendingLoading } = useQuery(
+    MY_PAYABLES,
+    { variables: { status: 'PENDING' }, fetchPolicy: 'cache-and-network' }
+  );
+  const { data: paidData, loading: paidLoading } = useQuery(MY_PAYABLES, {
+    variables: { status: 'PAID' },
+    fetchPolicy: 'cache-and-network',
+  });
+  const pending: VendorPayable[] = pendingData?.vendorPayables.payables ?? [];
+  const paid: VendorPayable[] = paidData?.vendorPayables.payables ?? [];
+  const pendingTotal = pending.reduce((s, p) => s + p.netPayable, 0);
+  return (
+    <section className="finance-section">
+      <header>
+        <div>
+          <h2>Payouts from LocalSell</h2>
+          <p>
+            Online (Cashfree) orders are collected into LocalSell&apos;s own
+            account, so unlike your other stores&apos; direct payments,
+            LocalSell owes you your share of these orders — the order total
+            minus commission. This is separate from the commission you pay
+            above.
+          </p>
+        </div>
+      </header>
+      <div className="finance-metrics">
+        <section>
+          <span>Owed to you</span>
+          <strong>{money(pendingTotal)}</strong>
+          <small>{pending.length} online order(s) not yet paid out</small>
+        </section>
+      </div>
+      <Table
+        data={[...pending, ...paid]}
+        loading={pendingLoading || paidLoading}
+        minWidth="44rem"
+        columns={[
+          { propertyName: 'orderNumber', headerName: 'Order' },
+          { propertyName: 'storeName', headerName: 'Store' },
+          {
+            propertyName: 'orderDeliveredAt',
+            headerName: 'Delivered',
+            body: (p: VendorPayable) => day(p.orderDeliveredAt),
+          },
+          {
+            propertyName: 'netPayable',
+            headerName: 'You receive',
+            align: 'right',
+            body: (p: VendorPayable) => <strong>{money(p.netPayable)}</strong>,
+          },
+          {
+            propertyName: 'status',
+            headerName: 'Status',
+            body: (p: VendorPayable) => (
+              <span
+                className={`finance-status finance-status-${p.status.toLowerCase()}`}
+              >
+                {p.status === 'PAID' ? 'Paid' : 'Pending'}
+              </span>
+            ),
+          },
+        ]}
+      />
+    </section>
+  );
+}
 export default function MyCommissionMain() {
   const { data, loading, error, refetch } = useQuery(SUMMARY, {
     fetchPolicy: 'cache-and-network',
@@ -87,6 +169,7 @@ export default function MyCommissionMain() {
         </Select>
       </div>
       <BillTable vendor bills={bills} loading={loading && !data} />
+      <PayoutsSection />
     </FinanceFrame>
   );
 }

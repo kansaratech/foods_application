@@ -26,7 +26,7 @@ export interface IVariation {
   _id: string;
   title: string;
   price: number;
-  discounted?: boolean;
+  discounted?: number | null;
   addons: string[];
   isOutOfStock?: boolean;
 }
@@ -59,6 +59,7 @@ export interface IItem {
   description?: string;
   quantity?: number;
   image?: string;
+  price?: number;
   variation?: IVariation;
   addons?: IAddon[];
 }

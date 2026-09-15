@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 import { IDropdownSelectItem } from '../interfaces';
 import { isValidEmail } from '../methods';
+import { isValidIndianMobile } from '../methods/phone';
 
 // Stricter than Yup's `.email()` (which accepts `x@gmail`) — see #41.
 const emailRule = Yup.string()
@@ -27,7 +28,9 @@ export const StaffSchema = Yup.object().shape({
     .nullable()
     .oneOf([Yup.ref('password'), null], 'Password must match')
     .required('Required'),
-  phone: Yup.string().required('Required').min(5,"Minimum 5 Numbers are Required"),
+  phone: Yup.string()
+    .required('Required')
+    .test('valid-phone', 'Enter a valid 10-digit phone number', (value) => isValidIndianMobile(value)),
   permissions: Yup.array()
     .of(Yup.mixed<IDropdownSelectItem>())
     .min(1, 'Permissions field must have at least 1 items')

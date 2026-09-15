@@ -55,6 +55,7 @@ interface OrderItem {
   food: string;
   description: string;
   quantity: number;
+  price: number;
   variation: ItemVariation;
   addons: ItemAddon[];
   __typename: string;
