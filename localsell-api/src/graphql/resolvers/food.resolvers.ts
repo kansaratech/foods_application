@@ -83,6 +83,31 @@ function assertGstRateWithinCap(value: number | null | undefined): void {
   }
 }
 
+// An add-on option costing more than the item itself doesn't make sense as a
+// "customization" — cap each attached option's price at the variation's own
+// price (client suggestion, following Issue#8).
+async function assertAddonPricesWithinItemPrice(variations: VariationInputArgs[]): Promise<void> {
+  const addonIds = Array.from(new Set(variations.flatMap((v) => v.addons ?? [])));
+  if (!addonIds.length) return;
+  const addons = await prisma.addon.findMany({
+    where: { id: { in: addonIds } },
+    include: { options: true },
+  });
+  const addonById = new Map(addons.map((a) => [a.id, a]));
+  for (const v of variations) {
+    for (const addonId of v.addons ?? []) {
+      const addon = addonById.get(addonId);
+      if (!addon) continue;
+      const tooExpensive = addon.options.find((o) => o.price > v.price);
+      if (tooExpensive) {
+        throw userInputError(
+          `"${tooExpensive.title}" (₹${tooExpensive.price}) in "${addon.title}" costs more than "${v.title || 'the item'}" (₹${v.price}) — an add-on can't cost more than the item itself.`,
+        );
+      }
+    }
+  }
+}
+
 async function assertUniqueFoodTitle(restaurantId: string, title: string, excludeId?: string): Promise<void> {
   const existing = await prisma.food.findFirst({
     where: {
@@ -300,6 +325,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       assertPositivePrices(input.variations);
       assertGstRateWithinCap(input.gstRatePercent);
       await assertUniqueFoodTitle(input.restaurant, input.title);
+      await assertAddonPricesWithinItemPrice(input.variations);
 
       await prisma.food.create({
         data: {
@@ -334,6 +360,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       assertPositivePrices(input.variations);
       assertGstRateWithinCap(input.gstRatePercent);
       await assertUniqueFoodTitle(input.restaurant, input.title, input._id);
+      await assertAddonPricesWithinItemPrice(input.variations);
 
       await prisma.food.update({
         where: { id: input._id },
