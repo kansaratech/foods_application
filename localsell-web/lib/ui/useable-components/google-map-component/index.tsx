@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useContext } from "react";
+import { useEffect, useState, useCallback, useContext, useRef } from "react";
 import { GoogleMap, Marker, Circle } from "@react-google-maps/api";
 import styles from "./google-map-component.module.css";
 import { IGoogleMapComponentProps } from "@/lib/utils/interfaces";
@@ -19,6 +19,7 @@ const GoogleMapComponent = ({
   // State for controlling zoom level
   const [zoom, setZoom] = useState(15);
   const { theme } = useTheme();
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Context
   const { isLoaded } = useContext(GoogleMapsContext);
@@ -58,12 +59,13 @@ const GoogleMapComponent = ({
     (map: google.maps.Map) => {
       setMapInstance(map);
       // The map often mounts inside a dialog that is still animating in, so its
-      // container starts at 0×0 and Google renders a grey box. Nudge it once the
-      // dialog has settled.
-      setTimeout(() => {
-        window.google?.maps.event.trigger(map, "resize");
-        map.setCenter(center);
-      }, 250);
+      // container starts at 0×0 (or an in-flux size on mobile, where the dialog
+      // animation and viewport chrome resizing both take longer than any fixed
+      // delay) and Google renders a grey/blank box. A single setTimeout guessed
+      // at the animation length and missed on slower mobile devices — a
+      // ResizeObserver below reacts to the container's real size instead.
+      window.google?.maps.event.trigger(map, "resize");
+      map.setCenter(center);
     },
     [center]
   );
@@ -72,6 +74,29 @@ const GoogleMapComponent = ({
   const onUnmount = useCallback(() => {
     setMapInstance(null);
   }, []);
+
+  // Re-trigger a resize any time the map's container actually changes size —
+  // covers the dialog-open animation on mobile finishing later than a fixed
+  // timeout would predict (Issue 30: map not displaying in mobile view).
+  useEffect(() => {
+    if (!mapInstance || !containerRef.current) return;
+    const node = containerRef.current;
+    let lastWidth = 0;
+    let lastHeight = 0;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      if (width === lastWidth && height === lastHeight) return;
+      lastWidth = width;
+      lastHeight = height;
+      if (width === 0 || height === 0) return;
+      window.google?.maps.event.trigger(mapInstance, "resize");
+      mapInstance.setCenter(center);
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [mapInstance, center]);
 
   // handlers
 
@@ -116,7 +141,11 @@ const GoogleMapComponent = ({
   }
 
   return (
-    <div className="map-container" style={{ position: "relative" }}>
+    <div
+      className="map-container"
+      style={{ position: "relative" }}
+      ref={containerRef}
+    >
       {/* One map, styled per theme. (Previously two maps were mounted with one
           permanently `display:none` — a map created in a hidden container never
           paints, which showed up as a blank map on mobile / in dark mode.) */}
