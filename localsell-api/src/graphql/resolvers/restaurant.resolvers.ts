@@ -561,8 +561,10 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       const cuisineIds = await resolveCuisineIds(input.cuisines);
       const config = await prisma.configuration.findFirst();
 
-      // A store an admin creates is live immediately; one a vendor self-onboards
-      // waits in the approval queue and stays hidden from customers until then.
+      // Every new store — admin-created or vendor self-onboarded — starts
+      // PENDING and stays hidden from customers until an admin explicitly
+      // approves it via the pending-stores queue (Issue 42). `adminCreated`
+      // still gates the admin-only privileges below (commission override).
       const adminCreated = currentUser.userType === 'ADMIN';
 
       // A new store inherits the platform default commission unless an admin
@@ -612,9 +614,9 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
           slug: slugify(input.name),
           orderPrefix: input.name.slice(0, 3).toUpperCase(),
           ownerId: owner.id,
-          approvalStatus: adminCreated ? 'APPROVED' : 'PENDING',
-          approvedAt: adminCreated ? new Date() : null,
-          approvedById: adminCreated ? currentUser.id : null,
+          approvalStatus: 'PENDING',
+          approvedAt: null,
+          approvedById: null,
           cuisines: { create: cuisineIds.map((cuisineId) => ({ cuisineId })) },
         },
       });
