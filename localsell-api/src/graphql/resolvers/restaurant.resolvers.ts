@@ -114,6 +114,17 @@ function normalizeDeliveryProvider(value?: string | null): string | undefined {
   return 'SELF';
 }
 
+// Both GST rate and commission rate were previously only bounded by the
+// column's numeric type — nothing stopped e.g. 500% being saved (Issue#2).
+// Business rule: neither may exceed 30%.
+const MAX_RATE_PERCENT = 30;
+function assertRateWithinCap(value: number | null | undefined, label: string): void {
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < 0 || value > MAX_RATE_PERCENT) {
+    throw userInputError(`${label} must be between 0 and ${MAX_RATE_PERCENT}%.`);
+  }
+}
+
 function assertOwnsRestaurant(user: { id: string; userType: string }, restaurant: Restaurant) {
   if (user.userType === 'ADMIN') return;
   if (user.userType === 'VENDOR' && restaurant.ownerId === user.id) return;
@@ -591,6 +602,8 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       // means "the platform earns nothing from this store".
       const commissionRate =
         adminCreated && input.commissionRate != null ? input.commissionRate : (config?.defaultCommissionRate ?? 20);
+      assertRateWithinCap(adminCreated ? input.commissionRate : null, 'Commission rate');
+      assertRateWithinCap(input.salesTax, 'GST rate');
 
       // A new store defaults to the owning vendor's KYC-declared GST status,
       // editable per store since a multi-store vendor can hold a different
@@ -703,6 +716,8 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
         gstin = gstRegistrationType === 'UNREGISTERED' ? null : (input.gstin ?? existing.gstin);
         assertGstinRequiredFor(gstRegistrationType as 'REGULAR' | 'COMPOSITION', gstin);
       }
+      assertRateWithinCap(input.salesTax, 'GST rate');
+      assertRateWithinCap(currentUser.userType === 'ADMIN' ? input.commissionRate : null, 'Commission rate');
 
       return prisma.restaurant.update({
         where: { id: input._id },
@@ -804,7 +819,7 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
 
     updateCommission: async (_parent, args: { id: string; commissionRate: number }, context) => {
       requireRole(context, ['ADMIN']);
-      if (!Number.isFinite(args.commissionRate) || args.commissionRate < 0 || args.commissionRate > 100) throw userInputError('Commission rate must be between 0 and 100.');
+      assertRateWithinCap(args.commissionRate, 'Commission rate');
       const before = await prisma.restaurant.findUnique({ where: { id: args.id } });
       const updated = await prisma.restaurant.update({
         where: { id: args.id },

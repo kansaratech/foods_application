@@ -99,13 +99,13 @@ export default function CommissionRateMain() {
     }
     if (restaurant) {
       setLoadingRestaurant(restaurantId);
-      if (restaurant?.commissionRate > 100) {
+      if (restaurant?.commissionRate > 30) {
         setLoadingRestaurant(null);
         return showToast({
           type: 'error',
           title: t('Commission Updated'),
           message: t(
-            'As commission rate is a %age value so it cannot exceed a max value of 100'
+            'Commission rate cannot exceed a max value of 30%'
           ),
         });
       }

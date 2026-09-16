@@ -130,7 +130,7 @@ export default function CommissionSettingsPanel() {
                 className="ls-field"
                 type="number"
                 min={0}
-                max={100}
+                max={30}
                 step="0.01"
                 required
                 value={values.defaultCommissionRate}

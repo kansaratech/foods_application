@@ -14,7 +14,7 @@ import { syncWhatsappTemplates as runWhatsappTemplateSync } from '../../services
 // here so it never overwrites an existing value with null.
 async function saveConfiguration(context: GraphQLContext, data: Prisma.ConfigurationUpdateInput) {
   requireRole(context, ['ADMIN']);
-  if (data.defaultCommissionRate !== undefined && (typeof data.defaultCommissionRate !== 'number' || !Number.isFinite(data.defaultCommissionRate) || data.defaultCommissionRate < 0 || data.defaultCommissionRate > 100)) throw userInputError('Default commission must be between 0 and 100.');
+  if (data.defaultCommissionRate !== undefined && (typeof data.defaultCommissionRate !== 'number' || !Number.isFinite(data.defaultCommissionRate) || data.defaultCommissionRate < 0 || data.defaultCommissionRate > 30)) throw userInputError('Default commission must be between 0 and 30%.');
   if (data.commissionBillingCycle !== undefined && !['MONTHLY','YEARLY'].includes(String(data.commissionBillingCycle))) throw userInputError('Choose monthly or yearly billing.');
   const clean = Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
   const existing = await prisma.configuration.findFirst();

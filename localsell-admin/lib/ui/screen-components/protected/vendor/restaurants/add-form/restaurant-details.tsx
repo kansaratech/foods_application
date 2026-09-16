@@ -484,7 +484,7 @@ export default function RestaurantDetails({
                         <CustomNumberField
                           prefix="%"
                           min={0}
-                          max={100}
+                          max={30}
                           placeholder={t('Default GST Rate (Regular stores only)')}
                           minFractionDigits={2}
                           maxFractionDigits={2}

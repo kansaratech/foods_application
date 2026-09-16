@@ -61,6 +61,33 @@ function assertPositivePrices(variations: VariationInputArgs[]): void {
   if (bad) throw userInputError(`"${bad.title || 'Variation'}" needs a price greater than 0`);
 }
 
+// A store could otherwise create the same item over and over under the same
+// name (Issue#1) — nothing stopped it. MySQL's default collation (utf8mb4_*_ci)
+// already compares strings case-insensitively, so a plain `equals` is enough
+// — `mode: 'insensitive'` is a Postgres/Mongo-only Prisma option and isn't
+// valid against this MySQL datasource.
+// Same 30% business cap as the store's own default GST rate (Issue#2) —
+// nothing previously stopped a per-item override above that.
+const MAX_GST_RATE_PERCENT = 30;
+function assertGstRateWithinCap(value: number | null | undefined): void {
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < 0 || value > MAX_GST_RATE_PERCENT) {
+    throw userInputError(`GST rate override must be between 0 and ${MAX_GST_RATE_PERCENT}%.`);
+  }
+}
+
+async function assertUniqueFoodTitle(restaurantId: string, title: string, excludeId?: string): Promise<void> {
+  const existing = await prisma.food.findFirst({
+    where: {
+      restaurantId,
+      title: title.trim(),
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+    select: { id: true },
+  });
+  if (existing) throw userInputError(`A food item named "${title.trim()}" already exists in this store.`);
+}
+
 interface ComboItemInputArgs {
   foodId: string;
   variationId?: string;
@@ -264,6 +291,8 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       await assertOwnsRestaurant(context, args.foodInput.restaurant);
       const input = args.foodInput;
       assertPositivePrices(input.variations);
+      assertGstRateWithinCap(input.gstRatePercent);
+      await assertUniqueFoodTitle(input.restaurant, input.title);
 
       await prisma.food.create({
         data: {
@@ -296,6 +325,8 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       const input = args.foodInput;
       if (!input._id) throw notFoundError('Food _id is required to edit');
       assertPositivePrices(input.variations);
+      assertGstRateWithinCap(input.gstRatePercent);
+      await assertUniqueFoodTitle(input.restaurant, input.title, input._id);
 
       await prisma.food.update({
         where: { id: input._id },

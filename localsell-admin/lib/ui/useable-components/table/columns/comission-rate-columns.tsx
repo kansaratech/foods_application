@@ -55,7 +55,7 @@ export const COMMISSION_RATE_COLUMNS = ({
                     );
                   }}
                   min={0}
-                  max={100}
+                  max={30}
                   showLabel={false}
                   loading={false}
                 />

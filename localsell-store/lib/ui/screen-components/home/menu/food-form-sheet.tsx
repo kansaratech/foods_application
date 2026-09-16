@@ -381,6 +381,13 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         setError(t("Discounted price must be less than the selling price"));
         return;
       }
+      if (gstRatePercent.trim()) {
+        const rate = Number(gstRatePercent);
+        if (!Number.isFinite(rate) || rate < 0 || rate > 30) {
+          setError(t("GST rate override must be between 0 and 30%"));
+          return;
+        }
+      }
       const foodInput = {
         _id: editingId ?? undefined,
         restaurant: restaurantId,
