@@ -969,6 +969,12 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       if (order.riderId && order.riderId !== currentUser.id) {
         throw userInputError('Order already assigned to another rider');
       }
+      // Same rule as assignRider (Issue 85): once the order has moved past
+      // ACCEPTED/ASSIGNED (picked up or further), self-claiming would yank
+      // it away from whoever is already carrying it and regress its status.
+      if (order.orderStatus !== 'ACCEPTED' && order.orderStatus !== 'ASSIGNED') {
+        throw userInputError('This order can no longer be assigned to a rider');
+      }
       await assertRiderApproved(currentUser.id);
       await assertRiderNotRejected(currentUser.id);
       await assertRiderUnderCashLimit(currentUser.id, args.id);
