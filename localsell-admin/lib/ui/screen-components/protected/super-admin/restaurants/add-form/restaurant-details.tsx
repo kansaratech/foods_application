@@ -655,7 +655,12 @@ export default function RestaurantDetailsForm({
                           showLabel={false}
                           value={values.salesTax}
                           onChange={setFieldValue}
-                          disabled={values.gstRegistrationType?.code !== 'REGULAR' && !!values.gstRegistrationType?.code}
+                          // Always editable: a store set up UNREGISTERED/
+                          // COMPOSITION must be able to set its rate in
+                          // anticipation of switching to REGULAR once its
+                          // GSTIN comes through — see issue #5, the "stuck
+                          // store" scenario. It's simply unused unless
+                          // gstRegistrationType is REGULAR.
                           style={{
                             borderColor: onErrorMessageMatcher(
                               'salesTax',
