@@ -61,6 +61,13 @@ function assertPositivePrices(variations: VariationInputArgs[]): void {
   if (bad) throw userInputError(`"${bad.title || 'Variation'}" needs a price greater than 0`);
 }
 
+// Addon options previously allowed (and one path even defaulted to) a ₹0
+// price — Issue#8: reject any option that isn't priced above 0.
+function assertPositiveOptionPrices(options: { title?: string; price?: number | null }[]): void {
+  const bad = options.find((o) => !((o.price ?? 0) > 0));
+  if (bad) throw userInputError(`"${bad.title || 'Option'}" needs a price greater than 0`);
+}
+
 // A store could otherwise create the same item over and over under the same
 // name (Issue#1) — nothing stopped it. MySQL's default collation (utf8mb4_*_ci)
 // already compares strings case-insensitively, so a plain `equals` is enough
@@ -549,6 +556,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       // Store-app shape: flat title + inline option objects.
+      if (input.options?.length) assertPositiveOptionPrices(input.options);
       return prisma.addon.create({
         data: {
           restaurantId: input.restaurant,
@@ -600,6 +608,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           });
         }
       } else if (input.options) {
+        if (input.options.length) assertPositiveOptionPrices(input.options);
         await prisma.option.deleteMany({ where: { addonId } });
         await prisma.option.createMany({
           data: input.options.map((o) => ({ addonId, title: o.title, description: o.description, price: o.price })),
@@ -615,8 +624,9 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       const pool = await getOptionPoolAddon(input.restaurant);
       const rows = (input.options ?? []).filter((o) => o.title?.trim());
       if (rows.length) {
+        assertPositiveOptionPrices(rows);
         await prisma.option.createMany({
-          data: rows.map((o) => ({ addonId: pool.id, title: o.title.trim(), description: o.description, price: o.price ?? 0 })),
+          data: rows.map((o) => ({ addonId: pool.id, title: o.title.trim(), description: o.description, price: o.price })),
         });
       }
       return prisma.restaurant.findUnique({ where: { id: input.restaurant } });
@@ -633,9 +643,11 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!opt?._id) throw notFoundError('Option _id is required to edit');
       const existing = await prisma.option.findUnique({ where: { id: opt._id }, include: { addon: true } });
       if (!existing || existing.addon.restaurantId !== input.restaurant) throw notFoundError('Option not found');
+      const nextPrice = opt.price ?? existing.price;
+      if (!(nextPrice > 0)) throw userInputError(`"${opt.title || existing.title || 'Option'}" needs a price greater than 0`);
       await prisma.option.update({
         where: { id: opt._id },
-        data: { title: opt.title, description: opt.description, price: opt.price ?? existing.price },
+        data: { title: opt.title, description: opt.description, price: nextPrice },
       });
       return prisma.restaurant.findUnique({ where: { id: input.restaurant } });
     },

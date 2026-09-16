@@ -30,6 +30,11 @@ export const ItemDetailSection = <
     price: number;
     isOutOfStock?: boolean;
     quantity?: number;
+    // Present on variations only (addon options never discount) — the modal
+    // header already showed the discounted price correctly, but each
+    // variation row here still showed the raw `price`, which read as wrong
+    // once the item was opened (Issue#7).
+    discounted?: number | null;
   },
 >({
   title,
@@ -78,6 +83,14 @@ export const ItemDetailSection = <
   const filteredMultiSelected = multiSelected
     ? (multiSelected as T[]).filter((item) => !item.isOutOfStock)
     : [];
+
+  // Mirrors the modal header's effectiveVariationPrice / the API's
+  // effectivePrice — the discounted price when one is actually set and
+  // cheaper than the base price.
+  const effectivePrice = (option: T): number =>
+    option.discounted != null && option.discounted > 0 && option.discounted < option.price
+      ? option.discounted
+      : option.price;
 
   const t = useTranslations();
   const { CURRENCY_SYMBOL } = useConfig();
@@ -175,7 +188,7 @@ export const ItemDetailSection = <
                   )}
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     {CURRENCY_SYMBOL || "₹"}
-                    {(option.price * (showStepper ? optionQuantity : 1)).toFixed(2)}
+                    {(effectivePrice(option) * (showStepper ? optionQuantity : 1)).toFixed(2)}
                   </span>
                 </div>
               </div>

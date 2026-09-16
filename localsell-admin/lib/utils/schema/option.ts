@@ -17,7 +17,7 @@ export const OptionSchema = Yup.object({
           .matches(/\S/, 'Name cannot be only spaces')
           .optional(),
         price: Yup.number()
-          .min(MIN_PRICE, 'Minimum value must be greater than 0')
+          .moreThan(MIN_PRICE, 'Price must be greater than 0')
           .max(MAX_PRICE)
           .required('Required'),
       })

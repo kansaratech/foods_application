@@ -43,7 +43,7 @@ export const AddonSchema = Yup.object().shape({
           .trim()
           .matches(/\S/, 'Name cannot be only spaces')
           .required('Required'),
-        price: Yup.number().min(0, 'Price cannot be negative').required('Required'),
+        price: Yup.number().moreThan(0, 'Price must be greater than 0').required('Required'),
         description: Yup.string().optional(),
       })
     )

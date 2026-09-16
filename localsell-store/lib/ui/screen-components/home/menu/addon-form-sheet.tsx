@@ -140,6 +140,10 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
         setError(t("Every option needs a title"));
         return;
       }
+      if (options.some((o) => !((o.price ?? 0) > 0))) {
+        setError(t("Every option needs a price greater than 0"));
+        return;
+      }
       const addonInput = {
         _id: editingId ?? undefined,
         restaurant: restaurantId,

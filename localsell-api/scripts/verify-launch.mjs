@@ -535,7 +535,7 @@ console.log('\n# Batch D — combos, upsell, required customization');
     // required customization group
     const addon = await gql(
       `mutation($i:AddonInput!){ createAddon(addonInput:$i){ _id isRequired quantityMinimum quantityMaximum } }`,
-      { i: { restaurant: store._id, title: 'Verify required group', isRequired: true, quantityMaximum: 1, options: [{ title: 'A', price: 0 }, { title: 'B', price: 10 }] } },
+      { i: { restaurant: store._id, title: 'Verify required group', isRequired: true, quantityMaximum: 1, options: [{ title: 'A', price: 5 }, { title: 'B', price: 10 }] } },
       admin,
     );
     const ad = addon.data?.createAddon;
