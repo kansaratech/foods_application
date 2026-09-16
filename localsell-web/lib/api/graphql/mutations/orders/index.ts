@@ -13,6 +13,7 @@ export const PLACE_ORDER = gql`
     $isPickedUp: Boolean!
     $deliveryCharges: Float!
     $instructions: String
+    $recipientPhone: String
   ) {
     placeOrder(
       restaurant: $restaurant
@@ -26,6 +27,7 @@ export const PLACE_ORDER = gql`
       isPickedUp: $isPickedUp
       deliveryCharges: $deliveryCharges
       instructions: $instructions
+      recipientPhone: $recipientPhone
     ) {
       _id
       orderId

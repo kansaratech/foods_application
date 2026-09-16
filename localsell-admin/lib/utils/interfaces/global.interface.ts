@@ -77,6 +77,10 @@ export interface IStepperFormProps {
   order: number;
   isLastStep?: boolean;
   onStepChange: (order: number) => void;
+  // Called by the last step once the wizard has actually completed
+  // (record saved) - distinct from onStepChange(0), which a "Back" button
+  // on step 1 can also reach when step 0 is a real, visible step.
+  onFinish?: () => void;
 }
 export interface IEditState<T> {
   bool: boolean;

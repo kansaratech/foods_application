@@ -43,9 +43,7 @@ import { useMutation, useQuery } from '@apollo/client';
 const RestaurantTiming = ({
   stepperProps,
 }: IRestaurantsRestaurantTimingComponentProps) => {
-  const { onStepChange } = stepperProps ?? {
-    onStepChange: () => {},
-  };
+  const { onFinish } = stepperProps ?? {};
 
   // Hooks
   const t = useTranslations();
@@ -123,7 +121,7 @@ const RestaurantTiming = ({
           duration: 3000,
         });
 
-        onStepChange(0);
+        onFinish?.();
         onSetRestaurantsContextData({} as IRestaurantsContextPropData);
         onRestaurantsFormVisible(false);
       },

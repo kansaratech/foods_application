@@ -59,6 +59,14 @@ export default function LocationPermissionComponent({
     }
   };
 
+  // Lets the user proceed without granting location (e.g. on web, where
+  // there's often no reliable way back into the permission prompt, or the
+  // user simply doesn't want to grant it right now). Rider location is
+  // re-requested wherever it's actually needed later on.
+  const dismissModal = () => {
+    setIsModalVisible(false);
+  };
+
   const askLocationPermission = async () => {
     setLoading(true);
     const { status, canAskAgain } =
@@ -113,6 +121,8 @@ export default function LocationPermissionComponent({
         isVisible={isModalVisible}
         coverScreen={false}
         backdropOpacity={0.5}
+        onBackdropPress={dismissModal}
+        onBackButtonPress={dismissModal}
       >
         <View className="h-fit w-full bg-transparent justify-around items-center">
           <View
@@ -123,6 +133,19 @@ export default function LocationPermissionComponent({
               borderWidth: 1,
             }}
           >
+            <TouchableOpacity
+              className="self-end p-1"
+              onPress={dismissModal}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text
+                className="text-[18px] font-medium"
+                style={{ color: appTheme.fontSecondColor }}
+              >
+                ✕
+              </Text>
+            </TouchableOpacity>
+
             <View className="gap-y-2">
               <Text
                 className="font-[Inter] font-semibold text-[20px] leading-[28px] tracking-[0px] text-center"
@@ -157,6 +180,15 @@ export default function LocationPermissionComponent({
                   Continue
                 </Text>
               )}
+            </TouchableOpacity>
+
+            <TouchableOpacity className="mt-3 py-1" onPress={dismissModal}>
+              <Text
+                className="text-center text-[13px] font-medium"
+                style={{ color: appTheme.fontSecondColor }}
+              >
+                {t("Skip for now")}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>

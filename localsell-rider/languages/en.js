@@ -225,6 +225,7 @@ export const en = {
     "Enable Location For Better Experience",
   "We need your location to find nearby restaurants, ensure accurate delivery, and provide the best service possible":
     "We need your location to find nearby restaurants, ensure accurate delivery, and provide the best service possible",
+  "Skip for now": "Skip for now",
   Logout: "Logout",
   Monday: "Monday",
   Tuesday: "Tuesday",

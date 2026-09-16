@@ -87,6 +87,7 @@ export const GET_ORDERS = gql`
       acceptedAt
       isRinged
       instructions
+      recipientPhone
       deliveryMode
       storeDeliveryAgent {
         _id

@@ -809,6 +809,11 @@ model Order {
   sgstAmount           Float?
   discountAmount       Float         @default(0)
   instructions         String?       @db.Text
+  // Optional contact number for whoever is actually receiving the order,
+  // when that's not the account holder (e.g. ordering for someone else at
+  // a different address). Store/rider call this number instead of the
+  // orderer's own phone when it's set.
+  recipientPhone       String?
   isPickedUp           Boolean       @default(false)
   // How this order is fulfilled. Kept in sync with `isPickedUp`
   // (PICKUP ⇔ isPickedUp). SELF = the store's own delivery person;

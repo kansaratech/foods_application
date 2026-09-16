@@ -252,6 +252,7 @@ export const hi = {
   Addons: "ऐड-ऑन",
   Options: "विकल्प",
   "Special Instructions": "विशेष निर्देश",
+  "Recipient's mobile number": "प्राप्तकर्ता का मोबाइल नंबर",
   "Sub Total": "उप-योग",
   Tip: "टिप",
   "Delivery Charges": "डिलीवरी शुल्क",

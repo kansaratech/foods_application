@@ -43,6 +43,7 @@ export const ItemDetailSection = <
   requiredTag,
   showTag = false,
   onOptionQuantityChange,
+  allowDeselect = false,
 }: SectionProps<T>) => {
   const handleSelect = (option: T) => {
     if (option.isOutOfStock) {
@@ -108,6 +109,13 @@ export const ItemDetailSection = <
                 name={name}
                 checked={isChecked}
                 onChange={() => handleSelect(option)}
+                onClick={() => {
+                  // Clicking an already-selected radio doesn't fire onChange
+                  // (its state isn't changing), so deselect has to happen here.
+                  if (!multiple && allowDeselect && isChecked) {
+                    onSingleSelect && onSingleSelect(null);
+                  }
+                }}
                 disabled={option.isOutOfStock}
                 className="accent-primary-color dark:accent-primary-color dark:bg-gray-700 dark:border-gray-600 "
               />

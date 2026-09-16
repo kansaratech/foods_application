@@ -250,6 +250,7 @@ export const en = {
   Addons: "Addons",
   Options: "Options",
   "Special Instructions": "Special Instructions",
+  "Recipient's mobile number": "Recipient's mobile number",
   "Sub Total": "Sub Total",
   Tip: "Tip",
   "Delivery Charges": "Delivery Charges",

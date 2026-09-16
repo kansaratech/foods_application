@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client"
 
-export const ADD_FAVOURITE_RESTAURANT = gql`mutation AddFavourite($id:String!){
+export const ADD_FAVOURITE_RESTAURANT = gql`mutation AddFavourite($id:ID!){
     addFavourite(id:$id){
       _id
       addresses{

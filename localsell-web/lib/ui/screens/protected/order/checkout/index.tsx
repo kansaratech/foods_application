@@ -109,6 +109,9 @@ export default function OrderCheckoutScreen() {
   const [selectedTip, setSelectedTip] = useState(
     () => localStorage.getItem("orderTip") || "",
   );
+  // Ordering for someone else (different recipient/location) — optional, so
+  // the store/rider can reach the right person instead of the account holder.
+  const [recipientPhone, setRecipientPhone] = useState("");
   const [distance, setDistance] = useState("0.0");
   const [shouldLeaveAtDoor, setShouldLeaveAtDoor] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState(
@@ -802,6 +805,15 @@ export default function OrderCheckoutScreen() {
       return;
     }
 
+    if (recipientPhone && !/^[6-9]\d{9}$/.test(recipientPhone)) {
+      showToast({
+        type: "error",
+        title: t("Invalid number"),
+        message: t("Recipient's mobile number must be a valid 10-digit number"),
+      });
+      return;
+    }
+
     // Ask the customer to confirm an address only when we don't already have
     // one (picked on the landing page or from their saved profile address).
     if (
@@ -822,6 +834,7 @@ export default function OrderCheckoutScreen() {
           restaurant: restaurantId,
           orderInput: items,
           instructions: localStorage.getItem("newOrderInstructions") || "",
+          recipientPhone: recipientPhone || null,
           paymentMethod: paymentMethod,
           couponCode: isCouponApplied ? (coupon ? coupon.title : null) : null,
           tipping: isPickUp ? 0 : +selectedTip,
@@ -1387,6 +1400,29 @@ export default function OrderCheckoutScreen() {
             ) : (
               ""
             )}
+
+            {/* <!-- Ordering for someone else --> */}
+            <div className="bg-white dark:bg-gray-900 mb-6 w-full">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
+                {t("Recipient's mobile number")}
+              </h2>
+              <p className="text-gray-500 dark:text-gray-400 mb-2 leading-5 tracking-normal font-inter text-xs sm:text-sm">
+                {t(
+                  "Ordering for someone else? Add their number so the store/rider can reach them.",
+                )}
+              </p>
+              <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                value={recipientPhone}
+                onChange={(e) =>
+                  setRecipientPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
+                }
+                placeholder={t("Optional — 10-digit mobile number")}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-secondary-color"
+              />
+            </div>
 
             {/* <!-- Payment Details --> */}
             <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">

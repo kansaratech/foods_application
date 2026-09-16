@@ -172,10 +172,12 @@ export default function RestaurantsForm() {
 
   // Handlers
   const onHandleStepChange = (order: number) => {
-    // order 0 is reached two ways: "Back" from the first visible step, or
-    // the final step finishing and looping around. Neither has anywhere
-    // useful left to go but out of the wizard.
-    if (order <= 0) {
+    // Step 0 is "Vendor" - a real, visible step when unlocked (fresh entry
+    // from the Stores list), but hidden/skipped when locked (?vendorId= or
+    // editing an existing store, where the owner can't change). So "Back"
+    // landing on 0 should show Vendor when unlocked, and exit when locked.
+    // Going below 0 (Back from Vendor itself) always exits.
+    if (order < 0 || (order === 0 && isLocked)) {
       exitWizard();
       return;
     }
@@ -299,6 +301,7 @@ export default function RestaurantsForm() {
               <RestaurantTiming
                 stepperProps={{
                   onStepChange: onHandleStepChange,
+                  onFinish: exitWizard,
                   order: activeIndex,
                   isLastStep: true,
                 }}

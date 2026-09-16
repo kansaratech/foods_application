@@ -11,7 +11,6 @@ import TrackingOrderDetailsDummy from "../../../../screen-components/protected/o
 // Services
 import useLocation from "@/lib/ui/screen-components/protected/order-tracking/services/useLocation";
 import useTracking from "@/lib/ui/screen-components/protected/order-tracking/services/useTracking";
-import ChangeOrderPanel from "@/lib/ui/screen-components/protected/order-tracking/components/changeOrderPanel";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_REVIEW_ORDER, GET_USER_PROFILE } from "@/lib/api/graphql";
@@ -293,9 +292,6 @@ export default function OrderTrackingScreen({
                 </div>
               </div>
 
-              {!isOrderTrackingDetailsLoading && mergedOrderDetails && (
-                <ChangeOrderPanel order={mergedOrderDetails} onChanged={() => refetchTracking()} />
-              )}
 
               {/* Order Details - Full width to match status card */}
               <div className="flex justify-center md:justify-start">

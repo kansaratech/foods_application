@@ -222,6 +222,7 @@ export const hi = {
     "बेहतर अनुभव के लिए लोकेशन सक्षम करें",
   "We need your location to find nearby restaurants, ensure accurate delivery, and provide the best service possible":
     "हमें आपके स्थान की आवश्यकता है ताकि हम आस-पास के रेस्तरां ढूंढ सकें, सटीक डिलीवरी सुनिश्चित कर सकें और सर्वोत्तम सेवा प्रदान कर सकें",
+  "Skip for now": "अभी नहीं",
   Logout: "लॉगआउट",
   Monday: "सोमवार",
   Tuesday: "मंगलवार",

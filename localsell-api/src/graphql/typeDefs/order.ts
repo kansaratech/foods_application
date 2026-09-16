@@ -85,6 +85,8 @@ export const orderTypeDefs = /* GraphQL */ `
     sgstAmount: Float
     discountAmount: Float!
     instructions: String
+    "Contact number for the person actually receiving the order, when different from the account holder. Null unless the customer set one at checkout."
+    recipientPhone: String
     orderDate: String
     expectedTime: String
     acceptedAt: String
@@ -220,6 +222,7 @@ export const orderTypeDefs = /* GraphQL */ `
       isPickedUp: Boolean!
       deliveryCharges: Float!
       instructions: String
+      recipientPhone: String
     ): Order!
     abortOrder(id: String!): Order!
     "Customer (or admin) changes fulfilment type / payment method while the order is still PENDING. Recomputes the delivery fee + total."

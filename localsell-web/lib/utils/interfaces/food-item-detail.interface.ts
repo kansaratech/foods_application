@@ -37,6 +37,10 @@ export interface SectionProps<T extends { _id: string }> {
   // When set, a checked multi-select option gets a +/- stepper (e.g. "2x
   // Tawa Roti") instead of just a checkbox. Ignored for single-select.
   onOptionQuantityChange?: (optionId: string, quantity: number) => void;
+  // Lets a single-select (radio) section be cleared by clicking the already-
+  // selected option again. Only meaningful when the section is optional -
+  // a required single-select (e.g. variation) must always keep a selection.
+  allowDeselect?: boolean;
 }
 export interface AddonSectionProps<T extends { _id: string }> {
   title: string;

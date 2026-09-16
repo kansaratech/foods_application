@@ -143,5 +143,6 @@ export interface IOrder {
   isRinged: boolean;
   isRiderRinged: boolean;
   instructions?: string;
+  recipientPhone?: string;
   discountAmount: number
 }

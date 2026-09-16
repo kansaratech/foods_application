@@ -469,6 +469,7 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
                 title={addon.title ?? "Unknown"}
                 name={addon._id ?? "addon"}
                 multiple={!isSingleSelect}
+                allowDeselect={isSingleSelect && effectiveMin === 0}
                 singleSelected={
                   isSingleSelect
                     ? (selectedAddonOptions[addon._id ?? ""] as Option)

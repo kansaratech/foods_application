@@ -7,7 +7,7 @@ import { orderSubTotal } from "@/lib/utils/methods";
 import { getIsAcceptButtonVisible } from "@/lib/utils/methods/global";
 import { ORDER_TYPE } from "@/lib/utils/types";
 import { memo, useContext, useEffect, useRef, useState } from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Linking, Text, TouchableOpacity, View } from "react-native";
 import CountdownTimer from "../custom-timer";
 import SpinnerComponent from "../spinner";
 import { preparationDeadline } from "@/lib/utils/methods/preparation-deadline";
@@ -546,6 +546,35 @@ const Order = ({
               {order?.instructions}
             </Text>
           </View>
+        )}
+
+        {/* Recipient contact — set when the customer ordered for someone
+            else, so the store can reach the actual recipient instead. */}
+        {order?.recipientPhone && (
+          <TouchableOpacity
+            className="py-2"
+            onPress={() => Linking.openURL(`tel:${order.recipientPhone}`)}
+          >
+            <Text
+              style={{
+                color: appTheme.primary,
+                fontSize: 14,
+                fontWeight: "600",
+              }}
+            >
+              {t("Recipient's mobile number")}
+            </Text>
+            <Text
+              style={{
+                color: appTheme.fontMainColor,
+                fontSize: 16,
+                fontWeight: "500",
+                marginTop: 4,
+              }}
+            >
+              {order.recipientPhone}
+            </Text>
+          </TouchableOpacity>
         )}
 
         {/* New Order */}

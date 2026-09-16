@@ -629,12 +629,14 @@ button:focus-visible {
 }
 .ls-native-table th {
   padding: 0.875rem 1rem;
-  text-align: left;
   font-weight: 600;
   color: var(--app-text-muted);
   background: var(--app-bg);
   border-bottom: 1px solid var(--app-border);
   white-space: nowrap;
+}
+:where(.ls-native-table th) {
+  text-align: left;
 }
 .ls-native-table td {
   padding: 0.875rem 1rem;

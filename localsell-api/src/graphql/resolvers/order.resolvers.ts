@@ -13,6 +13,7 @@ import { recordOrderCommission, recordRiderCash, recordVendorPayable, resolveCom
 import { assertRiderNotRejected } from './rider-docs.resolvers';
 import { assertRiderApproved } from './rider.resolvers';
 import { hasPriorOrder } from './coupon.resolvers';
+import { isValidIndianMobile, normalizeIndianPhone } from '../../utils/phone';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
 const PAST_STATUSES: OrderStatus[] = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
@@ -38,6 +39,7 @@ interface PlaceOrderArgs {
   isPickedUp: boolean;
   deliveryCharges: number;
   instructions?: string;
+  recipientPhone?: string;
 }
 
 export async function publishOrderUpdate(order: Order) {
@@ -729,6 +731,10 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         throw userInputError('This store is not currently accepting orders');
       }
 
+      if (args.recipientPhone && !isValidIndianMobile(args.recipientPhone)) {
+        throw userInputError('Recipient phone must be a valid 10-digit Indian mobile number');
+      }
+
       const { itemsData, itemsTotal, lines } = await buildOrderItems(args.restaurant, args.orderInput, restaurant.tax);
       if (itemsTotal < restaurant.minimumOrder) {
         throw userInputError(`Order amount is below the restaurant's minimum order of ${restaurant.minimumOrder}`);
@@ -803,6 +809,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
           discountAmount,
           orderAmount,
           instructions: args.instructions,
+          recipientPhone: normalizeIndianPhone(args.recipientPhone),
           isPickedUp: args.isPickedUp,
           deliveryMode,
           orderDate: new Date(args.orderDate),
