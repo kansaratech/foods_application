@@ -40,7 +40,7 @@ import './workspace.css';
 
 type BillingRow = {
   _id: string;
-  vendor: { _id: string; name?: string; email?: string };
+  vendor: { _id: string; name?: string; businessName?: string; email?: string };
   orderCount: number;
   grossFoodSubtotal: number;
   commissionTotal: number;
@@ -203,7 +203,7 @@ function BillTable({
                 headerName: 'Vendor',
                 body: (b: Bill) => (
                   <div>
-                    <strong>{b.vendor?.name || 'Vendor'}</strong>
+                    <strong>{b.vendor?.businessName || b.vendor?.name || 'Vendor'}</strong>
                     <small>{b.vendor?.email}</small>
                   </div>
                 ),
@@ -314,7 +314,7 @@ function ReceiptTable({
         {
           propertyName: 'vendor',
           headerName: 'Vendor',
-          body: (r: Receipt) => r.vendor?.name || r.vendor?.email || '-',
+          body: (r: Receipt) => r.vendor?.businessName || r.vendor?.name || r.vendor?.email || '-',
         },
         {
           propertyName: 'amount',
@@ -406,7 +406,7 @@ function PaymentDialog({
           }}
         >
           <div className="finance-callout">
-            <strong>{bill.vendor?.name || bill.vendor?.email}</strong>
+            <strong>{bill.vendor?.businessName || bill.vendor?.name || bill.vendor?.email}</strong>
             <span>{bill.invoiceNumber}</span>
             <span>
               Outstanding <b>{money(bill.outstandingAmount)}</b>
@@ -749,7 +749,7 @@ export function FinanceBalances() {
             headerName: 'Vendor',
             body: (b: VendorBalance) => (
               <div>
-                <strong>{b.vendor?.name || 'Vendor'}</strong>
+                <strong>{b.vendor?.businessName || b.vendor?.name || 'Vendor'}</strong>
                 <small>{b.vendor?.email}</small>
               </div>
             ),
@@ -948,7 +948,7 @@ export function FinanceBilling() {
             headerName: 'Vendor',
             body: (r: BillingRow) => (
               <div>
-                <strong>{r.vendor.name || r.vendor.email}</strong>
+                <strong>{r.vendor.businessName || r.vendor.name || r.vendor.email}</strong>
                 <small>{r.vendor.email}</small>
               </div>
             ),
@@ -1079,7 +1079,11 @@ function PayoutDialog({
         }}
       >
         <div className="finance-callout">
-          <strong>{payables[0]?.vendor?.name || payables[0]?.vendor?.email}</strong>
+          <strong>
+            {payables[0]?.vendor?.businessName ||
+              payables[0]?.vendor?.name ||
+              payables[0]?.vendor?.email}
+          </strong>
           <span>{payables.length} order(s)</span>
           <span>
             Net payable <b>{money(total)}</b>
@@ -1215,7 +1219,7 @@ export function FinanceVendorPayouts() {
             headerName: 'Vendor',
             body: (p: VendorPayable) => (
               <div>
-                <strong>{p.vendor?.name || 'Vendor'}</strong>
+                <strong>{p.vendor?.businessName || p.vendor?.name || 'Vendor'}</strong>
                 <small>{p.vendor?.email}</small>
               </div>
             ),
@@ -1371,7 +1375,7 @@ export function FinanceBillDetail({
           <>
             <div className="finance-summary-bar">
               <div>
-                <span>{bill.vendor?.name || bill.vendor?.email}</span>
+                <span>{bill.vendor?.businessName || bill.vendor?.name || bill.vendor?.email}</span>
                 <strong>{money(bill.outstandingAmount)} outstanding</strong>
                 <small>
                   {day(bill.periodStart)} / {day(bill.periodEnd)} /{' '}

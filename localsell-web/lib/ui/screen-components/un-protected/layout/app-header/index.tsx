@@ -20,12 +20,18 @@ import {
 import Logo from "@/lib/utils/assets/svg/Logo";
 import Cart from "@/lib/ui/useable-components/cart";
 import LocationPopover from "./location-popover";
+import SearchSuggestionsDropdown from "./search-suggestions-dropdown";
 
 import { useAuth } from "@/lib/context/auth/auth.context";
 import { useUserAddress } from "@/lib/context/address/address.context";
 import useUser from "@/lib/hooks/useUser";
 import useServiceability from "@/lib/hooks/useServiceability";
 import useLocationSearch from "@/lib/hooks/useLocationSearch";
+import useSearchSuggestions from "@/lib/hooks/useSearchSuggestions";
+import {
+  IFoodSearchResult,
+  IRestaurant,
+} from "@/lib/utils/interfaces/restaurants.interface";
 
 import { setUserLocale } from "@/lib/utils/methods/locale";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
@@ -138,7 +144,6 @@ export default function AppHeader() {
   const { userAddress, setUserAddress } = useUserAddress();
   const { cartCount, profile, logout } = useUser();
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
@@ -147,7 +152,17 @@ export default function AppHeader() {
   const profileMenuRef = useRef<Menu>(null);
   const didInitLocation = useRef(false);
   const didAutoLocate = useRef(false);
+  const searchBoxRef = useRef<HTMLDivElement>(null);
   const { detectCurrentLocation } = useLocationSearch();
+  const {
+    term: searchTerm,
+    open: isSearchOpen,
+    loading: isSearchLoading,
+    restaurants: searchedRestaurants,
+    foods: searchedFoods,
+    search: runSearch,
+    close: closeSearch,
+  } = useSearchSuggestions();
 
   const isLoggedIn = Boolean(authToken);
   const isHindi = locale === "hi";
@@ -247,11 +262,45 @@ export default function AppHeader() {
     });
   };
 
-  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const value = searchTerm.trim();
+  const goToSearchResults = (value: string) => {
+    closeSearch();
     router.push(value ? `/search/${encodeURIComponent(value)}` : "/discovery");
   };
+
+  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    goToSearchResults(searchTerm.trim());
+  };
+
+  const pickRestaurant = (restaurant: IRestaurant) => {
+    closeSearch();
+    router.push(
+      `/${restaurant.shopType === "restaurant" ? "restaurant" : "store"}/${restaurant.slug}/${restaurant._id}`,
+    );
+  };
+
+  const pickFood = (food: IFoodSearchResult) => {
+    closeSearch();
+    router.push(
+      `/${food.restaurantShopType === "grocery" ? "store" : "restaurant"}/${food.restaurantSlug}/${food.restaurantId}`,
+    );
+  };
+
+  // Close the suggestions panel on an outside click (but not on the click
+  // that opens it, and not on Escape-less blur while typing).
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(e.target as Node)) {
+        closeSearch();
+      }
+    };
+    const attach = window.setTimeout(() => document.addEventListener("click", onDocClick), 0);
+    return () => {
+      window.clearTimeout(attach);
+      document.removeEventListener("click", onDocClick);
+    };
+  }, [isSearchOpen, closeSearch]);
 
   const onLogout = () => {
     setIsLogoutOpen(false);
@@ -286,25 +335,43 @@ export default function AppHeader() {
           />
         </div>
 
-        <form
-          onSubmit={submitSearch}
-          className="mx-auto hidden max-w-2xl flex-1 items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#1c5bc7] focus-within:ring-2 focus-within:ring-[#1c5bc7]/15 md:flex dark:border-gray-700 dark:bg-gray-800"
-        >
-          <input
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder="Search restaurants, stores or items"
-            aria-label="Search restaurants, stores or items"
-            className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
-          />
-          <button
-            type="submit"
-            aria-label="Search"
-            className="p-1 text-slate-500 transition hover:text-[#16293f] dark:text-gray-300"
+        <div ref={searchBoxRef} className="relative mx-auto hidden max-w-2xl flex-1 md:block">
+          <form
+            onSubmit={submitSearch}
+            className="flex items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#1c5bc7] focus-within:ring-2 focus-within:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800"
           >
-            <Icon icon={faMagnifyingGlass} size={15} />
-          </button>
-        </form>
+            <input
+              value={searchTerm}
+              onChange={(event) => runSearch(event.target.value)}
+              onFocus={() => {
+                if (searchTerm.trim().length >= 2) runSearch(searchTerm);
+              }}
+              placeholder="Search restaurants, stores or items"
+              aria-label="Search restaurants, stores or items"
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
+            />
+            <button
+              type="submit"
+              aria-label="Search"
+              className="p-1 text-slate-500 transition hover:text-[#16293f] dark:text-gray-300"
+            >
+              <Icon icon={faMagnifyingGlass} size={15} />
+            </button>
+          </form>
+
+          {isSearchOpen && (
+            <SearchSuggestionsDropdown
+              term={searchTerm}
+              loading={isSearchLoading}
+              restaurants={searchedRestaurants}
+              foods={searchedFoods}
+              onPickRestaurant={pickRestaurant}
+              onPickFood={pickFood}
+              onSeeAll={() => goToSearchResults(searchTerm.trim())}
+            />
+          )}
+        </div>
 
         <div className="ml-auto flex items-center gap-2.5 whitespace-nowrap text-[13px] font-semibold text-slate-700 dark:text-gray-200 sm:gap-4 sm:text-sm">
           <button

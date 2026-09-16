@@ -65,7 +65,7 @@ export default function FinanceCharts({
               aria-label="Commission by vendor"
               data={{
                 labels: vendors.map(
-                  (v) => v.vendor.name || v.vendor.email || 'Vendor'
+                  (v) => v.vendor.businessName || v.vendor.name || v.vendor.email || 'Vendor'
                 ),
                 datasets: [
                   {
@@ -83,7 +83,7 @@ export default function FinanceCharts({
               <summary>View chart values</summary>
               {vendors.map((v) => (
                 <p key={v.vendor._id}>
-                  {v.vendor.name || v.vendor.email}:{' '}
+                  {v.vendor.businessName || v.vendor.name || v.vendor.email}:{' '}
                   <strong>{amount(v.commission)}</strong>
                 </p>
               ))}

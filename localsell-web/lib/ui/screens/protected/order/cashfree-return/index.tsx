@@ -1,5 +1,6 @@
 "use client";
 
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { ORDER_PAYMENT_STATUS } from "@/lib/api/graphql/queries/order-tracking";
 import { CREATE_CASHFREE_PAYMENT_SESSION } from "@/lib/api/graphql";
 import useUser from "@/lib/hooks/useUser";
@@ -8,7 +9,13 @@ import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import { loadCashfreeSdk, cashfreeSdkMode } from "@/lib/utils/methods/cashfree";
 import { useApolloClient, useMutation } from "@apollo/client";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const COUPON_STORAGE_KEY = "applied_coupon";
 const COUPON_TEXT_STORAGE_KEY = "coupon_text";
@@ -39,17 +46,24 @@ export default function CashfreeReturnScreen() {
   const client = useApolloClient();
   const { clearCart } = useUser();
   const { CASHFREE_ENV } = useConfig();
-  const [status, setStatus] = useState<"polling" | "paid" | "failed" | "timeout">("polling");
+  const [status, setStatus] = useState<
+    "polling" | "paid" | "failed" | "timeout"
+  >("polling");
   const finalizingRef = useRef(false);
   const [retrying, setRetrying] = useState(false);
-  const [createCashfreePaymentSession] = useMutation(CREATE_CASHFREE_PAYMENT_SESSION);
+  const [createCashfreePaymentSession] = useMutation(
+    CREATE_CASHFREE_PAYMENT_SESSION,
+  );
 
   const orderDbId = useMemo(() => {
     const queryOrderId = searchParams.get("order_id");
     if (typeof window !== "undefined") {
       if (queryOrderId) {
         localStorage.setItem(PENDING_CASHFREE_ORDER_ID_KEY, queryOrderId);
-        localStorage.setItem(PENDING_CASHFREE_STARTED_AT_KEY, Date.now().toString());
+        localStorage.setItem(
+          PENDING_CASHFREE_STARTED_AT_KEY,
+          Date.now().toString(),
+        );
         return queryOrderId;
       }
       return localStorage.getItem(PENDING_CASHFREE_ORDER_ID_KEY) || "";
@@ -138,9 +152,17 @@ export default function CashfreeReturnScreen() {
       ]);
       const session = data?.createCashfreePaymentSession;
       if (session?.success && session?.paymentSessionId) {
-        localStorage.setItem(PENDING_CASHFREE_STARTED_AT_KEY, Date.now().toString());
-        const cashfree = (window as any).Cashfree({ mode: cashfreeSdkMode(CASHFREE_ENV) });
-        cashfree.checkout({ paymentSessionId: session.paymentSessionId, redirectTarget: "_self" });
+        localStorage.setItem(
+          PENDING_CASHFREE_STARTED_AT_KEY,
+          Date.now().toString(),
+        );
+        const cashfree = (window as any).Cashfree({
+          mode: cashfreeSdkMode(CASHFREE_ENV),
+        });
+        cashfree.checkout({
+          paymentSessionId: session.paymentSessionId,
+          redirectTarget: "_self",
+        });
         return;
       }
     } finally {
@@ -166,13 +188,15 @@ export default function CashfreeReturnScreen() {
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-xl rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm">
         {status === "polling" ? (
-          <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-neutral-200 border-t-primary-color" />
+          <BrandLoader variant="inline" size={24} />
         ) : null}
         <h1 className="text-2xl font-semibold text-neutral-900">{heading}</h1>
         <p className="mt-3 text-sm text-neutral-600">{message}</p>
 
         {orderDbId ? (
-          <p className="mt-4 text-xs text-neutral-400">Reference: {orderDbId}</p>
+          <p className="mt-4 text-xs text-neutral-400">
+            Reference: {orderDbId}
+          </p>
         ) : null}
 
         {status === "failed" || status === "timeout" ? (
@@ -188,7 +212,13 @@ export default function CashfreeReturnScreen() {
             ) : null}
             <button
               className="rounded-full border border-neutral-300 px-5 py-3 text-sm font-medium text-neutral-700"
-              onClick={() => router.push(orderDbId ? `/order/${orderDbId}/tracking` : "/profile/order-history")}
+              onClick={() =>
+                router.push(
+                  orderDbId
+                    ? `/order/${orderDbId}/tracking`
+                    : "/profile/order-history",
+                )
+              }
             >
               View my order
             </button>

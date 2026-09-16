@@ -1,6 +1,6 @@
+import CustomSpinner from "@/lib/ui/useable-components/custom-spinner";
 import { useState } from "react";
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   Text,
@@ -69,11 +69,15 @@ export default function ForgotPasswordModal({
 
   const requestOtp = async () => {
     if (!EMAIL_RE.test(email.trim())) {
-      FlashMessageComponent({ message: "Enter the email on your store account." });
+      FlashMessageComponent({
+        message: "Enter the email on your store account.",
+      });
       return;
     }
     try {
-      await forgotPassword({ variables: { email: email.trim().toLowerCase() } });
+      await forgotPassword({
+        variables: { email: email.trim().toLowerCase() },
+      });
       FlashMessageComponent({
         message: "We sent a reset code to your email.",
       });
@@ -223,7 +227,7 @@ export default function ForgotPasswordModal({
             }}
           >
             {busy ? (
-              <ActivityIndicator color="#fff" />
+              <CustomSpinner color="#fff" />
             ) : (
               <Text className="text-white font-semibold">
                 {step === "request" ? "Send reset code" : "Set new password"}

@@ -13,7 +13,7 @@ import {
 } from 'primereact/datatable';
 import DataTableColumnSkeleton from '../custom-skeletons/datatable.column.skeleton';
 import { useTranslations } from 'next-intl';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import BrandLoader from '@/lib/ui/useable-components/brand-loader';
 import { useEffect } from 'react';
 import './table.css';
 
@@ -48,6 +48,8 @@ const Table = <T extends ITableExtends>({
       setSelectedData(e.value);
     }
   };
+
+  const initialLoading = loading && !data?.length;
 
   // Hooks
   const t = useTranslations();
@@ -96,6 +98,7 @@ const Table = <T extends ITableExtends>({
 
   return (
     <div
+      aria-busy={Boolean(loading)}
       className={`responsive-admin-table ${scrollable ? 'table-internal-scroll' : 'table-page-scroll'}`}
     >
       <DataTable
@@ -128,13 +131,7 @@ const Table = <T extends ITableExtends>({
         emptyMessage={
           loading ? (
             <div className="flex justify-center items-center h-full">
-              <ProgressSpinner
-                style={{ width: '20px', height: '20px' }}
-                strokeWidth="6"
-                fill="transparent"
-                animationDuration=".5s"
-                className="text-black"
-              />
+              <BrandLoader variant="panel" />
             </div>
           ) : (
             t('No Data Available')
@@ -158,10 +155,13 @@ const Table = <T extends ITableExtends>({
             className="dark:text-white"
             headerClassName="dark:text-white dark:bg-dark-900"
             footerClassName="dark:text-white dark:bg-dark-900"
-            sortable={col.sortable ?? (!isServerPaginated && !col?.propertyName?.includes('action'))}
+            sortable={
+              col.sortable ??
+              (!isServerPaginated && !col?.propertyName?.includes('action'))
+            }
             hidden={col?.hidden}
             bodyClassName="selectable-column"
-            body={loading ? <DataTableColumnSkeleton /> : col.body}
+            body={initialLoading ? <DataTableColumnSkeleton /> : col.body}
           />
         ))}
       </DataTable>

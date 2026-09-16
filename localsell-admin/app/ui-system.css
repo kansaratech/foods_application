@@ -145,8 +145,8 @@
   font-size: 0.8125rem;
 }
 .ls-calendar-panel.p-datepicker table td > span.p-highlight {
-  background: var(--highlight-bg);
-  color: var(--highlight-text-color);
+  background: var(--app-primary);
+  color: #fff;
   font-weight: 600;
 }
 .ls-calendar-panel.p-datepicker
@@ -685,4 +685,60 @@ textarea.ls-field {
 .layout-main-container {
   width: 100%;
   min-width: 0;
+}
+
+/* Shared date overlays: compact, readable and usable inside scrolling dialogs. */
+.ls-calendar-panel.p-datepicker {
+  width: 20rem;
+  min-width: min(20rem, calc(100vw - 24px)) !important;
+  font-family: inherit;
+}
+.ls-calendar-panel.p-datepicker table {
+  margin: 0.5rem 0;
+}
+.ls-calendar-panel.p-datepicker .p-datepicker-prev,
+.ls-calendar-panel.p-datepicker .p-datepicker-next {
+  width: 2rem;
+  height: 2rem;
+  color: var(--app-text-muted);
+  border-radius: 0.5rem;
+}
+.ls-calendar-panel.p-datepicker .p-datepicker-prev:hover,
+.ls-calendar-panel.p-datepicker .p-datepicker-next:hover {
+  background: var(--app-hover);
+  color: var(--app-primary);
+}
+.ls-calendar-panel.p-datepicker
+  table
+  td
+  > span:not(.p-highlight):not(.p-disabled):hover {
+  background: var(--app-hover);
+}
+.ls-calendar-panel.p-datepicker .p-datepicker-buttonbar {
+  border-top: 1px solid var(--app-border);
+  padding: 0.75rem 0 0;
+  gap: 0.5rem;
+}
+.ls-calendar-panel.p-datepicker .p-datepicker-buttonbar .p-button {
+  padding: 0.375rem 0.75rem;
+  min-height: 2rem;
+  height: auto;
+  font-size: 0.8125rem;
+  color: var(--app-primary);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.ls-calendar-panel.p-datepicker .p-datepicker-buttonbar .p-button:hover {
+  background: var(--app-hover);
+}
+.ls-calendar.p-calendar.ls-field-invalid {
+  border-color: #dc2626;
+}
+
+.ls-calendar-panel.p-datepicker.p-datepicker-touch-ui {
+  min-width: 0 !important;
+  width: min(20rem, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
 }

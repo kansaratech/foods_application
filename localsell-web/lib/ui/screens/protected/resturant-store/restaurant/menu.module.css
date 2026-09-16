@@ -1,0 +1,225 @@
+.layout {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  padding: 28px 12px 0;
+}
+.navigation {
+  position: sticky;
+  top: 88px;
+  padding: 16px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+}
+.navTitle {
+  margin: 0 12px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+}
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(100dvh - 180px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+.category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: start;
+  padding: 12px;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 150ms;
+}
+.category:hover {
+  background: #f1f5f9;
+}
+.category:focus-visible,
+.search button:focus-visible {
+  outline: 2px solid #1c5bc7;
+  outline-offset: 2px;
+}
+.category.active {
+  background: #edf3ff;
+  color: #1c5bc7;
+  font-weight: 700;
+}
+.count {
+  font-size: 12px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+.content {
+  min-width: 0;
+  scroll-margin-top: 144px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.menuTitle {
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.025em;
+}
+.resultCount {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+.search {
+  flex: 0 1 360px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: #64748b;
+}
+.search:focus-within {
+  border-color: #1c5bc7;
+  box-shadow: 0 0 0 3px #1c5bc714;
+}
+.search svg {
+  width: 15px;
+  flex-shrink: 0;
+}
+.search input {
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #0f172a;
+  font-size: 14px;
+}
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+.search button {
+  font-size: 24px;
+  line-height: 1;
+}
+.section {
+  margin-bottom: 28px;
+}
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 650;
+  color: #0f172a;
+}
+.sectionTitle span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 3px 7px;
+}
+.foodGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.clearSearch {
+  display: block;
+  margin: 16px auto 0;
+  color: #1c5bc7;
+  font-weight: 600;
+}
+:global(.dark) .navigation,
+:global(.dark) .search {
+  background: #111827;
+  border-color: #334155;
+}
+:global(.dark) .menuTitle,
+:global(.dark) .sectionTitle,
+:global(.dark) .search input {
+  color: #f1f5f9;
+}
+:global(.dark) .category {
+  color: #cbd5e1;
+}
+:global(.dark) .category:hover {
+  background: #1e293b;
+}
+:global(.dark) .category.active {
+  background: #1e3a5f;
+  color: #bfdbfe;
+}
+@media (min-width: 1700px) {
+  .foodGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1100px) {
+  .foodGrid {
+    grid-template-columns: 1fr;
+  }
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .search {
+    flex-basis: auto;
+  }
+}
+@media (max-width: 767px) {
+  .layout {
+    display: block;
+    padding: 16px 0 0;
+  }
+  .navigation {
+    top: 120px;
+    z-index: 20;
+    padding: 10px 0;
+    border: 0;
+    border-radius: 0;
+    margin-bottom: 20px;
+  }
+  .navTitle {
+    margin-left: 4px;
+  }
+  .categories {
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: none;
+    padding: 2px 2px 8px;
+  }
+  .category {
+    flex-shrink: 0;
+    padding: 10px 12px;
+    white-space: nowrap;
+    background: #f8fafc;
+  }
+  .content {
+    scroll-margin-top: 230px;
+  }
+  .menuTitle {
+    font-size: 22px;
+  }
+}

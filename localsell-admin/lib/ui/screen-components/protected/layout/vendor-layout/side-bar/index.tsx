@@ -33,15 +33,15 @@ function VendorSidebar({ children }: IGlobalComponentProps) {
     useContext<LayoutContextProps>(LayoutContext);
 
   return (
-    <div className="relative">
+    <div className="relative h-full min-h-0">
       <aside
         id="app-sidebar"
-        className={`box-border transform overflow-hidden transition-all duration-300 ease-in-out ${isVendorSidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}`}
+        className={`box-border h-full min-h-0 transform overflow-hidden transition-all duration-300 ease-in-out ${isVendorSidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}`}
       >
         <nav
           className={`flex h-full flex-col border-r dark:border-dark-600 bg-white dark:bg-dark-950 shadow-sm transition-opacity duration-300 ${isVendorSidebarVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         >
-          <ul className="flex-1 pl-2">{children}</ul>
+          <ul className="flex min-h-0 flex-1 flex-col pl-2">{children}</ul>
         </nav>
       </aside>
     </div>
@@ -49,8 +49,8 @@ function VendorSidebar({ children }: IGlobalComponentProps) {
 }
 
 export default function MakeVendorSidebar() {
-    // Hooks
-    const t = useTranslations();
+  // Hooks
+  const t = useTranslations();
   const { isVendorSidebarVisible } =
     useContext<LayoutContextProps>(LayoutContext);
   const { user } = useUserContext();
@@ -120,7 +120,7 @@ export default function MakeVendorSidebar() {
   return (
     <>
       <VendorSidebar>
-        <div className="h-[92vh] overflow-y-auto overflow-x-hidden pr-2">
+        <div className="h-full min-h-0 flex-1 overscroll-contain overflow-y-auto overflow-x-hidden pr-2">
           {navBarItems.map((item, index) => (
             <SidebarItem
               key={index}

@@ -64,7 +64,9 @@ export const vendorPayoutResolvers: IResolvers<unknown, GraphQLContext> = {
     createdAt: (p: VendorPayable) => p.createdAt.toISOString(),
     vendor: async (p: VendorPayable) => {
       const v = await prisma.user.findUnique({ where: { id: p.vendorId } });
-      return v ? { _id: v.id, name: v.name, email: v.email, phone: v.phone } : null;
+      return v
+        ? { _id: v.id, name: v.name, businessName: v.businessName, email: v.email, phone: v.phone }
+        : null;
     },
     storeName: async (p: VendorPayable) => {
       const r = await prisma.restaurant.findUnique({ where: { id: p.restaurantId } });
@@ -78,7 +80,9 @@ export const vendorPayoutResolvers: IResolvers<unknown, GraphQLContext> = {
     createdAt: (p: VendorPayout) => p.createdAt.toISOString(),
     vendor: async (p: VendorPayout) => {
       const v = await prisma.user.findUnique({ where: { id: p.vendorId } });
-      return v ? { _id: v.id, name: v.name, email: v.email, phone: v.phone } : null;
+      return v
+        ? { _id: v.id, name: v.name, businessName: v.businessName, email: v.email, phone: v.phone }
+        : null;
     },
   },
 };

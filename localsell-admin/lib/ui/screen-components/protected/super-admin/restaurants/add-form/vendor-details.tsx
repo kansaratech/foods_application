@@ -46,6 +46,7 @@ import CustomPhoneTextField from '@/lib/ui/useable-components/phone-input-field'
 const initialValues: IRestauransVendorDetailsForm = {
   _id: null,
   name: '',
+  businessName: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -99,7 +100,10 @@ export default function VendorDetails({
         ...restaurantsContextData,
         vendor: {
           _id: {
-            label: data.createVendor?.email,
+            label:
+              data.createVendor?.businessName ||
+              data.createVendor?.name ||
+              data.createVendor?.email,
             code: data.createVendor?._id,
           },
         },
@@ -118,6 +122,7 @@ export default function VendorDetails({
             vendorInput: {
               _id: '',
               name: formData.firstName + ' ' + formData.lastName,
+              businessName: formData.businessName,
               email: formData.email,
               password: formData.password,
               firstName: formData.firstName,
@@ -250,6 +255,27 @@ export default function VendorDetails({
                         </div>
                       ) : (
                         <div className="space-y-3">
+                          <div>
+                            <CustomTextField
+                              type="text"
+                              name="businessName"
+                              placeholder={t('Business / Store Name')}
+                              maxLength={60}
+                              value={values.businessName ?? ''}
+                              onChange={handleChange}
+                              showLabel={true}
+                              style={{
+                                borderColor: onErrorMessageMatcher(
+                                  'businessName',
+                                  errors?.businessName,
+                                  VendorErrors
+                                )
+                                  ? 'red'
+                                  : '',
+                              }}
+                            />
+                            {showErr('businessName')}
+                          </div>
                           <div>
                             <CustomTextField
                               type="text"

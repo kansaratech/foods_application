@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TextIconClickableProps } from '@/lib/utils/interfaces';
 import { Ripple } from 'primereact/ripple';
 // PrimeReact Spinner (or any loader component)
-import { ProgressSpinner } from 'primereact/progressspinner';
+import { ProgressSpinner } from '@/lib/ui/useable-components/brand-loader';
 
 export default function TextIconClickable({
   className,

@@ -6,6 +6,7 @@ export const BILL_FIELDS = gql`
     vendor {
       _id
       name
+      businessName
       email
       phone
     }
@@ -31,6 +32,7 @@ export const PAYMENT_FIELDS = gql`
     vendor {
       _id
       name
+      businessName
       email
     }
     amount
@@ -170,6 +172,7 @@ export const VENDOR_PAYABLE_FIELDS = gql`
     vendor {
       _id
       name
+      businessName
       email
       phone
     }
@@ -188,6 +191,7 @@ export const VENDOR_PAYOUT_FIELDS = gql`
     vendor {
       _id
       name
+      businessName
       email
     }
     amount
@@ -204,6 +208,7 @@ export const VENDOR_BALANCE_FIELDS = gql`
     vendor {
       _id
       name
+      businessName
       email
       phone
     }
@@ -284,7 +289,7 @@ export type VendorPayable = {
   orderDeliveredAt: string;
   createdAt: string;
 };
-export type Vendor = { _id: string; name?: string; email?: string };
+export type Vendor = { _id: string; name?: string; businessName?: string; email?: string };
 export type VendorBalance = {
   _id: string;
   vendor: Vendor;

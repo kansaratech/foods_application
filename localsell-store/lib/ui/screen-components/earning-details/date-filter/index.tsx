@@ -17,7 +17,8 @@ import { useTranslation } from "react-i18next";
 import { Text, TouchableOpacity, View } from "react-native";
 
 // React Native Calendars
-import { Calendar, DateData } from "react-native-calendars";
+import { DateData } from "react-native-calendars";
+import Calendar from "@/lib/ui/useable-components/calendar";
 import { MarkedDates } from "react-native-calendars/src/types";
 
 export default function EarningDetailsDateFilter({
@@ -57,46 +58,24 @@ export default function EarningDetailsDateFilter({
     }
   };
 
-  // Generate the marked dates
+  // Date-only strings stay in local calendar days across timezone/DST changes.
   const getMarkedDates = () => {
     const markedDates: MarkedDates = {};
-
-    if (dateFilter.startDate) {
-      markedDates[dateFilter.startDate] = {
-        startingDay: true,
-        marked: true,
-        color: Colors.light.primary,
-        dotColor: Colors.light.primary,
-        selectedColor: Colors.light.primary,
-        selectedTextColor: Colors.light.primary,
-        textColor: Colors.light.primary,
+    if (!dateFilter.startDate) return markedDates;
+    const end = dateFilter.endDate || dateFilter.startDate;
+    const cursor = new Date(`${dateFilter.startDate}T00:00:00`);
+    const lastDay = new Date(`${end}T00:00:00`);
+    while (cursor <= lastDay) {
+      const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+      if (key > end) break;
+      markedDates[key] = {
+        startingDay: key === dateFilter.startDate,
+        endingDay: key === end,
+        color: appTheme.primary,
+        textColor: appTheme.white,
       };
+      cursor.setDate(cursor.getDate() + 1);
     }
-
-    if (dateFilter.endDate) {
-      markedDates[dateFilter.endDate] = {
-        endingDay: true,
-        marked: true,
-        color: Colors.light.primary,
-        dotColor: Colors.light.primary,
-        selectedColor: Colors.light.primary,
-        selectedTextColor: Colors.light.primary,
-        textColor: Colors.light.primary,
-      };
-
-      // Mark the dates in between
-      const currentDate = new Date(dateFilter.startDate!);
-      const endDate = new Date(dateFilter.endDate);
-
-      while (currentDate < endDate) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        const dateString = currentDate.toISOString().split("T")[0];
-        if (dateString !== dateFilter.endDate) {
-          markedDates[dateString] = {};
-        }
-      }
-    }
-
     return markedDates;
   };
 
@@ -137,7 +116,8 @@ export default function EarningDetailsDateFilter({
       {isDateFilterVisible && (
         <View>
           <Calendar
-            initialDate={""}
+            markingType="period"
+            current={dateFilter.startDate || undefined}
             onDayPress={(day: DateData) => handleDayPress(day)}
             markedDates={{
               ...datesBeGetter,

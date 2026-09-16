@@ -2,22 +2,18 @@
 'use client';
 
 // Core
-import { useContext } from 'react';
 
 // Context
-import { LayoutContext } from '@/lib/context/global/layout.context';
 
 // Components
 import RestaurantAppTopbar from '@/lib/ui/screen-components/protected/layout/restaurant-layout/app-bar';
 import RestaurantSidebar from '@/lib/ui/screen-components/protected/layout/restaurant-layout/side-bar';
 
 // Interface
-import { IProvider, LayoutContextProps } from '@/lib/utils/interfaces';
+import { IProvider } from '@/lib/utils/interfaces';
 
 const RestaurantLayout = ({ children }: IProvider) => {
   // Context
-  const { isRestaurantSidebarVisible } =
-    useContext<LayoutContextProps>(LayoutContext);
 
   return (
     <div className="layout-main">
@@ -25,14 +21,10 @@ const RestaurantLayout = ({ children }: IProvider) => {
         <RestaurantAppTopbar />
       </div>
       <div className="layout-main-container">
-        <div className="relative left-0 z-50">
+        <div className="layout-sidebar relative left-0 z-50">
           <RestaurantSidebar />
         </div>
-        <div
-          className={`h-full flex flex-col min-h-0 max-w-[100vw] dark:bg-dark-950 ${isRestaurantSidebarVisible ? 'w-[calc(100vw-260px)]' : 'w-full'} px-5`}
-        >
-          {children}
-        </div>
+        <div className="layout-content dark:bg-dark-950 px-5">{children}</div>
       </div>
     </div>
   );

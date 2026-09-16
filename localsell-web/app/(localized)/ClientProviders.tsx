@@ -1,5 +1,6 @@
 "use client";
 
+import { NetworkActivity } from "@/lib/ui/useable-components/brand-loader";
 import { ApolloProvider } from "@apollo/client";
 import { PrimeReactProvider } from "primereact/api";
 import { useEffect, useMemo, useRef } from "react";
@@ -49,6 +50,7 @@ export default function ClientProviders({
   return (
     <PrimeReactProvider value={primeReactConfig}>
       <ApolloProvider client={client}>
+        <NetworkActivity />
         <ConfigurationProvider>
           <ToastProvider>
             <AuthProvider>

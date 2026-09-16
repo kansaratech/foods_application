@@ -65,7 +65,7 @@ export default function ProductPriceCell({
           <>
             <div className="mb-5 rounded-xl border border-surface-border bg-surface-ground p-4 text-sm text-content">
               {t(
-                'One unit of the selected variant. Valid variant discounts are included.'
+                'product_estimate_variant_help'
               )}
             </div>
             <div className="overflow-x-auto rounded-xl border border-surface-border">
@@ -144,7 +144,7 @@ export default function ProductPriceCell({
                 </strong>
                 :{' '}
                 {t(
-                  'Selling price minus commission. GST is added to the customer total and is not deducted again.'
+                  'product_estimate_net_help'
                 )}
               </p>
               <p>
@@ -153,12 +153,12 @@ export default function ProductPriceCell({
                 </strong>
                 :{' '}
                 {t(
-                  'Not calculated per product. Add-ons, coupons, refunds and settlement adjustments depend on the actual order. Delivery and tips are excluded from this estimate.'
+                  'product_estimate_adjustments_help'
                 )}
               </p>
               <p>
                 {t(
-                  'This is an item earnings estimate, not a final settlement amount. For store-collected COD, commission is billed separately.'
+                  'product_estimate_settlement_help'
                 )}
               </p>
             </div>

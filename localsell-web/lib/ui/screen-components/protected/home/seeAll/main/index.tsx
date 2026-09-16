@@ -1,5 +1,6 @@
 "use client";
 
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import React, { useCallback, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@apollo/client";
@@ -25,14 +26,14 @@ const RESTAURANT_SLUGS = new Set(["popular-restaurants", "popular-stores"]);
 function SeeAllSection() {
   const router = useRouter();
   const params = useParams();
-  const slug = (Array.isArray(params.slug) ? params.slug[0] : params.slug) ?? "";
+  const slug =
+    (Array.isArray(params.slug) ? params.slug[0] : params.slug) ?? "";
 
   const [isModalOpen, setIsModalOpen] = useState({ value: false, id: "" });
   const [items, setItems] = useState<IRestaurant[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
-
 
   // Title from slug
   const title = slug
@@ -78,23 +79,20 @@ function SeeAllSection() {
     (
       FavRestaurantId: string | undefined,
       shopType: string | undefined,
-      slug: string | undefined
+      slug: string | undefined,
     ) => {
       router.push(
-        `/${shopType === "restaurant" ? "restaurant" : "store"}/${slug}/${FavRestaurantId}`
+        `/${shopType === "restaurant" ? "restaurant" : "store"}/${slug}/${FavRestaurantId}`,
       );
     },
-    500
+    500,
   );
 
-  const handleUpdateIsModalOpen = useCallback(
-    (value: boolean, id: string) => {
-      setIsModalOpen((current) =>
-        current.value !== value || current.id !== id ? { value, id } : current
-      );
-    },
-    []
-  );
+  const handleUpdateIsModalOpen = useCallback((value: boolean, id: string) => {
+    setIsModalOpen((current) =>
+      current.value !== value || current.id !== id ? { value, id } : current,
+    );
+  }, []);
 
   // Infinite scroll
   useEffect(() => {
@@ -188,26 +186,7 @@ function SeeAllSection() {
         {loading && hasMore && (
           <div className="flex justify-center mt-6">
             <div className="flex items-center gap-2 text-gray-500">
-              <svg
-                className="animate-spin h-5 w-5 text-primary"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
+              <BrandLoader variant="inline" size={20} />
               <span>Loading more...</span>
             </div>
           </div>

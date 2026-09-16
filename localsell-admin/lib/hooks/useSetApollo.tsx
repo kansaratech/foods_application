@@ -1,3 +1,4 @@
+import { networkActivityLink } from '@/lib/utils/network-activity-link';
 import {
   ApolloClient,
   ApolloLink,
@@ -16,7 +17,6 @@ import { useEffect, useRef } from 'react';
 
 // Utility imports
 import { Subscription } from 'zen-observable-ts';
-
 
 import { METRICS_GENERAL } from '../api/graphql/mutations/metrics';
 import { REFRESH_TOKEN } from '../api/graphql/mutations/authentication/refresh';
@@ -226,9 +226,7 @@ async function refreshAccessToken(serverUrl?: string): Promise<string | null> {
           headers: {
             'Content-Type': 'application/json',
             nonce: getNonce() || '',
-            'bop-auth': getMetricsToken()
-              ? `Bearer ${getMetricsToken()}`
-              : '',
+            'bop-auth': getMetricsToken() ? `Bearer ${getMetricsToken()}` : '',
             'x-platform': 'web',
             'X-Client-Type': 'web',
           },
@@ -255,7 +253,11 @@ async function refreshAccessToken(serverUrl?: string): Promise<string | null> {
 
       const refreshedSession = result.data?.refreshToken;
 
-      if (!response.ok || isGraphQLResponseError(result) || !refreshedSession?.token) {
+      if (
+        !response.ok ||
+        isGraphQLResponseError(result) ||
+        !refreshedSession?.token
+      ) {
         return null;
       }
 
@@ -322,48 +324,50 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
   wsClientRef.current = wsClient;
   const wsLink = new WebSocketLink(wsClient);
 
-  const errorLink = new ApolloLink((operation, forward) =>
-    new Observable((observer) => {
-      let handle: Subscription | undefined;
+  const errorLink = new ApolloLink(
+    (operation, forward) =>
+      new Observable((observer) => {
+        let handle: Subscription | undefined;
 
-      const run = () => {
-        handle = forward(operation).subscribe({
-          next: observer.next.bind(observer),
-          complete: observer.complete.bind(observer),
-          error: async (error) => {
-            if (
-              hasExpiredAccessToken(error) &&
-              !isOperationAlreadyRetried(operation, 'accessTokenRetry')
-            ) {
-              markOperationRetried(operation, 'accessTokenRetry');
-              const refreshedToken = await refreshAccessToken(SERVER_URL);
+        const run = () => {
+          handle = forward(operation).subscribe({
+            next: observer.next.bind(observer),
+            complete: observer.complete.bind(observer),
+            error: async (error) => {
+              if (
+                hasExpiredAccessToken(error) &&
+                !isOperationAlreadyRetried(operation, 'accessTokenRetry')
+              ) {
+                markOperationRetried(operation, 'accessTokenRetry');
+                const refreshedToken = await refreshAccessToken(SERVER_URL);
 
-              if (refreshedToken) {
-                run();
-                return;
+                if (refreshedToken) {
+                  run();
+                  return;
+                }
               }
-            }
 
-            if (
-              hasExpiredAccessToken(error) ||
-              hasInvalidAccessToken(error)
-            ) {
-              handleInvalidSession();
-            }
+              if (
+                hasExpiredAccessToken(error) ||
+                hasInvalidAccessToken(error)
+              ) {
+                handleInvalidSession();
+              }
 
-            observer.error(error);
-          },
-        });
-      };
+              observer.error(error);
+            },
+          });
+        };
 
-      run();
-      return () => handle?.unsubscribe();
-    })
+        run();
+        return () => handle?.unsubscribe();
+      })
   );
 
   const request = async (operation: Operation): Promise<void> => {
     const token = getAccessToken();
-    const userId = typeof window === 'undefined' ? '' : localStorage.getItem('userId');
+    const userId =
+      typeof window === 'undefined' ? '' : localStorage.getItem('userId');
     const operationName = operation.operationName;
 
     if (operationName !== 'MetricsGeneral' && shouldRefreshToken()) {
@@ -458,7 +462,12 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
 
   const client = new ApolloClient({
     link: concat(
-      ApolloLink.from([errorLink, terminatingLink, requestLink]),
+      ApolloLink.from([
+        networkActivityLink,
+        errorLink,
+        terminatingLink,
+        requestLink,
+      ]),
       httpLink
     ),
     cache,

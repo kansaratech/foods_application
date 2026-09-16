@@ -144,7 +144,13 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
       const rows = [...byVendor.entries()].map(([vendorId, agg]) => {
         const v = vendors.get(vendorId);
         return {
-          vendor: { _id: vendorId, name: v?.name ?? null, email: v?.email ?? null, phone: v?.phone ?? null },
+          vendor: {
+            _id: vendorId,
+            name: v?.name ?? null,
+            businessName: v?.businessName ?? null,
+            email: v?.email ?? null,
+            phone: v?.phone ?? null,
+          },
           orderCount: agg.orderCount,
           grossFoodSubtotal: round2(agg.grossFoodSubtotal),
           commissionTotal: round2(agg.commissionTotal),
@@ -282,7 +288,13 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
           const payoutPending = round2(payoutByVendor.get(vendorId) ?? 0);
           return {
             _id: vendorId,
-            vendor: { _id: vendorId, name: v?.name ?? null, email: v?.email ?? null, phone: v?.phone ?? null },
+            vendor: {
+            _id: vendorId,
+            name: v?.name ?? null,
+            businessName: v?.businessName ?? null,
+            email: v?.email ?? null,
+            phone: v?.phone ?? null,
+          },
             commissionOutstanding,
             payoutPending,
             netBalance: round2(payoutPending - commissionOutstanding),
@@ -440,6 +452,7 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
           vendor: {
             _id: vendorId,
             name: vmap.get(vendorId)?.name ?? null,
+            businessName: vmap.get(vendorId)?.businessName ?? null,
             email: vmap.get(vendorId)?.email ?? null,
             phone: vmap.get(vendorId)?.phone ?? null,
           },
@@ -712,7 +725,9 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
     createdAt: (parent: CommissionBill) => parent.createdAt.toISOString(),
     vendor: async (parent: CommissionBill) => {
       const v = await prisma.user.findUnique({ where: { id: parent.vendorId } });
-      return v ? { _id: v.id, name: v.name, email: v.email, phone: v.phone } : null;
+      return v
+        ? { _id: v.id, name: v.name, businessName: v.businessName, email: v.email, phone: v.phone }
+        : null;
     },
   },
 

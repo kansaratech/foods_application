@@ -122,6 +122,74 @@ function assertOwnsRestaurant(user: { id: string; userType: string }, restaurant
 
 export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
+    searchSuggestions: async (
+      _parent,
+      args: { keyword: string; latitude?: number; longitude?: number; radiusKm?: number; limit?: number },
+    ) => {
+      const keyword = args.keyword.trim();
+      if (!keyword) return { restaurants: [], foods: [] };
+
+      const limit = args.limit ?? 8;
+      const radiusKm = args.radiusKm ?? 60;
+      const hasLocation = args.latitude != null && args.longitude != null;
+
+      let restaurants = await prisma.restaurant.findMany({
+        where: { ...CUSTOMER_VISIBLE_STORE, name: { contains: keyword } },
+      });
+      if (hasLocation) restaurants = withinRadius(restaurants, args.latitude, args.longitude, radiusKm);
+      restaurants = restaurants.slice(0, limit);
+
+      const matchedFoods = await prisma.food.findMany({
+        where: { isActive: true, title: { contains: keyword } },
+        take: limit * 4, // overfetch — some will be dropped by the visibility/radius filter below
+        orderBy: { title: 'asc' },
+      });
+
+      const restaurantIds = Array.from(new Set(matchedFoods.map((f) => f.restaurantId)));
+      const foodRestaurants = restaurantIds.length
+        ? await prisma.restaurant.findMany({ where: { id: { in: restaurantIds }, ...CUSTOMER_VISIBLE_STORE } })
+        : [];
+      const restaurantById = new Map(foodRestaurants.map((r) => [r.id, r]));
+      const shopTypeIds = Array.from(
+        new Set(foodRestaurants.map((r) => r.shopTypeId).filter((id): id is string => Boolean(id))),
+      );
+      const shopTypesById = shopTypeIds.length
+        ? new Map((await prisma.shopType.findMany({ where: { id: { in: shopTypeIds } } })).map((s) => [s.id, s.slug]))
+        : new Map<string, string>();
+
+      // A vendor's menu can genuinely contain the same dish entered more than
+      // once (double-tap on save, re-added after an edit, etc.) — that's a
+      // data-cleanup problem on the store's own menu, but the search dropdown
+      // shouldn't multiply it: show each distinct title once per restaurant.
+      const seenFoodKeys = new Set<string>();
+
+      const foods = matchedFoods
+        .map((food) => {
+          const restaurant = restaurantById.get(food.restaurantId);
+          if (!restaurant) return null;
+          if (hasLocation && restaurant.latitude != null && restaurant.longitude != null) {
+            const dist = distanceKm(args.latitude as number, args.longitude as number, restaurant.latitude, restaurant.longitude);
+            if (dist > radiusKm) return null;
+          }
+          const dedupeKey = `${restaurant.id}:${food.title.trim().toLowerCase()}`;
+          if (seenFoodKeys.has(dedupeKey)) return null;
+          seenFoodKeys.add(dedupeKey);
+          return {
+            _id: food.id,
+            title: food.title,
+            image: food.image,
+            restaurantId: restaurant.id,
+            restaurantName: restaurant.name,
+            restaurantSlug: restaurant.slug,
+            restaurantShopType: restaurant.shopTypeId ? (shopTypesById.get(restaurant.shopTypeId) ?? null) : null,
+          };
+        })
+        .filter((f): f is NonNullable<typeof f> => f !== null)
+        .slice(0, limit);
+
+      return { restaurants, foods };
+    },
+
     nearByRestaurants: async (
       _parent,
       args: { latitude?: number; longitude?: number; radiusKm?: number; shopType?: string },

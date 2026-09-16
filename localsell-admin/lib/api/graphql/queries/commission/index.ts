@@ -12,6 +12,7 @@ export const GET_COMMISSION_PERIOD_PREVIEW = gql`
         vendor {
           _id
           name
+          businessName
           email
           phone
         }
@@ -33,6 +34,7 @@ export const GET_COMMISSION_BILLS = gql`
         vendor {
           _id
           name
+          businessName
           email
         }
         periodStart
@@ -152,6 +154,7 @@ export const GET_PLATFORM_FINANCE_REPORT = gql`
         vendor {
           _id
           name
+          businessName
           email
         }
         orders
@@ -182,6 +185,7 @@ export const GET_COMMISSION_BILL = gql`
         vendor {
           _id
           name
+          businessName
           email
         }
         periodStart

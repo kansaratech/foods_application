@@ -13,8 +13,17 @@ const CustomDateInput = ({
   name,
   error,
   onChange,
+  minDate,
+  maxDate,
+  disabled,
   ...props
-}: IDateTextField & { name?: string; error?: string }) => {
+}: IDateTextField & {
+  name?: string;
+  error?: string;
+  minDate?: string;
+  maxDate?: string;
+  disabled?: boolean;
+}) => {
   const generatedId = useId();
   const id = name ?? generatedId;
   return (
@@ -29,6 +38,12 @@ const CustomDateInput = ({
         inputId={id}
         ariaLabel={placeholder || name || 'Choose date'}
         name={name}
+        placeholder={placeholder}
+        minDate={dateValue(minDate) ?? undefined}
+        maxDate={dateValue(maxDate) ?? undefined}
+        disabled={disabled}
+        invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
         className={twMerge('ls-field', error && 'ls-field-invalid', className)}
         value={dateValue(value)}
         onChange={(e) => onChange(dateString(e.value as Date | null))}

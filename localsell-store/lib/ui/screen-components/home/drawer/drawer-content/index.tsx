@@ -22,7 +22,6 @@ import {
 } from "@/lib/ui/useable-components/svg";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import { ScrollView } from "react-native-gesture-handler";
 
 export default function CustomDrawerContent(
   props: DrawerContentComponentProps,
@@ -49,14 +48,12 @@ export default function CustomDrawerContent(
     >
       <CustomDrawerHeader />
       {/* Drawer Items with Right Arrow */}
-      <ScrollView
+      <View
         key={currentTheme?.concat("Drawer_Content").concat("Scroll_View")}
         style={{
           backgroundColor: appTheme.themeBackground,
-          height: "auto",
           paddingBottom: 20,
         }}
-        scrollEnabled={true}
       >
         {props.state.routes.map((route, index) => {
           const isFocused = props.state.index === index;
@@ -173,7 +170,7 @@ export default function CustomDrawerContent(
             </Text>
           </View>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
 
       <ConfirmModal
         visible={logoutOpen}

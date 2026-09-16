@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Card from "@/lib/ui/useable-components/card";
 import SliderSkeleton from "@/lib/ui/useable-components/custom-skeletons/slider.loading.skeleton";
 import { IMainSectionProps } from "@/lib/utils/interfaces";
@@ -20,7 +27,7 @@ function MainSection({
   hasMore,
   queryData,
   onLoadMore,
-}: IMainSectionProps ) {
+}: IMainSectionProps) {
   const router = useRouter();
   const t = useTranslations();
   const { isSearchFocused, setIsSearchFocused, filter } = useSearchUI();
@@ -59,7 +66,7 @@ function MainSection({
         setIsModalOpen({ value, id });
       }
     },
-    [isModalOpen]
+    [isModalOpen],
   );
 
   if (loading && (!data || data.length === 0)) {
@@ -113,7 +120,7 @@ function MainSection({
           />
         )}
       </div>
-        {/* if queryData.length not zero then show */}
+      {/* if queryData.length not zero then show */}
       {uniqueData.length > 0 && queryData?.length !== 0 ? (
         <>
           <div
@@ -136,34 +143,17 @@ function MainSection({
           {/* Loader for pagination */}
           {loading && hasMore && (
             <div className="flex justify-center mt-6">
-            <div className="flex items-center gap-2 text-gray-500">
-              <svg
-                className="animate-spin h-5 w-5 text-primary"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
-              <span>Loading more...</span>
+              <div className="flex items-center gap-2 text-gray-500">
+                <BrandLoader variant="inline" size={20} />
+                <span>Loading more...</span>
+              </div>
             </div>
-          </div>
           )}
 
           {/* Sentinel the IntersectionObserver watches to auto-load the next page */}
-          {hasMore && onLoadMore && <div ref={sentinelRef} aria-hidden className="h-1 w-full" />}
+          {hasMore && onLoadMore && (
+            <div ref={sentinelRef} aria-hidden className="h-1 w-full" />
+          )}
 
           {/* Fallback "Load more" button if the observer never fires */}
           {hasMore && !loading && onLoadMore && (

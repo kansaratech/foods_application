@@ -6,12 +6,19 @@ export const reviewTypeDefs = /* GraphQL */ `
   }
 
   type ReviewOrderLite {
+    _id: ID!
     user: ReviewOrderUser
+  }
+
+  type ReviewRestaurantLite {
+    _id: ID!
+    name: String!
   }
 
   type Review {
     _id: ID!
     order: ReviewOrderLite
+    restaurant: ReviewRestaurantLite
     rating: Int!
     description: String
     comments: String
@@ -26,6 +33,8 @@ export const reviewTypeDefs = /* GraphQL */ `
   }
 
   type ReviewsByRestaurantResult {
+    total: Int!
+    ratings: Float!
     reviews: [Review!]!
   }
 

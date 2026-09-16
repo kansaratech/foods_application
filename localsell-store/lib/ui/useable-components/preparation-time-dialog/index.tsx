@@ -1,6 +1,6 @@
+import CustomSpinner from "@/lib/ui/useable-components/custom-spinner";
 import { useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Modal,
   Pressable,
   ScrollView,
@@ -186,7 +186,7 @@ export default function PreparationTimeDialog({
                 style={[styles.accept, (busy || !valid) && styles.disabled]}
               >
                 {busy ? (
-                  <ActivityIndicator color="#fff" />
+                  <CustomSpinner color="#fff" />
                 ) : (
                   <Text style={[styles.buttonText, styles.white]}>
                     {valid

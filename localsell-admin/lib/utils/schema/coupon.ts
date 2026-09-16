@@ -12,8 +12,11 @@ export const CouponFormSchema = Yup.object().shape({
     .max(100, 'You cannot exceed from 100 as this is a %age field'),
   enabled: Yup.boolean().required('Required').required('Please choose one'),
   lifeTimeActive: Yup.boolean(),
-  startDate: Yup.date(),
+  startDate: Yup.date().transform((value, original) =>
+    original === '' ? undefined : value
+  ),
   endDate: Yup.date()
+    .transform((value, original) => (original === '' ? undefined : value))
     .when('lifeTimeActive', {
       is: false,
       then: (schema) => schema.required('End Date is required'),

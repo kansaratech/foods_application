@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 // Hooks and Constants
 import { useUserContext } from '@/lib/hooks/useUser';
 import { DEFAULT_ROUTES } from '@/lib/utils/constants/routes';
-import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
+import BrandLoader from '@/lib/ui/useable-components/brand-loader';
 
 export default function RootPage() {
   // Hooks
@@ -27,5 +27,5 @@ export default function RootPage() {
     );
   }, [isSessionVerified, loading, router, user]);
 
-  return <CustomLoader />;
+  return <BrandLoader variant="screen" />;
 }

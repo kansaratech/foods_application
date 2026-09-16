@@ -24,13 +24,7 @@ async function computeReviewData(restaurantId: string) {
 
 export const reviewResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
-    reviewsByRestaurant: async (_parent, args: { restaurant: string }) => {
-      const reviews = await prisma.review.findMany({
-        where: { restaurantId: args.restaurant },
-        orderBy: { createdAt: 'desc' },
-      });
-      return { reviews };
-    },
+    reviewsByRestaurant: (_parent, args: { restaurant: string }) => computeReviewData(args.restaurant),
   },
 
   Mutation: {
@@ -92,7 +86,11 @@ export const reviewResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: Review) => parent.id,
     order: async (parent: Review) => {
       const user = await prisma.user.findUnique({ where: { id: parent.userId } });
-      return { user };
+      return { _id: parent.orderId, user };
+    },
+    restaurant: async (parent: Review) => {
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: parent.restaurantId } });
+      return restaurant ? { _id: restaurant.id, name: restaurant.name } : null;
     },
     // No moderation/soft-delete concept for reviews yet - every persisted row is active.
     isActive: () => true,

@@ -9,6 +9,7 @@ export const GET_VENDORS = gql`
       userType
       isActive
       name
+      businessName
       image
       restaurants {
         _id
@@ -54,6 +55,7 @@ export const GET_VENDOR_BY_ID_WITH_RESTAURANTS = gql`
       email
       userType
       name
+      businessName
       image
       restaurants {
         _id

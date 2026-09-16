@@ -6,6 +6,7 @@ export const CLOSE_COMMISSION_PERIOD = gql`
       _id
       vendor {
         name
+        businessName
       }
       commissionTotal
       orderCount

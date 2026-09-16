@@ -1,14 +1,25 @@
 'use client';
 
 import { Calendar as PrimeCalendar, CalendarProps } from 'primereact/calendar';
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 /** Shared calendar chrome; preserves PrimeReact's single/range value contracts. */
 export function Calendar(props: CalendarProps) {
   const id = useId();
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 640px)');
+    const update = () => setCompact(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   return (
     <PrimeCalendar
       showIcon
+      showButtonBar
+      touchUI={compact}
+      appendTo={typeof document !== 'undefined' ? document.body : undefined}
       readOnlyInput
       dateFormat="dd M yy"
       {...props}

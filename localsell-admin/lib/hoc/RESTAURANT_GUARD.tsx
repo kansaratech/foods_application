@@ -2,7 +2,7 @@
 // Core
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
+import BrandLoader from '@/lib/ui/useable-components/brand-loader';
 
 // Hooks
 import { useUserContext } from '@/lib/hooks/useUser';
@@ -42,11 +42,11 @@ const RESTAURANT_GUARD = <T extends object>(
     }, [hasSessionToken, isAllowed, isSessionVerified, loading, router]);
 
     if (loading) {
-      return <CustomLoader />;
+      return <BrandLoader variant="screen" />;
     }
 
     if (!isAllowed) {
-      return null;
+      return <BrandLoader variant="screen" />;
     }
 
     // ADMIN/RESTAURANT is always allowed

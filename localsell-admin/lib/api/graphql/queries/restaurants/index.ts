@@ -253,6 +253,8 @@ export const GET_RESTAURANT_PROFILE = gql`
       owner {
         _id
         email
+        name
+        businessName
       }
       shopType
       shopTypeId

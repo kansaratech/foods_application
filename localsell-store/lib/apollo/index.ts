@@ -1,3 +1,4 @@
+import { networkActivityLink } from "@/lib/utils/network-activity-link";
 import {
   ApolloClient,
   ApolloLink,
@@ -134,13 +135,23 @@ const setupApollo = () => {
           level: networkError ? "network" : "graphql",
           screen: (operation as any)?.operationName || "",
           message:
-            (graphQLErrors || []).map((e: any) => e?.message).filter(Boolean).join(" | ") ||
+            (graphQLErrors || [])
+              .map((e: any) => e?.message)
+              .filter(Boolean)
+              .join(" | ") ||
             (networkError as any)?.message ||
             "request failed",
-          extra: { op: (operation as any)?.operationName, code: (graphQLErrors as any)?.[0]?.extensions?.code, status: (networkError as any)?.statusCode, vars: (operation as any)?.variables },
+          extra: {
+            op: (operation as any)?.operationName,
+            code: (graphQLErrors as any)?.[0]?.extensions?.code,
+            status: (networkError as any)?.statusCode,
+            vars: (operation as any)?.variables,
+          },
         });
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     const invalidCodes = ["TOKEN_EXPIRED", "INVALID_TOKEN", "UNAUTHENTICATED"];
     const hasInvalidSession = (graphQLErrors || []).some(
@@ -182,7 +193,12 @@ const setupApollo = () => {
   }, wsLink);
 
   const link = concat(
-    ApolloLink.from([errorLink, terminatingLink, requestLink]),
+    ApolloLink.from([
+      networkActivityLink,
+      errorLink,
+      terminatingLink,
+      requestLink,
+    ]),
     httpLink,
   );
   const client: ApolloClient<NormalizedCacheObject> = new ApolloClient({

@@ -51,7 +51,7 @@ import { faAdd, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useMutation, useQuery } from '@apollo/client';
 import { useContext, useEffect } from 'react';
 import { GET_SUBCATEGORIES_BY_PARENT_ID } from '@/lib/api/graphql/queries/sub-categories';
-import CustomLoader from '@/lib/ui/useable-components/custom-progress-indicator';
+import BrandLoader from '@/lib/ui/useable-components/brand-loader';
 import { useTranslations } from 'next-intl';
 import { onUseLocalStorage } from '@/lib/utils/methods';
 
@@ -236,7 +236,7 @@ export default function CategoryAddForm({
       refetchSubCatrgories();
     }
   }, [category?._id, isAddCategoryVisible, refetchSubCatrgories]);
-  if (subCategoriesLoading) return <CustomLoader />;
+  if (subCategoriesLoading) return <BrandLoader variant="panel" />;
   if (!subCategoriesLoading)
     return (
       <FormDialog

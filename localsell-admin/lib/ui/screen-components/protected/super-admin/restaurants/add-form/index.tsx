@@ -79,7 +79,10 @@ export default function RestaurantsForm() {
   const vendorsDropdown = useMemo(
     () =>
       vendorResponse?.data?.vendors?.map((vendorItem: IVendorReponse) => {
-        return { label: vendorItem.email, code: vendorItem._id };
+        return {
+          label: vendorItem.businessName || vendorItem.name || vendorItem.email,
+          code: vendorItem._id,
+        };
       }),
     [vendorResponse?.data?.vendors]
   );
@@ -95,6 +98,9 @@ export default function RestaurantsForm() {
     [vendorResponse?.data?.vendors, resolvedVendorId]
   );
   const isLocked = isEditMode || !!lockedVendorId;
+  const lockedVendorLabel =
+    lockedVendor &&
+    (lockedVendor.businessName || lockedVendor.name || lockedVendor.email);
 
   // Pre-fill context and skip straight past the "pick a vendor" step: either
   // a vendor came in via ?vendorId= (opened from that vendor's own stores
@@ -108,7 +114,10 @@ export default function RestaurantsForm() {
         vendor: restaurantProfile.owner
           ? {
               _id: {
-                label: restaurantProfile.owner.email,
+                label:
+                  restaurantProfile.owner.businessName ||
+                  restaurantProfile.owner.name ||
+                  restaurantProfile.owner.email,
                 code: restaurantProfile.owner._id,
               },
             }
@@ -127,7 +136,12 @@ export default function RestaurantsForm() {
     hasAppliedLock.current = true;
     onSetRestaurantsContextData({
       ...restaurantsContextData,
-      vendor: { _id: { label: lockedVendor.email, code: lockedVendor._id } },
+      vendor: {
+        _id: {
+          label: lockedVendorLabel,
+          code: lockedVendor._id,
+        },
+      },
     } as IRestaurantsContextPropData);
     onActiveStepChange(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -200,7 +214,7 @@ export default function RestaurantsForm() {
         <div>
           <nav className="mb-1 text-sm text-slate-500" aria-label="Breadcrumb">
             {lockedVendor
-              ? `${t('Vendors')} / ${lockedVendor.name || lockedVendor.email} / ${isEditMode ? t('Edit store') : t('Add store')}`
+              ? `${t('Vendors')} / ${lockedVendorLabel} / ${isEditMode ? t('Edit store') : t('Add store')}`
               : `${t('Stores')} / ${isEditMode ? t('Edit store') : t('Add store')}`}
           </nav>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">
@@ -210,7 +224,7 @@ export default function RestaurantsForm() {
             {isEditMode
               ? `${t('Update the store details for')} ${restaurantProfile?.name ?? ''}`
               : lockedVendor
-                ? `${t('Add a store location for')} ${lockedVendor.name || lockedVendor.email}`
+                ? `${t('Add a store location for')} ${lockedVendorLabel}`
                 : t('Select an existing vendor and add a new store location.')}
           </p>
         </div>
@@ -227,7 +241,7 @@ export default function RestaurantsForm() {
       {lockedVendor && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-dark-600 dark:bg-dark-900">
           <div className="grid h-11 w-11 place-items-center rounded-full bg-primary-light font-bold text-primary">
-            {(lockedVendor.name || lockedVendor.email || 'V')
+            {(lockedVendorLabel || 'V')
               .split(' ')
               .map((part) => part[0])
               .slice(0, 2)
@@ -236,7 +250,7 @@ export default function RestaurantsForm() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
-              {lockedVendor.name || t('Vendor')}
+              {lockedVendorLabel || t('Vendor')}
             </p>
             <p className="truncate text-xs text-slate-500">
               {lockedVendor.email}

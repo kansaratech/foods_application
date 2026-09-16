@@ -1,3 +1,4 @@
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "@apollo/client";
 import {
@@ -24,9 +25,9 @@ export default function TicketChatModal({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState<string>("");
   const [isSending, setIsSending] = useState<boolean>(false);
-  
+
   // Create a polling interval reference
-const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch single ticket details
   const { data: ticketData, loading: ticketLoading } = useQuery(
@@ -35,7 +36,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
       variables: { ticketId },
       skip: !visible || !ticketId,
       fetchPolicy: "network-only",
-    }
+    },
   );
 
   // Fetch ticket messages with polling
@@ -47,7 +48,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
           ticket: ticketId,
           page: 1,
           limit: 50,
-        }
+        },
       },
       skip: !visible || !ticketId,
       fetchPolicy: "network-only",
@@ -58,8 +59,8 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
           title: "Error",
           message: error.message || "Failed to load messages",
         });
-      }
-    }
+      },
+    },
   );
 
   // Send message mutation
@@ -76,7 +77,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
         title: "Error",
         message: error.message || "Failed to send message",
       });
-    }
+    },
   });
 
   // Start polling when modal is visible
@@ -84,10 +85,10 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     if (visible && ticketId) {
       // Immediate fetch to get fresh data
       refetch();
-      
+
       // Start polling for messages every 3 seconds
       startPolling(3000);
-      
+
       // Additional interval as backup for polling
       pollingIntervalRef.current = setInterval(() => {
         refetch();
@@ -95,13 +96,13 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     } else {
       // Stop polling when modal is closed
       stopPolling();
-      
+
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
     }
-    
+
     // Cleanup on unmount
     return () => {
       stopPolling();
@@ -123,49 +124,53 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const formatTimestamp = (timestamp: string) => {
     try {
       const date = new Date(parseInt(timestamp));
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + 
-        ' ' + date.toLocaleDateString();
+      return (
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+        " " +
+        date.toLocaleDateString()
+      );
     } catch (error) {
       return "unknown time";
     }
   };
-  
+
   // Handle sending a message
   const handleSendMessage = () => {
     if (!message.trim() || isSending) return;
-    
+
     setIsSending(true);
-    
+
     sendMessage({
       variables: {
         messageInput: {
           content: message.trim(),
-          ticket: ticketId
-        }
-      }
+          ticket: ticketId,
+        },
+      },
     });
   };
-  
+
   // Handle enter key for sending message
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
 
   const messages = data?.getTicketMessages?.messages || [];
-  const ticket = data?.getTicketMessages?.ticket || ticketData?.getSingleSupportTicket;
-  const isClosed = ticket?.status === 'closed';
+  const ticket =
+    data?.getTicketMessages?.ticket || ticketData?.getSingleSupportTicket;
+  const isClosed = ticket?.status === "closed";
 
   // Get ticket title
   const getTicketTitle = () => {
     if (!ticket) return "Support Chat";
-    
+
     if (ticket.category === "order related" && ticket.orderId) {
       return `Order Issue - ${ticket.orderId}`;
     }
-    
+
     return ticket.title;
   };
 
@@ -221,7 +226,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
               </span>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => {
               // Stop polling before closing
               stopPolling();
@@ -230,7 +235,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
                 pollingIntervalRef.current = null;
               }
               onHide();
-            }} 
+            }}
             className="text-white hover:text-gray-300"
           >
             <span className="sr-only">Close</span>✕
@@ -243,7 +248,9 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
             <div className="text-xs font-medium text-gray-500 mb-1 dark:text-white">
               Ticket Description:
             </div>
-            <p className="text-sm text-gray-700 dark:text-white">{ticketData.getSingleSupportTicket.description}</p>
+            <p className="text-sm text-gray-700 dark:text-white">
+              {ticketData.getSingleSupportTicket.description}
+            </p>
             <div className="text-xs text-right mt-1 text-gray-500 dark:text-white">
               {formatTimestamp(ticket?.createdAt || Date.now().toString())}
             </div>
@@ -264,10 +271,13 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
                   so replies sit below the message they answer. */}
               {[...messages].map((msg) => {
                 // Skip messages that match description
-                if (msg.content.trim() === ticketData?.getSingleSupportTicket?.description?.trim()) {
+                if (
+                  msg.content.trim() ===
+                  ticketData?.getSingleSupportTicket?.description?.trim()
+                ) {
                   return null;
                 }
-                
+
                 // User's own messages are green and on right, admin messages are gray on left
                 const isUserMessage = msg.senderType === "user";
                 return (
@@ -275,7 +285,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
                     key={msg._id}
                     className={`rounded-lg p-3 max-w-[80%] ${
                       isUserMessage
-                        ? "bg-primary-color text-white ml-auto" 
+                        ? "bg-primary-color text-white ml-auto"
                         : "bg-gray-100 text-gray-800 mr-auto"
                     }`}
                   >
@@ -325,7 +335,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
               >
                 {direction === "rtl" ? (
                   isSending ? (
-                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <BrandLoader variant="inline" size={24} />
                   ) : (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -343,7 +353,7 @@ const pollingIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
                     </svg>
                   )
                 ) : isSending ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <BrandLoader variant="inline" size={24} />
                 ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

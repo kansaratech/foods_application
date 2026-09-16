@@ -1,4 +1,5 @@
 {
+  "loading_label": "लोड हो रहा है...",
   "service_area_label": "सेवा क्षेत्र",
   "select_service_area_placeholder": "सेवा क्षेत्र चुनें",
   "select_service_area_to_drop_pin": "मानचित्र पर पिन लगाने के लिए सेवा क्षेत्र चुनें या अपना पता खोजें।",

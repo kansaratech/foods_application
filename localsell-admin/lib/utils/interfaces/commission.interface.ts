@@ -1,6 +1,7 @@
 export interface ICommissionVendorLite {
   _id: string;
   name: string | null;
+  businessName?: string | null;
   email: string | null;
   phone?: string | null;
 }

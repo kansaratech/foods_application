@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useRef } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faImage, faStore } from '@fortawesome/free-solid-svg-icons';
@@ -37,6 +37,7 @@ export default function ImageUploadCard({
   onUploaded,
   aspect = 'square',
   maxSizeBytes = 2 * 1024 * 1024,
+  acceptedTypes = ALLOWED_TYPES,
 }: {
   label: string;
   helperText: string;
@@ -45,15 +46,25 @@ export default function ImageUploadCard({
   onUploaded: (url: string) => void;
   aspect?: 'square' | 'landscape';
   maxSizeBytes?: number;
+  acceptedTypes?: string[];
 }) {
+  const [uploadedType, setUploadedType] = useState('');
+  const isVideo =
+    uploadedType.startsWith('video/') ||
+    /\.(mp4|webm)(?:[?#]|$)|video\//i.test(value ?? '');
   const t = useTranslations();
   const { showToast } = useContext(ToastContext);
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploadFile, { loading }] = useMutation(UPLOAD_IMAGE_TO_S3);
 
   const handleFile = async (file: File) => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      showToast({ type: 'error', title: label, message: t('Supported formats: JPG, PNG, WebP'), duration: 3000 });
+    if (!acceptedTypes.includes(file.type)) {
+      showToast({
+        type: 'error',
+        title: label,
+        message: `${t('Supported formats')}: ${acceptedTypes.map((type) => type.split('/')[1]).join(', ')}`,
+        duration: 3000,
+      });
       return;
     }
     if (file.size > maxSizeBytes) {
@@ -70,6 +81,7 @@ export default function ImageUploadCard({
       const { data } = await uploadFile({ variables: { image: base64 } });
       const url = data?.uploadImageToS3?.imageUrl;
       if (!url) throw new Error(t('Upload failed'));
+      setUploadedType(file.type);
       onUploaded(url);
     } catch (error) {
       showToast({
@@ -85,18 +97,45 @@ export default function ImageUploadCard({
     <div>
       <p className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">
         {label}
-        {required ? <span className="text-red-500"> *</span> : <span className="ml-1 text-xs font-normal text-slate-400">({t('optional')})</span>}
+        {required ? (
+          <span className="text-red-500"> *</span>
+        ) : (
+          <span className="ml-1 text-xs font-normal text-slate-400">
+            ({t('optional')})
+          </span>
+        )}
       </p>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div
           className={`grid flex-shrink-0 place-items-center overflow-hidden border border-dashed border-slate-300 bg-slate-50 dark:border-dark-600 dark:bg-dark-900 ${
-            aspect === 'square' ? 'h-16 w-16 rounded-lg' : 'h-16 w-28 rounded-lg'
+            aspect === 'square'
+              ? 'h-16 w-16 rounded-lg'
+              : 'h-16 w-28 rounded-lg'
           }`}
         >
           {value ? (
-            <Image src={value} alt={label} width={112} height={64} className="h-full w-full object-cover" />
+            isVideo ? (
+              <video
+                src={value}
+                aria-label={label}
+                controls
+                preload="metadata"
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <Image
+                src={value}
+                alt={label}
+                width={112}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            )
           ) : (
-            <FontAwesomeIcon icon={aspect === 'square' ? faStore : faImage} className="text-lg text-slate-300" />
+            <FontAwesomeIcon
+              icon={aspect === 'square' ? faStore : faImage}
+              className="text-lg text-slate-300"
+            />
           )}
         </div>
         <div>
@@ -113,7 +152,7 @@ export default function ImageUploadCard({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
+        accept={acceptedTypes.join(',')}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

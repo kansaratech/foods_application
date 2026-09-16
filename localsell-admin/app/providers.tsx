@@ -1,5 +1,6 @@
 'use client';
 
+import { NetworkActivity } from '@/lib/ui/useable-components/brand-loader';
 import { ApolloProvider } from '@apollo/client';
 import { PrimeReactProvider } from 'primereact/api';
 import { ThemeProvider } from 'next-themes';
@@ -30,6 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <PrimeReactProvider value={{ ripple: true }}>
         <ApolloProvider client={client}>
+          <NetworkActivity />
           <ConfigurationProvider>
             <LayoutProvider>
               <UserProvider>

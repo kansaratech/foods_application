@@ -4,6 +4,7 @@ import { IDropdownSelectItem } from '../global.interface';
 export interface IVendorErrors {
   _id: string[];
   name: string[];
+  businessName: string[];
   email: string[];
   password: string[];
   confirmPassword: string[];
@@ -62,6 +63,7 @@ export interface IVendorRegistrationForm {
 export interface IRestauransVendorDetailsForm {
   _id: IDropdownSelectItem | null;
   name?: string;
+  businessName?: string;
   firstName?: string;
   lastName?: string;
   email: string;

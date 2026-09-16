@@ -207,6 +207,7 @@ Keys and where each is used:
 | `JWT_SECRET`, `REFRESH_TOKEN_SECRET` | api runtime | fresh `openssl rand -hex 32` each — **unique per deployment** |
 | `CORS_ORIGIN` | api runtime | the web + admin + store origins, comma‑separated, no `*` |
 | `PUBLIC_UPLOAD_URL` | api runtime | `https://api.localsell.in/uploads` |
+| `WEB_CLIENT_URL` | api runtime | `https://localsell.in` (no trailing slash) — builds the Cashfree `return_url`. **Missing = every online payment returns the customer to `http://localhost:3000` instead of the live site** (the api's hardcoded fallback). Restarting the api container after adding/changing it is enough — it's read at runtime, not baked into a build. |
 | `UPLOADS_HOST_DIR` | compose only (not read by the api process) | host dir bind-mounted to `/app/uploads`; default `/var/localsell/uploads` — create it once with `mkdir -p /var/localsell/uploads` before first `up` |
 | `NEXT_PUBLIC_SERVER_URL` / `_WS_SERVER_URL` | web + admin **build** | `https://…` / `wss://…` (trailing slash) |
 | `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | web + admin **build** | browser Maps key |

@@ -240,6 +240,11 @@ export const VendorSchemaOnStoreCreate = Yup.object().shape({
   // .trim()
   // .matches(/\S/, 'Name cannot be only spaces')
   // .required('Required'),
+  businessName: Yup.string()
+    .max(60)
+    .trim()
+    .matches(/\S/, 'Business name cannot be only spaces')
+    .required('Required'),
   firstName: Yup.string()
     .max(35)
     .trim()

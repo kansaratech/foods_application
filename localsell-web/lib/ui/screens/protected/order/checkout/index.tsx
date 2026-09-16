@@ -1,14 +1,14 @@
-/* eslint-disable max-lines */
 "use client";
+/* eslint-disable max-lines */
 
 // Core
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import {
   faBicycle,
   faStore,
   faPlus,
   faMinus,
 } from "@fortawesome/free-solid-svg-icons";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons/faSpinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 
@@ -63,11 +63,7 @@ import {
 } from "@/lib/api/graphql";
 
 // Interfaces
-import {
-  ICoupon,
-  ICouponData,
-  IOrder,
-} from "@/lib/utils/interfaces";
+import { ICoupon, ICouponData, IOrder } from "@/lib/utils/interfaces";
 
 // Types
 import { OrderTypes } from "@/lib/utils/types/order";
@@ -82,10 +78,13 @@ import { loadCashfreeSdk, cashfreeSdkMode } from "@/lib/utils/methods/cashfree";
 
 // Asets
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
-import Image from '@/lib/ui/useable-components/safe-image';
+import Image from "@/lib/ui/useable-components/safe-image";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/lib/providers/ThemeProvider";
-import { checkoutLightMapStyle, checkoutDarkMapStyle } from "@/lib/utils/mapStyles/checkout-map";
+import {
+  checkoutLightMapStyle,
+  checkoutDarkMapStyle,
+} from "@/lib/utils/mapStyles/checkout-map";
 import { GET_TIPS } from "@/lib/api/graphql/queries/tipping";
 
 //Coupon localStorage Keys
@@ -152,9 +151,7 @@ export default function OrderCheckoutScreen() {
 
   const { userAddress } = useUserAddress();
   const restaurantFromLocalStorage =
-    typeof window !== "undefined"
-      ? localStorage.getItem("restaurant")
-      : null;
+    typeof window !== "undefined" ? localStorage.getItem("restaurant") : null;
   const { data: restaurantData } = useRestaurant(restaurantId || "") || {
     data: restaurantFromLocalStorage
       ? JSON.parse(restaurantFromLocalStorage)
@@ -973,7 +970,8 @@ export default function OrderCheckoutScreen() {
 
   // REGULAR shows a real GST line; COMPOSITION/UNREGISTERED show an
   // "inclusive of tax" caption instead of a ₹0 row, which would read as a bug.
-  const gstMode = pricePreview?.gstMode ?? (taxValue ? "REGULAR" : "UNREGISTERED");
+  const gstMode =
+    pricePreview?.gstMode ?? (taxValue ? "REGULAR" : "UNREGISTERED");
   const showInclusiveTaxCaption = cart.length > 0 && gstMode !== "REGULAR";
 
   /* function calculateTip() {
@@ -1049,7 +1047,8 @@ export default function OrderCheckoutScreen() {
               height: "clamp(180px, 25vh, 280px)",
             }}
             options={{
-              styles: theme === "dark" ? checkoutDarkMapStyle : checkoutLightMapStyle,
+              styles:
+                theme === "dark" ? checkoutDarkMapStyle : checkoutLightMapStyle,
               disableDefaultUI: true,
             }}
             center={origin || destination}
@@ -1489,7 +1488,7 @@ export default function OrderCheckoutScreen() {
                     }}
                   >
                     {couponLoading ? (
-                      <FontAwesomeIcon icon={faSpinner} spin />
+                      <BrandLoader variant="inline" size={20} />
                     ) : (
                       <span>{t("Remove")}</span>
                     )}
@@ -1516,7 +1515,7 @@ export default function OrderCheckoutScreen() {
                       disabled={cart.length === 0}
                     >
                       {couponLoading ? (
-                        <FontAwesomeIcon icon={faSpinner} spin />
+                        <BrandLoader variant="inline" size={20} />
                       ) : (
                         <span>{t("submit_button")}</span>
                       )}
@@ -1535,10 +1534,7 @@ export default function OrderCheckoutScreen() {
             transition={{ duration: 0.3 }}
             className={styles.desktopSummary}
           >
-            <div
-              className={styles.summary}
-              id="price-summary"
-            >
+            <div className={styles.summary} id="price-summary">
               <h2 className="text-sm lg:text-lg font-semibold text-left flex justify-between dark:text-white">
                 {t("prices_in_label")} {CURRENCY}
                 <InfoSvg />
@@ -1643,7 +1639,7 @@ export default function OrderCheckoutScreen() {
                 disabled={cart.length === 0 || loadingOrderMutation}
               >
                 {loadingOrderMutation ? (
-                  <FontAwesomeIcon icon={faSpinner} spin />
+                  <BrandLoader variant="inline" size={20} />
                 ) : (
                   <span> {t("click_to_order_button")}</span>
                 )}
@@ -1653,10 +1649,7 @@ export default function OrderCheckoutScreen() {
 
           {/* <!-- Order Summary - Medium & Small Screens --> */}
           <div className={styles.mobileSummary}>
-            <div
-              className={styles.summary}
-              id="price-summary"
-            >
+            <div className={styles.summary} id="price-summary">
               <h2 className="text-sm lg:text-base font-semibold text-left flex justify-between dark:text-white ">
                 {t("prices_in_label")} {CURRENCY}
                 <InfoSvg />
@@ -1763,7 +1756,7 @@ export default function OrderCheckoutScreen() {
                 disabled={cart.length === 0 || loadingOrderMutation}
               >
                 {loadingOrderMutation ? (
-                  <FontAwesomeIcon icon={faSpinner} spin />
+                  <BrandLoader variant="inline" size={20} />
                 ) : (
                   <span> {t("click_to_order_button")} </span>
                 )}
@@ -1873,7 +1866,7 @@ export default function OrderCheckoutScreen() {
                         onClick={onPlaceOrder}
                       >
                         {loadingOrderMutation ?
-                          <FontAwesomeIcon icon={faSpinner} spin />
+                          <BrandLoader variant="inline" size={20} />
                         : <span> Click to order</span>}
                       </button>
                     </motion.div>

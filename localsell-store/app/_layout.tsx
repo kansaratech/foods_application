@@ -1,3 +1,4 @@
+import { NetworkActivity } from "@/lib/ui/useable-components/brand-loader";
 /* eslint-disable @typescript-eslint/no-require-imports */
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
@@ -112,6 +113,7 @@ function RootLayout() {
               </ConfigurationProvider>
             </InternetProvider>
           </AnimatedSplashScreen>
+          <NetworkActivity />
           <FlashMessage position="center" />
         </AppThemeProvidor>
       </ApolloProvider>

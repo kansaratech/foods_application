@@ -165,7 +165,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
                 key={vendor._id}
                 _id={vendor._id}
                 email={vendor.email}
-                name={vendor?.name}
+                name={vendor?.businessName || vendor?.name}
                 image={vendor?.image}
                 userType={vendor.userType}
                 totalRestaurants={vendor?.restaurants?.length ?? 0}
@@ -221,7 +221,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
           {selectedVendor && (
             <div className="mb-4 flex items-center gap-3 rounded-lg bg-slate-50 p-3 dark:bg-dark-900">
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary-light text-lg font-bold text-primary">
-                {(selectedVendor.name || selectedVendor.email || 'V')
+                {(selectedVendor.businessName || selectedVendor.name || selectedVendor.email || 'V')
                   .split(' ')
                   .map((part) => part[0])
                   .slice(0, 2)
@@ -230,7 +230,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-semibold text-slate-900 dark:text-white">
-                  {selectedVendor.name || t('Vendor')}
+                  {selectedVendor.businessName || selectedVendor.name || t('Vendor')}
                 </p>
                 <p className="truncate text-xs text-slate-500">
                   {selectedVendor.email}

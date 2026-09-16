@@ -1,3 +1,4 @@
+import BrandLoader from '../brand-loader';
 // Interfaces
 import { ICustomButtonProps } from '@/lib/utils/interfaces';
 
@@ -15,6 +16,7 @@ export default function CustomButton({
 }: ICustomButtonProps) {
   return (
     <Button
+      loadingIcon={<BrandLoader variant="inline" size={20} />}
       className={`ls-button ${classes['btn-custom']} ${className ?? ''}`}
       label={label}
       type={type}

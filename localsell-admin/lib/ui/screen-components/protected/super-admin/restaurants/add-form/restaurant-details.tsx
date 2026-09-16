@@ -153,7 +153,6 @@ export default function RestaurantDetailsForm({
   const isEditingExisting = !!editingRestaurantId;
 
   // API
-  const { data: restaurantData } = useQuery(GET_RESTAURANTS);
   const { data: editingProfileData, loading: editingProfileLoading } = useQuery(GET_RESTAURANT_PROFILE, {
     variables: { id: editingRestaurantId ?? '' },
     skip: !isEditingExisting,
@@ -278,23 +277,10 @@ export default function RestaurantDetailsForm({
   // Handlers
   const onCreateRestaurant = async (data: IRestaurantForm) => {
     try {
-      // check if values.name is present in restaurantData and show error toast
-      // — excluding the store's own current row when editing, since it will
-      // obviously match its own name.
-      const existingRestaurant = restaurantData?.restaurants.find(
-        (restaurant: IRestaurantForm & { _id?: string }) =>
-          restaurant.name.toLowerCase() === data.name.toLowerCase() &&
-          restaurant._id !== editingRestaurantId
-      );
-      if (existingRestaurant) {
-        showToast({
-          type: 'error',
-          title: `Restaurant Already Exists`,
-          message: 'Restaurant with same name already exists',
-          duration: 2500,
-        });
-        return;
-      }
+      // A vendor may legitimately run several branches under the same name
+      // (e.g. "Jamu Himachal Dhaba" — Sector 4, Sector 9, ...) — store slugs
+      // already get a unique suffix, so two stores sharing a name never
+      // collide anywhere it'd actually matter. No uniqueness check here.
 
       if (isEditingExisting) {
         await editRestaurant({
@@ -442,7 +428,7 @@ export default function RestaurantDetailsForm({
                         <CustomTextField
                           type="text"
                           name="name"
-                          placeholder={t('Name')}
+                          placeholder={`${t('Name')} *`}
                           maxLength={35}
                           value={values.name}
                           onChange={handleChange}
@@ -463,7 +449,7 @@ export default function RestaurantDetailsForm({
                         <CustomIconTextField
                           type="email"
                           name="username"
-                          placeholder={t('Email')}
+                          placeholder={`${t('Email')} *`}
                           maxLength={35}
                           showLabel={true}
                           autoComplete="off"
@@ -554,7 +540,7 @@ export default function RestaurantDetailsForm({
                           mask="999-999-9999"
                           name="phoneNumber"
                           showLabel={true}
-                          placeholder={t('Phone')}
+                          placeholder={`${t('Phone')} *`}
                           defaultCountry="in"
                           onChange={(e) => {
                             setFieldValue('phoneNumber', e);
@@ -571,11 +557,16 @@ export default function RestaurantDetailsForm({
                               : '',
                           }}
                         />
+                        {errors.phoneNumber && touched.phoneNumber && (
+                          <small className="ml-1 p-error">
+                            {errors.phoneNumber}
+                          </small>
+                        )}
                       </div>
 
                       <div className="md:col-span-8">
                         <CustomTextField
-                          placeholder={t('Address')}
+                          placeholder={`${t('Address')} *`}
                           name="address"
                           type="text"
                           maxLength={100}
@@ -604,7 +595,7 @@ export default function RestaurantDetailsForm({
                           suffix="m"
                           min={1}
                           max={500}
-                          placeholder={t('Delivery Time')}
+                          placeholder={`${t('Delivery Time')} *`}
                           name="deliveryTime"
                           showLabel={true}
                           value={values.deliveryTime}
@@ -625,7 +616,7 @@ export default function RestaurantDetailsForm({
                         <CustomNumberField
                           min={1}
                           max={99999}
-                          placeholder={t('Min Order')}
+                          placeholder={`${t('Min Order')} *`}
                           name="minOrder"
                           showLabel={true}
                           value={values.minOrder}
@@ -649,7 +640,7 @@ export default function RestaurantDetailsForm({
                           <FontAwesomeIcon
                             icon={faCircleInfo}
                             className="field-info-icon cursor-help text-xs text-slate-400"
-                            data-pr-tooltip={t("Default for products that don't set their own GST Rate Override. Only charged for Regular-GST stores")}
+                            data-pr-tooltip={t("restaurant_default_gst_help")}
                             data-pr-position="top"
                           />
                         </div>
@@ -685,7 +676,7 @@ export default function RestaurantDetailsForm({
                           <FontAwesomeIcon
                             icon={faCircleInfo}
                             className="field-info-icon cursor-help text-xs text-slate-400"
-                            data-pr-tooltip={t('Charged on the food subtotal only (excludes delivery fee, tip and tax). Leave blank to use the platform default commission rate')}
+                            data-pr-tooltip={t('restaurant_commission_rate_help')}
                             data-pr-position="top"
                           />
                         </div>
@@ -724,7 +715,7 @@ export default function RestaurantDetailsForm({
                       <div className="mt-2 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-3">
                         <CustomDropdownComponent
                           name="shopType"
-                          placeholder={t('Shop Category')}
+                          placeholder={`${t('Shop Category')} *`}
                           selectedItem={values.shopType}
                           setSelectedItem={setFieldValue}
                           loading={loading}
@@ -749,7 +740,7 @@ export default function RestaurantDetailsForm({
                       <div className="mt-2 min-w-0 border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-9">
                         <CustomMultiSelectComponent
                           name="cuisines"
-                          placeholder={t('Cuisines')}
+                          placeholder={`${t('Cuisines')} *`}
                           options={cuisinesDropdown ?? []}
                           selectedItems={values.cuisines}
                           setSelectedItems={setFieldValue}

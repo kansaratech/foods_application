@@ -1,5 +1,6 @@
 "use client";
 
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { useState } from "react";
 import TextComponent from "@/lib/ui/useable-components/text-field";
 import CustomButton from "@/lib/ui/useable-components/button";
@@ -381,7 +382,7 @@ export default function GetHelpMain() {
               }`}
             >
               {isSubmitting ? (
-                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <BrandLoader variant="inline" size={24} />
               ) : (
                 <span>{t("send_button")}</span>
               )}

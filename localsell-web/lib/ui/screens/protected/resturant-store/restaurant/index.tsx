@@ -21,10 +21,9 @@ import CampaignBanner from "@/lib/ui/screen-components/un-protected/campaign-ban
 
 // Icons
 import { ClockSvg, HeartSvg, InfoSvg, RatingSvg } from "@/lib/utils/assets/svg";
-import { faPlus, faSearch, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faSearch } from "@fortawesome/free-solid-svg-icons";
 
 // Components
-import Spacer from "@/lib/ui/useable-components/spacer";
 import { PaddingContainer } from "@/lib/ui/useable-components/containers";
 import FoodItemDetail from "@/lib/ui/useable-components/item-detail";
 import FoodCategorySkeleton from "@/lib/ui/useable-components/custom-skeletons/food-items.skeleton";
@@ -36,7 +35,8 @@ import EmptySearch from "@/lib/ui/useable-components/empty-search-results";
 import { ICategory, IFood } from "@/lib/utils/interfaces";
 
 // Methods
-import { toSlug } from "@/lib/utils/methods";
+import { filterMenu, countMenuItems } from "./menu-data";
+import styles from "./menu.module.css";
 import { calculateDistance } from "@/lib/utils/methods/order";
 import { MARKETPLACE_LOCATION } from "@/lib/utils/constants";
 import { useUserAddress } from "@/lib/context/address/address.context";
@@ -50,9 +50,10 @@ import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import { GET_POPULAR_SUB_CATEGORIES_LIST } from "@/lib/api/graphql";
 import { Dialog } from "primereact/dialog";
 import Loader from "@/app/(localized)/mapview/[slug]/components/Loader";
-import { motion } from "framer-motion";
 import CustomDialog from "@/lib/ui/useable-components/custom-dialog";
-import Image, { FALLBACK_IMAGE_SRC } from '@/lib/ui/useable-components/safe-image';
+import Image, {
+  FALLBACK_IMAGE_SRC,
+} from "@/lib/ui/useable-components/safe-image";
 import { useTranslations } from "next-intl";
 
 export default function RestaurantDetailsScreen() {
@@ -69,8 +70,8 @@ export default function RestaurantDetailsScreen() {
   const { id, slug }: { id: string; slug: string } = useParams();
 
   // Refs
-  const categoryRefs = useRef<Record<string, HTMLElement | null>>({});
-  const selectedCategoryRef = useRef<string>("");
+  const menuContentRef = useRef<HTMLDivElement>(null);
+  const categoryNavRef = useRef<HTMLElement>(null);
 
   // State
   const [direction, setDirection] = useState<"ltr" | "rtl">("ltr");
@@ -93,7 +94,9 @@ export default function RestaurantDetailsScreen() {
   const { profile } = useUser();
 
   // Fetch restaurant data
-  const { data, loading } = useRestaurant(id, decodeURIComponent(slug));
+  const { data, loading: refreshing } = useRestaurant(id, decodeURIComponent(slug));
+  // Keep the current menu visible while cached data refreshes.
+  const loading = refreshing && !data?.restaurant;
 
   // fetch popular deals id
   const { data: popularSubCategoriesList } = useQuery(
@@ -121,8 +124,12 @@ export default function RestaurantDetailsScreen() {
   }, [data?.restaurant, cart?.length, transformCartWithFoodInfo, updateCart]);
 
   // Filter food categories based on search term
-  const allDeals = data?.restaurant?.categories?.filter(
-    (cat: ICategory) => cat.foods.length,
+  const allDeals = useMemo(
+    () =>
+      (data?.restaurant?.categories ?? []).filter(
+        (category: ICategory) => category.foods.length > 0,
+      ),
+    [data?.restaurant?.categories],
   );
 
   // Check if restaurant is favorited when profile is loaded
@@ -143,81 +150,68 @@ export default function RestaurantDetailsScreen() {
     [isModalOpen],
   );
 
-  const popularDealsIds = popularSubCategoriesList?.popularItems?.map(
-    (item: any) => item.id,
-  );
   const normalizedFilter = filter.trim().toLowerCase();
-
-  const deals = useMemo(() => {
-    const filteredDeals =
-      (allDeals || [])
-        .filter((c: ICategory) => {
-          if (normalizedFilter === "") return true;
-
-          const categoryMatches = c.title
-            .toLowerCase()
-            .includes(normalizedFilter);
-          const foodsMatch = c.foods.some((food: IFood) =>
-            food.title.toLowerCase().includes(normalizedFilter) ||
-            (food.description &&
-              food.description.toLowerCase().includes(normalizedFilter)),
-          );
-
-          return categoryMatches || foodsMatch;
-        })
-        .map((c: ICategory, index: number) => ({
-          ...c,
-          index,
-          foods: c.foods.filter((food) => {
-            // If filter is empty, include all foods
-            if (normalizedFilter === "") return true;
-
-            // Include food if title or description matches filter
-            return (
-              food.title.toLowerCase().includes(normalizedFilter) ||
-              (food.description &&
-                food.description.toLowerCase().includes(normalizedFilter))
-            );
-          }),
-        }))
-        .filter((c: ICategory) => c.foods.length > 0) || [];
-
-    // Flatten all foods from all categories
-    const allFoods = filteredDeals.flatMap((cat: ICategory) => cat.foods);
-
-    // Filter foods that are in popularDealsIds
-    const popularFoods = allFoods.filter((food: IFood) =>
-      popularDealsIds?.includes(food._id),
+  const deals: ICategory[] = useMemo(() => {
+    const popularIds = new Set(
+      (popularSubCategoriesList?.popularItems ?? []).map(
+        (item: { id: string }) => item.id,
+      ),
     );
-
-    // Create a "Popular Deals" category if there are matching foods
-    const popularDealsCategory: ICategory | null = popularFoods.length
-      ? {
-          _id: "popular-deals",
-          title: "Popular Deals",
-          foods: popularFoods,
-          // index can be used for custom ordering if needed
-        }
-      : null;
-
-    // Add the new category at the top
-    return popularDealsCategory
-      ? [popularDealsCategory, ...filteredDeals]
-      : filteredDeals;
-  }, [allDeals, normalizedFilter, popularDealsIds]);
-
-  const [selectedCategory, setSelectedCategory] = useState("");
+    const popularFoods = Array.from(
+      new Map(
+        allDeals
+          .flatMap((category: ICategory) => category.foods)
+          .filter((food: IFood) => popularIds.has(food._id))
+          .map((food: IFood) => [food._id, food] as const),
+      ).values(),
+    ) as IFood[];
+    return popularFoods.length
+      ? [
+          { _id: "popular-deals", title: "Popular Deals", foods: popularFoods },
+          ...allDeals,
+        ]
+      : allDeals;
+  }, [allDeals, popularSubCategoriesList?.popularItems]);
+  const [categorySelection, setCategorySelection] = useState({
+    restaurantId: id,
+    categoryId: "",
+  });
+  const selectedCategory =
+    categorySelection.restaurantId === id &&
+    deals.some((category) => category._id === categorySelection.categoryId)
+      ? categorySelection.categoryId
+      : "";
+  const visibleDeals = useMemo(
+    () => filterMenu(deals, selectedCategory, filter),
+    [deals, selectedCategory, filter],
+  );
+  const searchedDeals = useMemo(
+    () => filterMenu(deals, "", filter),
+    [deals, filter],
+  );
+  const categoryCounts = new Map(
+    searchedDeals.map((category) => [category._id, category.foods.length]),
+  );
+  const resultCount = countMenuItems(visibleDeals);
 
   useEffect(() => {
-    if (deals.length > 0) {
-      const nextCategory = toSlug(deals[0]?.title);
-      setSelectedCategory(nextCategory); // first visible category selected by default
-      selectedCategoryRef.current = nextCategory;
-      return;
-    }
-    setSelectedCategory("");
-    selectedCategoryRef.current = "";
-  }, [deals]);
+    const revealSelection = () => {
+      const nav = categoryNavRef.current;
+      const active = nav?.querySelector<HTMLElement>(
+        'button[aria-pressed="true"]',
+      );
+      if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return;
+      const bounds = nav.getBoundingClientRect();
+      const item = active.getBoundingClientRect();
+      if (item.left < bounds.left)
+        nav.scrollBy({ left: item.left - bounds.left - 8 });
+      else if (item.right > bounds.right)
+        nav.scrollBy({ left: item.right - bounds.right + 8 });
+    };
+    revealSelection();
+    window.addEventListener("resize", revealSelection);
+    return () => window.removeEventListener("resize", revealSelection);
+  }, [selectedCategory]);
 
   const [addFavorite, { loading: addFavoriteLoading }] = useMutation(
     ADD_FAVOURITE_RESTAURANT,
@@ -304,8 +298,6 @@ export default function RestaurantDetailsScreen() {
   };
 
   // States
-  const [visibleItems, setVisibleItems] = useState(10); // Default visible items
-  const [showAll, setShowAll] = useState(false);
   const [showReviews, setShowReviews] = useState<boolean>(false);
   const [showMoreInfo, setShowMoreInfo] = useState<boolean>(false);
 
@@ -391,21 +383,20 @@ export default function RestaurantDetailsScreen() {
   };
 
   // Handlers
-  const handleScroll = (id: string) => {
-    setSelectedCategory(id);
-    selectedCategoryRef.current = id;
-    const element = document.getElementById(id);
-
-    if (element) {
-      const headerOffset = 120;
-      const elementPosition = element.offsetTop;
-      const offsetPosition = elementPosition - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-    }
+  const selectCategory = (categoryId: string) => {
+    setCategorySelection({ restaurantId: id, categoryId });
+    // scrollIntoView also works when the application uses a nested scroll container.
+    requestAnimationFrame(() => {
+      if (
+        menuContentRef.current &&
+        menuContentRef.current.getBoundingClientRect().top < 140
+      ) {
+        menuContentRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    });
   };
 
   // Function to handle opening the food item modal
@@ -441,58 +432,6 @@ export default function RestaurantDetailsScreen() {
   const handleSeeMoreInfo = () => {
     setShowMoreInfo(true);
   };
-
-  // Function to show all categories
-  useEffect(() => {
-    // Adjust visible items based on screen width
-    const updateVisibleItems = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setVisibleItems(3); // Small screens
-      } else if (width < 1024) {
-        setVisibleItems(4); // Medium screens
-      } else {
-        setVisibleItems(5); // Large screens
-      }
-    };
-
-    updateVisibleItems();
-    window.addEventListener("resize", updateVisibleItems);
-
-    return () => {
-      window.removeEventListener("resize", updateVisibleItems);
-    };
-  }, []);
-
-  // Highlight categories on scroll observer
-  useEffect(() => {
-    const handleScrollUpdate = () => {
-      const container = document.body;
-      if (!container) return;
-
-      let selected = "";
-      deals.forEach((category) => {
-        const element = document.getElementById(toSlug(category.title));
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top >= 0 && rect.top <= window.innerHeight / 2) {
-            selected = toSlug(category.title);
-          }
-        }
-      });
-
-      if (selected && selected !== selectedCategoryRef.current) {
-        setSelectedCategory(selected);
-        selectedCategoryRef.current = selected;
-      }
-    };
-
-    window.addEventListener("scroll", handleScrollUpdate, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScrollUpdate);
-    };
-  }, [deals]);
 
   return (
     <>
@@ -677,7 +616,9 @@ export default function RestaurantDetailsScreen() {
                 <span className="font-semibold">
                   {userAddress?.deliveryAddress}
                 </span>
-                {". You can browse the menu, but ordering is off until you pick a nearer delivery location (top bar)."}
+                {
+                  ". You can browse the menu, but ordering is off until you pick a nearer delivery location (top bar)."
+                }
               </p>
               <button
                 type="button"
@@ -691,265 +632,256 @@ export default function RestaurantDetailsScreen() {
         </div>
       )}
 
-      {/* Category Section */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="lg:top-[64px] top-[125px] sticky z-50 bg-white dark:bg-gray-900 shadow-[0_1px_1px_rgba(0,0,0,0.1)] dark:shadow-[0_1px_1px_rgba(255,255,255,0.05)]"
-      >
-        <PaddingContainer>
-          <div className="p-3 w-full grid grid-cols-1 gap-3 lg:grid-cols-[minmax(280px,480px)_minmax(0,1fr)] lg:items-center lg:gap-x-6">
-            {/* Search Input */}
-            <div className="relative w-full min-w-0">
-              <FontAwesomeIcon
-                icon={faSearch}
-                style={{ width: 14, height: 14 }}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-              <input
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                type="text"
-                name="search"
-                placeholder={t("search_for_food_items_placeholder")}
-                className="h-11 w-full rounded-full border border-gray-200 bg-white pl-11 pr-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-gray-400"
-              />
-              {loading && (
-                <FontAwesomeIcon
-                  icon={faSpinner}
-                  spin
-                  style={{ width: 13, height: 13 }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-              )}
-            </div>
-
-            {/* Category List */}
-            <div className="relative w-full min-w-0">
-              <div
-                className="min-h-12 w-full overflow-x-auto overflow-y-hidden flex items-center py-1
-                  [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-              >
-                <ul className="flex gap-3 items-center w-max flex-nowrap lg:ms-auto">
-                  {(showAll ? deals : deals.slice(0, visibleItems)).map(
-                    (category: ICategory, index: number) => {
-                      const _slug = toSlug(category.title);
-                      return (
-                        <li key={index} className="shrink-0">
-                          <button
-                            type="button"
-                            className={`${
-                              selectedCategory === _slug
-                                ? "bg-[#16293f] text-white"
-                                : "bg-slate-100 text-slate-600 hover:bg-[#fff7ef] hover:text-[#16293f] dark:bg-gray-800 dark:text-gray-300"
-                            } whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-semibold leading-none transition sm:text-sm`}
-                            onClick={() => handleScroll(toSlug(category.title))}
-                          >
-                            {category.title}
-                          </button>
-                        </li>
-                      );
-                    },
-                  )}
-
-                  {!showAll && deals.length > visibleItems && (
-                    <li className="shrink-0">
-                      <button
-                        type="button"
-                        className="bg-secondary-color hover:bg-primary-dark text-white dark:bg-primary-dark rounded-full px-4 py-2 font-medium text-[12px] sm:text-[14px] cursor-pointer leading-none"
-                        onClick={() => setShowAll(true)}
-                      >
-                        {t("more_button")}
-                      </button>
-                    </li>
-                  )}
-                </ul>
-              </div>
-            </div>
-
-            {normalizedFilter && (
-              <div className="flex items-center justify-between gap-3 text-sm text-gray-500 dark:text-gray-400 lg:col-span-2">
-                <span>
-                  {deals.reduce((count, category) => count + category.foods.length, 0)} results
-                </span>
-                <button
-                  type="button"
-                  className="font-medium text-primary-color dark:text-[#D2F29E]"
-                  onClick={() => setFilter("")}
-                >
-                  Clear
-                </button>
-              </div>
-            )}
-          </div>
-        </PaddingContainer>
-      </motion.div>
-
-      <Spacer height="20px" />
-
-      {/* Food Categories and Items */}
       <PaddingContainer className="pb-10">
-        {loading ? (
-          <FoodCategorySkeleton />
-        ) : normalizedFilter && deals.length === 0 ? (
-          <div className="py-10 text-center">
-            <EmptySearch />
-            <div className="mt-4 text-gray-500 dark:text-gray-400">
-              No products match &quot;{filter.trim()}&quot;
-            </div>
-          </div>
-        ) : (
-          deals.map((category: ICategory, catIndex: number) => {
-            const categorySlug = toSlug(category.title);
-
-            return (
-              <div
-                key={catIndex}
-                className="mb-7 p-3 scroll-mt-44"
-                id={categorySlug}
-                data-category-id={categorySlug}
-                ref={(el) => {
-                  categoryRefs.current[categorySlug] = el;
-                }}
-              >
-                <h2 className="mb-4 text-[22px] font-bold leading-tight tracking-[-0.02em] text-slate-950 dark:text-gray-100 sm:text-[24px]">
-                  {category.title}
+        <div className={styles.layout}>
+          <aside className={styles.navigation}>
+            <h2 className={styles.navTitle}>Menu categories</h2>
+            <nav
+              ref={categoryNavRef}
+              aria-label="Menu categories"
+              className={styles.categories}
+            >
+              {[
+                {
+                  _id: "",
+                  title: "All items",
+                  count: countMenuItems(searchedDeals),
+                },
+                ...deals.map((category) => ({
+                  _id: category._id,
+                  title: category.title,
+                  count: categoryCounts.get(category._id) ?? 0,
+                })),
+              ].map((category) => (
+                <button
+                  key={category._id}
+                  type="button"
+                  aria-pressed={selectedCategory === category._id}
+                  aria-controls="restaurant-menu-results"
+                  onClick={() => selectCategory(category._id)}
+                  className={`${styles.category} ${selectedCategory === category._id ? styles.active : ""}`}
+                >
+                  <span>{category.title}</span>
+                  <span className={styles.count}>{category.count}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+          <div
+            id="restaurant-menu-results"
+            className={styles.content}
+            ref={menuContentRef}
+          >
+            <div className={styles.toolbar}>
+              <div>
+                <h2 className={styles.menuTitle}>
+                  {deals.find((category) => category._id === selectedCategory)
+                    ?.title ?? "Explore the menu"}
                 </h2>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {category.foods.map((meal: IFood, mealIndex) => (
-                    <div
-                      key={mealIndex}
-                      className={`group relative flex gap-3 overflow-hidden rounded-2xl border p-3 transition duration-300 hover:cursor-pointer hover:shadow-md ${
-                        meal.isOutOfStock
-                          ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950"
-                          : "border-slate-200 bg-white shadow-sm hover:border-[#1c5bc7]/40 dark:border-gray-700 dark:bg-gray-800"
-                      }`}
-                      onClick={() => handleRestaurantClick(meal)}
+                <p className={styles.resultCount} role="status">
+                  {loading
+                    ? "Loading menu..."
+                    : `${resultCount} items${normalizedFilter ? ` matching "${filter.trim()}"` : " available"}`}
+                </p>
+              </div>
+              <div className={styles.search}>
+                <FontAwesomeIcon icon={faSearch} aria-hidden="true" />
+                <input
+                  aria-label={t("search_for_food_items_placeholder")}
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
+                  type="search"
+                  placeholder={t("search_for_food_items_placeholder")}
+                />
+                {filter && (
+                  <button
+                    type="button"
+                    aria-label="Clear menu search"
+                    onClick={() => setFilter("")}
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            </div>
+            {loading ? (
+              <FoodCategorySkeleton />
+            ) : visibleDeals.length === 0 ? (
+              <div className="py-10 text-center">
+                <EmptySearch />
+                <div className="mt-4 text-gray-500 dark:text-gray-400">
+                  {normalizedFilter
+                    ? `No items match "${filter.trim()}" in this category.`
+                    : "No items available in this category."}
+                  {normalizedFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setFilter("")}
+                      className={styles.clearSearch}
                     >
-                      {(meal.badge ||
-                        meal.isCombo ||
-                        (storeOfferPct && !meal.isOutOfStock)) && (
-                        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
-                          {meal.isCombo && (
-                            <Badge variant="offer">{t("combo_label")}</Badge>
-                          )}
-                          {meal.badge && (
-                            <Badge variant="festive">{meal.badge}</Badge>
-                          )}
-                          {storeOfferPct && !meal.isOutOfStock && !meal.isCombo && (
-                            <Badge variant="offer">
-                              {t("offer_percent_off", { pct: storeOfferPct })}
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                      {/* Image */}
-                      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28">
-                        <Image
-                          alt={meal.title}
-                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                          src={meal.image}
-                          width={120}
-                          height={120}
-                        />
-                      </div>
-
-                      {/* Text Content */}
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <h3 className="line-clamp-2 text-[15px] font-semibold tracking-[-0.01em] text-slate-900 dark:text-gray-100">
-                          {meal.title}
-                        </h3>
-                        <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-gray-400">
-                          {meal.isCombo && meal.comboItems?.length
-                            ? meal.comboItems
-                                .map((ci) => `${ci.quantity}× ${ci.title}`)
-                                .join(" + ")
-                            : meal.description}
-                        </p>
-                        <div className="mt-auto flex items-center justify-between gap-2 pe-10 pt-3">
-                          {(() => {
-                            const basePrice = meal.variations[0].price;
-                            const discounted = meal.variations[0].discounted;
-                            const hasVariationDiscount =
-                              discounted != null && discounted > 0 && discounted < basePrice;
-                            const displayPrice = hasVariationDiscount ? discounted : basePrice;
-                            const strikePrice =
-                              meal.isCombo && meal.compareAtPrice && meal.compareAtPrice > displayPrice
-                                ? meal.compareAtPrice
-                                : hasVariationDiscount
-                                  ? basePrice
-                                  : null;
-                            return (
-                              <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#16293f] dark:text-primary-color">
-                                <span>
-                                  {CURRENCY_SYMBOL}
-                                  {displayPrice}
-                                </span>
-                                {strikePrice != null && (
-                                  <span className="text-[11px] font-semibold text-slate-400 line-through">
-                                    {CURRENCY_SYMBOL}
-                                    {strikePrice}
-                                  </span>
-                                )}
-                              </span>
-                            );
-                          })()}
-                          {meal.isOutOfStock && (
-                            <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">
-                              {t("out_of_stock_label")}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Add Button */}
-                      <button
-                        className={`${direction === "rtl" ? "left-3" : "right-3"} absolute bottom-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1c5bc7] text-white shadow-md transition hover:scale-110`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRestaurantClick(meal);
-                        }}
-                        type="button"
-                        aria-label={`Add ${meal.title}`}
-                      >
-                        <FontAwesomeIcon icon={faPlus} color="white" />
-                      </button>
-
-                      {/* create a modal that will be show that this restaurant is closed do want to see menu or want to close if click on the see menu then will move to the next page other wise modal will be closed */}
-                      <CustomDialog
-                        className="max-w-[300px]"
-                        visible={
-                          isModalOpen.value &&
-                          isModalOpen.id === meal?._id?.toString()
-                        }
-                        onHide={() =>
-                          handleUpdateIsModalOpen(false, meal?._id?.toString())
-                        }
-                      >
-                        <div className="text-center pb-10 pt-10">
-                          <p className="text-lg font-bold pb-3 dark:text-gray-100">
-                            {t("restaurant_is_closed")}
-                          </p>
-                          <p className="text-sm dark:text-gray-300">
-                            {t("cannot_order_food_item_now")}
-                            <br></br> {t("please_try_again_later")}
-                          </p>
-                        </div>
-                      </CustomDialog>
-                    </div>
-                  ))}
+                      Clear search
+                    </button>
+                  )}
                 </div>
               </div>
-            );
-          })
-        )}
-        {!loading && deals.length == 0 && (
-          <div className="text-center py-6 text-gray-500 flex flex-col items-center justify-center">
-            <EmptySearch />
+            ) : (
+              visibleDeals.map((category: ICategory) => {
+                return (
+                  <div key={category._id} className={styles.section}>
+                    {!selectedCategory && (
+                      <h2 className={styles.sectionTitle}>
+                        {category.title}
+                        <span>{category.foods.length}</span>
+                      </h2>
+                    )}
+
+                    <div className={styles.foodGrid}>
+                      {category.foods.map((meal: IFood) => (
+                        <div
+                          key={meal._id}
+                          className={`group relative flex gap-4 overflow-hidden rounded-2xl border p-4 transition duration-200 hover:cursor-pointer hover:shadow-md ${
+                            meal.isOutOfStock
+                              ? "border-slate-200 bg-slate-100 opacity-70 dark:border-gray-700 dark:bg-gray-950"
+                              : "border-slate-200 bg-white shadow-sm hover:border-[#1c5bc7]/40 dark:border-gray-700 dark:bg-gray-800"
+                          }`}
+                          onClick={() => handleRestaurantClick(meal)}
+                        >
+                          {(meal.badge ||
+                            meal.isCombo ||
+                            (storeOfferPct && !meal.isOutOfStock)) && (
+                            <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+                              {meal.isCombo && (
+                                <Badge variant="offer">
+                                  {t("combo_label")}
+                                </Badge>
+                              )}
+                              {meal.badge && (
+                                <Badge variant="festive">{meal.badge}</Badge>
+                              )}
+                              {storeOfferPct &&
+                                !meal.isOutOfStock &&
+                                !meal.isCombo && (
+                                  <Badge variant="offer">
+                                    {t("offer_percent_off", {
+                                      pct: storeOfferPct,
+                                    })}
+                                  </Badge>
+                                )}
+                            </div>
+                          )}
+                          {/* Image */}
+                          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl sm:h-28 sm:w-28">
+                            <Image
+                              alt={meal.title}
+                              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                              src={meal.image}
+                              width={120}
+                              height={120}
+                            />
+                          </div>
+
+                          {/* Text Content */}
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <h3 className="line-clamp-2 text-[15px] font-semibold tracking-[-0.01em] text-slate-900 dark:text-gray-100">
+                              {meal.title}
+                            </h3>
+                            <p className="mt-0.5 line-clamp-2 text-sm leading-relaxed text-slate-500 dark:text-gray-400">
+                              {meal.isCombo && meal.comboItems?.length
+                                ? meal.comboItems
+                                    .map((ci) => `${ci.quantity}× ${ci.title}`)
+                                    .join(" + ")
+                                : meal.description}
+                            </p>
+                            <div className="mt-auto flex items-center justify-between gap-2 pe-10 pt-3">
+                              {(() => {
+                                const basePrice = meal.variations[0].price;
+                                const discounted =
+                                  meal.variations[0].discounted;
+                                const hasVariationDiscount =
+                                  discounted != null &&
+                                  discounted > 0 &&
+                                  discounted < basePrice;
+                                const displayPrice = hasVariationDiscount
+                                  ? discounted
+                                  : basePrice;
+                                const strikePrice =
+                                  meal.isCombo &&
+                                  meal.compareAtPrice &&
+                                  meal.compareAtPrice > displayPrice
+                                    ? meal.compareAtPrice
+                                    : hasVariationDiscount
+                                      ? basePrice
+                                      : null;
+                                return (
+                                  <span className="flex items-baseline gap-1.5 text-[15px] font-black text-[#16293f] dark:text-primary-color">
+                                    <span>
+                                      {CURRENCY_SYMBOL}
+                                      {displayPrice}
+                                    </span>
+                                    {strikePrice != null && (
+                                      <span className="text-[11px] font-semibold text-slate-400 line-through">
+                                        {CURRENCY_SYMBOL}
+                                        {strikePrice}
+                                      </span>
+                                    )}
+                                  </span>
+                                );
+                              })()}
+                              {meal.isOutOfStock && (
+                                <span className="text-[11px] font-bold uppercase tracking-wide text-red-500">
+                                  {t("out_of_stock_label")}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Add Button */}
+                          <button
+                            disabled={meal.isOutOfStock}
+                            className={`${direction === "rtl" ? "left-4" : "right-4"} absolute bottom-4 flex h-9 w-9 items-center justify-center rounded-lg bg-[#1c5bc7] text-white transition hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRestaurantClick(meal);
+                            }}
+                            type="button"
+                            aria-label={`Add ${meal.title}`}
+                          >
+                            <FontAwesomeIcon icon={faPlus} color="white" />
+                          </button>
+
+                          {/* create a modal that will be show that this restaurant is closed do want to see menu or want to close if click on the see menu then will move to the next page other wise modal will be closed */}
+                          <CustomDialog
+                            className="max-w-[300px]"
+                            visible={
+                              isModalOpen.value &&
+                              isModalOpen.id === meal?._id?.toString()
+                            }
+                            onHide={() =>
+                              handleUpdateIsModalOpen(
+                                false,
+                                meal?._id?.toString(),
+                              )
+                            }
+                          >
+                            <div className="text-center pb-10 pt-10">
+                              <p className="text-lg font-bold pb-3 dark:text-gray-100">
+                                {t("restaurant_is_closed")}
+                              </p>
+                              <p className="text-sm dark:text-gray-300">
+                                {t("cannot_order_food_item_now")}
+                                <br></br> {t("please_try_again_later")}
+                              </p>
+                            </div>
+                          </CustomDialog>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
-        )}
+        </div>
       </PaddingContainer>
 
       {/* Food Item Detail Modal */}

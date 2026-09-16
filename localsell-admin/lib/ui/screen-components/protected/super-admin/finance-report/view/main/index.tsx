@@ -217,7 +217,7 @@ export default function FinanceReportMain() {
                   headerName: t('Vendor'),
                   propertyName: 'vendor.name',
                   body: (row: IFinanceVendorRow) =>
-                    row.vendor.name || row.vendor.email || '—',
+                    row.vendor.businessName || row.vendor.name || row.vendor.email || '—',
                 },
                 { headerName: t('Orders'), propertyName: 'orders' },
                 {

@@ -4,7 +4,7 @@ import { IProtectedHomeLayoutComponent } from "@/lib/utils/interfaces";
 import { usePathname, useRouter } from "next/navigation";
 
 // Svg
-import { CutlerySvg,StoreSvg } from "@/lib/utils/assets/svg";
+import { CutlerySvg, StoreSvg } from "@/lib/utils/assets/svg";
 import PaddingContainer from "@/lib/ui/useable-components/containers/padding";
 import { useEffect, useState } from "react";
 // context
@@ -42,9 +42,8 @@ export default function HomeLayout({
   const isRestaurants = pathname === "/restaurants";
   const isStore = pathname === "/store";
 
-
   const t = useTranslations();
-  
+
   useEffect(() => {
     const handleScroll = () => {
       setStickyTop(window.scrollY > 300 ? 16 : 0);
@@ -53,9 +52,8 @@ export default function HomeLayout({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-
   return (
-    <div className="w-screen h-full flex flex-col ">
+    <div className="w-full min-w-0 flex flex-col ">
       {/* click-away handler */}
       {isSearchFocused && (
         <div
@@ -95,7 +93,7 @@ export default function HomeLayout({
 
       {/* Scrollable Content */}
       <div
-        className={`flex-1 overflow-auto bg-white dark:bg-gray-900 mt-4 sm:mt-0 ${isSearchFocused && "blur-md cursor-default"}`}
+        className={`flex-1 min-w-0 bg-white dark:bg-gray-900 mt-4 sm:mt-0 ${isSearchFocused && "blur-md cursor-default"}`}
       >
         <PaddingContainer>{children}</PaddingContainer>
       </div>

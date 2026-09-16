@@ -12,6 +12,8 @@ export const restaurantTypeDefs = /* GraphQL */ `
   type Owner {
     _id: ID!
     email: String
+    name: String
+    businessName: String
     isActive: Boolean
   }
 
@@ -263,7 +265,23 @@ export const restaurantTypeDefs = /* GraphQL */ `
     restaurantId: String!
   }
 
+  type FoodSearchResult {
+    _id: ID!
+    title: String!
+    image: String
+    restaurantId: String!
+    restaurantName: String!
+    restaurantSlug: String
+    restaurantShopType: String
+  }
+
+  type SearchSuggestions {
+    restaurants: [Restaurant!]!
+    foods: [FoodSearchResult!]!
+  }
+
   extend type Query {
+    searchSuggestions(keyword: String!, latitude: Float, longitude: Float, radiusKm: Float, limit: Int): SearchSuggestions!
     nearByRestaurants(latitude: Float, longitude: Float, radiusKm: Float, shopType: String): RestaurantList!
     nearByRestaurantsPreview(latitude: Float, longitude: Float, shopType: String, page: Int, limit: Int): RestaurantList!
     recentOrderRestaurantsPreview(latitude: Float, longitude: Float): [RestaurantCarouselPreview!]!

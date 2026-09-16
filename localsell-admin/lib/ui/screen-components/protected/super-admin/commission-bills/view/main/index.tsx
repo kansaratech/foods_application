@@ -138,7 +138,7 @@ export default function CommissionBillsMain() {
     () =>
       (preview?.rows ?? []).map((r) => ({
         _id: r.vendor._id,
-        vendorName: r.vendor.name || r.vendor.email || '—',
+        vendorName: r.vendor.businessName || r.vendor.name || r.vendor.email || '—',
         orderCount: r.orderCount,
         grossFoodSubtotal: r.grossFoodSubtotal,
         commissionTotal: r.commissionTotal,
@@ -310,7 +310,7 @@ export default function CommissionBillsMain() {
               headerName: t('Vendor'),
               propertyName: 'vendor',
               body: (r: ICommissionBill) =>
-                r.vendor?.name || r.vendor?.email || '—',
+                r.vendor?.businessName || r.vendor?.name || r.vendor?.email || '—',
             },
             {
               headerName: t('Period'),
@@ -391,7 +391,10 @@ export default function CommissionBillsMain() {
               </span>
               <span>
                 <b>{t('Vendor')}:</b>{' '}
-                {detail.bill.vendor?.name || detail.bill.vendor?.email || '—'}
+                {detail.bill.vendor?.businessName ||
+                  detail.bill.vendor?.name ||
+                  detail.bill.vendor?.email ||
+                  '—'}
               </span>
               <span>
                 <b>{t('Period')}:</b> {day(detail.bill.periodStart)} –{' '}

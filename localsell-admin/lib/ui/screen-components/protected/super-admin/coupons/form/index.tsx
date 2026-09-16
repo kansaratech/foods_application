@@ -7,6 +7,7 @@ import { CREATE_COUPON, EDIT_COUPON } from '@/lib/api/graphql';
 import { ToastContext } from '@/lib/context/global/toast.context';
 
 // Components
+import CustomDateInput from '@/lib/ui/useable-components/date-input';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
 import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 
@@ -20,7 +21,7 @@ import { CouponFormSchema } from '@/lib/utils/schema/coupon';
 import { Form, Formik } from 'formik';
 
 // Prime react
-import { ProgressSpinner } from 'primereact/progressspinner';
+import { ProgressSpinner } from '@/lib/ui/useable-components/brand-loader';
 import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
 
 // Hooks
@@ -265,14 +266,7 @@ export default function CouponForm({
         }}
         validateOnChange={true}
       >
-        {({
-          errors,
-          touched,
-          handleSubmit,
-          values,
-          isSubmitting,
-          setFieldValue,
-        }) => {
+        {({ errors, handleSubmit, values, isSubmitting, setFieldValue }) => {
           return (
             <Form onSubmit={handleSubmit}>
               <div className="space-y-4">
@@ -343,46 +337,25 @@ export default function CouponForm({
                 />
 
                 {!values.lifeTimeActive && (
-                  <CustomTextField
-                    value={values.startDate}
-                    name="startDate"
-                    showLabel={true}
-                    placeholder={t('Start Date')}
-                    type="date"
-                    onChange={(e) => setFieldValue('startDate', e.target.value)}
-                    style={{
-                      borderColor: onErrorMessageMatcher(
-                        'startDate',
-                        errors?.startDate,
-                        CouponErrors
-                      )
-                        ? 'red'
-                        : '',
-                    }}
-                  />
-                )}
-
-                {!values.lifeTimeActive && (
-                  <CustomTextField
-                    value={values.endDate}
-                    name="endDate"
-                    showLabel={true}
-                    placeholder={t('End Date')}
-                    type="date"
-                    onChange={(e) => setFieldValue('endDate', e.target.value)}
-                    style={{
-                      borderColor: onErrorMessageMatcher(
-                        'endDate',
-                        errors?.endDate,
-                        CouponErrors
-                      )
-                        ? 'red'
-                        : '',
-                    }}
-                  />
-                )}
-                {errors.endDate && touched.endDate && (
-                  <small className="ml-1 p-error">{errors.endDate}</small>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <CustomDateInput
+                      name="startDate"
+                      value={values.startDate}
+                      showLabel
+                      placeholder={t('Start Date')}
+                      onChange={(value) => setFieldValue('startDate', value)}
+                      error={errors.startDate}
+                    />
+                    <CustomDateInput
+                      name="endDate"
+                      value={values.endDate}
+                      showLabel
+                      placeholder={t('End Date')}
+                      onChange={(value) => setFieldValue('endDate', value)}
+                      error={errors.endDate}
+                      minDate={values.startDate}
+                    />
+                  </div>
                 )}
 
                 <ActionButton

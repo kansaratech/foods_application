@@ -1,20 +1,9 @@
-import { ActivityIndicator } from "react-native";
-// Constants
-import { Colors } from "@/lib/utils/constants";
-//Interface
+import CustomSpinner from "./custom-spinner";
 import { ISpinnerComponentProps } from "@/lib/utils/interfaces";
-function SpinnerComponent(props: ISpinnerComponentProps) {
-  return (
-    <ActivityIndicator
-      size="small"
-      color={props.color ?? Colors.light.primary}
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    />
-  );
+export default function SpinnerComponent({
+  color,
+  width,
+  height,
+}: ISpinnerComponentProps) {
+  return <CustomSpinner color={color} size={width ?? height ?? 24} />;
 }
-
-export default SpinnerComponent;

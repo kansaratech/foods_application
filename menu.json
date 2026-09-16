@@ -1,0 +1,241 @@
+{
+  "restaurant": "Kitchen Foods",
+  "currency": "INR",
+  "isPureVeg": true,
+  "categories": [
+    {
+      "name": "Chaat",
+      "tagline": "Chatpata. Mazedaar. Zabardast!",
+      "image": "images/categories/chaat.jpg",
+      "items": [
+        { "name": "Papdi Chaat", "price": 55, "image": "images/chaat/papdi-chaat.jpg" },
+        { "name": "Matar Chaat", "price": 60, "image": "images/chaat/matar-chaat.jpg" },
+        { "name": "Dahi Aloo Tiki", "price": 60, "image": "images/chaat/dahi-aloo-tiki.jpg" },
+        { "name": "Chhole Tiki", "price": 70, "image": "images/chaat/chhole-tiki.jpg" },
+        { "name": "Signature Palak Patta Chaat", "price": 90, "image": "images/chaat/signature-palak-patta-chaat.jpg" },
+        { "name": "Bhalla Papdi Chaat", "price": 65, "image": "images/chaat/bhalla-papdi-chaat.jpg" },
+        { "name": "Bhel Puri", "price": 50, "image": "images/chaat/bhel-puri.jpg" },
+        { "name": "Aloo Tiki Chaat", "price": 60, "image": "images/chaat/aloo-tiki-chaat.jpg" },
+        { "name": "Corn Chaat", "price": 70, "image": "images/chaat/corn-chaat.jpg" },
+        { "name": "Butter Aloo Tiki Chaat", "price": 90, "image": "images/chaat/butter-aloo-tiki-chaat.jpg" }
+      ]
+    },
+    {
+      "name": "South Indian",
+      "tagline": "Crispy. Tasty. Traditional!",
+      "image": "images/categories/south-indian.jpg",
+      "items": [
+        { "name": "Masala Dosa", "price": 110, "image": "images/south-indian/masala-dosa.jpg" },
+        { "name": "Plain Dosa", "price": 99, "image": "images/south-indian/plain-dosa.jpg" },
+        { "name": "Jinny Dosa", "price": 150, "image": "images/south-indian/jinny-dosa.jpg" },
+        { "name": "Schezwan Dosa", "price": 130, "image": "images/south-indian/schezwan-dosa.jpg" },
+        { "name": "Hyderabadi Dosa", "price": 130, "image": "images/south-indian/hyderabadi-dosa.jpg" },
+        { "name": "Chinese Dosa", "price": 130, "image": "images/south-indian/chinese-dosa.jpg" },
+        { "name": "Meggie Masala", "price": 130, "image": "images/south-indian/meggie-masala.jpg" },
+        { "name": "Paneer Dosa", "price": 160, "image": "images/south-indian/paneer-dosa.jpg" },
+        { "name": "Cheese Dosa", "price": 160, "image": "images/south-indian/cheese-dosa.jpg" },
+        { "name": "Bahubali Dosa", "price": 180, "image": "images/south-indian/bahubali-dosa.jpg" },
+        { "name": "Masoor Dosa", "price": 150, "image": "images/south-indian/masoor-dosa.jpg" },
+        { "name": "Cheese Onion Dosa", "price": 150, "image": "images/south-indian/cheese-onion-dosa.jpg" },
+        { "name": "Cheese Capsicum Dosa", "price": 150, "image": "images/south-indian/cheese-capsicum-dosa.jpg" },
+        { "name": "Veg Uttapam", "price": 100, "image": "images/south-indian/veg-uttapam.jpg" },
+        { "name": "Paneer Uttapam", "price": 150, "image": "images/south-indian/paneer-uttapam.jpg" }
+      ]
+    },
+    {
+      "name": "Chinese",
+      "tagline": "Wok Tossed. Bold Flavors. Pure Cravings!",
+      "image": "images/categories/chinese.jpg",
+      "items": [
+        { "name": "Veggie Hakka Noodles", "price": 100, "image": "images/chinese/veggie-hakka-noodles.jpg" },
+        { "name": "Veggie Noodles In Hot Garlic Sauce", "price": 140, "image": "images/chinese/veggie-noodles-hot-garlic-sauce.jpg" },
+        { "name": "Veggie Noodle In Chilli Garlic", "price": 140, "image": "images/chinese/veggie-noodle-chilli-garlic.jpg" },
+        { "name": "Gobi Manchurian", "price": 140, "image": "images/chinese/gobi-manchurian.jpg" },
+        { "name": "Chinese Bhel With Tangy Tagra Style", "price": 120, "image": "images/chinese/chinese-bhel-tangy-tagra.jpg" },
+        { "name": "Honey Chilli Potato", "price": 120, "image": "images/chinese/honey-chilli-potato.jpg" },
+        { "name": "Crispy Chilli Baby Corn", "price": 160, "image": "images/chinese/crispy-chilli-baby-corn.jpg" },
+        { "name": "Chilli Paneer Dry", "price": 180, "image": "images/chinese/chilli-paneer-dry.jpg" },
+        { "name": "Paneer In Sweet Chilli Sauce", "price": 180, "image": "images/chinese/paneer-sweet-chilli-sauce.jpg" },
+        { "name": "Schezwan Fried Rice", "price": 120, "image": "images/chinese/schezwan-fried-rice.jpg" },
+        { "name": "Mexican Fried Rice", "price": 150, "image": "images/chinese/mexican-fried-rice.jpg" },
+        { "name": "Veg Fried Rice", "price": 120, "image": "images/chinese/veg-fried-rice.jpg" }
+      ]
+    },
+    {
+      "name": "Burgers",
+      "tagline": "Bite into Happiness!",
+      "image": "images/categories/burgers.jpg",
+      "items": [
+        { "name": "Veg Burger", "price": 69, "image": "images/burgers/veg-burger.jpg" },
+        { "name": "Classic Tiki", "price": 69, "image": "images/burgers/classic-tiki.jpg" },
+        { "name": "Veg Cheese Tiki", "price": 89, "image": "images/burgers/veg-cheese-tiki.jpg" },
+        { "name": "Corn Cheese Tiki", "price": 89, "image": "images/burgers/corn-cheese-tiki.jpg" },
+        { "name": "Tandoori Tiki", "price": 109, "image": "images/burgers/tandoori-tiki.jpg" },
+        { "name": "Paneer Tiki", "price": 109, "image": "images/burgers/paneer-tiki.jpg" },
+        { "name": "Veg Corn & Paneer Tiki", "price": 119, "image": "images/burgers/veg-corn-paneer-tiki.jpg" },
+        { "name": "Maharaja Tiki", "price": 129, "image": "images/burgers/maharaja-tiki.jpg" },
+        { "name": "Spicy Jalapeno Veg Tiki", "price": 129, "image": "images/burgers/spicy-jalapeno-veg-tiki.jpg" }
+      ]
+    },
+    {
+      "name": "Fries",
+      "tagline": "Crispy. Crunchy. Irresistible!",
+      "image": "images/categories/fries.jpg",
+      "items": [
+        { "name": "Simple Salted", "price": 99, "image": "images/fries/simple-salted.jpg" },
+        { "name": "Masala Fries", "price": 109, "image": "images/fries/masala-fries.jpg" },
+        { "name": "Peri Peri", "price": 129, "image": "images/fries/peri-peri.jpg" },
+        { "name": "Tandoori Deep Fries", "price": 149, "image": "images/fries/tandoori-deep-fries.jpg" }
+      ]
+    },
+    {
+      "name": "Pasta",
+      "tagline": "Saucy. Cheesy. Yummilicious!",
+      "image": "images/categories/pasta.jpg",
+      "items": [
+        { "name": "Red Pasta", "price": 129, "image": "images/pasta/red-pasta.jpg" },
+        { "name": "White Pasta", "price": 149, "image": "images/pasta/white-pasta.jpg" },
+        { "name": "Mexican Veg Pasta", "price": 159, "image": "images/pasta/mexican-veg-pasta.jpg" },
+        { "name": "Cheese Chilli Pasta", "price": 159, "image": "images/pasta/cheese-chilli-pasta.jpg" },
+        { "name": "Honey Chilli Pasta", "price": 159, "image": "images/pasta/honey-chilli-pasta.jpg" },
+        { "name": "Spl. Soupy Pasta", "price": 159, "image": "images/pasta/spl-soupy-pasta.jpg" }
+      ]
+    },
+    {
+      "name": "Garlic Bread",
+      "tagline": "Garlic Goodness!",
+      "image": "images/categories/garlic-bread.jpg",
+      "items": [
+        { "name": "Cheese Garlic Bread", "price": 79, "image": "images/garlic-bread/cheese-garlic-bread.jpg" },
+        { "name": "Paneer Garlic Bread", "price": 99, "image": "images/garlic-bread/paneer-garlic-bread.jpg" },
+        { "name": "Veg Garlic Bread", "price": 99, "image": "images/garlic-bread/veg-garlic-bread.jpg" },
+        { "name": "Mexican Garlic Bread", "price": 129, "image": "images/garlic-bread/mexican-garlic-bread.jpg" }
+      ]
+    },
+    {
+      "name": "Pizza",
+      "tagline": "Fresh. Cheesy. Delicious",
+      "image": "images/categories/pizza.jpg",
+      "items": [
+        { "name": "Tomato & Capsicum", "price": 139, "image": "images/pizza/tomato-capsicum.jpg" },
+        { "name": "Onion & Capsicum", "price": 139, "image": "images/pizza/onion-capsicum.jpg" },
+        { "name": "Margherita", "price": 139, "image": "images/pizza/margherita.jpg" },
+        { "name": "Corn Veggie Delight", "price": 169, "image": "images/pizza/corn-veggie-delight.jpg" },
+        { "name": "Chatpata Paneer", "price": 169, "image": "images/pizza/chatpata-paneer.jpg" },
+        { "name": "Garden Mix Veggies", "price": 169, "image": "images/pizza/garden-mix-veggies.jpg" },
+        { "name": "Spicy Cheese Chilli", "price": 199, "image": "images/pizza/spicy-cheese-chilli.jpg" },
+        { "name": "Peppy Paneer", "price": 199, "image": "images/pizza/peppy-paneer.jpg" },
+        { "name": "Paneer Golden Delight", "price": 199, "image": "images/pizza/paneer-golden-delight.jpg" },
+        { "name": "Tandoori Paneer Tikka", "price": 239, "image": "images/pizza/tandoori-paneer-tikka.jpg" },
+        { "name": "Spl. Cheese Burst", "price": 239, "image": "images/pizza/spl-cheese-burst.jpg" },
+        { "name": "Spl. Mexican Burst", "price": 239, "image": "images/pizza/spl-mexican-burst.jpg" },
+        { "name": "Maharaja Paneer Pizza", "price": 279, "image": "images/pizza/maharaja-paneer-pizza.jpg" },
+        { "name": "Veggie Death By Cheese", "price": 279, "image": "images/pizza/veggie-death-by-cheese.jpg" },
+        { "name": "Signature Korean Paneer", "price": 299, "image": "images/pizza/signature-korean-paneer.jpg" },
+        { "name": "Signature Paneer Thin Crust", "price": 299, "image": "images/pizza/signature-paneer-thin-crust.jpg" }
+      ]
+    },
+    {
+      "name": "Shakes",
+      "tagline": "Thick, Creamy & Delicious!",
+      "image": "images/categories/shakes.jpg",
+      "items": [
+        { "name": "Badam Shake", "price": 60, "image": "images/shakes/badam-shake.jpg" },
+        { "name": "Spl. Kesar Pista Falooda", "price": 90, "image": "images/shakes/spl-kesar-pista-falooda.jpg" },
+        { "name": "Spl. Rose Falooda", "price": 90, "image": "images/shakes/spl-rose-falooda.jpg" },
+        { "name": "Spl. American Nuts Falooda", "price": 120, "image": "images/shakes/spl-american-nuts-falooda.jpg" },
+        { "name": "Spl. Bpk Kulfi Falooda", "price": 150, "image": "images/shakes/spl-bpk-kulfi-falooda.jpg" },
+        { "name": "Rose Shake", "price": 80, "image": "images/shakes/rose-shake.jpg" },
+        { "name": "Strawberry Shake", "price": 80, "image": "images/shakes/strawberry-shake.jpg" },
+        { "name": "Butterscotch Shake", "price": 80, "image": "images/shakes/butterscotch-shake.jpg" },
+        { "name": "Mango Shake", "price": 80, "image": "images/shakes/mango-shake.jpg" },
+        { "name": "Pineapple Shake", "price": 80, "image": "images/shakes/pineapple-shake.jpg" },
+        { "name": "Chocolate Shake", "price": 80, "image": "images/shakes/chocolate-shake.jpg" },
+        { "name": "Oreo Shake", "price": 99, "image": "images/shakes/oreo-shake.jpg" },
+        { "name": "Death By Chocolate", "price": 120, "image": "images/shakes/death-by-chocolate.jpg" },
+        { "name": "Kitkat Shake", "price": 120, "image": "images/shakes/kitkat-shake.jpg" },
+        { "name": "Chocolate Brownie Shake", "price": 140, "image": "images/shakes/chocolate-brownie-shake.jpg" }
+      ]
+    },
+    {
+      "name": "Mojitos",
+      "tagline": "Fresh. Fizzy. Fantastic!",
+      "image": "images/categories/mojitos.jpg",
+      "items": [
+        { "name": "Sweet Fresh Lime", "price": 89, "image": "images/mojitos/sweet-fresh-lime.jpg" },
+        { "name": "Blue Ocean", "price": 89, "image": "images/mojitos/blue-ocean.jpg" },
+        { "name": "Cranberry", "price": 89, "image": "images/mojitos/cranberry.jpg" },
+        { "name": "Bubble Gum", "price": 89, "image": "images/mojitos/bubble-gum.jpg" },
+        { "name": "Mint Mojito", "price": 89, "image": "images/mojitos/mint-mojito.jpg" },
+        { "name": "Masala Soda", "price": 89, "image": "images/mojitos/masala-soda.jpg" },
+        { "name": "Kala Khatta", "price": 89, "image": "images/mojitos/kala-khatta.jpg" },
+        { "name": "Orange Soda", "price": 89, "image": "images/mojitos/orange-soda.jpg" }
+      ]
+    },
+    {
+      "name": "Cold Coffee & Hot Brownie",
+      "tagline": "Chill in Coffee, Thrill in Brownie!",
+      "image": "images/categories/cold-coffee-hot-brownie.jpg",
+      "items": [
+        { "name": "Cold Coffee", "price": 50, "image": "images/cold-coffee-hot-brownie/cold-coffee.jpg" },
+        { "name": "Cold Coffee With Ice Cream", "price": 70, "image": "images/cold-coffee-hot-brownie/cold-coffee-with-ice-cream.jpg" },
+        { "name": "Regular Brownie", "price": 80, "image": "images/cold-coffee-hot-brownie/regular-brownie.jpg" },
+        { "name": "Brownie With Ice Cream", "price": 100, "image": "images/cold-coffee-hot-brownie/brownie-with-ice-cream.jpg" },
+        { "name": "Sizzler Chocolate Brownie", "price": 150, "image": "images/cold-coffee-hot-brownie/sizzler-chocolate-brownie.jpg" },
+        { "name": "Signature Melted Sizzler Brownie", "price": 180, "image": "images/cold-coffee-hot-brownie/signature-melted-sizzler-brownie.jpg" }
+      ]
+    },
+    {
+      "name": "Paav Bhaji",
+      "tagline": "Spicy, Buttery & Totally Delicious!",
+      "image": "images/categories/paav-bhaji.jpg",
+      "items": [
+        { "name": "Butter Paav Bhaji", "price": 80, "image": "images/paav-bhaji/butter-paav-bhaji.jpg" },
+        { "name": "Ghee Paav Bhaji", "price": 130, "image": "images/paav-bhaji/ghee-paav-bhaji.jpg" },
+        { "name": "Butter Paneer Paav Bhaji", "price": 130, "image": "images/paav-bhaji/butter-paneer-paav-bhaji.jpg" },
+        { "name": "Butter Cheese Paav Bhaji", "price": 130, "image": "images/paav-bhaji/butter-cheese-paav-bhaji.jpg" },
+        { "name": "Butter Paneer Cheese Paav Bhaji", "price": 150, "image": "images/paav-bhaji/butter-paneer-cheese-paav-bhaji.jpg", "isNew": true },
+        { "name": "Extra Paav", "price": 15, "image": "images/paav-bhaji/extra-paav.jpg" }
+      ]
+    },
+    {
+      "name": "Fariyali",
+      "tagline": "Light, Healthy & Tasty!",
+      "image": "images/categories/fariyali.jpg",
+      "items": [
+        { "name": "Sabudana Khichdi", "price": 60, "image": "images/fariyali/sabudana-khichdi.jpg" },
+        { "name": "Tikka Mitha Mix Sabudana Khichdi", "price": 70, "image": "images/fariyali/tikka-mitha-mix-sabudana-khichdi.jpg" },
+        { "name": "Paneer Masala Sabudana Khichdi", "price": 90, "image": "images/fariyali/paneer-masala-sabudana-khichdi.jpg" },
+        { "name": "Fariyali Mix Sabudana Khichdi", "price": 90, "image": "images/fariyali/fariyali-mix-sabudana-khichdi.jpg" },
+        { "name": "Fariyali French Fries", "price": 100, "image": "images/fariyali/fariyali-french-fries.jpg" }
+      ]
+    },
+    {
+      "name": "Sizzler",
+      "tagline": "Sizzling Hot! Full On Flavour!",
+      "image": "images/categories/sizzler.jpg",
+      "items": [
+        { "name": "Chinese Sizzler", "price": 199, "image": "images/sizzler/chinese-sizzler.jpg" },
+        { "name": "Sizzler Paneer Tikka", "price": 219, "image": "images/sizzler/sizzler-paneer-tikka.jpg" },
+        { "name": "Hottest Veg Sizzler", "price": 219, "image": "images/sizzler/hottest-veg-sizzler.jpg" },
+        { "name": "Mexican Sizzler", "price": 219, "image": "images/sizzler/mexican-sizzler.jpg" },
+        { "name": "Tandoori Sizzler", "price": 219, "image": "images/sizzler/tandoori-sizzler.jpg" },
+        { "name": "Paneer Angara Sizzler", "price": 250, "image": "images/sizzler/paneer-angara-sizzler.jpg" }
+      ]
+    },
+    {
+      "name": "Sandwich",
+      "tagline": "Grilled to Perfection!",
+      "image": "images/categories/sandwich.jpg",
+      "items": [
+        { "name": "Veg Cheese Grill", "priceMini": 80, "priceJumbo": 150, "image": "images/sandwich/veg-cheese-grill.jpg" },
+        { "name": "Cheese Masala", "priceMini": 80, "priceJumbo": 150, "image": "images/sandwich/cheese-masala.jpg" },
+        { "name": "Paneer Cheese Masala", "priceMini": 90, "priceJumbo": 160, "image": "images/sandwich/paneer-cheese-masala.jpg" },
+        { "name": "Tandoori Paneer", "priceMini": 90, "priceJumbo": 160, "image": "images/sandwich/tandoori-paneer.jpg" },
+        { "name": "Butter Paneer Chutney", "priceMini": 110, "priceJumbo": 190, "image": "images/sandwich/butter-paneer-chutney.jpg" },
+        { "name": "Butter Cheese Chutney", "priceMini": 110, "priceJumbo": 190, "image": "images/sandwich/butter-cheese-chutney.jpg" },
+        { "name": "Butter Corn Masala", "priceMini": 110, "priceJumbo": 190, "image": "images/sandwich/butter-corn-masala.jpg" }
+      ]
+    }
+  ]
+}

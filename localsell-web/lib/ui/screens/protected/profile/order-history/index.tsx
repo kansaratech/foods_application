@@ -1,4 +1,6 @@
 "use client";
+
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import styles from "./order-history.module.css";
 import { useState, useEffect } from "react";
 import { useQuery } from "@apollo/client";
@@ -190,26 +192,7 @@ export default function OrderHistoryScreen() {
           >
             {activeOrderLoading || pastOrderLoading ? (
               <>
-                <svg
-                  className="animate-spin h-5 w-5 dark:text-black text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
+                <BrandLoader variant="inline" size={20} />
                 <span>{t("loading_orders")}</span>
               </>
             ) : (

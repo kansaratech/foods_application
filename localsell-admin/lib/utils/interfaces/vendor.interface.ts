@@ -48,6 +48,7 @@ export interface IVendorReponse {
   userType: string;
   isActive: boolean;
   name?: string;
+  businessName?: string;
   image?: string;
   firstName?: string;
   lastName?: string;

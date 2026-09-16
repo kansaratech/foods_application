@@ -136,6 +136,38 @@ export const NEAR_BY_RESTAURANTS_PREVIEW = gql`
   }
 `;
 
+export const SEARCH_SUGGESTIONS = gql`
+  ${RESTAURANTS_FRAGMENT}
+  query SearchSuggestions(
+    $keyword: String!
+    $latitude: Float
+    $longitude: Float
+    $radiusKm: Float
+    $limit: Int
+  ) {
+    searchSuggestions(
+      keyword: $keyword
+      latitude: $latitude
+      longitude: $longitude
+      radiusKm: $radiusKm
+      limit: $limit
+    ) {
+      restaurants {
+        ...RestaurantPreviewFields
+      }
+      foods {
+        _id
+        title
+        image
+        restaurantId
+        restaurantName
+        restaurantSlug
+        restaurantShopType
+      }
+    }
+  }
+`;
+
 export const ACTIVE_RESTAURANT_COUNT = gql`
   query ActiveRestaurantCount(
     $latitude: Float
@@ -302,7 +334,6 @@ export const GET_REVIEWS_BY_RESTAURANT = gql`
         comments
         isActive
         createdAt
-        updatedAt
         order {
           _id
           user {

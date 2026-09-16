@@ -1,3 +1,4 @@
+import { networkActivityLink } from "@/lib/utils/network-activity-link";
 // Environment
 // import getEnv from "@/environment";
 
@@ -183,7 +184,12 @@ export const useSetupApollo = (): ApolloClient<NormalizedCacheObject> => {
   );
 
   const client = new ApolloClient({
-    link: ApolloLink.from([errorLink, requestLink, terminatingLink]),
+    link: ApolloLink.from([
+      networkActivityLink,
+      errorLink,
+      requestLink,
+      terminatingLink,
+    ]),
     cache,
     devtools: { enabled: process.env.NODE_ENV !== "production" },
   });

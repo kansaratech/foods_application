@@ -2,6 +2,7 @@ export const commissionTypeDefs = /* GraphQL */ `
   type CommissionVendorLite {
     _id: ID!
     name: String
+    businessName: String
     email: String
     phone: String
   }

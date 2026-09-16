@@ -37,15 +37,15 @@ function SuperAdminSidebar({ children }: IGlobalComponentProps) {
     useContext<LayoutContextProps>(LayoutContext);
 
   return (
-    <div className="relative dark:text-white">
+    <div className="relative h-full min-h-0 dark:text-white">
       <aside
         id="app-sidebar"
-        className={`box-border transform overflow-hidden transition-all duration-300 ease-in-out ${isSuperAdminSidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}`}
+        className={`box-border h-full min-h-0 transform overflow-hidden transition-all duration-300 ease-in-out ${isSuperAdminSidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}`}
       >
         <nav
           className={`flex h-full flex-col border-r bg-white dark:bg-dark-950 dark:border-dark-600 dark:text-white shadow-sm transition-opacity duration-300 ${isSuperAdminSidebarVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         >
-          <ul className="flex-1 pl-2">{children}</ul>
+          <ul className="flex min-h-0 flex-1 flex-col pl-2">{children}</ul>
         </nav>
       </aside>
     </div>
@@ -101,6 +101,12 @@ export default function MakeSidebar() {
           text: 'Stores',
           label: t('Stores'),
           route: '/general/stores',
+          isParent: false,
+        },
+        {
+          text: 'Riders',
+          label: t('Riders'),
+          route: '/general/riders',
           isParent: false,
         },
         {
@@ -278,7 +284,7 @@ export default function MakeSidebar() {
   return (
     <>
       <SuperAdminSidebar>
-        <div className="h-[90vh] pb-4 overflow-y-auto overflow-x-hidden pr-2">
+        <div className="h-full min-h-0 flex-1 overscroll-contain pb-4 overflow-y-auto overflow-x-hidden pr-2">
           {navBarItems.map((item, index) =>
             item.shouldShow && !item.shouldShow() ? null : (
               <SidebarItem

@@ -49,6 +49,23 @@ export interface INearByRestaurantsPreviewData {
     restaurants: IRestaurant[];
   };}
 
+export interface IFoodSearchResult {
+  _id: string;
+  title: string;
+  image?: string | null;
+  restaurantId: string;
+  restaurantName: string;
+  restaurantSlug?: string | null;
+  restaurantShopType?: string | null;
+}
+
+export interface ISearchSuggestionsData {
+  searchSuggestions: {
+    restaurants: IRestaurant[];
+    foods: IFoodSearchResult[];
+  };
+}
+
   export interface ITopRatedVendorData {
     topRatedVendorsPreview: IRestaurant[];
   }

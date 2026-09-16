@@ -2,22 +2,18 @@
 'use client';
 
 // Core
-import { useContext } from 'react';
 
 // Context
-import { LayoutContext } from '@/lib/context/global/layout.context';
 
 // Components
 import VendorAppTopbar from '@/lib/ui/screen-components/protected/layout/vendor-layout/app-bar';
 import VendorSidebar from '@/lib/ui/screen-components/protected/layout/vendor-layout/side-bar';
 
 // Interface
-import { IProvider, LayoutContextProps } from '@/lib/utils/interfaces';
+import { IProvider } from '@/lib/utils/interfaces';
 
 const VendorLayout = ({ children }: IProvider) => {
   // Context
-  const { isVendorSidebarVisible } =
-    useContext<LayoutContextProps>(LayoutContext);
 
   return (
     <div className="layout-main">
@@ -25,14 +21,10 @@ const VendorLayout = ({ children }: IProvider) => {
         <VendorAppTopbar />
       </div>
       <div className="layout-main-container">
-        <div className="relative left-0 z-50">
+        <div className="layout-sidebar relative left-0 z-50">
           <VendorSidebar />
         </div>
-        <div
-          className={`h-full flex flex-col min-h-0 max-w-[100vw] dark:bg-dark-950 w-full ${isVendorSidebarVisible ? 'w-[calc(100vw-260px)]' : 'w-full'}`}
-        >
-          {children}
-        </div>
+        <div className="layout-content dark:bg-dark-950">{children}</div>
       </div>
     </div>
   );

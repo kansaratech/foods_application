@@ -1,4 +1,6 @@
 "use client";
+
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import type React from "react";
 import { useRef, useState, useEffect } from "react";
 //components
@@ -6,8 +8,6 @@ import CustomButton from "@/lib/ui/useable-components/button";
 // Icons
 import PhoneIcon from "@/lib/utils/assets/svg/phone";
 import useDebounceFunction from "@/lib/hooks/useDebounceForFunction";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { useTranslations } from "next-intl";
 
 const VerificationPhone = ({
@@ -40,7 +40,7 @@ const VerificationPhone = ({
   // Handle input change
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const value = e.target.value;
 
@@ -61,7 +61,7 @@ const VerificationPhone = ({
   // Handle backspace key
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       // Focus previous input when backspace is pressed on an empty input
@@ -167,15 +167,7 @@ const VerificationPhone = ({
           loading ? "opacity-70 cursor-not-allowed" : ""
         }`}
       >
-        {loading ? (
-          <FontAwesomeIcon
-            icon={faSpinner}
-            spin
-            className="text-white text-lg"
-          />
-        ) : (
-          t("save_label")
-        )}
+        {loading ? <BrandLoader variant="inline" size={20} /> : t("save_label")}
       </button>
       <CustomButton
         label={t("resend_otp_label")}

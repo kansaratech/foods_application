@@ -1,5 +1,6 @@
 "use client";
 
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { loadCashfreeSdk } from "@/lib/utils/methods/cashfree";
 import { useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -15,7 +16,8 @@ export default function CashfreeStartScreen() {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const paymentSessionId = searchParams.get("paymentSessionId") || "";
-  const mode = searchParams.get("mode") === "production" ? "production" : "sandbox";
+  const mode =
+    searchParams.get("mode") === "production" ? "production" : "sandbox";
 
   useEffect(() => {
     if (!paymentSessionId) {
@@ -30,7 +32,10 @@ export default function CashfreeStartScreen() {
         cashfree.checkout({ paymentSessionId, redirectTarget: "_self" });
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load the payment page. Check your connection and try again.");
+        if (!cancelled)
+          setError(
+            "Could not load the payment page. Check your connection and try again.",
+          );
       });
     return () => {
       cancelled = true;
@@ -44,8 +49,10 @@ export default function CashfreeStartScreen() {
           <p className="text-sm text-red-600">{error}</p>
         ) : (
           <>
-            <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-4 border-neutral-200 border-t-primary-color" />
-            <p className="text-sm text-neutral-600">Opening secure payment...</p>
+            <BrandLoader variant="inline" size={24} />
+            <p className="text-sm text-neutral-600">
+              Opening secure payment...
+            </p>
           </>
         )}
       </div>

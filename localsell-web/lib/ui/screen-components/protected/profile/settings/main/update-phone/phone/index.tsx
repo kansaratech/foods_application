@@ -1,6 +1,5 @@
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import CustomPhoneTextField from "@/lib/ui/useable-components/phone-input-field";
 import { LaptopSvg } from "@/lib/utils/assets/svg";
 import { IUser } from "@/lib/utils/interfaces";
@@ -14,20 +13,25 @@ export interface IPhoneEntryProps {
   userPhone?: string;
 }
 
-const PhoneEntry = ({ handleChange, handleSubmit, handleUpdatePhoneModal, userPhone }: IPhoneEntryProps) => {
+const PhoneEntry = ({
+  handleChange,
+  handleSubmit,
+  handleUpdatePhoneModal,
+  userPhone,
+}: IPhoneEntryProps) => {
   const [loading, setLoading] = useState(false);
-  const t= useTranslations()
+  const t = useTranslations();
 
   const handleSaveClick = async () => {
-   setLoading(true);
-   try {
-     await handleSubmit();
-   } catch (error) {
-     console.error('Save failed:', error);
-   } finally {
-     setLoading(false);
-   }
- };
+    setLoading(true);
+    try {
+      await handleSubmit();
+    } catch (error) {
+      console.error("Save failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col justify-between px-4 w-full items-center dark:bg-gray-900 dark:text-white">
@@ -36,7 +40,7 @@ const PhoneEntry = ({ handleChange, handleSubmit, handleUpdatePhoneModal, userPh
       </div>
 
       <h2 className="font-extrabold text-lg md:text-xl lg:text-2xl my-2 text-start w-full leading-8">
-        {t('update_phone_name_title')}
+        {t("update_phone_name_title")}
       </h2>
 
       <div className="flex my-2 w-full">
@@ -66,13 +70,17 @@ const PhoneEntry = ({ handleChange, handleSubmit, handleUpdatePhoneModal, userPh
           type="button"
           onClick={handleSaveClick}
           disabled={loading}
-          aria-label={loading ? t("update_phone_name_saving_aria") : t("update_phone_name_save_aria")}
+          aria-label={
+            loading
+              ? t("update_phone_name_saving_aria")
+              : t("update_phone_name_save_aria")
+          }
           className={`bg-primary-color text-white flex items-center justify-center rounded-full p-2 sm:p-3 w-full md:w-[268px] mb-4 text-sm sm:text-lg font-medium ${
             loading ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
           {loading ? (
-            <FontAwesomeIcon icon={faSpinner} spin className="text-white text-lg" />
+            <BrandLoader variant="inline" size={20} />
           ) : (
             t("update_phone_name_save_button")
           )}

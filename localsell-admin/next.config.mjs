@@ -1,3 +1,4 @@
+import { PHASE_DEVELOPMENT_SERVER } from 'next/constants.js';
 import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin();
@@ -110,4 +111,9 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+// Keep production builds from overwriting chunks used by the running dev server.
+export default (phase) =>
+  withNextIntl({
+    ...nextConfig,
+    distDir: phase === PHASE_DEVELOPMENT_SERVER ? '.next-dev' : '.next',
+  });

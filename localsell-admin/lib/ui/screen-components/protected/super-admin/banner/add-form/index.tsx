@@ -11,7 +11,9 @@ import useToast from '@/lib/hooks/useToast';
 import CustomButton from '@/lib/ui/useable-components/button';
 import CustomDropdownComponent from '@/lib/ui/useable-components/custom-dropdown';
 import CustomTextField from '@/lib/ui/useable-components/input-field';
-import CustomUploadImageComponent from '@/lib/ui/useable-components/upload/upload-image';
+import ImageUploadCard from '@/lib/ui/useable-components/image-upload-card';
+import CustomDateInput from '@/lib/ui/useable-components/date-input';
+import CustomInputSwitch from '@/lib/ui/useable-components/custom-input-switch';
 import {
   ACTION_TYPES,
   BannersErrors,
@@ -292,121 +294,99 @@ const BannersAddForm = ({
                     </div>
                   </div>
                 </section>
-                <section className="banner-editor-card">
-                  <h2>Publishing &amp; schedule</h2>
-                  <p className="banner-editor-hint">
-                    Control availability and display order. Leave dates empty to
-                    run without a schedule.
-                  </p>
-                  <div className="banner-editor-pair">
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1">
-                        <CustomTextField
-                          type="number"
-                          name="priority"
-                          placeholder={t('Priority')}
-                          value={String(values.priority)}
-                          onChange={handleChange}
-                          showLabel={true}
-                        />
-                      </div>
-                      <label className="flex items-center gap-2 pb-2 text-sm">
-                        <input
-                          type="checkbox"
-                          name="isActive"
-                          checked={values.isActive}
-                          onChange={(e) =>
-                            setFieldValue('isActive', e.target.checked)
-                          }
-                        />
-                        {t('Active')}
-                      </label>
-                    </div>
-
-                    <div>
-                      <CustomTextField
-                        type="date"
-                        name="startDate"
-                        placeholder={t('Start Date')}
-                        value={values.startDate}
-                        onChange={(e) =>
-                          setFieldValue('startDate', e.target.value)
-                        }
-                        showLabel={true}
-                      />
-                    </div>
-
-                    <div>
-                      <CustomTextField
-                        type="date"
-                        name="endDate"
-                        placeholder={t('End Date')}
-                        value={values.endDate}
-                        onChange={(e) =>
-                          setFieldValue('endDate', e.target.value)
-                        }
-                        showLabel={true}
-                        style={{
-                          borderColor: onErrorMessageMatcher(
-                            'endDate',
-                            errors?.endDate,
-                            BannersErrors
-                          )
-                            ? 'red'
-                            : '',
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <CustomTextField
-                        type="text"
-                        name="couponCode"
-                        placeholder={t('Coupon Code')}
-                        maxLength={35}
-                        value={values.couponCode}
-                        onChange={handleChange}
-                        showLabel={true}
-                      />
-                    </div>
-                  </div>
-                </section>
               </div>
               <aside className="banner-editor-card banner-editor-media">
                 <h2>Banner media</h2>
                 <p className="banner-editor-hint">
                   Upload an image or video for your promotion.
                 </p>
-                <div
-                  className={`${
-                    errors.file && !values.file
-                      ? 'border-red-500'
-                      : 'border-gray-200 dark:border-dark-600'
-                  } rounded-lg border p-4`}
-                >
-                  <CustomUploadImageComponent
-                    key={'file'}
-                    name="file"
-                    title={t('Upload file')}
-                    fileTypes={[
-                      'image/jpg',
-                      'image/jpeg',
-                      'image/png',
-                      'image/webp',
-                      'image/gif',
-                      'video/mp4',
-                      'video/webm',
-                    ]}
-                    onSetImageUrl={setFieldValue}
-                    showExistingImage={banner ? true : false}
-                    existingImageUrl={banner && values.file}
-                  />
-                </div>
-
-                <p className="banner-editor-hint">
-                  JPG, PNG, WebP, GIF, MP4 or WebM.
-                </p>
+                <ImageUploadCard
+                  label={t('Upload file')}
+                  helperText="JPG, PNG, WebP, GIF, MP4 or WebM."
+                  required
+                  aspect="landscape"
+                  value={values.file}
+                  acceptedTypes={[
+                    'image/jpeg',
+                    'image/jpg',
+                    'image/png',
+                    'image/webp',
+                    'image/gif',
+                    'video/mp4',
+                    'video/webm',
+                  ]}
+                  maxSizeBytes={50 * 1024 * 1024}
+                  onUploaded={(url) => setFieldValue('file', url)}
+                />
+                {errors.file && (
+                  <p role="alert" className="mt-2 text-xs text-red-500">
+                    {errors.file}
+                  </p>
+                )}
               </aside>
+              <section className="banner-editor-card banner-editor-schedule">
+                <h2>Publishing &amp; schedule</h2>
+                <p className="banner-editor-hint">
+                  Control availability and display order. Leave dates empty to
+                  run without a schedule.
+                </p>
+                <div className="banner-editor-pair">
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1">
+                      <CustomTextField
+                        type="number"
+                        name="priority"
+                        placeholder={t('Priority')}
+                        value={String(values.priority)}
+                        onChange={handleChange}
+                        showLabel={true}
+                      />
+                    </div>
+                    <CustomInputSwitch
+                      label={t('Active')}
+                      isActive={values.isActive}
+                      className="mb-3 text-sm"
+                      onChange={(e) =>
+                        setFieldValue('isActive', e.target.checked)
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <CustomDateInput
+                      name="startDate"
+                      placeholder={t('Start Date')}
+                      value={values.startDate}
+                      onChange={(value) => setFieldValue('startDate', value)}
+                      showLabel={true}
+                    />
+                  </div>
+
+                  <div>
+                    <CustomDateInput
+                      name="endDate"
+                      minDate={values.startDate}
+                      placeholder={t('End Date')}
+                      value={values.endDate}
+                      onChange={(value) => setFieldValue('endDate', value)}
+                      showLabel={true}
+                      error={errors.endDate}
+                    />
+                  </div>
+
+                  <div>
+                    <CustomTextField
+                      type="text"
+                      name="couponCode"
+                      placeholder={t('Coupon Code')}
+                      maxLength={35}
+                      value={values.couponCode}
+                      onChange={handleChange}
+                      showLabel={true}
+                    />
+                  </div>
+                </div>
+              </section>
               <div className="banner-editor-footer">
                 {Object.keys(errors).length > 0 && (
                   <p role="alert" className="text-sm text-red-500">

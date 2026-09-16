@@ -49,6 +49,7 @@ export const SignInErrors: ISignInFormErrors = {
 export const VendorErrors: IVendorErrors = {
   _id: ['Required'],
   name: ['Required', 'Name cannot be only spaces'],
+  businessName: ['Required', 'Business name cannot be only spaces'],
   email: ['Required', 'Invalid email'],
   password: ['Required', ...PasswordErrors],
   confirmPassword: ['Required', 'Password must match'],

@@ -13,11 +13,12 @@
     "gen:theme": "node scripts/gen-prime-theme.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "npm run check:calendar-ui && next lint",
     "prettier": "prettier --write .",
     "prepare": "husky",
     "cy:open": "cypress open",
-    "cy:run": "cypress run"
+    "cy:run": "cypress run",
+    "check:calendar-ui": "node ../scripts/check-calendar-ui.cjs"
   },
   "dependencies": {
     "@apollo/client": "^3.11.8",

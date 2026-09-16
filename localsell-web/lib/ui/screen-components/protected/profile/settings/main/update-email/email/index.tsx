@@ -1,6 +1,5 @@
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import CustomTextField from "@/lib/ui/useable-components/input-field";
 import { useTranslations } from "next-intl";
 
@@ -61,13 +60,17 @@ const EmailEntry = ({
           type="button"
           onClick={handleSaveClick}
           disabled={loading}
-          aria-label={loading ? t("update_phone_name_saving_aria") : t("update_phone_name_save_aria")}
+          aria-label={
+            loading
+              ? t("update_phone_name_saving_aria")
+              : t("update_phone_name_save_aria")
+          }
           className={`bg-primary-color text-white flex items-center justify-center rounded-full p-2 sm:p-3 w-full md:w-[268px] mb-4 text-sm sm:text-lg font-medium ${
             loading ? "opacity-70 cursor-not-allowed" : ""
           }`}
         >
           {loading ? (
-            <FontAwesomeIcon icon={faSpinner} spin className="text-white text-lg" />
+            <BrandLoader variant="inline" size={20} />
           ) : (
             t("update_phone_name_save_button")
           )}

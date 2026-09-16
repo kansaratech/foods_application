@@ -23,11 +23,11 @@ export default function BannerEditor({ id }: { id?: string }) {
   const back = () => router.push('/management/banners');
   return (
     <div className="management-page">
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="w-full min-w-0">
         <button
           type="button"
           onClick={back}
-          className="mb-5 flex items-center gap-2 text-sm text-[var(--text-color-secondary)] hover:underline"
+          className="mb-3 flex items-center gap-2 text-sm text-[var(--text-color-secondary)] hover:underline"
         >
           <i className="pi pi-arrow-left" aria-hidden="true" />
           {t('Banners')}
@@ -38,7 +38,7 @@ export default function BannerEditor({ id }: { id?: string }) {
         />
         {id && loading ? (
           <p role="status" className="p-6">
-            Loading banner?
+            Loading banner...
           </p>
         ) : id && error ? (
           <div role="alert" className="p-6">

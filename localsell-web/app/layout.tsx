@@ -79,7 +79,6 @@ export default async function RootLayout({
         {/* Add more media queries for other device sizes if needed */}
       </head>
       <body className={dir === "rtl" ? "rtl" : ""} suppressHydrationWarning>
-
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <DirectionProvider dir={dir}>

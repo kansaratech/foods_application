@@ -1,8 +1,8 @@
+"use client";
 /* eslint-disable max-lines */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-"use client";
-
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import styles from "./address.module.css";
 
 import React, { useContext, useEffect, useMemo, useState } from "react";
@@ -15,7 +15,6 @@ import {
   faCirclePlus,
   faMapMarker,
   faPlus,
-  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import { GoogleMap, Marker } from "@react-google-maps/api";
 import { AutoComplete, AutoCompleteSelectEvent } from "primereact/autocomplete";
@@ -91,7 +90,7 @@ const extractPincode = (address?: string | null) =>
   address?.match(/\b[1-9]\d{5}\b/)?.[0] ?? "";
 
 export default function UserAddressComponent(
-  props: IUserAddressComponentProps
+  props: IUserAddressComponentProps,
 ) {
   // Props
   const { visible, onHide, editAddress, confirmYourAddress } = props;
@@ -99,9 +98,8 @@ export default function UserAddressComponent(
   // States
   const [modifiyingId, setModifyingId] = useState("");
   const [[index, direction], setIndex] = useState<[number, number]>([0, 0]);
-  const [selectedServiceArea, setSelectedServiceArea] = useState<IDropdownSelectItem | null>(
-    null
-  );
+  const [selectedServiceArea, setSelectedServiceArea] =
+    useState<IDropdownSelectItem | null>(null);
   const [newDraggedCenter, setNewDraggedCenter] = useState({ lat: 0, lng: 0 });
   const [selectedLocationType, setSelectedLocationType] =
     useState<string>("House");
@@ -139,13 +137,13 @@ export default function UserAddressComponent(
     {
       onCompleted,
       onError,
-    }
+    },
   );
 
   // Locatl Storage Constaints
   const hasCurrentLocation = !!onUseLocalStorage(
     "get",
-    USER_CURRENT_LOCATION_LS_KEY
+    USER_CURRENT_LOCATION_LS_KEY,
   );
 
   // Memo
@@ -164,7 +162,7 @@ export default function UserAddressComponent(
       throttle((request, callback) => {
         autocompleteService?.current?.getPlacePredictions(request, callback);
       }, 1500),
-    []
+    [],
   );
 
   // Handlers
@@ -175,7 +173,7 @@ export default function UserAddressComponent(
     setInputValue(editAddress?.deliveryAddress || "");
     setSelectedServiceArea(
       serviceAreaOptions?.find((city) => city.label === editAddress?.details) ||
-        null
+        null,
     );
     setPincode(extractPincode(editAddress?.deliveryAddress));
     paginate(1);
@@ -224,7 +222,7 @@ export default function UserAddressComponent(
   };
 
   const onHandlerAutoCompleteSelectionChange = (
-    event: AutoCompleteSelectEvent
+    event: AutoCompleteSelectEvent,
   ) => {
     const selectedOption = event?.value as IPlaceSelectedOption;
     if (selectedOption) {
@@ -254,8 +252,9 @@ export default function UserAddressComponent(
 
             // Auto-fill PIN / state from the place's address components.
             const comps = results[0].address_components || [];
-            const pin = comps.find((c) => c.types.includes("postal_code"))
-              ?.long_name;
+            const pin = comps.find((c) =>
+              c.types.includes("postal_code"),
+            )?.long_name;
             const region = comps.find((c) =>
               c.types.includes("administrative_area_level_1"),
             )?.long_name;
@@ -268,7 +267,7 @@ export default function UserAddressComponent(
             }
             if (region) setStateName(region);
           }
-        }
+        },
       );
       setSelectedPlaceObject(selectedOption);
     }
@@ -283,7 +282,7 @@ export default function UserAddressComponent(
 
     const { formattedAddress } = await getAddress(
       new_center.lat,
-      new_center.lng
+      new_center.lng,
     );
 
     if (!formattedAddress) {
@@ -375,7 +374,8 @@ export default function UserAddressComponent(
   // from lat/lng, not PIN. Google's reverse-geocode often returns a Plus Code
   // with no postal component for small towns (Deogarh included), so it's only
   // ever blocking when the user typed something that isn't a real 6-digit PIN.
-  const isPincodeValid = pincode.trim() === "" || /^[1-9]\d{5}$/.test(pincode.trim());
+  const isPincodeValid =
+    pincode.trim() === "" || /^[1-9]\d{5}$/.test(pincode.trim());
 
   const onHandleCreateAddress = () => {
     if (!isDragged && !selectedServiceArea) {
@@ -400,7 +400,9 @@ export default function UserAddressComponent(
     const hasValidCoordinates =
       Array.isArray(coordinates) &&
       coordinates.length >= 2 &&
-      coordinates.every((c) => c !== undefined && c !== null && !Number.isNaN(Number(c)));
+      coordinates.every(
+        (c) => c !== undefined && c !== null && !Number.isNaN(Number(c)),
+      );
     if (!hasValidCoordinates) {
       // Without a real pin, longitude/latitude below would stringify to the
       // literal "undefined" and fail server-side as a silent-looking error —
@@ -505,7 +507,8 @@ export default function UserAddressComponent(
     // even on a 200 OK response whose body carried a genuine server-side
     // failure (e.g. a Prisma validation error), which the old handler
     // discarded entirely by never reading its `error` argument.
-    const serverMessage: string | undefined = error?.graphQLErrors?.[0]?.message;
+    const serverMessage: string | undefined =
+      error?.graphQLErrors?.[0]?.message;
     showToast({
       title: t("Address_updated_success"),
       type: "error",
@@ -541,10 +544,11 @@ export default function UserAddressComponent(
           getCurrentLocation(onSetUserLocation);
         }}
       >
-        <FontAwesomeIcon
-          icon={isLocationFetching ? faSpinner : faCirclePlus}
-          spin={isLocationFetching}
-        />
+        {isLocationFetching ? (
+          <BrandLoader variant="inline" size={20} />
+        ) : (
+          <FontAwesomeIcon icon={faCirclePlus} />
+        )}
         <span>{t("LoginForSavedAddresses.currentlocation")}</span>
       </button>
 
@@ -552,13 +556,16 @@ export default function UserAddressComponent(
         <div className="w-[90%] rounded-xl border border-primary-color bg-primary-light dark:bg-gray-800 p-3">
           {isLocationFetching ? (
             <p className="text-sm text-gray-600 dark:text-gray-300">
-              <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+              <BrandLoader variant="inline" size={20} />
               {t("LoginForSavedAddresses.currentlocation")}…
             </p>
           ) : userAddress?.deliveryAddress ? (
             <>
               <div className="flex items-start gap-x-2">
-                <FontAwesomeIcon icon={faMapMarker} className="mt-1 text-primary-color" />
+                <FontAwesomeIcon
+                  icon={faMapMarker}
+                  className="mt-1 text-primary-color"
+                />
                 <div className="flex flex-col">
                   <span className="font-inter font-medium text-sm text-secondary-color">
                     {t("LoginForSavedAddresses.currentlocation")}
@@ -628,16 +635,32 @@ export default function UserAddressComponent(
                 <div className="w-full flex items-center gap-x-2">
                   <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-full">
                     {address?.label === ADDRESS_TYPES.OFFICE && (
-                      <OfficeSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                      <OfficeSvg
+                        height={18}
+                        darkColor={iconDarkColor}
+                        color={iconColor}
+                      />
                     )}
                     {address?.label === ADDRESS_TYPES.HOUSE && (
-                      <HomeSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                      <HomeSvg
+                        height={18}
+                        darkColor={iconDarkColor}
+                        color={iconColor}
+                      />
                     )}
                     {address?.label === ADDRESS_TYPES.APARTMENT && (
-                      <AppartmentSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                      <AppartmentSvg
+                        height={18}
+                        darkColor={iconDarkColor}
+                        color={iconColor}
+                      />
                     )}
                     {address?.label === ADDRESS_TYPES.OTHER && (
-                      <OtherSvg height={18} darkColor={iconDarkColor} color={iconColor} />
+                      <OtherSvg
+                        height={18}
+                        darkColor={iconDarkColor}
+                        color={iconColor}
+                      />
                     )}
                   </div>
                   <div className="w-full flex flex-col gap-y-[2px]">
@@ -662,7 +685,7 @@ export default function UserAddressComponent(
                   }`}
                 >
                   {isBusy ? (
-                    <FontAwesomeIcon icon={faSpinner} spin className="text-[10px] text-primary-color" />
+                    <BrandLoader variant="inline" size={20} />
                   ) : isActive ? (
                     <span className="h-2.5 w-2.5 rounded-full bg-primary-color" />
                   ) : null}
@@ -735,8 +758,12 @@ export default function UserAddressComponent(
 
       <div className="w-full flex flex-col items-center gap-y-2">
         <div className={styles.fields}>
-          <label className={styles.field} htmlFor="address-service-area">{t("service_area_label")}</label>
-          <p className="text-xs leading-5 text-gray-500 dark:text-gray-300">{t("service_area_help")}</p>
+          <label className={styles.field} htmlFor="address-service-area">
+            {t("service_area_label")}
+          </label>
+          <p className="text-xs leading-5 text-gray-500 dark:text-gray-300">
+            {t("service_area_help")}
+          </p>
           <CustomDropdownComponent
             inputId="address-service-area"
             name="serviceArea"
@@ -749,7 +776,7 @@ export default function UserAddressComponent(
 
               const { formattedAddress } = await getAddress(
                 coords[1],
-                coords[0]
+                coords[0],
               );
 
               setInputValue(formattedAddress);
@@ -766,7 +793,9 @@ export default function UserAddressComponent(
             options={serviceAreaOptions}
           />
 
-          <label className={styles.field} htmlFor="google-map">{t("enter_full_Address_placeholder")}</label>
+          <label className={styles.field} htmlFor="google-map">
+            {t("enter_full_Address_placeholder")}
+          </label>
           <AutoComplete
             aria-label={t("enter_full_Address_placeholder")}
             id="google-map"
@@ -788,7 +817,9 @@ export default function UserAddressComponent(
             // Same nested-in-a-Dialog portal issue as the city dropdown —
             // without this the suggestions panel can render behind/clipped
             // by the Dialog and look unresponsive.
-            appendTo={typeof document !== "undefined" ? document.body : undefined}
+            appendTo={
+              typeof document !== "undefined" ? document.body : undefined
+            }
             placeholder={t("enter_full_Address_placeholder")}
             style={{ width: "100%" }}
             itemTemplate={(item) => {
@@ -801,7 +832,7 @@ export default function UserAddressComponent(
                   matches.map((match: { offset: number; length: number }) => [
                     match.offset,
                     match.offset + match.length,
-                  ])
+                  ]),
                 );
               }
 
@@ -825,42 +856,45 @@ export default function UserAddressComponent(
           {/* Structured address fields — pincode is required for exact delivery */}
           <label className={styles.field} htmlFor="address-area">
             <span>{t("area_locality_placeholder")}</span>
-            <input id="address-area"
-            type="text"
-            value={areaLine}
-            onChange={(e) => setAreaLine(e.target.value)}
-            placeholder={t("area_locality_placeholder")}
-            className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
-          />
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <label className={styles.field} htmlFor="address-state">
-            <span>{t("state_placeholder")}</span>
-            <input id="address-state"
+            <input
+              id="address-area"
               type="text"
-              value={stateName}
-              onChange={(e) => setStateName(e.target.value)}
-              placeholder={t("state_placeholder")}
+              value={areaLine}
+              onChange={(e) => setAreaLine(e.target.value)}
+              placeholder={t("area_locality_placeholder")}
               className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
           </label>
+          <div className="grid grid-cols-2 gap-2">
+            <label className={styles.field} htmlFor="address-state">
+              <span>{t("state_placeholder")}</span>
+              <input
+                id="address-state"
+                type="text"
+                value={stateName}
+                onChange={(e) => setStateName(e.target.value)}
+                placeholder={t("state_placeholder")}
+                className="h-11 w-full rounded border border-gray-300 px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+            </label>
             <label className={styles.field} htmlFor="address-pincode">
-            <span>{t("pincode_placeholder")}</span>
-            <input id="address-pincode"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={pincode}
-              onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
-              placeholder={t("pincode_placeholder")}
-              aria-invalid={pincode.length > 0 && !isPincodeValid}
-              className={`h-11 w-full rounded border px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white ${
-                pincode.length > 0 && !isPincodeValid
-                  ? "border-red-500"
-                  : "border-gray-300 dark:border-gray-600"
-              }`}
-            />
-          </label>
+              <span>{t("pincode_placeholder")}</span>
+              <input
+                id="address-pincode"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                placeholder={t("pincode_placeholder")}
+                aria-invalid={pincode.length > 0 && !isPincodeValid}
+                className={`h-11 w-full rounded border px-3 text-sm outline-none focus:border-primary-color dark:bg-gray-800 dark:text-white ${
+                  pincode.length > 0 && !isPincodeValid
+                    ? "border-red-500"
+                    : "border-gray-300 dark:border-gray-600"
+                }`}
+              />
+            </label>
           </div>
           {pincode.length > 0 && !isPincodeValid && (
             <span className="text-xs text-red-500">
@@ -886,8 +920,12 @@ export default function UserAddressComponent(
               >
                 <div>
                   {item.icon(
-                    selectedLocationType === item.name ? "var(--primary-color)" : undefined,
-                    selectedLocationType === item.name ? "var(--primary-color)" : undefined
+                    selectedLocationType === item.name
+                      ? "var(--primary-color)"
+                      : undefined,
+                    selectedLocationType === item.name
+                      ? "var(--primary-color)"
+                      : undefined,
                   )}
                 </div>
                 <div className="flex flex-col gap-y-[2px]">
@@ -907,7 +945,7 @@ export default function UserAddressComponent(
             className="w-full h-fit bg-transparent text-gray-900 dark:text-white py-2 border border-black dark:border-gray-600 rounded-full text-base lg:text-[14px]"
             onClick={() => {
               const selectedAddress = profile?.addresses.find(
-                (address) => address.selected
+                (address) => address.selected,
               );
               if (selectedAddress) {
                 setUserAddress(selectedAddress);
@@ -924,16 +962,19 @@ export default function UserAddressComponent(
           </button>
           <button
             className={`w-full h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px] ${
-              (!isDragged && !selectedServiceArea) || !isPincodeValid ? "opacity-50" : ""
+              (!isDragged && !selectedServiceArea) || !isPincodeValid
+                ? "opacity-50"
+                : ""
             }`}
-            disabled={modifyingAddressLoading || (!isDragged && !selectedServiceArea) || !isPincodeValid}
+            disabled={
+              modifyingAddressLoading ||
+              (!isDragged && !selectedServiceArea) ||
+              !isPincodeValid
+            }
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (
-              <FontAwesomeIcon
-                icon={faSpinner}
-                spin={modifyingAddressLoading}
-              />
+              <BrandLoader variant="inline" size={20} />
             ) : (
               <span>{t("Save_address")}</span>
             )}
@@ -979,8 +1020,12 @@ export default function UserAddressComponent(
 
       <div className="w-full flex flex-col items-center gap-y-2">
         <div className={styles.fields}>
-          <label className={styles.field} htmlFor="address-service-area">{t("service_area_label")}</label>
-          <p className="text-xs leading-5 text-gray-500 dark:text-gray-300">{t("service_area_help")}</p>
+          <label className={styles.field} htmlFor="address-service-area">
+            {t("service_area_label")}
+          </label>
+          <p className="text-xs leading-5 text-gray-500 dark:text-gray-300">
+            {t("service_area_help")}
+          </p>
           <CustomDropdownComponent
             inputId="address-service-area"
             name={t("service_area_label")}
@@ -993,7 +1038,7 @@ export default function UserAddressComponent(
 
               const { formattedAddress } = await getAddress(
                 coords[1],
-                coords[0]
+                coords[0],
               );
 
               setInputValue(formattedAddress);
@@ -1008,7 +1053,9 @@ export default function UserAddressComponent(
             options={serviceAreaOptions}
           />
 
-          <label className={styles.field} htmlFor="google-map">{t("enter_full_Address_placeholder")}</label>
+          <label className={styles.field} htmlFor="google-map">
+            {t("enter_full_Address_placeholder")}
+          </label>
           <AutoComplete
             aria-label={t("enter_full_Address_placeholder")}
             id="google-map"
@@ -1030,7 +1077,9 @@ export default function UserAddressComponent(
             // Same nested-in-a-Dialog portal issue as the city dropdown —
             // without this the suggestions panel can render behind/clipped
             // by the Dialog and look unresponsive.
-            appendTo={typeof document !== "undefined" ? document.body : undefined}
+            appendTo={
+              typeof document !== "undefined" ? document.body : undefined
+            }
             placeholder={t("enter_full_Address_placeholder")}
             style={{ width: "100%" }}
             itemTemplate={(item) => {
@@ -1043,7 +1092,7 @@ export default function UserAddressComponent(
                   matches.map((match: { offset: number; length: number }) => [
                     match.offset,
                     match.offset + match.length,
-                  ])
+                  ]),
                 );
               }
 
@@ -1091,8 +1140,12 @@ export default function UserAddressComponent(
               >
                 <div>
                   {item.icon(
-                    selectedLocationType === item.name ? "var(--primary-color)" : undefined,
-                    selectedLocationType === item.name ? "var(--primary-color)" : undefined
+                    selectedLocationType === item.name
+                      ? "var(--primary-color)"
+                      : undefined,
+                    selectedLocationType === item.name
+                      ? "var(--primary-color)"
+                      : undefined,
                   )}
                 </div>
                 <div className="flex flex-col gap-y-[2px]">
@@ -1112,7 +1165,7 @@ export default function UserAddressComponent(
             className="w-full  h-fit bg-transparent text-gray-900 dark:text-white py-2 border border-black dark:border-gray-600 rounded-full text-base lg:text-[14px]"
             onClick={() => {
               const selectedAddress = profile?.addresses.find(
-                (address) => address.selected
+                (address) => address.selected,
               );
               if (selectedAddress) {
                 setUserAddress(selectedAddress);
@@ -1129,14 +1182,15 @@ export default function UserAddressComponent(
           </button>
           <button
             className="w-full h-fit bg-primary-color text-white py-2 rounded-full text-base lg:text-[14px]"
-            disabled={modifyingAddressLoading || (!isDragged && !selectedServiceArea) || !isPincodeValid}
+            disabled={
+              modifyingAddressLoading ||
+              (!isDragged && !selectedServiceArea) ||
+              !isPincodeValid
+            }
             onClick={() => onHandleCreateAddress()}
           >
             {modifyingAddressLoading ? (
-              <FontAwesomeIcon
-                icon={faSpinner}
-                spin={modifyingAddressLoading}
-              />
+              <BrandLoader variant="inline" size={20} />
             ) : (
               <span>{t("Save_address")}</span>
             )}
@@ -1208,18 +1262,18 @@ export default function UserAddressComponent(
       header={
         index !== 0 ? (
           <div className={styles.headerRow}>
-          <button
-            type="button"
-            aria-label={t("go_back")}
-            className={styles.back}
-            onClick={() => paginate(-1)}
-          >
-            <FontAwesomeIcon
-              icon={faArrowCircleLeft}
-              className="dark:text-white"
-            />
-          </button>
-          <h2 className={styles.title}>{t("Add_new_address")}</h2>
+            <button
+              type="button"
+              aria-label={t("go_back")}
+              className={styles.back}
+              onClick={() => paginate(-1)}
+            >
+              <FontAwesomeIcon
+                icon={faArrowCircleLeft}
+                className="dark:text-white"
+              />
+            </button>
+            <h2 className={styles.title}>{t("Add_new_address")}</h2>
           </div>
         ) : null
       }

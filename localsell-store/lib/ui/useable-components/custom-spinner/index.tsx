@@ -1,57 +1,76 @@
-// Core
 import { useEffect, useRef } from "react";
-import { Animated, Easing } from "react-native";
-
-// Hooks
+import { Animated, Easing, Image, View } from "react-native";
 import { useApptheme } from "@/lib/context/theme.context";
-
-interface ICustomSpinnerProps {
-  /** Diameter of the spinner in px. Defaults to 32. */
+import { IMAGES } from "@/lib/assets/images";
+import { useReducedMotion } from "../brand-loader/motion";
+export default function CustomSpinner({
+  size = 28,
+  color,
+}: {
   size?: number;
-  /** Colour of the moving arc. Defaults to the theme's main font colour. */
   color?: string;
-}
-
-export default function CustomSpinner({ size = 32, color }: ICustomSpinnerProps) {
-  // Hooks
+}) {
   const { appTheme } = useApptheme();
-  const spinValue = useRef(new Animated.Value(0)).current;
-
+  const reduced = useReducedMotion();
+  const spin = useRef(new Animated.Value(0)).current;
   useEffect(() => {
+    if (reduced) return;
     const animation = Animated.loop(
-      Animated.timing(spinValue, {
+      Animated.timing(spin, {
         toValue: 1,
-        duration: 900,
+        duration: 1000,
         easing: Easing.linear,
         useNativeDriver: true,
       }),
     );
     animation.start();
-    return () => animation.stop();
-  }, [spinValue]);
-
-  const arcColor = color ?? appTheme.fontMainColor;
-
+    return () => {
+      animation.stop();
+      spin.setValue(0);
+    };
+  }, [reduced, spin]);
   return (
-    <Animated.View
-      className="self-center"
+    <View
+      accessibilityRole="progressbar"
+      accessibilityLabel="LocalSell loading"
       style={{
         width: size,
         height: size,
-        borderRadius: size / 2,
-        borderWidth: Math.max(2, size / 12),
-        borderColor: "transparent",
-        borderTopColor: arcColor,
-        borderRightColor: arcColor,
-        transform: [
-          {
-            rotate: spinValue.interpolate({
-              inputRange: [0, 1],
-              outputRange: ["0deg", "360deg"],
-            }),
-          },
-        ],
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
       }}
-    />
+    >
+      <Animated.View
+        style={{
+          position: "absolute",
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: 2,
+          borderColor: "transparent",
+          borderTopColor: color ?? appTheme.primary,
+          borderRightColor: color ?? appTheme.primary,
+          transform: [
+            {
+              rotate: spin.interpolate({
+                inputRange: [0, 1],
+                outputRange: ["0deg", "360deg"],
+              }),
+            },
+          ],
+        }}
+      />
+      <Image
+        source={IMAGES.loaderIcon}
+        resizeMode="contain"
+        style={{
+          width: size * 0.7,
+          height: size * 0.7,
+          backgroundColor: "white",
+          borderRadius: size,
+        }}
+      />
+    </View>
   );
 }

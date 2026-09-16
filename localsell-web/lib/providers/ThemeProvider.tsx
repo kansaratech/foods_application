@@ -14,19 +14,25 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>("light");
   const pathname = usePathname();
+  const [themeReady, setThemeReady] = useState(false);
 
   // Load theme on first mount
   useEffect(() => {
-    const saved = localStorage.getItem("theme") as Theme | null;
-    const initial = saved || "light";
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("theme");
+    } catch {}
+    const initial: Theme = saved === "dark" ? "dark" : "light";
     setTheme(initial);
+    setThemeReady(true);
     document.documentElement.classList.toggle("dark", initial === "dark");
   }, []);
 
   // 🔥 Re-apply theme on every route change (fix for /404 navigation)
   useEffect(() => {
+    if (!themeReady) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme, pathname]);
+  }, [theme, pathname, themeReady]);
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";

@@ -1,18 +1,17 @@
 "use client";
 
+import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLocationCrosshairs,
   faMagnifyingGlass,
-  faSpinner,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import useLocationSearch from "@/lib/hooks/useLocationSearch";
 
 const ORANGE = "#1c5bc7";
-const MAROON = "#16293f";
 
 /**
  * Lightweight delivery-location picker for the header. Two ways in: the
@@ -125,7 +124,10 @@ export default function LocationPopover({
 
       {currentAddress && (
         <p className="mb-2 truncate rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-gray-800 dark:text-gray-400">
-          Currently: <span className="font-medium text-slate-700 dark:text-gray-200">{currentAddress}</span>
+          Currently:{" "}
+          <span className="font-medium text-slate-700 dark:text-gray-200">
+            {currentAddress}
+          </span>
         </p>
       )}
 
@@ -135,11 +137,11 @@ export default function LocationPopover({
         disabled={locating}
         className="mb-2 flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold text-slate-800 transition hover:border-[#1c5bc7] hover:bg-blue-50/50 disabled:opacity-60 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800"
       >
-        <FontAwesomeIcon
-          icon={locating ? faSpinner : faLocationCrosshairs}
-          spin={locating}
-          style={{ width: 15, height: 15, color: MAROON }}
-        />
+        {locating ? (
+          <BrandLoader variant="inline" size={20} />
+        ) : (
+          <FontAwesomeIcon icon={faLocationCrosshairs} />
+        )}
         {locating ? "Getting your location…" : "Use my current location"}
       </button>
 
@@ -159,14 +161,7 @@ export default function LocationPopover({
           placeholder="Search area, society, landmark…"
           className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
         />
-        {searching && (
-          <FontAwesomeIcon
-            icon={faSpinner}
-            spin
-            style={{ width: 13, height: 13 }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-        )}
+        {searching && <BrandLoader variant="inline" size={20} />}
       </div>
 
       {error && (
@@ -197,9 +192,14 @@ export default function LocationPopover({
         </ul>
       )}
 
-      {!error && !searching && term.trim().length >= 3 && predictions.length === 0 && (
-        <p className="mt-2 px-1 text-xs text-slate-400">No matches — try a nearby landmark.</p>
-      )}
+      {!error &&
+        !searching &&
+        term.trim().length >= 3 &&
+        predictions.length === 0 && (
+          <p className="mt-2 px-1 text-xs text-slate-400">
+            No matches — try a nearby landmark.
+          </p>
+        )}
     </div>
   );
 }

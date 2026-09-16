@@ -1,7 +1,6 @@
 'use client';
 
 import { useFormikContext } from 'formik';
-import { Checkbox } from 'primereact/checkbox';
 import { useTranslations } from 'next-intl';
 import { faEnvelope } from '@fortawesome/free-solid-svg-icons';
 
@@ -122,50 +121,35 @@ export default function AccountStep() {
 
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t('Account access')}</p>
-            <div className="flex items-start gap-2">
-              <Checkbox
-                inputId="sendSetupLink"
-                checked={values.sendSetupLink}
-                onChange={(e) => {
-                  setFieldValue('sendSetupLink', !!e.checked);
-                  setFieldTouched('sendSetupLink', true, false);
-                }}
+            {/* "Send account setup link instead" hidden for now (email
+                delivery for this flow isn't ready to rely on yet) — admins
+                always set the password directly here. `sendSetupLink` stays
+                false since the checkbox that would flip it is gone. */}
+            <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+              <CustomPasswordTextField
+                autoComplete="new-password"
+                placeholder={`${t('Password')} *`}
+                name="password"
+                maxLength={30}
+                value={values.password}
+                showLabel
+                onChange={onFieldChange}
+                style={{ borderColor: fieldError('password') ? 'red' : '' }}
               />
-              <div>
-                <label htmlFor="sendSetupLink" className="cursor-pointer text-sm font-medium text-slate-900 dark:text-white">
-                  {t('Send account setup link instead')}
-                </label>
-                <p className="text-xs text-slate-500">{t('Vendor will receive a secure link to set their password')}</p>
-              </div>
+              <CustomPasswordTextField
+                autoComplete="new-password"
+                placeholder={`${t('Confirm password')} *`}
+                name="confirmPassword"
+                maxLength={30}
+                showLabel
+                value={values.confirmPassword}
+                onChange={onFieldChange}
+                feedback={false}
+                style={{ borderColor: fieldError('confirmPassword') ? 'red' : '' }}
+              />
+              {fieldError('password') && <small className="p-error -mt-3">{fieldError('password')}</small>}
+              {fieldError('confirmPassword') && <small className="p-error -mt-3">{fieldError('confirmPassword')}</small>}
             </div>
-
-            {!values.sendSetupLink && (
-              <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-                <CustomPasswordTextField
-                  autoComplete="new-password"
-                  placeholder={`${t('Password')} *`}
-                  name="password"
-                  maxLength={30}
-                  value={values.password}
-                  showLabel
-                  onChange={onFieldChange}
-                  style={{ borderColor: fieldError('password') ? 'red' : '' }}
-                />
-                <CustomPasswordTextField
-                  autoComplete="new-password"
-                  placeholder={`${t('Confirm password')} *`}
-                  name="confirmPassword"
-                  maxLength={30}
-                  showLabel
-                  value={values.confirmPassword}
-                  onChange={onFieldChange}
-                  feedback={false}
-                  style={{ borderColor: fieldError('confirmPassword') ? 'red' : '' }}
-                />
-                {fieldError('password') && <small className="p-error -mt-3">{fieldError('password')}</small>}
-                {fieldError('confirmPassword') && <small className="p-error -mt-3">{fieldError('confirmPassword')}</small>}
-              </div>
-            )}
           </div>
         </>
       )}

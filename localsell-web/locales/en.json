@@ -1,4 +1,5 @@
 {
+  "loading_label": "Loading...",
   "service_area_label": "Service area",
   "select_service_area_placeholder": "Select service area",
   "select_service_area_to_drop_pin": "Select a service area or search your address to position the map pin.",

@@ -1,3 +1,4 @@
+import BrandLoader from "../brand-loader";
 // Interfaces
 import { ICustomButtonProps } from "@/lib/utils/interfaces";
 
@@ -18,6 +19,7 @@ export default function CustomButton({
 }: ICustomButtonProps) {
   return (
     <Button
+      loadingIcon={<BrandLoader variant="inline" size={20} />}
       loading={loading}
       disabled={loading || disabled}
       // `text-white` is the default so a primary (blue) button is always

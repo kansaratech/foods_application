@@ -103,7 +103,7 @@ export const collectionsResolvers: IResolvers<unknown, GraphQLContext> = {
     vendor: async (p: CommissionPayment) => {
       const v = await prisma.user.findUnique({ where: { id: p.vendorId } });
       return v
-        ? { _id: v.id, name: v.name, email: v.email, phone: v.phone }
+        ? { _id: v.id, name: v.name, businessName: v.businessName, email: v.email, phone: v.phone }
         : null;
     },
   },

@@ -24,8 +24,8 @@ import { IMAGES } from "@/lib/assets/images";
 import ForgotPasswordModal from "./forgot-password-modal";
 
 const initial: ILoginInitialValues = {
-  username: "dgh-shrinath-mishthan-bhandar@store.padharo",
-  password: "Store@123",
+  username: "",
+  password: "",
 };
 
 const LoginScreen = () => {
