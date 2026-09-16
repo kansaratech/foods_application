@@ -121,35 +121,60 @@ export default function AccountStep() {
 
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">{t('Account access')}</p>
-            {/* "Send account setup link instead" hidden for now (email
-                delivery for this flow isn't ready to rely on yet) — admins
-                always set the password directly here. `sendSetupLink` stays
-                false since the checkbox that would flip it is gone. */}
-            <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
-              <CustomPasswordTextField
-                autoComplete="new-password"
-                placeholder={`${t('Password')} *`}
-                name="password"
-                maxLength={30}
-                value={values.password}
-                showLabel
-                onChange={onFieldChange}
-                style={{ borderColor: fieldError('password') ? 'red' : '' }}
+
+            <div className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 dark:border-dark-600">
+              <input
+                type="checkbox"
+                id="sendSetupLink"
+                className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-black"
+                checked={values.sendSetupLink}
+                onChange={(e) => {
+                  setFieldValue('sendSetupLink', e.target.checked);
+                  setFieldTouched('sendSetupLink', true, false);
+                }}
               />
-              <CustomPasswordTextField
-                autoComplete="new-password"
-                placeholder={`${t('Confirm password')} *`}
-                name="confirmPassword"
-                maxLength={30}
-                showLabel
-                value={values.confirmPassword}
-                onChange={onFieldChange}
-                feedback={false}
-                style={{ borderColor: fieldError('confirmPassword') ? 'red' : '' }}
-              />
-              {fieldError('password') && <small className="p-error -mt-3">{fieldError('password')}</small>}
-              {fieldError('confirmPassword') && <small className="p-error -mt-3">{fieldError('confirmPassword')}</small>}
+              <div>
+                <label
+                  htmlFor="sendSetupLink"
+                  className="cursor-pointer text-sm font-medium text-slate-900 dark:text-white"
+                >
+                  {t('Send account setup link instead')}
+                </label>
+                <p className="text-xs text-slate-500">
+                  {t(
+                    'The vendor gets an email with a code to set their own password — the account has no usable password until they complete it.'
+                  )}
+                </p>
+              </div>
             </div>
+
+            {!values.sendSetupLink && (
+              <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
+                <CustomPasswordTextField
+                  autoComplete="new-password"
+                  placeholder={`${t('Password')} *`}
+                  name="password"
+                  maxLength={30}
+                  value={values.password}
+                  showLabel
+                  onChange={onFieldChange}
+                  style={{ borderColor: fieldError('password') ? 'red' : '' }}
+                />
+                <CustomPasswordTextField
+                  autoComplete="new-password"
+                  placeholder={`${t('Confirm password')} *`}
+                  name="confirmPassword"
+                  maxLength={30}
+                  showLabel
+                  value={values.confirmPassword}
+                  onChange={onFieldChange}
+                  feedback={false}
+                  style={{ borderColor: fieldError('confirmPassword') ? 'red' : '' }}
+                />
+                {fieldError('password') && <small className="p-error -mt-3">{fieldError('password')}</small>}
+                {fieldError('confirmPassword') && <small className="p-error -mt-3">{fieldError('confirmPassword')}</small>}
+              </div>
+            )}
           </div>
         </>
       )}

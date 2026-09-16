@@ -4,7 +4,7 @@ import { User } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
-import { comparePassword, hashPassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../services/auth.service';
+import { comparePassword, generateOtp, hashPassword, signAccessToken, signRefreshToken, verifyRefreshToken } from '../../services/auth.service';
 import { forbiddenError, invalidTokenError, notFoundError, tokenExpiredError, userInputError } from '../../utils/errors';
 import { normalizeIndianPhone } from '../../utils/phone';
 import { recordAudit } from '../../utils/audit';
@@ -115,6 +115,28 @@ async function resolveBusinessTypeId(businessType?: string | null): Promise<stri
 // forgot-password flow (forgotPassword / resetPassword) using their email.
 function generateInvitePassword(): string {
   return randomBytes(24).toString('base64url');
+}
+
+// A setup-invite email is the vendor's only way to ever get a working
+// credential (the account is created with no password at all — see
+// createVendor) — sending it into a void because Configuration.enableEmail
+// is off would strand the account permanently. Fail before creating/updating
+// the vendor rather than after (Issue 86).
+async function assertCanSendInvite(email: string): Promise<void> {
+  const config = await prisma.configuration.findFirst({ select: { enableEmail: true } });
+  if (!config?.enableEmail) {
+    throw userInputError(
+      `Email sending is not enabled, so a setup invite can't be delivered to ${email}. ` +
+        'Enable email in Configuration, or set a password for this vendor directly instead.',
+    );
+  }
+}
+
+// Mints the same OTP shape `forgotPassword`/`resetPassword` already check
+// (user.resolvers.ts), so the invite email's code is a real, working
+// credential-setup flow rather than a pointer to a separate step.
+function buildInviteOtp(): { otpCode: string; otpExpiresAt: Date } {
+  return { otpCode: generateOtp(), otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000) };
 }
 
 export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
@@ -324,14 +346,19 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         }
         await assertPhoneFree(phone, input._id);
 
-        const data: typeof baseData & { password?: string } = { ...baseData };
+        const data: typeof baseData & { password?: string | null; otpCode?: string | null; otpExpiresAt?: Date | null } = {
+          ...baseData,
+        };
         if (input.password) {
           data.password = await hashPassword(input.password);
         } else if (existing.status === 'DRAFT') {
-          // First time this vendor goes live — it only has the placeholder
-          // password saveVendorDraft gave it, so mint a real one now.
-          data.password = await hashPassword(generateInvitePassword());
+          // First time this vendor goes live and no password was set — send
+          // a setup invite instead of minting an unseen password (Issue 86 /
+          // "vendor active without setup").
           sendingInvite = true;
+          await assertCanSendInvite(email);
+          data.password = null;
+          Object.assign(data, buildInviteOtp());
         }
         // Otherwise this is an edit of an already-ACTIVE vendor with no
         // password entered: leave the existing password untouched.
@@ -341,16 +368,35 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         if (existing) throw userInputError('A vendor with this email already exists');
         await assertPhoneFree(phone);
         sendingInvite = !input.password;
+        if (sendingInvite) await assertCanSendInvite(email);
         vendor = await prisma.user.create({
-          data: { ...baseData, password: await hashPassword(input.password ?? generateInvitePassword()) },
+          data: {
+            ...baseData,
+            // No usable password at creation when the account is meant to
+            // be set up via invite (Issue 86 second half) — the vendor can't
+            // log in until they complete the OTP-based reset below, instead
+            // of the account being immediately usable with a system-minted
+            // password nobody actually saw.
+            password: input.password ? await hashPassword(input.password) : null,
+            ...(sendingInvite ? buildInviteOtp() : {}),
+          },
         });
       }
 
       if (sendingInvite && vendor.email) {
+        // The OTP minted above (`buildInviteOtp`) is the same code
+        // `forgotPassword`/`resetPassword` check — so this one email is a
+        // complete, working setup flow, not just a pointer to go trigger a
+        // separate "forgot password" request themselves.
         const message =
           `Welcome to LocalSell! Your vendor account (${vendor.email}) has been created. ` +
-          `Use "Forgot Password" on the vendor login page with this email to set your password and get started.`;
-        await sendEmail(vendor.email, 'Set up your LocalSell vendor account', message);
+          `Go to the vendor login page, choose "Forgot Password", and enter this code to set your password: ${vendor.otpCode}. ` +
+          `This code expires in 10 minutes — request a new one from "Forgot Password" if it lapses.`;
+        const emailed = await sendEmail(vendor.email, 'Set up your LocalSell vendor account', message);
+        if (!emailed) {
+          // eslint-disable-next-line no-console
+          console.error(`[createVendor] setup-invite email failed to send to ${vendor.email} (vendor ${vendor.id})`);
+        }
         if (vendor.phone) {
           await sendPhoneMessage(vendor.phone, message);
         }
