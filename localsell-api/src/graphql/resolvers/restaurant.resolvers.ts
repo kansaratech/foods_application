@@ -1,5 +1,5 @@
 import { IResolvers } from '@graphql-tools/utils';
-import { Prisma, Restaurant } from '@prisma/client';
+import { Prisma, Restaurant, User } from '@prisma/client';
 import { prisma } from '../../prisma/client';
 import { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/auth';
@@ -118,6 +118,22 @@ function assertOwnsRestaurant(user: { id: string; userType: string }, restaurant
   if (user.userType === 'ADMIN') return;
   if (user.userType === 'VENDOR' && restaurant.ownerId === user.id) return;
   throw notFoundError('Restaurant not found');
+}
+
+// A back-office STAFF account with the Restaurants/Stores permission can
+// already pick and manage ANY store from the admin panel's restaurant-role
+// screens (RESTAURANT_GUARD lets them in; the store picker there has no
+// ownership restriction) — but the mutations those screens call only ever
+// checked ADMIN/VENDOR, so a STAFF-driven edit (e.g. delivery charge) was
+// silently rejected server-side and the field appeared to reset itself
+// (Issue 82). Mirrors the frontend's own permission check.
+function assertCanManageRestaurant(user: User, restaurant: Restaurant) {
+  if (user.userType === 'STAFF') {
+    const permissions = Array.isArray(user.permissions) ? (user.permissions as string[]) : [];
+    if (permissions.includes('Restaurants') || permissions.includes('Stores')) return;
+    throw forbiddenError();
+  }
+  assertOwnsRestaurant(user, restaurant);
 }
 
 export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
@@ -899,10 +915,10 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       },
       context,
     ) => {
-      const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const currentUser = requireRole(context, ['ADMIN', 'VENDOR', 'STAFF']);
       const restaurant = await prisma.restaurant.findUnique({ where: { id: args.id } });
       if (!restaurant) throw notFoundError('Restaurant not found');
-      assertOwnsRestaurant(currentUser, restaurant);
+      assertCanManageRestaurant(currentUser, restaurant);
 
       const data = await prisma.restaurant.update({
         where: { id: args.id },
