@@ -1352,7 +1352,10 @@ export default function OrderCheckoutScreen() {
                         </div>
                         <p className="text-secondary-color font-semibold text-sm sm:text-base md:text-[11px] lg:text-[12px] xl:text-[14px]">
                           {CURRENCY_SYMBOL}
-                          {item.price}
+                          {/* Line subtotal (unit price × quantity), not just
+                              the unit price — so this updates when the
+                              stepper does, matching the grand total (Issue 96). */}
+                          {(Number(item.price || 0) * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     </div>
