@@ -212,7 +212,35 @@ export default function UpdateRestaurantDetails({
               handleSubmit,
               isSubmitting,
               setFieldValue,
+              validateForm,
+              setTouched,
             }) => {
+              // `image`/`logo` are required but their upload widgets never set
+              // Formik's `touched` state on their own, and neither field ever
+              // rendered an inline error — so for any store missing one, the
+              // Update button silently failed Formik validation with no
+              // visible feedback at all (Issue 81). Validate explicitly on
+              // click so a toast + the fields' own errors below always show.
+              const onUpdateClick = async () => {
+                const formErrors = await validateForm();
+                if (Object.keys(formErrors).length === 0) return;
+                setTouched(
+                  Object.keys(formErrors).reduce(
+                    (acc, key) => ({ ...acc, [key]: true }),
+                    {} as Record<string, boolean>,
+                  ),
+                );
+                showToast({
+                  type: 'error',
+                  title: t('Missing information'),
+                  message:
+                    formErrors.image || formErrors.logo
+                      ? t(
+                          'Please upload both a profile image and a logo before saving.',
+                        )
+                      : t('Please fix the highlighted fields before saving.'),
+                });
+              };
               return (
                 <Form onSubmit={handleSubmit}>
                   <div className="mb-2 grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
@@ -551,6 +579,16 @@ export default function UpdateRestaurantDetails({
                         }}
                       />
                     </div>
+                    {(errors.logo || errors.image) && (
+                      <div className="flex flex-col gap-1 md:col-span-2">
+                        {errors.logo && (
+                          <small className="p-error">{errors.logo as string}</small>
+                        )}
+                        {errors.image && (
+                          <small className="p-error">{errors.image as string}</small>
+                        )}
+                      </div>
+                    )}
 
                     <div className="mt-2 flex items-center justify-end border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-2">
                       {errors.address && touched.address && (
@@ -560,6 +598,7 @@ export default function UpdateRestaurantDetails({
                         className="w-fit h-10 bg-black border dark:border-dark-600 text-white border-gray-300 px-8"
                         label={t('Update')}
                         type="submit"
+                        onClick={onUpdateClick}
                         loading={isSubmitting}
                       />
                     </div>
