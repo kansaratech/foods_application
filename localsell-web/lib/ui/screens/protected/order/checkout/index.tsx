@@ -1357,6 +1357,11 @@ export default function OrderCheckoutScreen() {
                               stepper does, matching the grand total (Issue 96). */}
                           {(Number(item.price || 0) * item.quantity).toFixed(2)}
                         </p>
+                        {item.isOutOfStock && (
+                          <p className="text-xs font-semibold text-red-500">
+                            {t("out_of_stock_label")}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -1382,10 +1387,12 @@ export default function OrderCheckoutScreen() {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          if (item.isOutOfStock) return;
                           updateItemQuantity(item.key, 1);
                         }}
+                        disabled={item.isOutOfStock}
                         aria-label={`${t("increase")} ${item.foodTitle}`}
-                        className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center"
+                        className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
                         type="button"
                       >
                         <FontAwesomeIcon icon={faPlus} size="xs" />

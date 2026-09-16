@@ -2,7 +2,7 @@
 
 import styles from "./cart.module.css";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
@@ -33,6 +33,7 @@ export default function Cart({ onClose }: CartProps) {
     updateItemQuantity,
     calculateSubtotal,
     restaurant: restaurantId,
+    transformCartWithFoodInfo,
   } = useUser();
 
   const { CURRENCY_SYMBOL } = useConfig();
@@ -46,6 +47,14 @@ export default function Cart({ onClose }: CartProps) {
   const id = localStorage.getItem("cart-product-store-id") || "";
 
   const { data } = useRestaurant(id, decodeURIComponent(slug));
+
+  // Re-derived against live catalog data (not the cart's stale add-time
+  // snapshot) so an item the store just marked out of stock is flagged here
+  // even though it was in stock when added (Issue#3).
+  const pricedCart = useMemo(
+    () => transformCartWithFoodInfo(cart, data?.restaurant),
+    [cart, data, transformCartWithFoodInfo],
+  );
 
   const router = useRouter();
   const t = useTranslations();
@@ -200,7 +209,7 @@ export default function Cart({ onClose }: CartProps) {
         <div className={styles.content}>
           {/* Cart Items */}
           <div className={styles.items}>
-            {cart.map((item) => (
+            {pricedCart.map((item) => (
               <div
                 key={item.key}
                 className={styles.item}
@@ -222,6 +231,11 @@ export default function Cart({ onClose }: CartProps) {
                         {CURRENCY_SYMBOL}
                         {item.price || 0}
                       </p>
+                      {item.isOutOfStock && (
+                        <p className="text-xs font-semibold text-red-500">
+                          {t("out_of_stock_label")}
+                        </p>
+                      )}
                     </div>
                   </div>
                   {item.optionTitles && item.optionTitles.length > 0 && (
@@ -258,10 +272,12 @@ export default function Cart({ onClose }: CartProps) {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      if (item.isOutOfStock) return;
                       updateItemQuantity(item.key, 1);
                     }}
+                    disabled={item.isOutOfStock}
                     aria-label={`${t("increase")} ${item.foodTitle || item.title}`}
-                    className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center"
+                    className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
                     type="button"
                   >
                     <FontAwesomeIcon icon={faPlus} size="xs" />

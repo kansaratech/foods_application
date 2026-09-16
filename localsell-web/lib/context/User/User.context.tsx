@@ -64,6 +64,11 @@ export interface CartItem {
   variationTitle?: string;
   optionTitles?: string[];
   price?: string | number;
+  // Refreshed from live catalog data by transformCartWithFoodInfo on every
+  // render (not the stale value from when the item was added) — lets the
+  // cart block increasing quantity on an item the store just marked out of
+  // stock (Issue#3).
+  isOutOfStock?: boolean;
 }
 
 export interface ProfileType {
@@ -327,6 +332,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = (props) => {
           variationTitle,
           title,
           optionTitles,
+          isOutOfStock: Boolean(variationItem.isOutOfStock || foodItem.isOutOfStock),
           price: totalPrice.toFixed(2),
         };
       });
