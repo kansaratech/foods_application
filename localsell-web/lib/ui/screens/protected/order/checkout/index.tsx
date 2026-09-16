@@ -12,7 +12,13 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { motion } from "framer-motion";
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   ApolloCache,
   ApolloError,
@@ -151,6 +157,7 @@ export default function OrderCheckoutScreen() {
     loadingProfile,
     logout,
     updateItemQuantity,
+    transformCartWithFoodInfo,
   } = useUser();
 
   const { userAddress } = useUserAddress();
@@ -360,6 +367,18 @@ export default function OrderCheckoutScreen() {
   }, [restaurantId, isCouponApplied]);
   // Use local restaurant data if GraphQL data is not available
   const finalRestaurantData = restaurantData || localRestaurantData;
+
+  // The raw cart (as `addItem` stores it) carries only addon _ids, no prices
+  // — a line's addon-inclusive `price` only exists once something has run
+  // `transformCartWithFoodInfo` against full catalog data. Checkout used to
+  // trust `cart` as already-priced, which silently dropped addon costs (and
+  // therefore under-discounted any coupon applied on top) whenever that
+  // hadn't happened yet. Recompute it here directly, the same way the
+  // restaurant/store pages do, so checkout is never dependent on that.
+  const pricedCart = useMemo(
+    () => transformCartWithFoodInfo(cart, finalRestaurantData?.restaurant),
+    [cart, finalRestaurantData, transformCartWithFoodInfo],
+  );
 
   // Context
   const { isLoaded } = useContext(GoogleMapsContext);
@@ -963,7 +982,7 @@ export default function OrderCheckoutScreen() {
   // Pricing Handlers
   function calculatePrice(delivery = 0, withDiscount: boolean = false) {
     let itemTotal: number = 0;
-    cart.forEach((cartItem) => {
+    pricedCart.forEach((cartItem) => {
       itemTotal = itemTotal + Number(cartItem?.price || 0) * cartItem.quantity;
     });
     if (withDiscount && coupon && coupon.discount && isCouponApplied) {
@@ -1296,7 +1315,7 @@ export default function OrderCheckoutScreen() {
                 {t("selected_items_label")}
               </h2>
               {/* Map this below section */}
-              {cart.map((item) => {
+              {pricedCart.map((item) => {
                 return (
                   <div
                     key={item._id}
