@@ -966,12 +966,12 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
               <Text
                 style={{ color: appTheme.fontMainColor, fontWeight: "600" }}
               >
-                {t("Item availability")}
+                {t("Hide from menu")}
               </Text>
               <Text style={{ color: appTheme.fontSecondColor, fontSize: 12 }}>
                 {isActive
-                  ? t("Visible to customers on your menu")
-                  : t("Hidden from your menu")}
+                  ? t("Item shows on your menu — use the out-of-stock toggle instead for a temporary sellout")
+                  : t("Item is completely removed from your menu, not just marked sold out")}
               </Text>
             </View>
             <CustomSwitch value={isActive} onToggle={setIsActive} />

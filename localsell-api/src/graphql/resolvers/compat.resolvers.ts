@@ -38,6 +38,11 @@ export const compatResolvers: IResolvers<unknown, GraphQLContext> = {
       const countById = new Map(grouped.map((g) => [g.foodId, g._sum.quantity ?? 0]));
       return foodIds
         .map((id) => ({ id, count: countById.get(id) ?? 0 }))
+        // A brand-new item with zero orders isn't "popular" — without this,
+        // any store with under 10 items showed every never-ordered item
+        // under Popular Items too, duplicating it alongside its real
+        // category on the storefront the moment it was created (Issue#5).
+        .filter((item) => item.count > 0)
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
     },
