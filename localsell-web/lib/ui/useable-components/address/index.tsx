@@ -1224,16 +1224,21 @@ export default function UserAddressComponent(
       return;
     }
 
-    fetch({ input: search }, (results: IPlaceSelectedOption[]) => {
-      let newOptions: IPlaceSelectedOption[] = [];
-      if (selectedPlaceObject) {
-        newOptions = [selectedPlaceObject];
-      }
-      if (results) {
-        newOptions = [...newOptions, ...results];
-      }
-      setOptions(newOptions);
-    });
+    fetch(
+      // This marketplace only ever serves India (Issue 70) — restrict
+      // suggestions to Indian results instead of matching anywhere on earth.
+      { input: search, componentRestrictions: { country: "in" } },
+      (results: IPlaceSelectedOption[]) => {
+        let newOptions: IPlaceSelectedOption[] = [];
+        if (selectedPlaceObject) {
+          newOptions = [selectedPlaceObject];
+        }
+        if (results) {
+          newOptions = [...newOptions, ...results];
+        }
+        setOptions(newOptions);
+      },
+    );
 
     return () => {
       autocompleteService.current = null;

@@ -105,6 +105,9 @@ mapsRouter.get('/place-autocomplete', async (req, res) => {
     const url = new URL('https://maps.googleapis.com/maps/api/place/autocomplete/json');
     url.searchParams.set('input', input);
     url.searchParams.set('language', language);
+    // This marketplace only ever serves India (Issue 70) — restrict address
+    // suggestions to Indian results instead of matching anywhere on earth.
+    url.searchParams.set('components', 'country:in');
     url.searchParams.set('key', key);
 
     const response = await fetch(url);
