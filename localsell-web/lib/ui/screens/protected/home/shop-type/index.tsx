@@ -88,6 +88,8 @@ return (
         cuisinesloading={cuisinesloading}
         error={!!error}
         hasMore={hasMore} // ✅ pass down so MainSection can show "No more"
+        showBackButton
+        backFallbackHref="/discovery"
     />
 );
 }

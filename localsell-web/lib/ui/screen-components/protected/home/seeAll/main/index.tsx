@@ -136,7 +136,7 @@ function SeeAllSection() {
     return (
       <ProtectedFavRestaurants>
         <div className="w-full py-6 flex flex-col gap-6">
-          <HomeHeadingSection title={title} showFilter={false} />
+          <HomeHeadingSection title={title} showFilter={false} showBackButton backFallbackHref="/discovery" />
           {isFavouriteRestaurantsLoading ? (
             <CardSkeletonGrid count={4} />
           ) : FavouriteRestaurantsData?.userFavourite &&
@@ -160,7 +160,7 @@ function SeeAllSection() {
 
   return (
     <>
-      <HomeHeadingSection title={title} showFilter={false} />
+      <HomeHeadingSection title={title} showFilter={false} showBackButton backFallbackHref="/discovery" />
 
       <div className="mb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mt-4 items-center">

@@ -79,6 +79,7 @@ import { loadCashfreeSdk, cashfreeSdkMode } from "@/lib/utils/methods/cashfree";
 // Asets
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import Image from "@/lib/ui/useable-components/safe-image";
+import BackButton from "@/lib/ui/useable-components/back-button";
 import { useTranslations } from "next-intl";
 import { useTheme } from "@/lib/providers/ThemeProvider";
 import {
@@ -1053,6 +1054,10 @@ export default function OrderCheckoutScreen() {
     <>
       {/* <!-- Header with map and navigation --> */}
       <div className="relative">
+        <BackButton
+          fallbackHref="/discovery"
+          className="!absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1.5 shadow-md backdrop-blur hover:bg-white dark:bg-gray-900/90"
+        />
         {isLoaded ? (
           <GoogleMap
             mapContainerStyle={{

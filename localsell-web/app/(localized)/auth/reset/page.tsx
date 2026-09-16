@@ -3,6 +3,7 @@
 import { RESET_PASSWORD_WITH_TOKEN } from "@/lib/api/graphql";
 import CustomButton from "@/lib/ui/useable-components/button";
 import CustomPasswordTextField from "@/lib/ui/useable-components/password-input-field";
+import BackButton from "@/lib/ui/useable-components/back-button";
 import { isStrongPassword } from "@/lib/utils/methods/validation";
 import { useMutation } from "@apollo/client";
 import { useTranslations } from "next-intl";
@@ -69,6 +70,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-6 py-16">
+      <BackButton fallbackHref="/auth/forgot-password" className="mb-6 w-fit" />
       <h1 className="text-3xl font-semibold">{t("update_password_title")}</h1>
       <p className="mt-3 text-sm text-neutral-600">
         {email || t("reset_link_invalid_or_expired_message")}

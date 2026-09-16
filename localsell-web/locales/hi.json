@@ -307,6 +307,7 @@
   "no_support_tickets_yet_message": "आपने अभी तक कोई सहायता टिकट नहीं बनाया है।",
   "create_first_ticket_button": "अपना पहला टिकट बनाएं",
   "back_to_home": "होम पर वापस",
+  "back_button_label": "वापस",
   "unknown_date": "अज्ञात तिथि",
   "not_available_label": "उपलब्ध नहीं",
   "support_ticket_created_successfully": "आपका सहायता टिकट सफलतापूर्वक बनाया गया",

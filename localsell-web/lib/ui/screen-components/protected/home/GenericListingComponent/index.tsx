@@ -22,12 +22,14 @@ interface GenericListingProps {
   error: boolean;
   hasMore?: boolean;
   onLoadMore?: () => void;
+  showBackButton?: boolean;
+  backFallbackHref?: string;
 }
 
 export default function GenericListingComponent({
   headingTitle,
   cuisineSectionTitle,
-  mainSectionTitle, 
+  mainSectionTitle,
   mainData,
   cuisineDataFromHook,
   loading,
@@ -35,7 +37,9 @@ export default function GenericListingComponent({
   error,
   hasMore,
   onLoadMore,
-  queryData
+  queryData,
+  showBackButton = false,
+  backFallbackHref,
 
 }: GenericListingProps) {
   const [cuisineData, setcuisineData] = useState<ICuisinesData[]>([]);
@@ -132,6 +136,8 @@ export default function GenericListingComponent({
         onPress={handleShowModal}
         appliedFilters={filters.cuisines.length + filters.rating.length}
         sortByTitle={sortBy}
+        showBackButton={showBackButton}
+        backFallbackHref={backFallbackHref}
       />
       {filters.cuisines.length === 0 && filters.rating.length === 0 && (
         <CuisinesSection

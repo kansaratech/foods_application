@@ -62,7 +62,7 @@ function CuisineSelectionSection() {
 
   return (
     <>
-      <HomeHeadingSection title={title} showFilter={false} />
+      <HomeHeadingSection title={title} showFilter={false} showBackButton backFallbackHref="/discovery" />
       <div className="mb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mt-4 items-center">
           {(getCuisinRestaurants as IRestaurant[] | undefined)?.map((item) => (

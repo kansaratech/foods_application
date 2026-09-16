@@ -14,6 +14,7 @@ import { ISearchSuggestionsData } from "@/lib/utils/interfaces/restaurants.inter
 import { useParams, useRouter } from "next/navigation";
 // heading component
 import HomeHeadingSection from "@/lib/ui/useable-components/home-heading-section";
+import BackButton from "@/lib/ui/useable-components/back-button";
 import { useTranslations } from "next-intl";
 
 function SearchSeeAllSection() {
@@ -92,6 +93,7 @@ function SearchSeeAllSection() {
   if (!restaurants.length && !foods.length)
     return (
       <div className="py-16 text-center">
+        <BackButton fallbackHref="/discovery" className="mx-auto mb-6 w-fit" />
         <p className="text-2xl font-bold">No results for “{term}”</p>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Try a different name, cuisine or dish.
@@ -101,6 +103,7 @@ function SearchSeeAllSection() {
 
   return (
     <>
+      <BackButton fallbackHref="/discovery" className="mx-[6px] mb-4" />
       {restaurants.length > 0 && (
         <>
           <HomeHeadingSection

@@ -315,6 +315,7 @@
   "no_support_tickets_yet_message": "You haven't created any support tickets yet.",
   "create_first_ticket_button": "Create Your First Ticket",
   "back_to_home": "Back to Home",
+  "back_button_label": "Back",
   "unknown_date": "unknown date",
   "not_available_label": "N/A",
   "support_ticket_created_successfully": "Your support ticket has been created successfully",

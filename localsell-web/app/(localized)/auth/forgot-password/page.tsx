@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/context/auth/auth.context";
 import CustomButton from "@/lib/ui/useable-components/button";
 import CustomTextField from "@/lib/ui/useable-components/input-field";
+import BackButton from "@/lib/ui/useable-components/back-button";
 import useToast from "@/lib/hooks/useToast";
 import { isValidEmail } from "@/lib/utils/methods/validation";
 import { useTranslations } from "next-intl";
@@ -38,6 +39,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-6 py-16">
+      <BackButton fallbackHref="/" className="mb-6 w-fit" />
       <h1 className="text-3xl font-semibold">{t("password_recovery_label")}</h1>
       <p className="mt-3 text-sm text-neutral-600">
         {submitted

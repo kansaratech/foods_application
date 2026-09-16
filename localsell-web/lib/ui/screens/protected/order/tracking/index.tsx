@@ -21,6 +21,7 @@ import { RatingModal } from "@/lib/ui/screen-components/protected/profile";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import ReactConfetti from "react-confetti";
 import ChatRider from "@/lib/ui/screen-components/protected/order-tracking/components/ChatRider";
+import BackButton from "@/lib/ui/useable-components/back-button";
 
 interface IOrderTrackingScreenProps {
   orderId: string;
@@ -259,16 +260,22 @@ export default function OrderTrackingScreen({
       <div className="w-screen h-full flex flex-col pb-20 dark:bg-gray-900 dark:text-gray-100">
         <div className="scrollable-container flex-1">
           {/* Google Map for Tracking */}
-          <GoogleMapTrackingComponent
-            isLoaded={isLoaded}
-            origin={origin}
-            destination={destination}
-            directions={directions}
-            isCheckingCache={isCheckingCache}
-            directionsCallback={directionsCallback}
-            orderStatus={mergedOrderDetails?.orderStatus || "PENDING"}
-            riderId={mergedOrderDetails?.rider?._id}
-          />
+          <div className="relative">
+            <BackButton
+              fallbackHref="/profile/order-history"
+              className="!absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1.5 shadow-md backdrop-blur hover:bg-white dark:bg-gray-900/90"
+            />
+            <GoogleMapTrackingComponent
+              isLoaded={isLoaded}
+              origin={origin}
+              destination={destination}
+              directions={directions}
+              isCheckingCache={isCheckingCache}
+              directionsCallback={directionsCallback}
+              orderStatus={mergedOrderDetails?.orderStatus || "PENDING"}
+              riderId={mergedOrderDetails?.rider?._id}
+            />
+          </div>
 
           {/* Main Content with increased gap from map */}
           <div className="mt-8 md:mt-10">

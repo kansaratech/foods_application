@@ -63,6 +63,7 @@ import { toSlug } from "@/lib/utils/methods";
 import { isRestaurantOpen } from "@/lib/utils/constants/isRestaurantOpen";
 import ReviewsModal from "@/lib/ui/useable-components/reviews-modal";
 import InfoModal from "@/lib/ui/useable-components/info-modal";
+import BackButton from "@/lib/ui/useable-components/back-button";
 import ChatSvg from "@/lib/utils/assets/svg/chat";
 import Image, { FALLBACK_IMAGE_SRC } from '@/lib/ui/useable-components/safe-image';
 import Loader from "@/app/(localized)/mapview/[slug]/components/Loader";
@@ -632,6 +633,10 @@ export default function StoreDetailsScreen() {
 
       {/* Banner */}
       <div className="relative">
+        <BackButton
+          fallbackHref="/store"
+          className="!absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1.5 shadow-md backdrop-blur hover:bg-white dark:bg-gray-900/90"
+        />
         {loading ? (
           <Skeleton width="100%" height="20rem" borderRadius="0" />
         ) : (

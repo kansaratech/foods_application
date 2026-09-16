@@ -6,6 +6,7 @@ import { faFilter } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import CustomButton from "../button";
 import MapViewButton from "../mapViewButton";
+import BackButton from "../back-button";
 import { useTranslations } from "next-intl";
 function HomeHeadingSection({
   title = "Restaurants near me",
@@ -13,12 +14,16 @@ function HomeHeadingSection({
   appliedFilters,
   sortByTitle,
   showFilter = true,
+  showBackButton = false,
+  backFallbackHref = "/discovery",
 }: {
   title: string;
   onPress?: () => void;
   appliedFilters?: number;
   sortByTitle?: string;
   showFilter?: boolean;
+  showBackButton?: boolean;
+  backFallbackHref?: string;
 }) {
 
   const t = useTranslations()
@@ -26,7 +31,10 @@ function HomeHeadingSection({
 
   return (
     <div className="flex justify-between items-center mx-[6px] mb-8">
-      <span className="font-inter font-bold text-2xl sm:text-4xl leading-8 tracking-normal text-gray-900 dark:text-white">
+      <span className="flex items-center gap-3 font-inter font-bold text-2xl sm:text-4xl leading-8 tracking-normal text-gray-900 dark:text-white">
+        {showBackButton && (
+          <BackButton fallbackHref={backFallbackHref} label="" />
+        )}
         {headingTitle}
       </span>
       <div className="flex items-center gap-4">
