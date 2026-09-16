@@ -220,6 +220,7 @@ export const RIDER_ORDERS = gql`
         name
         phone
       }
+      recipientPhone
       paymentMethod
       paidAmount
       orderAmount

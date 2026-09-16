@@ -68,6 +68,7 @@ function HomeProcessingOrdersMain(props: IOrderTabsComponentProps) {
         paymentStatus={item.paymentStatus}
         acceptedAt={item.acceptedAt}
         user={item.user}
+        recipientPhone={item.recipientPhone}
       />
     ),
     [route.key],

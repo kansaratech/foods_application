@@ -728,7 +728,10 @@ export default function OrderDetailScreen() {
                     router.push({
                       pathname: "/chat",
                       params: {
-                        phoneNumber: order?.user?.phone,
+                        // Call whoever is actually receiving the order when
+                        // a recipient number was provided at checkout, not
+                        // the account holder's own phone.
+                        phoneNumber: order?.recipientPhone || order?.user?.phone,
                         orderId: order?.orderId,
                         id: order?._id,
                       },

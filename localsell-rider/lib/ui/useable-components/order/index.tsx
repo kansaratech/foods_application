@@ -44,6 +44,7 @@ const Order = ({
   paymentStatus,
   acceptedAt,
   user,
+  recipientPhone,
   tab,
 }: IOrderComponentProps) => {
   // Hooks
@@ -407,7 +408,10 @@ const Order = ({
                         router.push({
                           pathname: "/chat",
                           params: {
-                            phoneNumber: user.phone,
+                            // Call/message whoever is actually receiving the
+                            // order when a recipient number was provided,
+                            // not the account holder's own phone.
+                            phoneNumber: recipientPhone || user.phone,
                             orderId: orderId,
                             id: _id,
                           },
@@ -528,7 +532,8 @@ const areOrderPropsEqual = (
     sameDeliveryLocation &&
     prevProps.user?._id === nextProps.user?._id &&
     prevProps.user?.name === nextProps.user?.name &&
-    prevProps.user?.phone === nextProps.user?.phone
+    prevProps.user?.phone === nextProps.user?.phone &&
+    prevProps.recipientPhone === nextProps.recipientPhone
   );
 };
 

@@ -7,6 +7,10 @@ import { IRiderProfile } from "./user.interface";
 export interface IOrderComponentProps extends IGlobalComponentProps {
 
   tab: ORDER_TYPE;
+  // Contact number for whoever is actually receiving the order, when that's
+  // not the account holder (e.g. ordering for someone else) — call/message
+  // this instead of `user.phone` when it's set.
+  recipientPhone?: string | null;
 }
 
 export interface IOrder {
@@ -38,6 +42,7 @@ export interface IOrder {
     name: string;
     phone: string;
   };
+  recipientPhone?: string | null;
   paymentStatus: string;
   createdAt: string;
   acceptedAt: string;
