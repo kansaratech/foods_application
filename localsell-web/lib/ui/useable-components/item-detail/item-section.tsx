@@ -45,6 +45,14 @@ export const ItemDetailSection = <
   onOptionQuantityChange,
   allowDeselect = false,
 }: SectionProps<T>) => {
+  // An optional single-pick group (allowDeselect) is rendered as a checkbox,
+  // not a radio — a radio that can be clicked again to clear itself has no
+  // visual affordance for that, which read as "no way to remove it once
+  // picked" even though it technically worked. A checkbox communicates
+  // toggle-ability directly; selecting a different option in the same group
+  // still clears the previous one (single-select), same as before.
+  const singleSelectAsCheckbox = !multiple && allowDeselect;
+
   const handleSelect = (option: T) => {
     if (option.isOutOfStock) {
       return;
@@ -59,6 +67,10 @@ export const ItemDetailSection = <
             ? (prevSelected as T[]).filter((o) => o._id !== option._id)
             : [...(prevSelected as T[]), option];
         });
+    } else if (singleSelectAsCheckbox) {
+      const isCurrentlySelected =
+        (singleSelected as Option | null)?._id === option._id;
+      onSingleSelect && onSingleSelect(isCurrentlySelected ? null : option);
     } else {
       onSingleSelect && onSingleSelect(option);
     }
@@ -105,17 +117,10 @@ export const ItemDetailSection = <
             >
               {/* Input Radio/Checkbox */}
               <input
-                type={multiple ? "checkbox" : "radio"}
+                type={multiple || singleSelectAsCheckbox ? "checkbox" : "radio"}
                 name={name}
                 checked={isChecked}
                 onChange={() => handleSelect(option)}
-                onClick={() => {
-                  // Clicking an already-selected radio doesn't fire onChange
-                  // (its state isn't changing), so deselect has to happen here.
-                  if (!multiple && allowDeselect && isChecked) {
-                    onSingleSelect && onSingleSelect(null);
-                  }
-                }}
                 disabled={option.isOutOfStock}
                 className="accent-primary-color dark:accent-primary-color dark:bg-gray-700 dark:border-gray-600 "
               />
