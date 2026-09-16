@@ -26,10 +26,13 @@ import {
   COLLECTION_RECEIPTS,
   RECORD_COLLECTION,
   VENDOR_PAYABLES,
+  VENDOR_PAYOUT_OVERVIEW,
+  VENDOR_BALANCES,
   RECORD_VENDOR_PAYOUT,
   Bill,
   Receipt,
   VendorPayable,
+  VendorBalance,
   money,
   day,
 } from './operations';
@@ -54,6 +57,7 @@ type CommissionOrder = {
 const base = '/management/finance';
 const pages = [
   ['Overview', base],
+  ['Balance sheet', `${base}/balances`],
   ['Collect commission', `${base}/collections`],
   ['Generate bills', `${base}/billing`],
   ['Vendor payables', `${base}/payables`],
@@ -115,6 +119,20 @@ function Failure({
       </ActionButton>
     </div>
   ) : null;
+}
+// Which channel a payment moved through — the platform never touches COD
+// cash (the store/rider holds it and gets billed commission separately),
+// while every CASHFREE rupee lands in the platform's own account first (so
+// the platform owes the vendor their net share instead). These two money
+// flows are handled on entirely separate pages (Collect commission vs
+// Vendor payables); this badge is what makes that split visible at a glance
+// instead of something you have to already know.
+function ChannelBadge({ channel }: { channel: 'offline' | 'online' }) {
+  return (
+    <span className={`finance-channel-badge finance-channel-${channel}`}>
+      {channel === 'offline' ? 'Offline · COD' : 'Online · Cashfree'}
+    </span>
+  );
 }
 function Status({ bill }: { bill: Bill }) {
   const label =
@@ -486,50 +504,119 @@ export function FinanceOverview() {
   const { data, loading, error, refetch } = useQuery(COLLECTION_OVERVIEW, {
     fetchPolicy: 'cache-and-network',
   });
+  const {
+    data: payoutData,
+    loading: payoutLoading,
+    error: payoutError,
+    refetch: refetchPayouts,
+  } = useQuery(VENDOR_PAYOUT_OVERVIEW, { fetchPolicy: 'cache-and-network' });
   const summary = data?.commissionCollectionOverview;
+  const payoutSummary = payoutData?.vendorPayoutOverview;
   return (
     <FinanceFrame
       title="Finance overview"
-      description="Track commission earned from stores, collect outstanding bills and keep a receipt for every payment."
+      description="Every order's money moves through one of two channels — track both below."
     >
-      <div className="finance-money-flow">
-        <i className="pi pi-info-circle" />
-        <p>
-          <strong>Payments go directly to stores.</strong> LocalSell collects
-          only its commission from the vendor. Store delivery and customer
-          payments are managed by the store.
-        </p>
-      </div>
       <Failure error={error} retry={refetch} />
-      <div className="finance-metrics">
-        {[
-          [
-            'Outstanding commission',
-            summary?.outstanding,
-            'Billed and still to collect',
-          ],
-          [
-            'Unbilled commission',
-            summary?.unbilled,
-            'Delivered orders awaiting a bill',
-          ],
-          [
-            'Commission received',
-            summary?.collected,
-            'Recorded collections to date',
-          ],
-        ].map(([label, value, help]) => (
-          <section key={String(label)}>
-            <span>{label}</span>
-            <strong>
-              {loading && !summary ? '...' : money(value as number)}
-            </strong>
-            <small>{help}</small>
-          </section>
-        ))}
-      </div>
+      <Failure error={payoutError} retry={refetchPayouts} />
+
+      <section className="finance-section">
+        <header>
+          <div>
+            <ChannelBadge channel="offline" />
+            <h2>Commission to collect</h2>
+            <p>
+              The store already holds this cash (COD pickup / self-delivery)
+              — LocalSell bills the vendor for its commission and collects it
+              separately.
+            </p>
+          </div>
+        </header>
+        <div className="finance-metrics">
+          {[
+            [
+              'Outstanding commission',
+              summary?.outstanding,
+              'Billed and still to collect',
+            ],
+            [
+              'Unbilled commission',
+              summary?.unbilled,
+              'Delivered orders awaiting a bill',
+            ],
+            [
+              'Commission received',
+              summary?.collected,
+              'Recorded collections to date',
+            ],
+          ].map(([label, value, help]) => (
+            <section key={String(label)}>
+              <span>{label}</span>
+              <strong>
+                {loading && !summary ? '...' : money(value as number)}
+              </strong>
+              <small>{help}</small>
+            </section>
+          ))}
+        </div>
+      </section>
+
+      <section className="finance-section">
+        <header>
+          <div>
+            <ChannelBadge channel="online" />
+            <h2>Owed to vendors</h2>
+            <p>
+              Cashfree orders settle into LocalSell&apos;s own account first,
+              so — the reverse of COD — the platform owes the vendor their
+              net share (order total minus commission) here.
+            </p>
+          </div>
+          <Link href={`${base}/payables`}>View all payables</Link>
+        </header>
+        <div className="finance-metrics">
+          {[
+            [
+              'Pending payout',
+              payoutSummary?.pendingTotal,
+              'Net owed, not yet paid out',
+            ],
+            [
+              'Orders awaiting payout',
+              payoutSummary?.pendingOrderCount,
+              'Delivered Cashfree orders',
+              true,
+            ],
+            [
+              'Vendors owed',
+              payoutSummary?.vendorsOwed,
+              'Distinct vendors with a pending payout',
+              true,
+            ],
+          ].map(([label, value, help, isCount]) => (
+            <section key={String(label)}>
+              <span>{label}</span>
+              <strong>
+                {payoutLoading && !payoutSummary
+                  ? '...'
+                  : isCount
+                    ? (value as number) ?? 0
+                    : money(value as number)}
+              </strong>
+              <small>{help}</small>
+            </section>
+          ))}
+        </div>
+      </section>
+
       <div className="finance-tasks">
         {[
+          [
+            'Balance sheet',
+            'See exactly who LocalSell owes and who owes LocalSell.',
+            'balances',
+            'pi-book',
+          ],
           [
             'Collect commission',
             'Find unpaid bills and record a payment.',
@@ -541,6 +628,12 @@ export function FinanceOverview() {
             'Review delivered orders and create vendor bills.',
             'billing',
             'pi-file',
+          ],
+          [
+            'Pay out vendors',
+            'Send net payouts for Cashfree orders.',
+            'payables',
+            'pi-send',
           ],
           [
             'View receipts',
@@ -562,6 +655,7 @@ export function FinanceOverview() {
       <section className="finance-section">
         <header>
           <div>
+            <ChannelBadge channel="offline" />
             <h2>Needs collection</h2>
             <p>
               {summary?.openBills ?? 0} open bills across{' '}
@@ -575,6 +669,125 @@ export function FinanceOverview() {
           loading={loading && !summary}
         />
       </section>
+    </FinanceFrame>
+  );
+}
+function NetBalanceCell({ netBalance }: { netBalance: number }) {
+  if (Math.abs(netBalance) < 0.01) {
+    return <span className="finance-status finance-status-paid">Settled</span>;
+  }
+  const owedToVendor = netBalance > 0;
+  return (
+    <div className="finance-net-balance">
+      <strong className={owedToVendor ? 'finance-net-owe' : 'finance-net-collect'}>
+        {money(Math.abs(netBalance))}
+      </strong>
+      <small>{owedToVendor ? 'We owe the vendor' : 'Collect from vendor'}</small>
+    </div>
+  );
+}
+export function FinanceBalances() {
+  const [search, setSearch] = useState(''),
+    [page, setPage] = useState(1),
+    [limit, setLimit] = useState(25);
+  const { data, loading, error, refetch } = useQuery(VENDOR_BALANCES, {
+    variables: { page, limit, search: search || undefined },
+    fetchPolicy: 'cache-and-network',
+  });
+  const balances: VendorBalance[] = data?.vendorBalances.balances ?? [];
+  const totals = balances.reduce(
+    (acc, b) => ({
+      owe: acc.owe + (b.netBalance > 0 ? b.netBalance : 0),
+      collect: acc.collect + (b.netBalance < 0 ? -b.netBalance : 0),
+    }),
+    { owe: 0, collect: 0 },
+  );
+  return (
+    <FinanceFrame
+      title="Balance sheet"
+      description="Every vendor's consolidated position — COD commission they owe LocalSell, netted against CASHFREE payouts LocalSell owes them. Only vendors with an open position on either side show up here; a vendor fully settled on both drops off automatically."
+    >
+      <div className="finance-metrics">
+        <section>
+          <span>Total to pay out</span>
+          <strong className="finance-net-owe">{money(totals.owe)}</strong>
+          <small>Sum of every vendor LocalSell currently owes</small>
+        </section>
+        <section>
+          <span>Total to collect</span>
+          <strong className="finance-net-collect">{money(totals.collect)}</strong>
+          <small>Sum of every vendor who currently owes LocalSell</small>
+        </section>
+      </div>
+      <div className="ls-filter-toolbar">
+        <InputText
+          aria-label="Search vendors"
+          placeholder="Search vendor name or email"
+          className="ls-field ls-filter-search"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
+      </div>
+      <Failure error={error} retry={refetch} />
+      <Table
+        data={balances}
+        loading={loading && !data}
+        minWidth="50rem"
+        rowsPerPage={limit}
+        currentPage={page}
+        totalRecords={data?.vendorBalances.total ?? 0}
+        onPageChange={(p, l) => {
+          setPage(p);
+          setLimit(l);
+        }}
+        columns={[
+          {
+            propertyName: 'vendor',
+            headerName: 'Vendor',
+            body: (b: VendorBalance) => (
+              <div>
+                <strong>{b.vendor?.name || 'Vendor'}</strong>
+                <small>{b.vendor?.email}</small>
+              </div>
+            ),
+          },
+          {
+            propertyName: 'commissionOutstanding',
+            headerName: 'Owes LocalSell (COD)',
+            align: 'right',
+            body: (b: VendorBalance) => money(b.commissionOutstanding),
+          },
+          {
+            propertyName: 'payoutPending',
+            headerName: 'LocalSell owes (Cashfree)',
+            align: 'right',
+            body: (b: VendorBalance) => money(b.payoutPending),
+          },
+          {
+            propertyName: 'netBalance',
+            headerName: 'Net position',
+            align: 'right',
+            body: (b: VendorBalance) => <NetBalanceCell netBalance={b.netBalance} />,
+          },
+          {
+            propertyName: 'action',
+            headerName: '',
+            body: (b: VendorBalance) =>
+              b.netBalance > 0 ? (
+                <Link className="finance-table-link" href={`${base}/payables`}>
+                  Pay out
+                </Link>
+              ) : b.netBalance < 0 ? (
+                <Link className="finance-table-link" href={`${base}/collections`}>
+                  Collect
+                </Link>
+              ) : null,
+          },
+        ]}
+      />
     </FinanceFrame>
   );
 }
@@ -601,6 +814,7 @@ export function FinanceCollections() {
       title="Collect commission"
       description="Open a vendor bill to review its orders. Record a payment only after the money reaches LocalSell."
     >
+      <ChannelBadge channel="offline" />
       <div className="ls-filter-toolbar">
         <InputText
           aria-label="Search invoices or vendors"
@@ -697,6 +911,7 @@ export function FinanceBilling() {
       title="Generate commission bills"
       description="Review unbilled delivered orders. Generate one bill per vendor and billing period, then collect it from the vendor."
     >
+      <ChannelBadge channel="offline" />
       <Failure error={error} retry={refetch} />
       <div className="finance-money-flow">
         <i className="pi pi-clock" />
@@ -955,6 +1170,7 @@ export function FinanceVendorPayouts() {
       title="Vendor payables"
       description="CASHFREE orders are collected into LocalSell's own account, so unlike COD the platform owes the vendor their net share (order total minus commission). Select a vendor's orders and record the payout once you've sent the money."
     >
+      <ChannelBadge channel="online" />
       <div className="finance-money-flow">
         <i className="pi pi-info-circle" />
         <p>
@@ -1282,4 +1498,4 @@ export function FinanceBillDetail({
     </FinanceFrame>
   );
 }
-export { BillTable, ReceiptTable };
+export { BillTable, ReceiptTable, ChannelBadge };

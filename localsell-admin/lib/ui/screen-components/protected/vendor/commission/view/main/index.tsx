@@ -4,6 +4,7 @@ import { useState } from 'react';
 import {
   FinanceFrame,
   BillTable,
+  ChannelBadge,
 } from '@/lib/ui/screens/super-admin/management/finance/workspace';
 import {
   BILL_FIELDS,
@@ -22,6 +23,8 @@ const SUMMARY = gql`
       currentPeriodCommission
       currentPeriodOrderCount
       outstandingTotal
+      payoutPendingTotal
+      netBalance
       bills {
         ...CollectionBill
       }
@@ -56,6 +59,7 @@ function PayoutsSection() {
     <section className="finance-section">
       <header>
         <div>
+          <ChannelBadge channel="online" />
           <h2>Payouts from LocalSell</h2>
           <p>
             Online (Cashfree) orders are collected into LocalSell&apos;s own
@@ -130,6 +134,25 @@ export default function MyCommissionMain() {
           payment, the remaining balance and receipt appear on the bill.
         </p>
       </div>
+      {summary && Math.abs(summary.netBalance) >= 0.01 && (
+        <div className="finance-summary-bar">
+          <div>
+            <span>Net position</span>
+            <strong
+              className={
+                summary.netBalance > 0 ? 'finance-net-owe' : 'finance-net-collect'
+              }
+            >
+              {money(Math.abs(summary.netBalance))}
+            </strong>
+            <small>
+              {summary.netBalance > 0
+                ? 'LocalSell owes you this much overall (Cashfree payouts pending minus commission you owe).'
+                : 'You owe LocalSell this much overall (commission owed minus Cashfree payouts pending).'}
+            </small>
+          </div>
+        </div>
+      )}
       {error && (
         <div role="alert" className="finance-error">
           {error.message}

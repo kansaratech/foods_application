@@ -15,22 +15,17 @@ import { IActionMenuItem } from '@/lib/utils/interfaces/action-menu.interface';
 import BannerTableHeader from '../header/table-header';
 
 // Interfaces and Types
-import {
-  IBannersDataResponse,
-  IBannersMainComponentsProps,
-  IBannersResponse,
-} from '@/lib/utils/interfaces';
+import { IBannersDataResponse, IBannersResponse } from '@/lib/utils/interfaces';
 
 // GraphQL
 import { DELETE_BANNER } from '@/lib/api/graphql';
 import { GET_BANNERS } from '@/lib/api/graphql/queries/banners';
 import { useMutation, useQuery } from '@apollo/client';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
-export default function BannersMain({
-  setIsAddBannerVisible,
-  setBanner,
-}: IBannersMainComponentsProps) {
+export default function BannersMain() {
+  const router = useRouter();
   // Hooks
   const { showToast } = useToast();
   const t = useTranslations();
@@ -87,8 +82,9 @@ export default function BannersMain({
       label: t('Edit'),
       command: (data?: IBannersResponse) => {
         if (data) {
-          setIsAddBannerVisible(true);
-          setBanner(data);
+          router.push(
+            `/management/banners/${encodeURIComponent(data._id)}/edit`
+          );
         }
       },
     },

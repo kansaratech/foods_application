@@ -225,6 +225,11 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
         .filter((b) => b.status === 'PENDING')
         .reduce((s, b) => s + billOutstanding(b), 0);
 
+      const pendingPayables = await prisma.vendorPayable.findMany({
+        where: { vendorId: currentUser.id, status: 'PENDING' },
+      });
+      const payoutPendingTotal = round2(pendingPayables.reduce((s, p) => s + p.netPayable, 0));
+
       return {
         cycle,
         currentPeriodStart: period.start.toISOString(),
@@ -232,8 +237,70 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
         currentPeriodCommission: round2(unbilled.reduce((s, r) => s + r.commissionAmount, 0)),
         currentPeriodOrderCount: unbilled.length,
         outstandingTotal: round2(outstandingTotal),
+        payoutPendingTotal,
+        netBalance: round2(payoutPendingTotal - outstandingTotal),
         bills,
       };
+    },
+
+    // Admin-only "balance sheet": one row per vendor with any open position —
+    // consolidates the two ledgers (CommissionBill = vendor owes LocalSell,
+    // VendorPayable = LocalSell owes vendor) that are otherwise only ever
+    // shown separately, so it's never obvious at a glance who to pay and who
+    // to collect from.
+    vendorBalances: async (
+      _parent,
+      args: { page?: number; limit?: number; search?: string },
+      context,
+    ) => {
+      requireRole(context, ['ADMIN']);
+      const page = args.page && args.page > 0 ? args.page : 1;
+      const limit = Math.min(100, Math.max(1, args.limit ?? 25));
+
+      const [openBills, pendingPayouts] = await Promise.all([
+        prisma.commissionBill.findMany({ where: { status: 'PENDING' } }),
+        prisma.vendorPayable.groupBy({
+          by: ['vendorId'],
+          where: { status: 'PENDING' },
+          _sum: { netPayable: true },
+        }),
+      ]);
+
+      const outstandingByVendor = new Map<string, number>();
+      for (const b of openBills) {
+        outstandingByVendor.set(b.vendorId, (outstandingByVendor.get(b.vendorId) ?? 0) + billOutstanding(b));
+      }
+      const payoutByVendor = new Map(pendingPayouts.map((p) => [p.vendorId, p._sum.netPayable ?? 0]));
+
+      const vendorIds = new Set([...outstandingByVendor.keys(), ...payoutByVendor.keys()]);
+      const vendorMap = await vendorLiteMap([...vendorIds]);
+
+      let rows = [...vendorIds]
+        .map((vendorId) => {
+          const v = vendorMap.get(vendorId);
+          const commissionOutstanding = round2(outstandingByVendor.get(vendorId) ?? 0);
+          const payoutPending = round2(payoutByVendor.get(vendorId) ?? 0);
+          return {
+            _id: vendorId,
+            vendor: { _id: vendorId, name: v?.name ?? null, email: v?.email ?? null, phone: v?.phone ?? null },
+            commissionOutstanding,
+            payoutPending,
+            netBalance: round2(payoutPending - commissionOutstanding),
+          };
+        })
+        // Largest open position first — whichever direction it owes.
+        .sort((a, b) => Math.abs(b.netBalance) - Math.abs(a.netBalance));
+
+      if (args.search) {
+        const q = args.search.trim().toLowerCase();
+        rows = rows.filter(
+          (r) => r.vendor.name?.toLowerCase().includes(q) || r.vendor.email?.toLowerCase().includes(q),
+        );
+      }
+
+      const total = rows.length;
+      const balances = rows.slice((page - 1) * limit, (page - 1) * limit + limit);
+      return { balances, total };
     },
 
     riderCashOutstanding: async (_parent, _args, context) => {

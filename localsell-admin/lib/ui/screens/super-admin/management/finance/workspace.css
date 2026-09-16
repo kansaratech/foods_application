@@ -71,8 +71,28 @@
 .finance-metrics,
 .finance-tasks {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 16px;
+}
+.finance-channel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.finance-channel-offline {
+  color: #9a5b00;
+  background: #fff4d9;
+}
+.finance-channel-online {
+  color: #0a5fb4;
+  background: #e6f1fd;
 }
 .finance-metrics section,
 .finance-tasks > a,
@@ -165,6 +185,22 @@
 .finance-status-pending {
   color: #9a5b00;
   background: #fff4d9;
+}
+.finance-net-balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.finance-net-balance small {
+  font-size: 11px;
+  opacity: 0.75;
+}
+.finance-net-owe {
+  color: #0a5fb4;
+}
+.finance-net-collect {
+  color: #b42318;
 }
 .finance-form-grid {
   display: grid;

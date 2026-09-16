@@ -42,6 +42,22 @@ export interface IStoreEarningsOrderProps {
   deliveryMode?: string;
 }
 
+export interface IVendorPayable {
+  _id: string;
+  orderNumber: string;
+  orderAmount: number;
+  commissionAmount: number;
+  netPayable: number;
+  status: string;
+  orderDeliveredAt: string;
+}
+export interface IStoreVendorPayablesResponse {
+  vendorPayables: {
+    total: number;
+    payables: IVendorPayable[];
+  };
+}
+
 export interface IDateFilter {
   startDate: string;
   endDate: string;

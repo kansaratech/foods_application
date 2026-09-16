@@ -1,5 +1,5 @@
 // Interface and Types
-import { IBannersHeaderComponentsProps } from '@/lib/utils/interfaces/banner.interface';
+import { useRouter } from 'next/navigation';
 
 // Components
 import ManagementHeading from '@/lib/ui/useable-components/management-page/heading';
@@ -9,9 +9,8 @@ import TextIconClickable from '@/lib/ui/useable-components/text-icon-clickable';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import { useTranslations } from 'next-intl';
 
-const BannersHeader = ({
-  setIsAddBannerVisible,
-}: IBannersHeaderComponentsProps) => {
+const BannersHeader = () => {
+  const router = useRouter();
   // Hooks
   const t = useTranslations();
   return (
@@ -24,7 +23,7 @@ const BannersHeader = ({
         icon={faAdd}
         iconStyles={{ color: 'currentColor' }}
         title={t('Add Banner')}
-        onClick={() => setIsAddBannerVisible(true)}
+        onClick={() => router.push('/management/banners/new')}
       />
     </ManagementHeading>
   );

@@ -10,15 +10,20 @@ export const vendorPayoutResolvers: IResolvers<unknown, GraphQLContext> = {
   Query: {
     vendorPayables: async (
       _p,
-      args: { vendorId?: string; status?: string; page?: number; limit?: number },
+      args: { vendorId?: string; restaurantId?: string; status?: string; page?: number; limit?: number },
       context,
     ) => {
       const user = requireRole(context, ["ADMIN", "VENDOR"]);
       const vendorId = user.userType === "VENDOR" ? user.id : args.vendorId;
       const page = args.page && args.page > 0 ? args.page : 1;
       const limit = Math.min(100, Math.max(1, args.limit ?? 25));
+      // restaurantId narrows to one store — a vendor's `restaurantLogin` session
+      // (the store app) is authenticated as the owning vendor, so without this
+      // a multi-store vendor would see every store's payables mixed together
+      // when they only asked about the one they're logged into.
       const where = {
         ...(vendorId ? { vendorId } : {}),
+        ...(args.restaurantId ? { restaurantId: args.restaurantId } : {}),
         ...(args.status ? { status: args.status } : {}),
       };
       const [payables, total] = await Promise.all([

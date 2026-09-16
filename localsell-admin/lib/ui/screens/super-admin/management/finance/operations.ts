@@ -198,6 +198,31 @@ export const VENDOR_PAYOUT_FIELDS = gql`
     createdAt
   }
 `;
+export const VENDOR_BALANCE_FIELDS = gql`
+  fragment VendorBalanceRow on VendorBalance {
+    _id
+    vendor {
+      _id
+      name
+      email
+      phone
+    }
+    commissionOutstanding
+    payoutPending
+    netBalance
+  }
+`;
+export const VENDOR_BALANCES = gql`
+  query VendorBalances($page: Int, $limit: Int, $search: String) {
+    vendorBalances(page: $page, limit: $limit, search: $search) {
+      total
+      balances {
+        ...VendorBalanceRow
+      }
+    }
+  }
+  ${VENDOR_BALANCE_FIELDS}
+`;
 export const VENDOR_PAYOUT_OVERVIEW = gql`
   query VendorPayoutOverview {
     vendorPayoutOverview {
@@ -260,6 +285,13 @@ export type VendorPayable = {
   createdAt: string;
 };
 export type Vendor = { _id: string; name?: string; email?: string };
+export type VendorBalance = {
+  _id: string;
+  vendor: Vendor;
+  commissionOutstanding: number;
+  payoutPending: number;
+  netBalance: number;
+};
 export type Receipt = {
   _id: string;
   receiptNumber: string;

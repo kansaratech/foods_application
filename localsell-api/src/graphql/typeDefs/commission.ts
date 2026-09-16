@@ -91,7 +91,28 @@ export const commissionTypeDefs = /* GraphQL */ `
     currentPeriodCommission: Float!
     currentPeriodOrderCount: Int!
     outstandingTotal: Float!
+    "Net owed to this vendor from CASHFREE orders, not yet paid out."
+    payoutPendingTotal: Float!
+    "payoutPendingTotal - outstandingTotal. Positive = LocalSell owes the vendor; negative = the vendor owes LocalSell."
+    netBalance: Float!
     bills: [CommissionBill!]!
+  }
+
+  "One vendor's consolidated money position: what LocalSell owes them (CASHFREE payouts) net against what they owe LocalSell (COD commission)."
+  type VendorBalance {
+    _id: ID!
+    vendor: CommissionVendorLite!
+    "Outstanding COD commission this vendor owes LocalSell."
+    commissionOutstanding: Float!
+    "Net CASHFREE payout LocalSell owes this vendor, not yet paid."
+    payoutPending: Float!
+    "payoutPending - commissionOutstanding. Positive = pay the vendor; negative = collect from the vendor."
+    netBalance: Float!
+  }
+
+  type VendorBalancesResult {
+    balances: [VendorBalance!]!
+    total: Int!
   }
 
   # ---- Rider COD cash ----
@@ -188,6 +209,8 @@ export const commissionTypeDefs = /* GraphQL */ `
     commissionBills(status: String, vendorId: ID, page: Int, limit: Int, search: String, startDate: String, endDate: String): CommissionBillsResult!
     commissionBill(id: ID!): CommissionBillDetail!
     myCommissionSummary: MyCommissionSummary!
+    "Admin-only consolidated balance sheet: who LocalSell owes, and who owes LocalSell, across all vendors."
+    vendorBalances(page: Int, limit: Int, search: String): VendorBalancesResult!
     riderCashOutstanding: [RiderCashOutstandingRow!]!
     riderCashSummary(riderId: ID!): RiderCashSummary!
     platformFinanceReport(startDate: String, endDate: String): PlatformFinanceReport!

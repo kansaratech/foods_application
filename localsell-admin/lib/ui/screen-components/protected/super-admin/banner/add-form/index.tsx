@@ -19,7 +19,7 @@ import {
   SCREEN_NAMES,
 } from '@/lib/utils/constants';
 import { IQueryResult, IRestaurantResponse } from '@/lib/utils/interfaces';
-import { IBannersAddFormComponentProps } from '@/lib/utils/interfaces/banner.interface';
+import { IBannersResponse } from '@/lib/utils/interfaces/banner.interface';
 import { IBannersForm } from '@/lib/utils/interfaces/forms/banners.form.interface';
 import { onErrorMessageMatcher } from '@/lib/utils/methods';
 import { getLabelByCode } from '@/lib/utils/methods/label-by-code';
@@ -27,15 +27,16 @@ import { BannerSchema } from '@/lib/utils/schema/banner';
 import { useMutation } from '@apollo/client';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { useTranslations } from 'next-intl';
-import FormDialog from '@/lib/ui/useable-components/form/form-dialog';
+import './banner-editor.css';
 import { useMemo } from 'react';
 
 const BannersAddForm = ({
-  isAddBannerVisible,
   onHide,
   banner,
-  position = 'right',
-}: IBannersAddFormComponentProps) => {
+}: {
+  banner: IBannersResponse | null;
+  onHide: () => void;
+}) => {
   // Queries
   const { data } = useQueryGQL(GET_RESTAURANTS_DROPDOWN, {
     fetchPolicy: 'cache-and-network',
@@ -106,313 +107,333 @@ const BannersAddForm = ({
     values: IBannersForm,
     { resetForm }: FormikHelpers<IBannersForm>
   ) => {
-    if (data) {
-      mutate({
-        variables: {
-          bannerInput: {
-            _id: banner ? banner._id : '',
-            title: values.title,
-            description: values.description,
-            file: values.file,
-            action: values.action?.code,
-            screen: values.screen?.code,
-            placement: values.placement?.code ?? 'HOME',
-            priority: Number(values.priority) || 0,
-            couponCode: values.couponCode?.trim() || null,
-            startDate: values.startDate || null,
-            endDate: values.endDate || null,
-            isActive: values.isActive,
-          },
+    return mutate({
+      variables: {
+        bannerInput: {
+          _id: banner ? banner._id : '',
+          title: values.title,
+          description: values.description,
+          file: values.file,
+          action: values.action?.code,
+          screen: values.screen?.code,
+          placement: values.placement?.code ?? 'HOME',
+          priority: Number(values.priority) || 0,
+          couponCode: values.couponCode?.trim() || null,
+          startDate: values.startDate || null,
+          endDate: values.endDate || null,
+          isActive: values.isActive,
         },
-        onCompleted: () => {
-          showToast({
-            type: 'success',
-            title: t('Success'),
-            message: banner ? t('Banner updated') : t('Banner added'),
-            duration: 3000,
-          });
-          resetForm();
-          onHide();
-        },
-        onError: (error) => {
-          let message = '';
-          try {
-            message = error.graphQLErrors[0]?.message;
-          } catch (err) {
-            message = t('ActionFailedTryAgain');
-          }
-          showToast({
-            type: 'error',
-            title: t('Error'),
-            message,
-            duration: 3000,
-          });
-        },
-      });
-    }
+      },
+      onCompleted: () => {
+        showToast({
+          type: 'success',
+          title: t('Success'),
+          message: banner ? t('Banner updated') : t('Banner added'),
+          duration: 3000,
+        });
+        resetForm();
+        onHide();
+      },
+      onError: (error) => {
+        let message = '';
+        try {
+          message = error.graphQLErrors[0]?.message;
+        } catch (err) {
+          message = t('ActionFailedTryAgain');
+        }
+        showToast({
+          type: 'error',
+          title: t('Error'),
+          message,
+          duration: 3000,
+        });
+      },
+    });
   };
   return (
-    <FormDialog
-      title={
-        <>
-          {' '}
-          {banner ? t('Edit') : t('Add')} {t('Banner')}{' '}
-        </>
-      }
-      visible={isAddBannerVisible}
-      position={position}
-      onHide={onHide}
-      className=""
+    <Formik
+      initialValues={initialValues}
+      validationSchema={BannerSchema}
+      onSubmit={handleSubmit}
+      enableReinitialize
+      validateOnChange={false} // Disable validation on change
+      validateOnBlur={false} // Disable validation on blur
     >
-      <div className="flex h-full w-full items-center justify-start">
-        <div className="h-full w-full">
-          <div className="flex flex-col gap-2">
-            <div>
-              <Formik
-                initialValues={initialValues}
-                validationSchema={BannerSchema}
-                onSubmit={handleSubmit}
-                enableReinitialize
-                validateOnChange={false} // Disable validation on change
-                validateOnBlur={false} // Disable validation on blur
-              >
-                {({
-                  values,
-                  errors,
-                  handleChange,
-                  handleSubmit,
-                  setFieldValue,
-                }) => {
-                  return (
-                    <Form onSubmit={handleSubmit}>
-                      <div className="space-y-4">
-                        <div>
-                          <CustomTextField
-                            type="text"
-                            name="title"
-                            placeholder={t('Title')}
-                            maxLength={35}
-                            value={values.title}
-                            onChange={handleChange}
-                            showLabel={true}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'title',
-                                errors?.title,
-                                BannersErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <CustomTextField
-                            type="text"
-                            name="description"
-                            placeholder={t('Description')}
-                            maxLength={35}
-                            value={values.description}
-                            onChange={handleChange}
-                            showLabel={true}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'description',
-                                errors?.description,
-                                BannersErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
+      {({ values, errors, handleChange, handleSubmit, setFieldValue }) => {
+        return (
+          <Form onSubmit={handleSubmit} className="banner-editor">
+            <div className="banner-editor-grid">
+              <div className="banner-editor-fields">
+                <section className="banner-editor-card">
+                  <h2>Banner details</h2>
+                  <p className="banner-editor-hint">
+                    Add the title and description customers will see.
+                  </p>
+                  <div className="banner-editor-pair">
+                    <div>
+                      <CustomTextField
+                        type="text"
+                        name="title"
+                        placeholder={t('Title')}
+                        maxLength={35}
+                        value={values.title}
+                        onChange={handleChange}
+                        showLabel={true}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'title',
+                            errors?.title,
+                            BannersErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <CustomTextField
+                        type="text"
+                        name="description"
+                        placeholder={t('Description')}
+                        maxLength={35}
+                        value={values.description}
+                        onChange={handleChange}
+                        showLabel={true}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'description',
+                            errors?.description,
+                            BannersErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </section>
+                <section className="banner-editor-card">
+                  <h2>Destination</h2>
+                  <p className="banner-editor-hint">
+                    Choose where the banner appears and where a tap takes
+                    customers.
+                  </p>
+                  <div className="banner-editor-pair">
+                    <div>
+                      <CustomDropdownComponent
+                        placeholder={t('Actions')}
+                        options={ACTION_TYPES}
+                        showLabel={true}
+                        name="action"
+                        filter={false}
+                        selectedItem={values.action}
+                        setSelectedItem={(name, value) => {
+                          setFieldValue(name, value);
+                          setFieldValue('screen', null);
+                        }}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'action',
+                            errors?.action,
+                            BannersErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    </div>
 
-                        <div>
-                          <CustomDropdownComponent
-                            placeholder={t('Actions')}
-                            options={ACTION_TYPES}
-                            showLabel={true}
-                            name="action"
-                            filter={false}
-                            selectedItem={values.action}
-                            setSelectedItem={setFieldValue}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'action',
-                                errors?.action,
-                                BannersErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
+                    <div>
+                      <CustomDropdownComponent
+                        placeholder={t('Screen')}
+                        options={
+                          values.action?.code === 'Navigate Specific Restaurant'
+                            ? RESTAURANT_NAMES
+                            : values.action?.code === 'Navigate Specific Page'
+                              ? SCREEN_NAMES
+                              : []
+                        }
+                        showLabel={true}
+                        name="screen"
+                        // loading={loading}
+                        selectedItem={values.screen}
+                        setSelectedItem={setFieldValue}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'screen',
+                            errors?.screen,
+                            BannersErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    </div>
 
-                        <div>
-                          <CustomDropdownComponent
-                            placeholder={t('Screen')}
-                            options={
-                              values.action?.code ===
-                              'Navigate Specific Restaurant'
-                                ? RESTAURANT_NAMES
-                                : values.action?.code ===
-                                    'Navigate Specific Page'
-                                  ? SCREEN_NAMES
-                                  : []
-                            }
-                            showLabel={true}
-                            name="screen"
-                            // loading={loading}
-                            selectedItem={values.screen}
-                            setSelectedItem={setFieldValue}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'screen',
-                                errors?.screen,
-                                BannersErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
-
-                        <div>
-                          <CustomDropdownComponent
-                            placeholder={t('Placement')}
-                            options={PLACEMENT_OPTIONS}
-                            showLabel={true}
-                            name="placement"
-                            filter={false}
-                            selectedItem={values.placement}
-                            setSelectedItem={setFieldValue}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'placement',
-                                errors?.placement,
-                                BannersErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
-
-                        <div className="flex items-end gap-3">
-                          <div className="flex-1">
-                            <CustomTextField
-                              type="number"
-                              name="priority"
-                              placeholder={t('Priority')}
-                              value={String(values.priority)}
-                              onChange={handleChange}
-                              showLabel={true}
-                            />
-                          </div>
-                          <label className="flex items-center gap-2 pb-2 text-sm">
-                            <input
-                              type="checkbox"
-                              name="isActive"
-                              checked={values.isActive}
-                              onChange={(e) =>
-                                setFieldValue('isActive', e.target.checked)
-                              }
-                            />
-                            {t('Active')}
-                          </label>
-                        </div>
-
-                        <div>
-                          <CustomTextField
-                            type="date"
-                            name="startDate"
-                            placeholder={t('Start Date')}
-                            value={values.startDate}
-                            onChange={(e) =>
-                              setFieldValue('startDate', e.target.value)
-                            }
-                            showLabel={true}
-                          />
-                        </div>
-
-                        <div>
-                          <CustomTextField
-                            type="date"
-                            name="endDate"
-                            placeholder={t('End Date')}
-                            value={values.endDate}
-                            onChange={(e) =>
-                              setFieldValue('endDate', e.target.value)
-                            }
-                            showLabel={true}
-                            style={{
-                              borderColor: onErrorMessageMatcher(
-                                'endDate',
-                                errors?.endDate,
-                                BannersErrors
-                              )
-                                ? 'red'
-                                : '',
-                            }}
-                          />
-                        </div>
-
-                        <div>
-                          <CustomTextField
-                            type="text"
-                            name="couponCode"
-                            placeholder={t('Coupon Code')}
-                            maxLength={35}
-                            value={values.couponCode}
-                            onChange={handleChange}
-                            showLabel={true}
-                          />
-                        </div>
-
-                        <div
-                          className={`${
-                            errors.file && !values.file
-                              ? 'border-red-500'
-                              : 'border-gray-200 dark:border-dark-600'
-                          } rounded-lg border p-4`}
-                        >
-                          <CustomUploadImageComponent
-                            key={'file'}
-                            name="file"
-                            title={t('Upload file')}
-                            fileTypes={[
-                              'image/jpg',
-                              'image/jpeg',
-                              'image/png',
-                              'image/webp',
-                              'image/gif',
-                              'video/mp4',
-                              'video/webm',
-                            ]}
-                            onSetImageUrl={setFieldValue}
-                            showExistingImage={banner ? true : false}
-                            existingImageUrl={banner && values.file}
-                          />
-                        </div>
-
-                        <div className="m-4 flex justify-end">
-                          <CustomButton
-                            className="h-10 w-fit border dark:border-dark-600 border-gray-300 bg-black px-8 text-white"
-                            label={banner ? t('Update') : t('Add')}
-                            type="submit"
-                            loading={mutationLoading}
-                          />
-                        </div>
+                    <div>
+                      <CustomDropdownComponent
+                        placeholder={t('Placement')}
+                        options={PLACEMENT_OPTIONS}
+                        showLabel={true}
+                        name="placement"
+                        filter={false}
+                        selectedItem={values.placement}
+                        setSelectedItem={setFieldValue}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'placement',
+                            errors?.placement,
+                            BannersErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </section>
+                <section className="banner-editor-card">
+                  <h2>Publishing &amp; schedule</h2>
+                  <p className="banner-editor-hint">
+                    Control availability and display order. Leave dates empty to
+                    run without a schedule.
+                  </p>
+                  <div className="banner-editor-pair">
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <CustomTextField
+                          type="number"
+                          name="priority"
+                          placeholder={t('Priority')}
+                          value={String(values.priority)}
+                          onChange={handleChange}
+                          showLabel={true}
+                        />
                       </div>
-                    </Form>
-                  );
-                }}
-              </Formik>
+                      <label className="flex items-center gap-2 pb-2 text-sm">
+                        <input
+                          type="checkbox"
+                          name="isActive"
+                          checked={values.isActive}
+                          onChange={(e) =>
+                            setFieldValue('isActive', e.target.checked)
+                          }
+                        />
+                        {t('Active')}
+                      </label>
+                    </div>
+
+                    <div>
+                      <CustomTextField
+                        type="date"
+                        name="startDate"
+                        placeholder={t('Start Date')}
+                        value={values.startDate}
+                        onChange={(e) =>
+                          setFieldValue('startDate', e.target.value)
+                        }
+                        showLabel={true}
+                      />
+                    </div>
+
+                    <div>
+                      <CustomTextField
+                        type="date"
+                        name="endDate"
+                        placeholder={t('End Date')}
+                        value={values.endDate}
+                        onChange={(e) =>
+                          setFieldValue('endDate', e.target.value)
+                        }
+                        showLabel={true}
+                        style={{
+                          borderColor: onErrorMessageMatcher(
+                            'endDate',
+                            errors?.endDate,
+                            BannersErrors
+                          )
+                            ? 'red'
+                            : '',
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <CustomTextField
+                        type="text"
+                        name="couponCode"
+                        placeholder={t('Coupon Code')}
+                        maxLength={35}
+                        value={values.couponCode}
+                        onChange={handleChange}
+                        showLabel={true}
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
+              <aside className="banner-editor-card banner-editor-media">
+                <h2>Banner media</h2>
+                <p className="banner-editor-hint">
+                  Upload an image or video for your promotion.
+                </p>
+                <div
+                  className={`${
+                    errors.file && !values.file
+                      ? 'border-red-500'
+                      : 'border-gray-200 dark:border-dark-600'
+                  } rounded-lg border p-4`}
+                >
+                  <CustomUploadImageComponent
+                    key={'file'}
+                    name="file"
+                    title={t('Upload file')}
+                    fileTypes={[
+                      'image/jpg',
+                      'image/jpeg',
+                      'image/png',
+                      'image/webp',
+                      'image/gif',
+                      'video/mp4',
+                      'video/webm',
+                    ]}
+                    onSetImageUrl={setFieldValue}
+                    showExistingImage={banner ? true : false}
+                    existingImageUrl={banner && values.file}
+                  />
+                </div>
+
+                <p className="banner-editor-hint">
+                  JPG, PNG, WebP, GIF, MP4 or WebM.
+                </p>
+              </aside>
+              <div className="banner-editor-footer">
+                {Object.keys(errors).length > 0 && (
+                  <p role="alert" className="text-sm text-red-500">
+                    Please complete all required fields and check that priority
+                    is zero or more and the end date is on or after the start
+                    date.
+                  </p>
+                )}
+                <CustomButton
+                  type="button"
+                  label={t('Cancel')}
+                  onClick={onHide}
+                  disabled={mutationLoading}
+                  className="p-button-outlined"
+                />
+                <CustomButton
+                  className="h-10 w-fit border dark:border-dark-600 border-gray-300 bg-black px-8 text-white"
+                  label={banner ? t('Update') : t('Add Banner')}
+                  type="submit"
+                  loading={mutationLoading}
+                />
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </FormDialog>
+          </Form>
+        );
+      }}
+    </Formik>
   );
 };
 

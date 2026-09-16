@@ -44,7 +44,7 @@ export const vendorPayoutTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    vendorPayables(vendorId: ID, status: String, page: Int, limit: Int): VendorPayablesResult!
+    vendorPayables(vendorId: ID, restaurantId: ID, status: String, page: Int, limit: Int): VendorPayablesResult!
     vendorPayoutOverview: VendorPayoutOverview!
   }
 

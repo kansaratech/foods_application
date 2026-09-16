@@ -8,16 +8,20 @@ import { useUserContext } from "@/lib/context/global/user.context";
 import {
   IStoreEarnings,
   IStoreEarningsResponse,
+  IStoreVendorPayablesResponse,
 } from "@/lib/utils/interfaces/rider-earnings.interface";
 
 // Charts
 import { barDataItem } from "react-native-gifted-charts";
 
 // GraphQL
-import { STORE_EARNINGS_GRAPH } from "@/lib/apollo/queries/earnings.query";
+import {
+  STORE_EARNINGS_GRAPH,
+  STORE_VENDOR_PAYABLES,
+} from "@/lib/apollo/queries/earnings.query";
 
 // Hooks
-import { useLazyQuery } from "@apollo/client";
+import { useLazyQuery, useQuery } from "@apollo/client";
 import { useTranslation } from "react-i18next";
 
 // Expo
@@ -111,6 +115,22 @@ export default function EarningsMain() {
     }
   }, [userId]);
 
+  // Online (Cashfree) orders settle into LocalSell's own account first, so
+  // unlike COD — which the store already holds — LocalSell owes the store
+  // its net share of these. Nothing else in the app surfaces this, so it's
+  // otherwise invisible that this money is owed at all.
+  const { data: payablesData, loading: isPayablesLoading } =
+    useQuery<IStoreVendorPayablesResponse>(STORE_VENDOR_PAYABLES, {
+      variables: { restaurantId: userId, status: "PENDING" },
+      skip: !userId,
+      fetchPolicy: "cache-and-network",
+    });
+  const pendingPayables = payablesData?.vendorPayables.payables ?? [];
+  const pendingPayoutTotal = pendingPayables.reduce(
+    (sum, p) => sum + p.netPayable,
+    0,
+  );
+
   const earnings = storeEarningsData?.storeEarningsGraph.earnings ?? [];
 
   // Readable label for an earnings row (the API `_id` is the store id, not a date).
@@ -185,6 +205,33 @@ export default function EarningsMain() {
     <GestureHandlerRootView
       style={{ backgroundColor: appTheme.themeBackground, flex: 1 }}
     >
+      {(pendingPayoutTotal > 0 || isPayablesLoading) && (
+        <View
+          className="mx-4 mt-4 mb-1 rounded-2xl border p-4"
+          style={{ borderColor: appTheme.borderLineColor, backgroundColor: appTheme.cartContainer }}
+        >
+          <View className="flex-row items-center justify-between mb-1">
+            <View
+              className="rounded-full px-2.5 py-1"
+              style={{ backgroundColor: "#E6F1FD" }}
+            >
+              <Text style={{ color: "#0A5FB4", fontSize: 10, fontWeight: "700" }}>
+                {t("ONLINE · CASHFREE")}
+              </Text>
+            </View>
+            <Text
+              className="font-bold"
+              style={{ color: appTheme.fontMainColor, fontSize: 18 }}
+            >
+              {isPayablesLoading ? "..." : `${symbol}${formatNumber(pendingPayoutTotal)}`}
+            </Text>
+          </View>
+          <Text style={{ color: appTheme.fontSecondColor, fontSize: 12 }}>
+            {t("Owed to you by LocalSell")} · {pendingPayables.length}{" "}
+            {t("online order(s) not yet paid out")}
+          </Text>
+        </View>
+      )}
       <EarningsBarChart
         data={barData}
         width={700}

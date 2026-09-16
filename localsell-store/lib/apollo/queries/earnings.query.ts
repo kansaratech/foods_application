@@ -35,6 +35,26 @@ export const STORE_EARNINGS_GRAPH = gql`
   }
 `;
 
+// Cashfree ("online") orders settle into LocalSell's own account first, so
+// unlike COD (where the store already holds the cash), LocalSell owes the
+// store its net share here — this is what's still pending payout.
+export const STORE_VENDOR_PAYABLES = gql`
+  query StoreVendorPayables($restaurantId: ID!, $status: String) {
+    vendorPayables(restaurantId: $restaurantId, status: $status, limit: 100) {
+      total
+      payables {
+        _id
+        orderNumber
+        orderAmount
+        commissionAmount
+        netPayable
+        status
+        orderDeliveredAt
+      }
+    }
+  }
+`;
+
 export const STORE_GRAND_TOTAL_EARNINGS = gql`
   query Earnings(
     $userType: UserTypeEnum
