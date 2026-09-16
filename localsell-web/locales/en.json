@@ -1,4 +1,33 @@
 {
+  "AppHeader": {
+    "homeAriaLabel": "LocalSell home",
+    "deliverTo": "Deliver to",
+    "notAvailableYet": "Not available yet",
+    "setYourLocation": "Set your location",
+    "setYourDeliveryLocation": "Set your delivery location",
+    "notDeliveredYet": "LocalSell doesn't deliver to {address} yet",
+    "searchPlaceholder": "Search restaurants, stores or items",
+    "toggleLanguage": "Toggle language",
+    "cart": "Cart",
+    "cartWithCount": "Cart, {count} items",
+    "profile": "Profile",
+    "myOrders": "My orders",
+    "getHelp": "Get help",
+    "logOut": "Log out",
+    "logOutConfirmTitle": "Log out of LocalSell?",
+    "cancel": "Cancel",
+    "loginSignup": "Log in / Sign up"
+  },
+  "LocationPopover": {
+    "ariaLabel": "Choose delivery location",
+    "title": "Set your delivery location",
+    "close": "Close",
+    "currentlyLabel": "Currently:",
+    "gettingLocation": "Getting your location…",
+    "useCurrentLocation": "Use my current location",
+    "searchPlaceholder": "Search area, society, landmark…",
+    "noMatches": "No matches — try a nearby landmark."
+  },
   "loading_label": "Loading...",
   "service_area_label": "Service area",
   "select_service_area_placeholder": "Select service area",

@@ -4,7 +4,7 @@ import cartStyles from "@/lib/ui/useable-components/cart/cart.module.css";
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Sidebar } from "primereact/sidebar";
 import { Menu } from "primereact/menu";
 import { Dialog } from "primereact/dialog";
@@ -87,14 +87,15 @@ function LocationButton({
   className?: string;
   unavailable?: boolean;
 }) {
+  const t = useTranslations("AppHeader");
   return (
     <button
       type="button"
       onClick={onClick}
       title={
         unavailable
-          ? `LocalSell doesn't deliver to ${address} yet`
-          : address || "Set your delivery location"
+          ? t("notDeliveredYet", { address })
+          : address || t("setYourDeliveryLocation")
       }
       className={`group flex items-center gap-2 rounded-full border px-3 py-1.5 text-left transition hover:border-[#1c5bc7] dark:border-gray-700 ${
         unavailable ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30" : "border-slate-200"
@@ -114,10 +115,10 @@ function LocationButton({
               : "text-slate-400 dark:text-gray-500"
           }`}
         >
-          {unavailable ? "Not available yet" : "Deliver to"}
+          {unavailable ? t("notAvailableYet") : t("deliverTo")}
         </span>
         <span className="truncate text-[13px] font-semibold text-slate-800 dark:text-gray-100">
-          {address ? shortAddress(address) : "Set your location"}
+          {address ? shortAddress(address) : t("setYourLocation")}
         </span>
       </span>
       <Icon
@@ -138,6 +139,7 @@ function LocationButton({
 export default function AppHeader() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("AppHeader");
   const [, startTransition] = useTransition();
 
   const { setIsAuthModalVisible, setActivePanel, authToken } = useAuth();
@@ -315,7 +317,7 @@ export default function AppHeader() {
         <Link
           href="/"
           className="flex shrink-0 items-center"
-          aria-label="LocalSell home"
+          aria-label={t("homeAriaLabel")}
         >
           <Logo fillColor="#000000" darkmode="#FFFFFF" />
         </Link>
@@ -346,8 +348,8 @@ export default function AppHeader() {
               onFocus={() => {
                 if (searchTerm.trim().length >= 2) runSearch(searchTerm);
               }}
-              placeholder="Search restaurants, stores or items"
-              aria-label="Search restaurants, stores or items"
+              placeholder={t("searchPlaceholder")}
+              aria-label={t("searchPlaceholder")}
               autoComplete="off"
               className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
             />
@@ -378,7 +380,7 @@ export default function AppHeader() {
             type="button"
             onClick={toggleLocale}
             className="transition hover:text-[#16293f] dark:hover:text-blue-300"
-            aria-label="Toggle language"
+            aria-label={t("toggleLanguage")}
           >
             <span className={isHindi ? "text-[#16293f] dark:text-blue-300" : ""}>
               हिन्दी
@@ -397,11 +399,13 @@ export default function AppHeader() {
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart"}
+            aria-label={
+              cartCount > 0 ? t("cartWithCount", { count: cartCount }) : t("cart")
+            }
             className="relative flex items-center gap-1.5 transition hover:text-[#16293f] dark:hover:text-blue-300"
           >
             <Icon icon={faCartShopping} size={16} />
-            <span className="hidden sm:inline">Cart</span>
+            <span className="hidden sm:inline">{t("cart")}</span>
             {cartCount > 0 && (
               <span
                 className="absolute -right-2 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white sm:static sm:ml-0.5 sm:h-5 sm:min-w-[20px]"
@@ -445,20 +449,20 @@ export default function AppHeader() {
                 className="mt-2 dark:bg-gray-800 dark:text-white"
                 model={[
                   {
-                    label: "Profile",
+                    label: t("profile"),
                     command: () => router.push("/profile"),
                   },
                   {
-                    label: "My orders",
+                    label: t("myOrders"),
                     command: () => router.push("/profile/order-history"),
                   },
                   {
-                    label: "Get help",
+                    label: t("getHelp"),
                     command: () => router.push("/profile/getHelp"),
                   },
                   { separator: true },
                   {
-                    label: "Log out",
+                    label: t("logOut"),
                     command: () => setIsLogoutOpen(true),
                   },
                 ]}
@@ -473,7 +477,7 @@ export default function AppHeader() {
               }}
               className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
             >
-              Log in / Sign up
+              {t("loginSignup")}
             </button>
           )}
         </div>
@@ -514,7 +518,7 @@ export default function AppHeader() {
         className="w-[92%] max-w-sm rounded-xl bg-white px-6 dark:bg-gray-800 dark:text-white"
         header={
           <span className="block w-full text-center text-lg font-bold">
-            Log out of LocalSell?
+            {t("logOutConfirmTitle")}
           </span>
         }
         headerClassName="!justify-center dark:bg-gray-800"
@@ -525,7 +529,7 @@ export default function AppHeader() {
             onClick={() => setIsLogoutOpen(false)}
             className="w-1/2 rounded-full border border-slate-300 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 dark:border-gray-600 dark:text-white"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -534,7 +538,7 @@ export default function AppHeader() {
             style={{ backgroundColor: ORANGE }}
           >
             <Icon icon={faSignOutAlt} size={14} />
-            Log out
+            {t("logOut")}
           </button>
         </div>
       </Dialog>

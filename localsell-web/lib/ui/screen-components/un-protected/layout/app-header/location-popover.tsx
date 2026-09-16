@@ -2,6 +2,7 @@
 
 import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLocationCrosshairs,
@@ -31,6 +32,7 @@ export default function LocationPopover({
   currentAddress: string;
   anchorClassName?: string;
 }) {
+  const t = useTranslations("LocationPopover");
   const {
     predictions,
     searching,
@@ -106,16 +108,16 @@ export default function LocationPopover({
       ref={panelRef}
       className={`absolute z-50 mt-2 w-[min(92vw,360px)] rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_20px_60px_rgba(15,23,42,0.18)] dark:border-gray-700 dark:bg-gray-900 ${anchorClassName}`}
       role="dialog"
-      aria-label="Choose delivery location"
+      aria-label={t("ariaLabel")}
     >
       <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-semibold text-slate-900 dark:text-white">
-          Set your delivery location
+          {t("title")}
         </span>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("close")}
           className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-gray-800"
         >
           <FontAwesomeIcon icon={faXmark} style={{ width: 14, height: 14 }} />
@@ -124,7 +126,7 @@ export default function LocationPopover({
 
       {currentAddress && (
         <p className="mb-2 truncate rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-gray-800 dark:text-gray-400">
-          Currently:{" "}
+          {t("currentlyLabel")}{" "}
           <span className="font-medium text-slate-700 dark:text-gray-200">
             {currentAddress}
           </span>
@@ -142,7 +144,7 @@ export default function LocationPopover({
         ) : (
           <FontAwesomeIcon icon={faLocationCrosshairs} />
         )}
-        {locating ? "Getting your location…" : "Use my current location"}
+        {locating ? t("gettingLocation") : t("useCurrentLocation")}
       </button>
 
       <div className="relative">
@@ -158,7 +160,7 @@ export default function LocationPopover({
             setTerm(e.target.value);
             search(e.target.value);
           }}
-          placeholder="Search area, society, landmark…"
+          placeholder={t("searchPlaceholder")}
           className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
         />
         {searching && <BrandLoader variant="inline" size={20} />}
@@ -197,7 +199,7 @@ export default function LocationPopover({
         term.trim().length >= 3 &&
         predictions.length === 0 && (
           <p className="mt-2 px-1 text-xs text-slate-400">
-            No matches — try a nearby landmark.
+            {t("noMatches")}
           </p>
         )}
     </div>

@@ -1,4 +1,33 @@
 {
+  "AppHeader": {
+    "homeAriaLabel": "लोकलसेल होम",
+    "deliverTo": "डिलीवरी पता",
+    "notAvailableYet": "अभी उपलब्ध नहीं",
+    "setYourLocation": "अपना स्थान सेट करें",
+    "setYourDeliveryLocation": "अपना डिलीवरी स्थान सेट करें",
+    "notDeliveredYet": "लोकलसेल अभी {address} पर डिलीवरी नहीं करता",
+    "searchPlaceholder": "रेस्तरां, स्टोर या आइटम खोजें",
+    "toggleLanguage": "भाषा बदलें",
+    "cart": "कार्ट",
+    "cartWithCount": "कार्ट, {count} आइटम",
+    "profile": "प्रोफ़ाइल",
+    "myOrders": "मेरे ऑर्डर",
+    "getHelp": "सहायता प्राप्त करें",
+    "logOut": "लॉग आउट",
+    "logOutConfirmTitle": "लोकलसेल से लॉग आउट करें?",
+    "cancel": "रद्द करें",
+    "loginSignup": "लॉग इन / साइन अप"
+  },
+  "LocationPopover": {
+    "ariaLabel": "डिलीवरी स्थान चुनें",
+    "title": "अपना डिलीवरी स्थान सेट करें",
+    "close": "बंद करें",
+    "currentlyLabel": "वर्तमान में:",
+    "gettingLocation": "आपका स्थान प्राप्त किया जा रहा है…",
+    "useCurrentLocation": "मेरा वर्तमान स्थान उपयोग करें",
+    "searchPlaceholder": "क्षेत्र, सोसाइटी, लैंडमार्क खोजें…",
+    "noMatches": "कोई मेल नहीं मिला — नज़दीकी लैंडमार्क आज़माएँ।"
+  },
   "loading_label": "लोड हो रहा है...",
   "service_area_label": "सेवा क्षेत्र",
   "select_service_area_placeholder": "सेवा क्षेत्र चुनें",
