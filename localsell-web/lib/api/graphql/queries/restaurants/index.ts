@@ -136,6 +136,32 @@ export const NEAR_BY_RESTAURANTS_PREVIEW = gql`
   }
 `;
 
+// Paginated variant of nearByRestaurants (Issue 11) — the resolver accepts
+// page/limit so the caller can page through results instead of fetching the
+// full serviceable list in one response.
+export const NEAR_BY_RESTAURANTS_PAGINATED = gql`
+  ${RESTAURANTS_FRAGMENT}
+  query RestaurantsPaginated(
+    $latitude: Float
+    $longitude: Float
+    $shopType: String
+    $page: Int
+    $limit: Int
+  ) {
+    nearByRestaurantsPreview(
+      latitude: $latitude
+      longitude: $longitude
+      shopType: $shopType
+      page: $page
+      limit: $limit
+    ) {
+      restaurants {
+        ...RestaurantPreviewFields
+      }
+    }
+  }
+`;
+
 export const SEARCH_SUGGESTIONS = gql`
   ${RESTAURANTS_FRAGMENT}
   query SearchSuggestions(
