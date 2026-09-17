@@ -548,6 +548,40 @@ const Order = ({
           </View>
         )}
 
+        {/* Customer — always shown so the store can confirm/call the
+            account holder, separate from the optional recipient override
+            below (someone ordering on a different person's behalf). */}
+        {order?.user && (
+          <TouchableOpacity
+            className="py-2"
+            disabled={!order.user.phone}
+            onPress={() =>
+              order.user.phone && Linking.openURL(`tel:${order.user.phone}`)
+            }
+          >
+            <Text
+              style={{
+                color: secondaryText,
+                fontSize: 14,
+                fontWeight: "600",
+              }}
+            >
+              {t("Customer")}
+            </Text>
+            <Text
+              style={{
+                color: appTheme.fontMainColor,
+                fontSize: 16,
+                fontWeight: "500",
+                marginTop: 4,
+              }}
+            >
+              {order.user.name}
+              {order.user.phone ? ` · ${order.user.phone}` : ""}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Recipient contact — set when the customer ordered for someone
             else, so the store can reach the actual recipient instead. */}
         {order?.recipientPhone && (
