@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ActionMenu } from '@/lib/ui/screen-components/protected/super-admin/users/view/main/ActionMenu';
 import { IUserResponse } from '@/lib/utils/interfaces/users.interface';
+import { formatCurrency } from '@/lib/utils/methods/currency';
 import {
   customerDate,
   customerMethod,
@@ -69,19 +70,13 @@ export const USERS_TABLE_COLUMNS = (
   {
     headerName: 'Orders',
     propertyName: 'orders',
-    body: () => (
-      <span title="Order totals are not available in the customer directory">
-        ?
-      </span>
-    ),
+    body: (user: IUserResponse) => <span>{user.orders ?? 0}</span>,
   },
   {
     headerName: 'Total spent',
     propertyName: 'totalSpent',
-    body: () => (
-      <span title="Spending totals are not available in the customer directory">
-        ?
-      </span>
+    body: (user: IUserResponse) => (
+      <span>{formatCurrency(user.totalSpent ?? 0)}</span>
     ),
   },
   {

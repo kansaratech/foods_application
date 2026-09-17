@@ -56,6 +56,10 @@ model User {
   otpExpiresAt           DateTime?
   permissions            Json?
   tokenVersion           Int       @default(0)
+  // Stamped on every successful login (all types/branches) — the admin
+  // Customers directory's "Last active" column read this field but it never
+  // existed, so every row showed "?" (Issue: customers list question marks).
+  lastLogin              DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
@@ -132,6 +136,7 @@ model Cuisine {
 }
 
 model Restaurant {
+  assignedRiders RiderProfile[] @relation("RiderAssignedStore")
   id                    String    @id @default(cuid())
   ownerId               String
   name                  String
@@ -933,6 +938,8 @@ model RiderProfile {
   withdrawnWalletAmount Float   @default(0)
   // INDEPENDENT | STORE_ASSIGNED
   employmentType        String  @default("INDEPENDENT")
+  assignedStoreId       String?
+  assignedStore         Restaurant? @relation("RiderAssignedStore", fields: [assignedStoreId], references: [id], onDelete: SetNull)
 
   // PENDING | APPROVED | REJECTED — every new rider (admin-created or a
   // self-registration from the app) starts PENDING and cannot go online or
@@ -947,6 +954,7 @@ model RiderProfile {
   zone Zone? @relation(fields: [zoneId], references: [id])
 
   @@index([zoneId])
+  @@index([assignedStoreId])
 }
 
 model RiderDocument {

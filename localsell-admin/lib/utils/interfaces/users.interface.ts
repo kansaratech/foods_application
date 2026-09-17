@@ -25,6 +25,8 @@ export interface IUserResponse {
   status: string;
   lastLogin: string;
   registrationMethod: string;
+  orders: number;
+  totalSpent: number;
   isOrderNotification: boolean;
   isOfferNotification: boolean;
   createdAt: string;

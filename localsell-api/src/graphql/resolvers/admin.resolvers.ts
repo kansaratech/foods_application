@@ -417,15 +417,20 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
       // Draft saves stay near-validation-free (#52) — no GSTIN format check here,
       // just persist whatever the wizard has so far.
       const gst = resolveVendorGstFields(input);
-      const phone = normalizeIndianPhone(input.phoneNumber);
-      // Friendly conflict message instead of a raw `User_phone_key` Prisma error.
-      await assertPhoneFree(phone, input._id);
+      // A country-code-only value is the untouched phone input, not a number.
+      const phoneDigits = (input.phoneNumber ?? '').replace(/\D/g, '');
+      const phone = !phoneDigits || phoneDigits === '91'
+        ? undefined
+        : normalizeIndianPhone(input.phoneNumber);
 
       // The one thing a draft must have: something in it. An entirely blank
       // "Save draft" shouldn't create a ghost vendor row.
-      if (!input._id && !email && !phone && !input.name?.trim() && !input.firstName?.trim() && !input.businessName?.trim()) {
+      if (!input._id && !email && !phone && !input.name?.trim() && !input.firstName?.trim() && !input.lastName?.trim() && !input.businessName?.trim()) {
         throw userInputError('Add at least a name, email or phone before saving a draft.');
       }
+
+      // Check conflicts only after rejecting an empty draft.
+      await assertPhoneFree(phone, input._id);
 
       const data = {
         email,
@@ -586,5 +591,26 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
     _id: (parent: User) => parent.id,
     favourite: (parent: User) => (Array.isArray(parent.favouriteRestaurantIds) ? (parent.favouriteRestaurantIds as string[]) : []),
     addresses: (parent: User) => prisma.address.findMany({ where: { userId: parent.id } }),
+    // No `registrationMethod` column ever existed on User — the Customers
+    // directory read `user.registrationMethod` (always undefined) with a
+    // fallback to `user.userType` ("CUSTOMER", never a real signup method),
+    // so every row showed "Unknown". Derive it from what's actually on file.
+    registrationMethod: (parent: User) => {
+      if (parent.appleId) return 'apple';
+      if (parent.phone && !parent.email) return 'phone';
+      if (parent.email) return 'email';
+      return null;
+    },
+    // Orders/spend were hardcoded "?" placeholders in the admin Customers
+    // directory ("not available in the customer directory") — real per-user
+    // aggregates now that a bulk query wasn't wired up for this simpler list.
+    orders: (parent: User) => prisma.order.count({ where: { userId: parent.id, orderStatus: { not: 'CANCELLED' } } }),
+    totalSpent: async (parent: User) => {
+      const result = await prisma.order.aggregate({
+        where: { userId: parent.id, orderStatus: { not: 'CANCELLED' } },
+        _sum: { orderAmount: true },
+      });
+      return result._sum.orderAmount ?? 0;
+    },
   },
 };

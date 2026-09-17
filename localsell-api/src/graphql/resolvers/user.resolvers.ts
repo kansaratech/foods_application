@@ -25,7 +25,14 @@ function favouriteList(user: User): string[] {
   return Array.isArray(user.favouriteRestaurantIds) ? (user.favouriteRestaurantIds as string[]) : [];
 }
 
+// Fire-and-forget — a failed timestamp write must never block or fail a
+// login. Powers the admin Customers directory's "Last active" column.
+function touchLastLogin(userId: string): void {
+  void prisma.user.update({ where: { id: userId }, data: { lastLogin: new Date() } }).catch(() => {});
+}
+
 function buildAuthPayload(user: User, isNewUser: boolean) {
+  touchLastLogin(user.id);
   const { token, expiresAt } = signAccessToken({
     userId: user.id,
     userType: user.userType,
@@ -100,6 +107,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         if (!user || !user.password || !(await comparePassword(args.password, user.password))) {
           throw userInputError('Invalid email or password');
         }
+        touchLastLogin(user.id);
         const { token, expiresAt } = signAccessToken({ userId: user.id, userType: user.userType, tokenVersion: user.tokenVersion });
         return {
           userId: user.id,
@@ -177,6 +185,7 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
         });
         isNewUser = true;
       }
+      touchLastLogin(user.id);
       const { token, expiresAt } = signAccessToken({ userId: user.id, userType: user.userType, tokenVersion: user.tokenVersion });
       return {
         userId: user.id,

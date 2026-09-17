@@ -312,6 +312,8 @@ export const generateDummyUsers = (count: number = 10): IUserResponse[] => {
       status: 'Loading...',
       lastLogin: 'Loading...',
       registrationMethod: 'Loading...', // VALID (it exists in your interface!)
+      orders: 0,
+      totalSpent: 0,
 
       isOrderNotification: false,
       isOfferNotification: false,

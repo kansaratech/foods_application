@@ -12,6 +12,9 @@ export const GET_USERS = gql`
       status
       lastLogin
       notes
+      registrationMethod
+      orders
+      totalSpent
       addresses {
         location {
           coordinates
@@ -47,6 +50,9 @@ export const GET_USERS_PAGINATED = gql`
         status
         lastLogin
         notes
+        registrationMethod
+        orders
+        totalSpent
         addresses {
           location {
             coordinates

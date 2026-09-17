@@ -66,6 +66,13 @@ export const adminTypeDefs = /* GraphQL */ `
     notificationToken: String
     favourite: [String!]!
     addresses: [Address!]!
+    # How the account signed up — derived server-side (appleId/phone/email
+    # on file), since no registrationMethod column is ever stored.
+    registrationMethod: String
+    # Order count / lifetime spend for the Customers directory. Only counts
+    # orders that actually charged the customer (excludes cancelled).
+    orders: Int!
+    totalSpent: Float!
   }
 
   type UsersPaginated {
