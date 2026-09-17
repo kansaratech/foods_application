@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Skeleton } from "primereact/skeleton";
 import { useMutation } from "@apollo/client";
 import { ADD_FAVOURITE_RESTAURANT } from "@/lib/api/graphql/mutations/restaurant";
-import { GET_USER_PROFILE } from "@/lib/api/graphql";
+import { GET_USER_PROFILE, GET_USER_FAVOURITE } from "@/lib/api/graphql";
 import { useQuery } from "@apollo/client";
 
 // Context & Hooks
@@ -235,7 +235,9 @@ export default function RestaurantDetailsScreen() {
         console.error("Error adding favorite:", error);
         setIsLiked((prev) => !prev); // Revert the like state on error
       },
-      refetchQueries: [{ query: GET_USER_PROFILE }],
+      // See store/index.tsx's identical refetch for why GET_USER_FAVOURITE is
+      // needed alongside GET_USER_PROFILE (Issue 109).
+      refetchQueries: [{ query: GET_USER_PROFILE }, { query: GET_USER_FAVOURITE }],
     },
   );
 

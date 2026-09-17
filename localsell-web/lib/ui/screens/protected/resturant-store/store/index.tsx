@@ -35,7 +35,7 @@ import FoodItemDetail from "@/lib/ui/useable-components/item-detail";
 import FoodCategorySkeleton from "@/lib/ui/useable-components/custom-skeletons/food-items.skeleton";
 import { useMutation } from "@apollo/client";
 import { ADD_FAVOURITE_RESTAURANT } from "@/lib/api/graphql/mutations/restaurant";
-import { GET_USER_PROFILE } from "@/lib/api/graphql";
+import { GET_USER_PROFILE, GET_USER_FAVOURITE } from "@/lib/api/graphql";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 import Confetti from "react-confetti";
 import CustomDialog from "@/lib/ui/useable-components/custom-dialog";
@@ -464,7 +464,12 @@ export default function StoreDetailsScreen() {
       onError: (error) => {
         console.error("Error toggling favorite:", error);
       },
-      refetchQueries: [{ query: GET_USER_PROFILE }],
+      // GET_USER_PROFILE drives this page's own heart icon; GET_USER_FAVOURITE
+      // is a separate cached query backing the Profile page's "Your
+      // Favourites" list — without also refetching it, the list stayed
+      // stale until a hard reload even though the toggle persisted fine
+      // (Issue 109).
+      refetchQueries: [{ query: GET_USER_PROFILE }, { query: GET_USER_FAVOURITE }],
     }
   );
 
