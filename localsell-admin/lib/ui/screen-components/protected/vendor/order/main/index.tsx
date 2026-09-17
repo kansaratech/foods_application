@@ -70,13 +70,17 @@ export default function OrderVendorMain() {
       (order: IExtendedOrder): IExtendedOrder => ({
         ...order,
         itemsTitle:
-          order.items
-            .map((item) => item.title)
+          (order?.items ?? [])
+            .map((item) => item?.title)
             .join(', ')
             .slice(0, 15) + '...',
+        // Pickup orders have no deliveryAddress at all — this crashed the
+        // whole screen's render (unguarded property access) the moment a
+        // pickup order appeared in the list.
         OrderdeliveryAddress:
-          order.deliveryAddress.deliveryAddress.toString().slice(0, 15) + '...',
-        DateCreated: order.createdAt.toString().slice(0, 10),
+          order?.deliveryAddress?.deliveryAddress?.toString()?.slice(0, 15) +
+          '...',
+        DateCreated: order?.createdAt?.toString()?.slice(0, 10),
       })
     );
   }, [data]);
