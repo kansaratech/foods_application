@@ -458,10 +458,17 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
               addon.isRequired && (addon.quantityMinimum ?? 0) < 1
                 ? 1
                 : (addon.quantityMinimum ?? 0);
+            // "Extra Toppings: at most 1" read as unenforced when the tag
+            // just said "Optional" with no cap shown at all (Issue 116) — a
+            // true multi-select group now says how many it allows.
+            const maxCapNote =
+              !isSingleSelect && (addon.quantityMaximum ?? 0) > 0
+                ? ` (${t("up_to")} ${addon.quantityMaximum})`
+                : "";
             const requiredTagText =
-              effectiveMin > 0
+              (effectiveMin > 0
                 ? `${effectiveMin} ${t("required")}`
-                : `${t("optional")}`;
+                : `${t("optional")}`) + maxCapNote;
 
             return (
               <ItemDetailSection
@@ -510,6 +517,7 @@ export default function FoodItemDetail(props: IFoodItemDetalComponentProps) {
                 options={addonOptions as Option[]}
                 requiredTag={requiredTagText}
                 showTag={true}
+                maxSelections={!isSingleSelect ? addon.quantityMaximum : null}
                 onOptionQuantityChange={
                   !isSingleSelect
                     ? (optionId, qty) =>

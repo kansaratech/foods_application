@@ -41,6 +41,11 @@ export interface SectionProps<T extends { _id: string }> {
   // selected option again. Only meaningful when the section is optional -
   // a required single-select (e.g. variation) must always keep a selection.
   allowDeselect?: boolean;
+  // Caps how many distinct options a multi-select group can have checked at
+  // once (addon.quantityMaximum, when > 1) — without this, "pick up to N"
+  // groups let a customer check any number, only to have the order rejected
+  // server-side at placeOrder time (Issue 116).
+  maxSelections?: number | null;
 }
 export interface AddonSectionProps<T extends { _id: string }> {
   title: string;

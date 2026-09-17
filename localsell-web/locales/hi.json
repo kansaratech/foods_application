@@ -763,6 +763,7 @@
   "select_variation": "वैरिएशन चुनें",
   "required": "आवश्यक",
   "optional": "वैकल्पिक",
+  "up_to": "अधिकतम",
   "unknown": "अज्ञात",
   "add_to_order": "ऑर्डर में जोड़ें",
   "view_on_map_tooltip": "मानचित्र पर {page} देखें",

@@ -49,6 +49,7 @@ export const ItemDetailSection = <
   showTag = false,
   onOptionQuantityChange,
   allowDeselect = false,
+  maxSelections = null,
 }: SectionProps<T>) => {
   // An optional single-pick group (allowDeselect) is rendered as a checkbox,
   // not a radio — a radio that can be clicked again to clear itself has no
@@ -58,11 +59,27 @@ export const ItemDetailSection = <
   // still clears the previous one (single-select), same as before.
   const singleSelectAsCheckbox = !multiple && allowDeselect;
 
+  const filteredMultiSelected = multiSelected
+    ? (multiSelected as T[]).filter((item) => !item.isOutOfStock)
+    : [];
+
+  // "Pick up to N" (quantityMaximum > 1) had no client-side cap at all — a
+  // customer could check every option and only discover the rejection at
+  // placeOrder, which already enforces this server-side (order.service.ts).
+  const atMax =
+    multiple &&
+    typeof maxSelections === "number" &&
+    filteredMultiSelected.length >= maxSelections;
+
   const handleSelect = (option: T) => {
     if (option.isOutOfStock) {
       return;
     }
     if (multiple) {
+      const alreadySelected = filteredMultiSelected.some(
+        (o) => o._id === option._id,
+      );
+      if (!alreadySelected && atMax) return;
       onMultiSelect &&
         onMultiSelect((prevSelected) => {
           const exists = (prevSelected as T[]).some(
@@ -80,9 +97,6 @@ export const ItemDetailSection = <
       onSingleSelect && onSingleSelect(option);
     }
   };
-  const filteredMultiSelected = multiSelected
-    ? (multiSelected as T[]).filter((item) => !item.isOutOfStock)
-    : [];
 
   // Mirrors the modal header's effectiveVariationPrice / the API's
   // effectivePrice — the discounted price when one is actually set and
@@ -134,8 +148,8 @@ export const ItemDetailSection = <
                 name={name}
                 checked={isChecked}
                 onChange={() => handleSelect(option)}
-                disabled={option.isOutOfStock}
-                className="accent-primary-color dark:accent-primary-color dark:bg-gray-700 dark:border-gray-600 "
+                disabled={option.isOutOfStock || (!isChecked && atMax)}
+                className="accent-primary-color dark:accent-primary-color dark:bg-gray-700 dark:border-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
               />
 
               {/* Label, quantity stepper & price */}

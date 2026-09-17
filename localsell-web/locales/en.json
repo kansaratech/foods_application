@@ -772,6 +772,7 @@
   "select_variation": "Select Variation",
   "required": "Required",
   "optional": "Optional",
+  "up_to": "up to",
   "unknown": "Unknown",
   "add_to_order": "Add to order",
   "view_on_map_tooltip": "View {page} on Map",
