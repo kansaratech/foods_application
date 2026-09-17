@@ -114,7 +114,15 @@ export function loadGoogleMapsScript(key: string): Promise<void>{
 // Format date from timestamp
 export const formatDateForCreatedAt = (timestamp: string) => {
   try {
-    const date = new Date(Number.parseInt(timestamp));
+    // `Number.parseInt` on an ISO date string ("2026-09-16T...") stops at
+    // the first non-digit and returns just the leading year (2026) — as a
+    // millisecond epoch that's ~1970, so every review misread as "~56 Years
+    // ago" (Issue 118). Only treat the value as a raw epoch when it's
+    // actually all digits; otherwise let Date parse it directly.
+    const date = /^\d+$/.test(timestamp)
+      ? new Date(Number(timestamp))
+      : new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "Unknown date";
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
 
