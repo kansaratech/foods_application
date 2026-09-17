@@ -3,6 +3,7 @@ import { prisma } from '../prisma/client';
 import { verifyCashfreeWebhookSignature } from '../services/cashfree.service';
 import { publishOrderUpdate } from '../graphql/resolvers/order.resolvers';
 import { notifyOrderEvent } from '../services/order-notify';
+import { pubsub, TOPICS } from '../utils/pubsub';
 
 /**
  * Cashfree Payment Gateway webhook.
@@ -32,7 +33,13 @@ cashfreeWebhookRouter.post('/', raw({ type: '*/*', limit: '1mb' }), async (req, 
   const rawBody: Buffer = Buffer.isBuffer(req.body) ? req.body : Buffer.from('');
 
   const config = await prisma.configuration.findFirst();
-  if (config?.cashfreeSecretKey) {
+  if (!config?.cashfreeSecretKey) {
+    // Fail closed: with no secret configured we cannot verify this request came
+    // from Cashfree at all, so treat it as untrusted rather than processing it.
+    console.error('[cashfree-webhook] no cashfreeSecretKey configured — rejecting unverifiable webhook');
+    return res.sendStatus(401);
+  }
+  {
     const signature = String(req.header('x-webhook-signature') ?? '');
     const timestamp = String(req.header('x-webhook-timestamp') ?? '');
     const ok = verifyCashfreeWebhookSignature(rawBody, timestamp, signature, config.cashfreeSecretKey);
@@ -65,6 +72,20 @@ cashfreeWebhookRouter.post('/', raw({ type: '*/*', limit: '1mb' }), async (req, 
       });
       await publishOrderUpdate(updated);
       notifyOrderEvent(updated.id, 'PAYMENT_CONFIRMED');
+
+      // Payment just confirmed — this is the first moment the store is allowed
+      // to see this order (placeOrder deliberately held it back for CASHFREE;
+      // see the matching gate there and in the restaurantOrders query).
+      notifyOrderEvent(updated.id, 'PLACED');
+      const restaurant = await prisma.restaurant.findUnique({ where: { id: updated.restaurantId } });
+      if (restaurant) {
+        await pubsub.publish(TOPICS.SUBSCRIBE_PLACE_ORDER(updated.restaurantId), {
+          subscribePlaceOrder: { userId: updated.userId, origin: 'order_service', order: updated },
+        });
+        await prisma.webNotification.create({
+          data: { userId: restaurant.ownerId, body: `New order #${updated.orderId} received`, navigateTo: '/orders' },
+        });
+      }
       console.log(`[cashfree-webhook] order ${orderId} marked PAID (cf_payment_id=${body.data?.payment?.cf_payment_id})`);
     } else if (body.type === 'PAYMENT_FAILED_WEBHOOK' || body.type === 'PAYMENT_USER_DROPPED_WEBHOOK') {
       if (order.paymentStatus === 'PAID') return; // a later successful retry already landed

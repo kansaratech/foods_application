@@ -64,6 +64,9 @@ export default function MenuMain() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [searchExpanded, setSearchExpanded] = useState<Record<string, boolean>>(
+    {},
+  );
   const [pendingDelete, setPendingDelete] = useState<{
     title: string;
     message: string;
@@ -77,6 +80,7 @@ export default function MenuMain() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setSearch(searchInput.trim());
+      setSearchExpanded({});
       setPage(1);
     }, 400);
     return () => clearTimeout(timeout);
@@ -129,8 +133,16 @@ export default function MenuMain() {
     onError: (e) => showMessage({ message: e.message, type: "danger" }),
   });
 
-  const toggleExpanded = (id: string) =>
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+  const isExpanded = (id: string) =>
+    search ? (searchExpanded[id] ?? true) : Boolean(expanded[id]);
+
+  const toggleExpanded = (id: string) => {
+    if (search) {
+      setSearchExpanded((prev) => ({ ...prev, [id]: !(prev[id] ?? true) }));
+    } else {
+      setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+    }
+  };
 
   const confirmDeleteCategory = (category: ICategory) => {
     setPendingDelete({
@@ -168,9 +180,7 @@ export default function MenuMain() {
     const prices = food.variations.map((v) => v.price);
     const min = Math.min(...prices);
     const max = Math.max(...prices);
-    return min === max
-      ? format(min)
-      : `${t("from")} ${format(min)}`;
+    return min === max ? format(min) : `${t("from")} ${format(min)}`;
   };
 
   const renderFoodRow = (food: IFood, category: ICategory) => (
@@ -191,7 +201,11 @@ export default function MenuMain() {
               resizeMode="cover"
             />
           ) : (
-            <Ionicons name="fast-food-outline" size={18} color={appTheme.iconColor} />
+            <Ionicons
+              name="fast-food-outline"
+              size={18}
+              color={appTheme.iconColor}
+            />
           )}
         </View>
         <View className="flex-1">
@@ -223,7 +237,11 @@ export default function MenuMain() {
         <TouchableOpacity
           onPress={() => foodSheetRef.current?.open(category._id, food)}
         >
-          <Ionicons name="pencil-outline" size={18} color={appTheme.iconColor} />
+          <Ionicons
+            name="pencil-outline"
+            size={18}
+            color={appTheme.iconColor}
+          />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => confirmDeleteFood(food, category._id)}>
           <Ionicons name="trash-outline" size={18} color={appTheme.error} />
@@ -256,7 +274,11 @@ export default function MenuMain() {
                 resizeMode="cover"
               />
             ) : (
-              <Ionicons name="grid-outline" size={18} color={appTheme.iconColor} />
+              <Ionicons
+                name="grid-outline"
+                size={18}
+                color={appTheme.iconColor}
+              />
             )}
           </View>
           <Text
@@ -271,20 +293,24 @@ export default function MenuMain() {
           <TouchableOpacity
             onPress={() => categorySheetRef.current?.open(category)}
           >
-            <Ionicons name="pencil-outline" size={18} color={appTheme.iconColor} />
+            <Ionicons
+              name="pencil-outline"
+              size={18}
+              color={appTheme.iconColor}
+            />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => confirmDeleteCategory(category)}>
             <Ionicons name="trash-outline" size={18} color={appTheme.error} />
           </TouchableOpacity>
           <Ionicons
-            name={expanded[category._id] ? "chevron-up" : "chevron-down"}
+            name={isExpanded(category._id) ? "chevron-up" : "chevron-down"}
             size={18}
             color={appTheme.fontMainColor}
           />
         </View>
       </TouchableOpacity>
 
-      {expanded[category._id] && (
+      {isExpanded(category._id) && (
         <View>
           {category.foods.length === 0 ? (
             <Text
@@ -294,14 +320,35 @@ export default function MenuMain() {
               {t("No food items yet")}
             </Text>
           ) : (
-            category.foods.map((food) => renderFoodRow(food, category))
+            [...category.foods]
+              .sort((a, b) =>
+                search
+                  ? Number(
+                      b.title
+                        .toLocaleLowerCase()
+                        .includes(search.toLocaleLowerCase()),
+                    ) -
+                    Number(
+                      a.title
+                        .toLocaleLowerCase()
+                        .includes(search.toLocaleLowerCase()),
+                    )
+                  : 0,
+              )
+              .map((food) => renderFoodRow(food, category))
           )}
           <TouchableOpacity
             onPress={() => foodSheetRef.current?.open(category._id)}
             className="flex-row items-center gap-2 px-4 py-3"
           >
-            <Ionicons name="add-circle-outline" size={18} color={appTheme.primary} />
-            <Text style={{ color: appTheme.primary }}>{t("Add Food Item")}</Text>
+            <Ionicons
+              name="add-circle-outline"
+              size={18}
+              color={appTheme.primary}
+            />
+            <Text style={{ color: appTheme.primary }}>
+              {t("Add Food Item")}
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -326,7 +373,11 @@ export default function MenuMain() {
       </View>
       <View className="flex-row items-center gap-3">
         <TouchableOpacity onPress={() => addonSheetRef.current?.open(addon)}>
-          <Ionicons name="pencil-outline" size={18} color={appTheme.iconColor} />
+          <Ionicons
+            name="pencil-outline"
+            size={18}
+            color={appTheme.iconColor}
+          />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => confirmDeleteAddon(addon)}>
           <Ionicons name="trash-outline" size={18} color={appTheme.error} />
@@ -345,7 +396,10 @@ export default function MenuMain() {
             maxWidth: isDesktop ? 1120 : undefined,
           }}
         >
-          <View className="flex-row gap-2 p-1.5 rounded-2xl" style={{ backgroundColor: appTheme.sidebarIconBackground }}>
+          <View
+            className="flex-row gap-2 p-1.5 rounded-2xl"
+            style={{ backgroundColor: appTheme.sidebarIconBackground }}
+          >
             <TouchableOpacity
               onPress={() => setActiveTab("menu")}
               className="flex-1 py-3 rounded-xl items-center"
@@ -359,7 +413,9 @@ export default function MenuMain() {
               <Text
                 style={{
                   color:
-                    activeTab === "menu" ? appTheme.black : appTheme.fontMainColor,
+                    activeTab === "menu"
+                      ? appTheme.black
+                      : appTheme.fontMainColor,
                 }}
               >
                 {t("Menu")}
@@ -392,7 +448,8 @@ export default function MenuMain() {
             {activeTab === "menu" ? (
               <TextInput
                 className="flex-1 h-12 rounded-xl border px-4"
-                placeholder={t("Search categories")}
+                placeholder={t("Search food items or categories")}
+                accessibilityLabel={t("Search food items or categories")}
                 placeholderTextColor={appTheme.fontSecondColor}
                 style={{ color: appTheme.fontSecondColor }}
                 value={searchInput}
@@ -421,11 +478,18 @@ export default function MenuMain() {
             loading && categories.length === 0 ? (
               <SpinnerComponent />
             ) : categories.length === 0 ? (
-              <NoRecordFound msg="No categories yet" />
+              <NoRecordFound
+                msg={
+                  search
+                    ? "No matching food items or categories"
+                    : "No categories yet"
+                }
+              />
             ) : (
               <>
                 <FlatList
                   data={categories}
+                  extraData={{ expanded, searchExpanded, search }}
                   keyExtractor={(item) => item._id}
                   renderItem={renderCategory}
                   contentContainerStyle={{ paddingBottom: 32 }}
@@ -440,7 +504,9 @@ export default function MenuMain() {
                         name="chevron-back"
                         size={20}
                         color={
-                          page <= 1 ? appTheme.fontSecondColor : appTheme.primary
+                          page <= 1
+                            ? appTheme.fontSecondColor
+                            : appTheme.primary
                         }
                       />
                     </TouchableOpacity>
@@ -449,7 +515,9 @@ export default function MenuMain() {
                     </Text>
                     <TouchableOpacity
                       disabled={page >= totalPages}
-                      onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onPress={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                     >
                       <Ionicons
                         name="chevron-forward"

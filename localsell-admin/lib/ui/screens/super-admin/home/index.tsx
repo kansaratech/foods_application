@@ -7,6 +7,7 @@ import { useContext, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
+import { useLocale, useTranslations } from 'next-intl';
 import {
   dateString,
   dateValue,
@@ -61,11 +62,11 @@ const CARD =
   'rounded-xl border border-slate-200 bg-white dark:border-dark-600 dark:bg-dark-900';
 
 const PRESETS = [
-  { label: 'Today', value: 'today', days: 0 },
-  { label: 'Last 7 days', value: '7', days: 6 },
-  { label: 'Last 30 days', value: '30', days: 29 },
-  { label: 'This month', value: 'month', days: -1 },
-  { label: 'Custom', value: 'custom', days: -1 },
+  { label: 'today', value: 'today', days: 0 },
+  { label: 'last_7_days', value: '7', days: 6 },
+  { label: 'last_30_days', value: '30', days: 29 },
+  { label: 'this_month', value: 'month', days: -1 },
+  { label: 'custom', value: 'custom', days: -1 },
 ];
 
 function rangeForPreset(preset: string): [Date, Date] {
@@ -143,17 +144,27 @@ function BreakdownChart({
   rows: { label: string; value: number }[];
   currency?: boolean;
 }) {
+  const t = useTranslations('home_dashboard');
   if (!rows.some((r) => r.value > 0))
     return (
       <p className="flex h-[260px] items-center justify-center text-sm text-slate-400">
-        No activity in this range yet
+        {t('no_activity_in_this_range_yet')}
       </p>
     );
   const data = {
-    labels: rows.map((r) => r.label.charAt(0) + r.label.slice(1).toLowerCase()),
+    labels: rows.map((r) => {
+      const type = r.label.toUpperCase().replace(/[ _-]/g, '');
+      const key = (
+        { DELIVERY: 'delivery', PICKUP: 'pickup', DINEIN: 'dine_in' } as Record<
+          string,
+          string
+        >
+      )[type];
+      return key ? t(key) : r.label;
+    }),
     datasets: [
       {
-        label: currency ? 'Revenue' : 'Orders',
+        label: currency ? t('revenue') : t('orders'),
         data: rows.map((r) => r.value),
         backgroundColor: '#1c5bc7',
         hoverBackgroundColor: '#17499e',
@@ -168,7 +179,9 @@ function BreakdownChart({
       tooltip: {
         callbacks: {
           label: (c: any) =>
-            currency ? money(c.parsed.y) : `${c.parsed.y} orders`,
+            currency
+              ? money(c.parsed.y)
+              : t('count_orders', { count: c.parsed.y }),
         },
       },
     },
@@ -192,6 +205,8 @@ function BreakdownChart({
 }
 
 export default function Home() {
+  const t = useTranslations('home_dashboard');
+  const locale = useLocale();
   const { isSuperAdminSidebarVisible } = useContext(LayoutContext);
   const { user } = useUserContext();
   const router = useRouter();
@@ -239,39 +254,39 @@ export default function Home() {
   );
   const pendingDocs = docsData?.pendingStoreDocuments?.total ?? 0;
 
-  const name = user?.name || user?.email?.split('@')[0] || 'Admin';
+  const name = user?.name || user?.email?.split('@')[0] || t('admin');
   const salesDelta = pctText(s.gmvToday ?? 0, s.gmvPrev ?? 0);
   const ordersDelta = pctText(s.ordersToday ?? 0, s.ordersPrev ?? 0);
 
   const metrics = [
     {
-      label: 'Gross sales',
+      label: t('gross_sales'),
       value: money(s.gmvToday),
       icon: faIndianRupeeSign,
       tone: 'blue',
       route: '/management/finance-report',
       delta: salesDelta,
-      hint: 'vs previous period',
+      hint: t('vs_previous_period'),
     },
     {
-      label: 'Orders',
+      label: t('orders'),
       value: s.ordersToday ?? 0,
       icon: faBagShopping,
       tone: 'blue',
       route: '/management/orders',
       delta: ordersDelta,
-      hint: 'vs previous period',
+      hint: t('vs_previous_period'),
     },
     {
-      label: 'Active orders',
+      label: t('active_orders'),
       value: s.activeOrders ?? 0,
       icon: faArrowTrendUp,
       tone: 'green',
       route: '/management/orders',
-      hint: 'live right now',
+      hint: t('live_right_now'),
     },
     {
-      label: 'Stores live',
+      label: t('stores_live'),
       value: `${s.activeStores ?? 0} / ${s.totalStores ?? 0}`,
       icon: faStore,
       tone: 'blue',
@@ -282,21 +297,21 @@ export default function Home() {
 
   const stakeholders = [
     {
-      label: 'Customers',
+      label: t('customers'),
       value: users.usersCount ?? 0,
       pct: change.usersPercent,
       route: '/general/users',
       icon: faUsers,
     },
     {
-      label: 'Vendors',
+      label: t('vendors'),
       value: users.vendorsCount ?? 0,
       pct: change.vendorsPercent,
       route: '/general/vendors',
       icon: faStore,
     },
     {
-      label: 'Stores',
+      label: t('stores'),
       value: users.restaurantsCount ?? 0,
       pct: change.restaurantsPercent,
       route: '/general/stores',
@@ -307,30 +322,30 @@ export default function Home() {
   const attention = [
     {
       icon: faReceipt,
-      title: 'Store documents to review',
-      sub: 'KYC / bank details awaiting approval',
+      title: t('store_documents_to_review'),
+      sub: t('kyc_bank_details_awaiting_approval'),
       count: pendingDocs,
       route: '/management/store-documents',
     },
     {
       icon: faStore,
-      title: 'Offline stores',
-      sub: 'Live stores that are currently unavailable',
+      title: t('offline_stores'),
+      sub: t('live_stores_that_are_currently_unavailable'),
       count: Math.max(0, (s.totalStores ?? 0) - (s.activeStores ?? 0)),
       route: '/general/stores',
     },
     {
       icon: faReceipt,
-      title: 'Unbilled commission',
-      sub: 'Delivered-order commission not yet billed',
+      title: t('unbilled_commission'),
+      sub: t('delivered_order_commission_not_yet_billed'),
       count: s.unbilledCommission ?? 0,
       money: true,
       route: '/management/finance/billing',
     },
     {
       icon: faUsers,
-      title: 'Waitlist to notify',
-      sub: 'Sign-ups waiting for a service area',
+      title: t('waitlist_to_notify'),
+      sub: t('sign_ups_waiting_for_a_service_area'),
       count: s.waitlistUnnotified ?? 0,
       route: '/management/waitlist',
     },
@@ -339,13 +354,13 @@ export default function Home() {
   const chartRows = chartMode === 'revenue' ? salesByType : ordersByType;
 
   const summary = [
-    ['Gross sales', money(s.gmvToday)],
-    ['Orders', String(s.ordersToday ?? 0)],
+    [t('gross_sales'), money(s.gmvToday)],
+    [t('orders'), String(s.ordersToday ?? 0)],
     [
-      'Avg. order value',
+      t('avg_order_value'),
       money(s.ordersToday ? (s.gmvToday || 0) / s.ordersToday : 0),
     ],
-    ['Unbilled commission', money(s.unbilledCommission)],
+    [t('unbilled_commission'), money(s.unbilledCommission)],
   ];
 
   const onPreset = (v: string) => {
@@ -376,7 +391,7 @@ export default function Home() {
       'Attention needed,Count',
       ...attention.map((a) => `${esc(a.title)},${a.money ? a.count : a.count}`),
       '',
-      `${chartMode === 'revenue' ? 'Revenue' : 'Orders'} by type,Value`,
+      `${chartMode === 'revenue' ? t('revenue') : t('orders')} by type,Value`,
       ...chartRows.map((r: any) => `${esc(r.label)},${r.value}`),
     ];
     const blob = new Blob([lines.join('\n')], {
@@ -399,20 +414,20 @@ export default function Home() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Welcome back, {name}
+                {t('welcome_back_name', { name })}
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Showing{' '}
-                {start.toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}{' '}
-                –{' '}
-                {end.toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
+                {t('showing_start_end', {
+                  start: start.toLocaleDateString(locale, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  }),
+                  end: end.toLocaleDateString(locale, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  }),
                 })}
               </p>
             </div>
@@ -423,7 +438,7 @@ export default function Home() {
               className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-primary hover:text-primary dark:border-dark-600 dark:bg-dark-900 dark:text-white"
             >
               <FontAwesomeIcon icon={faFileArrowDown} />
-              Export CSV
+              {t('export_csv')}
             </ActionButton>
           </div>
 
@@ -431,26 +446,26 @@ export default function Home() {
             className={`${CARD} flex flex-col gap-3 p-3 shadow-sm lg:flex-row lg:items-center lg:justify-between`}
           >
             <SegmentedControl
-              label="Reporting period"
+              label={t('reporting_period')}
               options={PRESETS.filter((p) => p.value !== 'custom').map(
                 (p) => p.value
               )}
               selectedTab={preset}
               setSelectedTab={onPreset}
               renderLabel={(value) =>
-                PRESETS.find((p) => p.value === value)?.label ?? value
+                t(PRESETS.find((p) => p.value === value)?.label ?? value)
               }
             />
 
             <div className="flex min-w-0 flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
               <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Custom range
+                {t('custom_range')}
               </span>
               <DateRangePicker
                 startDate={dateString(range[0])}
                 endDate={dateString(range[1])}
                 showLabel={false}
-                label="Reporting dates"
+                label={t('reporting_dates')}
                 onChange={(start, end) => {
                   const from = dateValue(start),
                     to = dateValue(end);
@@ -479,7 +494,7 @@ export default function Home() {
           <section className={`${CARD} p-5 shadow-sm`}>
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                Revenue &amp; orders breakdown
+                {t('revenue_orders_breakdown')}
               </h2>
               <div className="inline-flex rounded-md border border-slate-200 p-0.5 text-xs dark:border-dark-600">
                 {(['revenue', 'orders'] as const).map((mode) => (
@@ -493,7 +508,7 @@ export default function Home() {
                         : 'text-slate-500'
                     }`}
                   >
-                    {mode}
+                    {t(mode === 'revenue' ? 'revenue' : 'orders')}
                   </button>
                 ))}
               </div>
@@ -519,20 +534,20 @@ export default function Home() {
           <section className={`${CARD} flex flex-col p-5 shadow-sm`}>
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900 dark:text-white">
-                Top stores
+                {t('top_stores')}
               </h2>
               <button
                 type="button"
                 onClick={() => router.push('/management/store-performance')}
                 className="text-xs font-semibold text-primary hover:underline"
               >
-                View all →
+                {t('view_all')}
               </button>
             </div>
             <div className="mt-2 flex-1">
               {perfRows.length === 0 && (
                 <p className="py-8 text-center text-sm text-slate-400">
-                  No store activity in this range
+                  {t('no_store_activity_in_this_range')}
                 </p>
               )}
               {perfRows.slice(0, 5).map((r: any, i: number) => (
@@ -550,7 +565,10 @@ export default function Home() {
                       {r.name}
                     </b>
                     <small className="text-[11px] text-slate-500">
-                      {r.orders} orders · {r.cancelRate}% cancelled
+                      {t('orders_orders_rate_cancelled', {
+                        orders: r.orders,
+                        rate: r.cancelRate,
+                      })}
                     </small>
                   </span>
                   <b className="text-sm text-slate-900 dark:text-white">
@@ -564,7 +582,7 @@ export default function Home() {
 
         <div>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Platform
+            {t('platform')}
           </h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {stakeholders.map((k) => {
@@ -594,11 +612,13 @@ export default function Home() {
                       >
                         {down ? '↓' : '↑'} {Math.abs(k.pct).toFixed(1)}%
                         <span className="ml-1 font-normal text-slate-400">
-                          this year
+                          {t('this_year')}
                         </span>
                       </span>
                     ) : (
-                      <span className="text-slate-400">Tap to manage</span>
+                      <span className="text-slate-400">
+                        {t('tap_to_manage')}
+                      </span>
                     )}
                   </p>
                 </button>
@@ -610,11 +630,11 @@ export default function Home() {
         <div className="grid grid-cols-1 gap-4">
           <section className={`${CARD} overflow-hidden shadow-sm`}>
             <h2 className="border-b border-slate-100 px-5 py-3.5 text-base font-semibold text-slate-900 dark:border-dark-600 dark:text-white">
-              Attention needed
+              {t('attention_needed')}
             </h2>
             {attention.length === 0 && (
               <p className="px-5 py-8 text-center text-sm text-slate-400">
-                All clear — nothing needs your attention 🎉
+                {t('all_clear_nothing_needs_your_attention')}
               </p>
             )}
             {attention.map((a) => (

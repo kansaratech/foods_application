@@ -47,6 +47,7 @@ export const riderTypeDefs = /* GraphQL */ `
     isActive: Boolean
     status: String
     employmentType: String
+    assignedStore: Restaurant
     vehicleType: String
     assigned: [String!]
     zone: ZoneLite
@@ -98,6 +99,7 @@ export const riderTypeDefs = /* GraphQL */ `
     vehicleType: String
     vehicleNumber: String
     employmentType: String
+    assignedStoreId: String
     available: Boolean
     isActive: Boolean
     password: String

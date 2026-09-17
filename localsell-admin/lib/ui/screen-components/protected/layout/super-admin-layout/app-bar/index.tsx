@@ -174,7 +174,7 @@ const AppTopbar = () => {
   function onLocaleChange(value: string) {
     const locale = value as TLocale;
     startTransition(() => {
-      setUserLocale(locale);
+      void setUserLocale(locale).then(() => router.refresh());
     });
   }
 

@@ -12,5 +12,5 @@ export async function getUserLocale() {
 }
 
 export async function setUserLocale(locale: TLocale) {
-  cookies().set(COOKIE_NAME, locale);
+  cookies().set(COOKIE_NAME, locale, { path: '/', sameSite: 'lax', maxAge: 31536000 });
 }

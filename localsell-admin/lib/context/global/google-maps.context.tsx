@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext } from 'react';
-import { useJsApiLoader } from '@react-google-maps/api';
+import { Libraries, useJsApiLoader } from '@react-google-maps/api';
 import {
   IGoogleMapsContext,
   IGoogleMapsProviderProps,
@@ -11,6 +11,8 @@ export const GoogleMapsContext = createContext<IGoogleMapsContext>(
   {} as IGoogleMapsContext
 );
 
+const DEFAULT_LIBRARIES: Libraries = ['places'];
+
 export const GoogleMapsProvider: React.FC<IGoogleMapsProviderProps> = ({
   apiKey,
   libraries,
@@ -19,7 +21,7 @@ export const GoogleMapsProvider: React.FC<IGoogleMapsProviderProps> = ({
   const { isLoaded: hookIsLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
-    libraries: libraries || ['places'],
+    libraries: libraries || DEFAULT_LIBRARIES,
   });
   const isLoaded = hookIsLoaded;
 

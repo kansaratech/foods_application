@@ -55,7 +55,7 @@ export default async function RootLayout({
       </head>
       <body className="flex flex-col flex-wrap">
         <PwaRegister />
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
       </body>

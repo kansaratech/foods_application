@@ -44,7 +44,7 @@ import { toTextCase } from '@/lib/utils/methods';
 import { useShopTypes } from '@/lib/hooks/useShopType';
 
 // Schemas and GraphQL
-import { RestaurantSchema } from '@/lib/utils/schema/restaurant';
+import { makeRestaurantSchema } from '@/lib/utils/schema/restaurant';
 import {
   CREATE_RESTAURANT,
   GET_CUISINES,
@@ -267,11 +267,11 @@ export default function RestaurantDetails({
           <div>
             <Formik
               initialValues={initialValues}
-              validationSchema={RestaurantSchema}
+              validationSchema={makeRestaurantSchema(true)}
               onSubmit={async (values) => {
                 await onCreateRestaurant(values);
               }}
-              validateOnChange={false}
+              validateOnChange={true}
             >
               {({
                 values,
@@ -362,7 +362,9 @@ export default function RestaurantDetails({
 
                       <div>
                         <CustomPasswordTextField
-                          placeholder={t('Password')}
+                          placeholder={`${t('Password')} *`}
+                          aria-required={true}
+                          error={touched.password ? errors.password : undefined}
                           name="password"
                           maxLength={20}
                           value={values.password}
@@ -382,7 +384,9 @@ export default function RestaurantDetails({
 
                       <div>
                         <CustomPasswordTextField
-                          placeholder={t('Confirm Password')}
+                          placeholder={`${t('Confirm Password')} *`}
+                          aria-required={true}
+                          error={touched.confirmPassword ? errors.confirmPassword : undefined}
                           name="confirmPassword"
                           maxLength={20}
                           showLabel={true}

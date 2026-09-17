@@ -75,6 +75,7 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
     const { t } = useTranslation();
     const { dataProfile } = useUserContext();
     const sheetRef = useRef<ResponsiveFormSheetHandle>(null);
+    const submittingRef = useRef(false);
     const { width } = useWindowDimensions();
     // A side-by-side layout with an always-visible price panel only fits a
     // desktop-width browser — narrower windows (including the web build
@@ -197,7 +198,6 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         sheetRef.current?.dismiss();
         showMessage({ message: t("Food item created"), type: "success" });
       },
-      onError: (e) => showMessage({ message: e.message, type: "danger" }),
     });
 
     const [editFood, { loading: editing }] = useMutation(EDIT_FOOD, {
@@ -206,7 +206,6 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
         sheetRef.current?.dismiss();
         showMessage({ message: t("Food item updated"), type: "success" });
       },
-      onError: (e) => showMessage({ message: e.message, type: "danger" }),
     });
 
     const [uploadImage] = useMutation(UPLOAD_IMAGE_TO_S3);
@@ -357,7 +356,9 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
       );
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
+      if (submittingRef.current || uploading) return;
+      setError("");
       if (!title.trim()) {
         setError(t("Title is required"));
         return;
@@ -407,10 +408,19 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
           addons: v.addons ?? [],
         })),
       };
-      if (editingId) {
-        editFood({ variables: { foodInput } });
-      } else {
-        createFood({ variables: { foodInput } });
+      submittingRef.current = true;
+      try {
+        if (editingId) {
+          await editFood({ variables: { foodInput } });
+        } else {
+          await createFood({ variables: { foodInput } });
+        }
+      } catch (error) {
+        // Global flash messages render behind the modal. Keep failures visible
+        // beside its submit button and preserve the entered values for retry.
+        setError((error as Error).message || t("Failed to save food item"));
+      } finally {
+        submittingRef.current = false;
       }
     };
 

@@ -606,7 +606,14 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       return prisma.order.findMany({
-        where: { restaurantId, orderStatus: { in: ACTIVE_STATUSES } },
+        where: {
+          restaurantId,
+          orderStatus: { in: ACTIVE_STATUSES },
+          // A CASHFREE order the customer hasn't actually paid for yet (still
+          // checking out, abandoned, or failed) must stay invisible to the
+          // store — see the matching gate in placeOrder.
+          NOT: { paymentMethod: 'CASHFREE', paymentStatus: { in: ['PENDING', 'FAILED'] } },
+        },
         orderBy: { createdAt: 'desc' },
       });
     },
@@ -818,13 +825,20 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       });
 
       await publishOrderUpdate(order);
-      await pubsub.publish(TOPICS.SUBSCRIBE_PLACE_ORDER(order.restaurantId), {
-        subscribePlaceOrder: { userId: order.userId, origin: 'order_service', order },
-      });
-      await prisma.webNotification.create({
-        data: { userId: restaurant.ownerId, body: `New order #${order.orderId} received`, navigateTo: '/orders' },
-      });
-      notifyOrderEvent(order.id, 'PLACED');
+      // CASHFREE orders aren't shown/alerted to the store until the webhook
+      // confirms payment (see cashfree-webhook.ts) — otherwise a store could
+      // start preparing food for an order the customer never actually paid
+      // for (abandoned checkout, failed payment). COD carries no such risk
+      // since the store is paid in cash on handover either way.
+      if (args.paymentMethod !== 'CASHFREE') {
+        await pubsub.publish(TOPICS.SUBSCRIBE_PLACE_ORDER(order.restaurantId), {
+          subscribePlaceOrder: { userId: order.userId, origin: 'order_service', order },
+        });
+        await prisma.webNotification.create({
+          data: { userId: restaurant.ownerId, body: `New order #${order.orderId} received`, navigateTo: '/orders' },
+        });
+        notifyOrderEvent(order.id, 'PLACED');
+      }
       return order;
     },
 

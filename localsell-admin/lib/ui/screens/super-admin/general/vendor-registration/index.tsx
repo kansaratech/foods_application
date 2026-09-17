@@ -4,7 +4,7 @@
 import { useContext, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Form, Formik, FormikHelpers, FormikProps } from 'formik';
+import { Form, Formik, FormikProps } from 'formik';
 import * as Yup from 'yup';
 import { useMutation, useQuery } from '@apollo/client';
 import { useTranslations } from 'next-intl';
@@ -81,6 +81,12 @@ const STEP_FIELDS: (keyof IVendorRegistrationForm)[][] = [
   ['payoutHolderName', 'payoutAccountNumber', 'payoutIfsc', 'payoutBankName'],
 ];
 
+// The phone input emits +91 even when no mobile digits have been entered.
+function draftPhoneNumber(value: string): string | undefined {
+  const digits = extractIndianMobileDigits(value);
+  return !digits || digits === '91' ? undefined : digits;
+}
+
 function applyYupErrors(err: unknown, formik: FormikProps<IVendorRegistrationForm>) {
   const yupErr = err as Yup.ValidationError;
   if (!yupErr?.inner) return;
@@ -88,7 +94,10 @@ function applyYupErrors(err: unknown, formik: FormikProps<IVendorRegistrationFor
   const newTouched: Record<string, boolean> = {};
   yupErr.inner.forEach((e) => {
     if (e.path) {
-      newErrors[e.path] = e.message;
+      // Prefer the required-field message over other failures for an empty value.
+      if (!newErrors[e.path] || e.type === 'required' || e.type === 'optionality') {
+        newErrors[e.path] = e.message;
+      }
       newTouched[e.path] = true;
     }
   });
@@ -191,7 +200,7 @@ export default function VendorRegistrationScreen() {
     email: values.email.trim().toLowerCase(),
     firstName: values.firstName.trim() || undefined,
     lastName: values.lastName.trim() || undefined,
-    phoneNumber: values.phoneNumber ? extractIndianMobileDigits(values.phoneNumber) : undefined,
+    phoneNumber: draftPhoneNumber(values.phoneNumber),
     image: values.image || undefined,
     businessName: values.businessName.trim() || undefined,
     businessType: values.businessType?.code,
@@ -215,23 +224,23 @@ export default function VendorRegistrationScreen() {
   });
 
   const persistDraft = async (
-    values: IVendorRegistrationForm,
-    setFieldValue: FormikHelpers<IVendorRegistrationForm>['setFieldValue']
+    formik: FormikProps<IVendorRegistrationForm>
   ): Promise<string | null> => {
+    const { values, setFieldValue } = formik;
     // A draft has almost no validation (#52) — just don't save a blank form.
     const hasSomething =
       values.email.trim() ||
       values.firstName.trim() ||
       values.lastName.trim() ||
-      values.phoneNumber.trim() ||
+      draftPhoneNumber(values.phoneNumber) ||
       values.businessName.trim();
     if (!hasSomething) {
-      showToast({
-        type: 'error',
-        title: t('Vendor Registration'),
-        message: t('Add at least a name, email or phone before saving a draft'),
-        duration: 2500,
-      });
+      try {
+        await vendorAccountStepSchema.validate(values, { abortEarly: false });
+      } catch (error) {
+        applyYupErrors(error, formik);
+      }
+      setStep(0);
       return null;
     }
     try {
@@ -286,7 +295,7 @@ export default function VendorRegistrationScreen() {
       }
     }
     setSavingDraft(true);
-    const savedId = await persistDraft(formik.values, formik.setFieldValue);
+    const savedId = await persistDraft(formik);
     if (savedId && step === 2) await persistPayoutDoc(formik.values, savedId);
     setSavingDraft(false);
     if (!savedId) return;
@@ -295,7 +304,7 @@ export default function VendorRegistrationScreen() {
 
   const handleSaveDraft = async (formik: FormikProps<IVendorRegistrationForm>) => {
     setSavingDraft(true);
-    const savedId = await persistDraft(formik.values, formik.setFieldValue);
+    const savedId = await persistDraft(formik);
     if (savedId && step === 2) await persistPayoutDoc(formik.values, savedId);
     setSavingDraft(false);
     if (savedId) {

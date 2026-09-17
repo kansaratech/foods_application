@@ -30,6 +30,7 @@ interface RiderInputArgs {
   vehicleType?: string;
   vehicleNumber?: string;
   employmentType?: string;
+  assignedStoreId?: string | null;
   available?: boolean;
   isActive?: boolean;
   password?: string;
@@ -48,11 +49,26 @@ function riderProfileWriteData(input: RiderInputArgs) {
     vehicleType: input.vehicleType,
     available: input.available ?? true,
     zoneId: input.zone || undefined,
-    employmentType: input.employmentType || 'INDEPENDENT',
+    employmentType: input.employmentType || undefined,
+    ...(input.employmentType === 'INDEPENDENT'
+      ? { assignedStoreId: null }
+      : input.assignedStoreId !== undefined
+        ? { assignedStoreId: input.assignedStoreId || null }
+        : {}),
     ...(input.vehicleNumber !== undefined
       ? { vehicleDetails: { number: input.vehicleNumber || undefined } as Prisma.InputJsonValue }
       : {}),
   };
+}
+
+async function validateRiderStore(input: RiderInputArgs, draft = false) {
+  if (input.employmentType !== 'STORE_ASSIGNED') return;
+  if (!input.assignedStoreId) {
+    if (!draft) throw userInputError('Select a store for a store-assigned rider.');
+    return;
+  }
+  const store = await prisma.restaurant.findUnique({ where: { id: input.assignedStoreId }, select: { id: true } });
+  if (!store) throw userInputError('The selected store no longer exists. Please select another store.');
 }
 
 async function loadRiderProfile(userId: string) {
@@ -333,6 +349,7 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     createRider: async (_parent, args: { riderInput: RiderInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       const input = args.riderInput;
+      await validateRiderStore(input);
       const email = input.email ? input.email.trim().toLowerCase() : undefined;
       const phone = normalizeIndianPhone(input.phone);
 
@@ -421,6 +438,7 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     saveRiderDraft: async (_parent, args: { riderInput: RiderInputArgs }, context) => {
       requireRole(context, ['ADMIN']);
       const input = args.riderInput;
+      await validateRiderStore(input, true);
       const email = input.email ? input.email.trim().toLowerCase() : undefined;
 
       const baseData = {
@@ -464,6 +482,10 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
       const input = args.riderInput;
       if (!input._id) throw notFoundError('Rider _id is required to edit');
       if (currentUser.userType === 'RIDER' && currentUser.id !== input._id) throw forbiddenError();
+      if (currentUser.userType !== 'ADMIN' && (input.assignedStoreId !== undefined || input.employmentType !== undefined)) {
+        throw forbiddenError();
+      }
+      await validateRiderStore(input);
 
       await prisma.user.update({
         where: { id: input._id },
@@ -598,6 +620,9 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
     image: (parent: RiderParent) => parent.image,
     status: (parent: RiderParent) => parent.status,
     employmentType: (parent: RiderParent) => parent.riderProfile?.employmentType ?? 'INDEPENDENT',
+    assignedStore: (parent: RiderParent) => parent.riderProfile?.assignedStoreId
+      ? prisma.restaurant.findUnique({ where: { id: parent.riderProfile.assignedStoreId } })
+      : null,
     available: (parent: RiderParent) => parent.riderProfile?.available ?? null,
     vehicleType: (parent: RiderParent) => parent.riderProfile?.vehicleType ?? null,
     approvalStatus: (parent: RiderParent) => parent.riderProfile?.approvalStatus ?? 'PENDING',

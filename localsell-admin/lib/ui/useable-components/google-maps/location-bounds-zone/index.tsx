@@ -177,8 +177,15 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
             }
 
             setInputValue(selectedOption.description);
+            setIsDrawing(false);
 
-            setTimeout(() => focusZone(newPath), 200);
+            // City searches should show the whole city, not the small starter polygon.
+            const viewport = results[0].geometry.viewport;
+            if (deliveryZoneType === 'polygon' && viewport) {
+              mapRef.current?.fitBounds(viewport, 48);
+            } else {
+              focusZone(newPath);
+            }
           }
         }
       );
@@ -299,6 +306,52 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
 
   return (
     <div className="zone-map-editor">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          {t('zone_map_help')}
+        </p>
+        <div
+          className="flex items-center gap-2"
+          role="group"
+          aria-label={t('zone_map_controls')}
+        >
+          <ActionButton
+            type="button"
+            variant="secondary"
+            disabled={!googleMapsContext?.isLoaded}
+            aria-label={t('zone_zoom_out')}
+            onClick={() => {
+              const map = mapRef.current;
+              if (map) map.setZoom(Math.max(0, (map.getZoom() ?? 14) - 1));
+            }}
+            className="h-10 min-w-10 rounded-lg border border-slate-300 px-3 text-lg dark:text-white"
+          >
+            −
+          </ActionButton>
+          <ActionButton
+            type="button"
+            variant="secondary"
+            disabled={!googleMapsContext?.isLoaded}
+            aria-label={t('zone_zoom_in')}
+            onClick={() => {
+              const map = mapRef.current;
+              if (map) map.setZoom(Math.min(22, (map.getZoom() ?? 14) + 1));
+            }}
+            className="h-10 min-w-10 rounded-lg border border-slate-300 px-3 text-lg dark:text-white"
+          >
+            +
+          </ActionButton>
+          <ActionButton
+            type="button"
+            variant="secondary"
+            disabled={!googleMapsContext?.isLoaded || !path.length}
+            onClick={() => focusZone(path)}
+            className="h-10 rounded-lg border border-slate-300 px-3 text-sm dark:text-white"
+          >
+            {t('zone_fit_zone')}
+          </ActionButton>
+        </div>
+      </div>
       <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-100 dark:border-dark-600">
         <div className="h-[420px] w-full object-cover sm:h-[480px]">
           <div className="absolute left-0 right-0 top-0 z-10">
@@ -327,7 +380,7 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
                   dropdown={true}
                   multiple={false}
                   loadingIcon={null}
-                  placeholder={t('Enter your full address')}
+                  placeholder={t('zone_search_placeholder')}
                   style={{ width: '100%' }}
                   itemTemplate={(item) => {
                     const matches =
@@ -465,6 +518,10 @@ const CustomGoogleMapsLocationZoneBounds: React.FC<
               onClick={onClickGoogleMaps}
               onLoad={(map) => {
                 mapRef.current = map;
+                focusZone(path);
+              }}
+              onUnmount={() => {
+                mapRef.current = null;
               }}
             >
               {deliveryZoneType === 'point' && path.length >= 1 && (

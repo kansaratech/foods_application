@@ -98,6 +98,7 @@ export const GET_RIDER_STATS = gql`
 export const GET_RIDER = gql`
   query Rider($id: String!) {
     rider(id: $id) {
+      assignedStore { _id name }
       _id
       name
       username

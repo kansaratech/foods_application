@@ -12,6 +12,8 @@ import { ConfigurationContext } from '@/lib/context/global/configuration.context
 
 import { Libraries } from '@react-google-maps/api';
 
+const LIBRARIES: Libraries = ['places', 'drawing', 'geometry', 'visualization'];
+
 export const useConfiguration = () => {
   const configuration: IConfiguration | undefined =
     useContext(ConfigurationContext);
@@ -29,9 +31,6 @@ export const useConfiguration = () => {
   const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const AMPLITUDE_API_KEY_WEB = configuration?.webAmplitudeApiKey;
   const AMPLITUDE_API_KEY_APP = configuration?.appAmplitudeApiKey;
-  const LIBRARIES = 'places,drawing,geometry,visualization'.split(
-    ','
-  ) as Libraries;
   const COLORS = {
     GOOGLE: configuration?.googleColor,
   };

@@ -8,7 +8,7 @@ export const ORDER_SUPER_ADMIN_COLUMNS = () => {
       body: (row: IExtendedOrder) => (
         <div className="orders-cell">
           <strong>{row.orderId}</strong>
-          <small title={row._id}>#{row._id.slice(-6)}</small>
+          {row._id && <small title={row._id}>#{row._id.slice(-6)}</small>}
         </div>
       ),
     },

@@ -409,7 +409,7 @@ export default function RestaurantDetailsForm({
               onSubmit={async (values) => {
                 await onCreateRestaurant(values);
               }}
-              validateOnChange={false}
+              validateOnChange={true}
             >
               {({
                 touched,
@@ -512,33 +512,22 @@ export default function RestaurantDetailsForm({
                         <>
                           <div className="md:col-span-6">
                             <CustomPasswordTextField
-                              placeholder={t('Password')}
+                              placeholder={`${t('Password')} *`}
+                              aria-required={true}
                               name="password"
                               maxLength={20}
                               value={values.password}
                               showLabel={true}
                               autoComplete="new-password"
                               onChange={handleChange}
-                              style={{
-                                borderColor: onErrorMessageMatcher(
-                                  'password',
-                                  errors?.password,
-                                  RestaurantErrors
-                                )
-                                  ? 'red'
-                                  : '',
-                              }}
+                              error={touched.password ? errors.password : undefined}
                             />
-                            {errors.password && touched.password && (
-                              <small className="ml-1 p-error">
-                                {errors.password}
-                              </small>
-                            )}
                           </div>
 
                           <div className="md:col-span-6">
                             <CustomPasswordTextField
-                              placeholder={t('Confirm Password')}
+                              placeholder={`${t('Confirm Password')} *`}
+                              aria-required={true}
                               name="confirmPassword"
                               maxLength={20}
                               showLabel={true}
@@ -546,21 +535,8 @@ export default function RestaurantDetailsForm({
                               value={values.confirmPassword ?? ''}
                               onChange={handleChange}
                               feedback={false}
-                              style={{
-                                borderColor: onErrorMessageMatcher(
-                                  'confirmPassword',
-                                  errors?.confirmPassword,
-                                  RestaurantErrors
-                                )
-                                  ? 'red'
-                                  : '',
-                              }}
+                              error={touched.confirmPassword ? errors.confirmPassword : undefined}
                             />
-                            {errors.confirmPassword && touched.confirmPassword && (
-                              <small className="ml-1 p-error">
-                                {errors.confirmPassword}
-                              </small>
-                            )}
                           </div>
                         </>
                       )}

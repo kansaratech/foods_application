@@ -51,4 +51,9 @@ export const RiderSchema = Yup.object().shape({
     .required('Required'),
   vehicleNumber: Yup.string().notRequired(),
   employmentType: Yup.string().oneOf(['INDEPENDENT', 'STORE_ASSIGNED']).required('Required'),
+  assignedStore: Yup.object().nullable().when('employmentType', {
+    is: 'STORE_ASSIGNED',
+    then: (schema) => schema.shape({ code: Yup.string().required('Required') }).required('Required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
 });

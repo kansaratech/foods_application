@@ -25,6 +25,7 @@ import {
   CREATE_RIDER,
   GET_RIDER,
   GET_ZONES,
+  GET_RESTAURANTS_DROPDOWN,
   SAVE_RIDER_DRAFT,
 } from '@/lib/api/graphql';
 
@@ -62,6 +63,7 @@ const emptyInitialValues: IRiderForm = {
   vehicleType: null,
   vehicleNumber: '',
   employmentType: 'INDEPENDENT',
+  assignedStore: null,
 };
 
 export default function RiderRegistrationScreen() {
@@ -72,6 +74,14 @@ export default function RiderRegistrationScreen() {
   const isEditMode = !!editRiderId;
 
   const { showToast } = useContext(ToastContext);
+
+  const { data: storesData, loading: storesLoading, error: storesError, refetch: refetchStores } = useQuery<{
+    restaurants: { _id: string; name: string }[];
+  }>(GET_RESTAURANTS_DROPDOWN, { fetchPolicy: 'cache-and-network' });
+  const storeOptions = useMemo(() => (storesData?.restaurants ?? []).map((store) => ({
+    label: store.name,
+    code: store._id,
+  })).sort((a, b) => a.label.localeCompare(b.label)), [storesData]);
 
   const { data: zonesData } = useQuery<IRiderZonesResponse>(GET_ZONES, {
     fetchPolicy: 'cache-and-network',
@@ -111,6 +121,9 @@ export default function RiderRegistrationScreen() {
         VEHICLE_TYPE.find((vt) => vt.code === rider.vehicleType) || null,
       vehicleNumber: rider.vehicleDetails?.number ?? '',
       employmentType: rider.employmentType ?? 'INDEPENDENT',
+      assignedStore: rider.assignedStore
+        ? { label: rider.assignedStore.name, code: rider.assignedStore._id }
+        : null,
     };
   }, [isEditMode, riderLoading, riderData]);
 
@@ -138,6 +151,9 @@ export default function RiderRegistrationScreen() {
     vehicleType: values.vehicleType?.code,
     vehicleNumber: values.vehicleNumber || undefined,
     employmentType: values.employmentType,
+    assignedStoreId: values.employmentType === 'STORE_ASSIGNED'
+      ? values.assignedStore?.code ?? null
+      : null,
     isActive: values.isActive,
     available: true,
     sendSetupLink: values.sendSetupLink,
@@ -460,9 +476,11 @@ export default function RiderRegistrationScreen() {
                                 checked={
                                   values.employmentType === 'INDEPENDENT'
                                 }
-                                onChange={() =>
-                                  setFieldValue('employmentType', 'INDEPENDENT')
-                                }
+                                onChange={() => {
+                                  setFieldValue('employmentType', 'INDEPENDENT');
+                                  setFieldValue('assignedStore', null, false);
+                                  setFieldTouched('assignedStore', false, false);
+                                }}
                               />
                               <label
                                 htmlFor="employmentIndependent"
@@ -497,6 +515,30 @@ export default function RiderRegistrationScreen() {
                             </div>
                           </div>
                         </fieldset>
+                        {values.employmentType === 'STORE_ASSIGNED' && (
+                          <div>
+                            <CustomDropdownComponent
+                              placeholder={`${t('Store Name')} *`}
+                              name="assignedStore"
+                              showLabel
+                              filter
+                              options={storeOptions}
+                              selectedItem={values.assignedStore ?? null}
+                              setSelectedItem={(name, value) => {
+                                setFieldValue(name, value);
+                                setFieldTouched(name, true, false);
+                              }}
+                              isLoading={storesLoading && !storesData}
+                              disabled={!!storesError && !storesData}
+                              error={fieldError('assignedStore')}
+                            />
+                            {storesError && (
+                              <button type="button" className="mt-2 text-sm text-red-600" onClick={() => void refetchStores()}>
+                                {t('rider_store_load_retry')}
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 

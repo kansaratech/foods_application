@@ -109,14 +109,20 @@ async function assertAddonPricesWithinItemPrice(variations: VariationInputArgs[]
 }
 
 async function assertUniqueFoodTitle(restaurantId: string, title: string, excludeId?: string): Promise<void> {
-  const existing = await prisma.food.findFirst({
+  const normalizedTitle = title.trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!normalizedTitle) throw userInputError('Title is required');
+  // Compare existing titles too: older records may contain extra whitespace.
+  // Uniqueness is store-wide, regardless of category, price or visibility.
+  const foods = await prisma.food.findMany({
     where: {
       restaurantId,
-      title: title.trim(),
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
-    select: { id: true },
+    select: { title: true },
   });
+  const existing = foods.some((food) =>
+    food.title.trim().replace(/\s+/g, ' ').toLowerCase() === normalizedTitle,
+  );
   if (existing) throw userInputError(`A food item named "${title.trim()}" already exists in this store.`);
 }
 
@@ -269,12 +275,19 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     ) => {
       const limit = args.limit ?? 10;
       const page = args.page ?? 1;
+      const search = args.search?.trim();
       const where = {
         restaurantId: args.restaurantId,
-        ...(args.search ? { title: { contains: args.search } } : {}),
+        ...(search ? {
+          OR: [
+            { title: { contains: search } },
+            { foods: { some: { title: { contains: search } } } },
+            { subCategories: { some: { title: { contains: search } } } },
+          ],
+        } : {}),
       };
       const [data, totalCount] = await Promise.all([
-        prisma.category.findMany({ where, skip: (page - 1) * limit, take: limit }),
+        prisma.category.findMany({ where, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], skip: (page - 1) * limit, take: limit }),
         prisma.category.count({ where }),
       ]);
       return { data, totalCount, currentPage: page, totalPages: Math.max(1, Math.ceil(totalCount / limit)) };
@@ -332,7 +345,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
           restaurantId: input.restaurant,
           categoryId: input.category,
           subCategoryId: input.subCategory || undefined,
-          title: input.title,
+          title: input.title.trim().replace(/\s+/g, ' '),
           description: input.description,
           badge: input.badge ?? null,
           ...foodImageFields(input),
@@ -367,7 +380,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
         data: {
           categoryId: input.category,
           subCategoryId: input.subCategory || undefined,
-          title: input.title,
+          title: input.title.trim().replace(/\s+/g, ' '),
           description: input.description,
           badge: input.badge ?? null,
           ...foodImageFields(input),

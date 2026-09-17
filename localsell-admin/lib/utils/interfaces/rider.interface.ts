@@ -56,6 +56,7 @@ export interface IRiderResponse {
 }
 
 export interface ISingleRiderResponse {
+  assignedStore?: { _id: string; name: string } | null;
   __typename: 'Rider';
   _id: string;
   name: string;

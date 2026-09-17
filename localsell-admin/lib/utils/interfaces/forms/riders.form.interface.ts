@@ -16,6 +16,7 @@ export interface IRiderForm {
   vehicleType: IDropdownSelectItem | null;
   vehicleNumber: string;
   employmentType: TRiderEmploymentType;
+  assignedStore?: IDropdownSelectItem | null;
 }
 
 export interface IRiderErrors {

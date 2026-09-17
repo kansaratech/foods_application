@@ -5,7 +5,6 @@ import {
 import React, { useMemo, useState, useEffect } from 'react';
 import Table from '@/lib/ui/useable-components/table';
 import { ORDER_SUPER_ADMIN_COLUMNS } from '@/lib/ui/useable-components/table/columns/order-superadmin-columns';
-import OrderTableSkeleton from '@/lib/ui/useable-components/custom-skeletons/orders.vendor.row.skeleton';
 import { IExtendedOrder, IOrder } from '@/lib/utils/interfaces';
 import { TOrderRowData } from '@/lib/utils/types';
 import { DataTableFilterMeta } from 'primereact/datatable';
@@ -56,8 +55,9 @@ export default function OrderTable({
 
   const displayData: TOrderRowData[] = useMemo(() => {
     if (loading && isInitialLoad) {
-      // Only show skeleton on initial load
-      return OrderTableSkeleton({ rowCount: 10 }); // Display 10 skeleton rows while loading
+      // The shared table owns its loading state. Placeholder objects must not
+      // reach real order renderers (they have no ID or string status).
+      return [];
     }
     // If loading but not initial load, return last valid orders
     if (loading && !isInitialLoad && !data?.orders) {
