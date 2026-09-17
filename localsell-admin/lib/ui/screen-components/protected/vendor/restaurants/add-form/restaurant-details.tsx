@@ -281,7 +281,35 @@ export default function RestaurantDetails({
                 handleSubmit,
                 isSubmitting,
                 setFieldValue,
+                validateForm,
+                setTouched,
               }) => {
+                // `logo`/`image` are required but their upload widgets never
+                // set Formik's touched state on their own and neither field
+                // ever rendered an inline error — so a store missing one
+                // could save (or silently fail) with zero visible feedback
+                // (Issue 106). Validate explicitly on click so a toast + the
+                // fields' own errors always show.
+                const onSaveClick = async () => {
+                  const formErrors = await validateForm();
+                  if (Object.keys(formErrors).length === 0) return;
+                  setTouched(
+                    Object.keys(formErrors).reduce(
+                      (acc, key) => ({ ...acc, [key]: true }),
+                      {} as Record<string, boolean>,
+                    ),
+                  );
+                  if (formErrors.logo || formErrors.image) {
+                    showToast({
+                      title: t('Missing information'),
+                      message: t(
+                        'Please upload both a store logo and a cover image before saving.',
+                      ),
+                      type: 'error',
+                      duration: 3000,
+                    });
+                  }
+                };
                 return (
                   <Form onSubmit={handleSubmit}>
                     <div className="mb-2 space-y-3">
@@ -642,6 +670,17 @@ export default function RestaurantDetails({
                         />
                       </div>
 
+                      {(errors.logo || errors.image) && (
+                        <div className="flex flex-col gap-1">
+                          {errors.logo && (
+                            <small className="p-error">{errors.logo as string}</small>
+                          )}
+                          {errors.image && (
+                            <small className="p-error">{errors.image as string}</small>
+                          )}
+                        </div>
+                      )}
+
                       <div className="mt-4 flex justify-end items-center">
                         {errors.address && touched.address && (
                           <small className="p-error mr-4">
@@ -665,7 +704,9 @@ export default function RestaurantDetails({
                                 message:
                                   'Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.',
                               });
+                              return;
                             }
+                            void onSaveClick();
                           }}
                         />
                       </div>

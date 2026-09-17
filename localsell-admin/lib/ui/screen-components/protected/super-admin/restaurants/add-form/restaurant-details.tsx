@@ -419,7 +419,37 @@ export default function RestaurantDetailsForm({
                 handleSubmit,
                 isSubmitting,
                 setFieldValue,
+                validateForm,
+                setTouched,
               }) => {
+                // `logo`/`image` are required (the logo card even shows a
+                // "*") but their upload widgets never set Formik's touched
+                // state on their own and neither field ever rendered an
+                // inline error — so a store missing one could silently fail
+                // this validation with zero visible feedback, or (worse)
+                // read as "saved fine" if the click otherwise looked like it
+                // did something (Issue 106). Validate explicitly on click so
+                // a toast + the fields' own errors always show.
+                const onSaveClick = async () => {
+                  const formErrors = await validateForm();
+                  if (Object.keys(formErrors).length === 0) return;
+                  setTouched(
+                    Object.keys(formErrors).reduce(
+                      (acc, key) => ({ ...acc, [key]: true }),
+                      {} as Record<string, boolean>,
+                    ),
+                  );
+                  if (formErrors.logo || formErrors.image) {
+                    showToast({
+                      title: t('Missing information'),
+                      message: t(
+                        'Please upload both a store logo and a cover image before saving.',
+                      ),
+                      type: 'error',
+                      duration: 3000,
+                    });
+                  }
+                };
                 return (
                   <Form onSubmit={handleSubmit}>
                     <Tooltip target=".field-info-icon" />
@@ -782,6 +812,16 @@ export default function RestaurantDetailsForm({
                           onUploaded={(url) => setFieldValue('image', url)}
                         />
                       </div>
+                      {(errors.logo || errors.image) && (
+                        <div className="flex flex-col gap-1 md:col-span-12">
+                          {errors.logo && (
+                            <small className="p-error">{errors.logo as string}</small>
+                          )}
+                          {errors.image && (
+                            <small className="p-error">{errors.image as string}</small>
+                          )}
+                        </div>
+                      )}
 
                       <div className="mt-2 flex justify-between border-t border-slate-200 pt-5 dark:border-dark-600 md:col-span-12">
                         <CustomButton
@@ -823,7 +863,9 @@ export default function RestaurantDetailsForm({
                                 type: 'error',
                                 duration: 3000,
                               });
+                              return;
                             }
+                            void onSaveClick();
                           }}
                         />
                       </div>
