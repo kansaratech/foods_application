@@ -20,11 +20,13 @@ interface Props {
   amount: string;
   rechecking: boolean;
   startingRetry: boolean;
+  switchingToCod?: boolean;
   autoChecking?: boolean;
   feedback: string;
   canRetry: boolean;
   onCheck: () => void;
   onRetry: () => void;
+  onSwitchToCod?: () => void;
 }
 
 export default function PaymentStatusCard({
@@ -36,11 +38,13 @@ export default function PaymentStatusCard({
   amount,
   rechecking,
   startingRetry,
+  switchingToCod = false,
   autoChecking = false,
   feedback,
   canRetry,
   onCheck,
   onRetry,
+  onSwitchToCod,
 }: Props) {
   const t = useTranslations("payment_panel");
   const isCod = paymentMethod === "COD";
@@ -60,7 +64,7 @@ export default function PaymentStatusCard({
     !isCod &&
     (state === "pending" || state === "failed") &&
     paymentMethod === "CASHFREE";
-  const busy = rechecking || startingRetry;
+  const busy = rechecking || startingRetry || switchingToCod;
   const styles = {
     success:
       "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
@@ -197,6 +201,16 @@ export default function PaymentStatusCard({
                   >
                     {t(startingRetry ? "opening" : "retry")}
                     <FiArrowRight aria-hidden="true" />
+                  </button>
+                )}
+                {onSwitchToCod && (
+                  <button
+                    type="button"
+                    onClick={onSwitchToCod}
+                    disabled={busy}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    {t(switchingToCod ? "switching_to_cod" : "switch_to_cod")}
                   </button>
                 )}
               </div>

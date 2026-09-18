@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useMutation } from "@apollo/client";
 import {
   CREATE_CASHFREE_PAYMENT_SESSION,
+  MODIFY_ORDER,
   RECHECK_CASHFREE_PAYMENT,
 } from "@/lib/api/graphql";
 import { loadCashfreeSdk, cashfreeSdkMode } from "@/lib/utils/methods/cashfree";
@@ -46,6 +47,7 @@ export default function OrderPaymentPanel({
   );
   const [createCashfreePaymentSession, { loading: startingRetry }] =
     useMutation(CREATE_CASHFREE_PAYMENT_SESSION);
+  const [modifyOrder, { loading: switchingToCod }] = useMutation(MODIFY_ORDER);
 
   useEffect(() => {
     const orderId = orderTrackingDetails._id;
@@ -182,6 +184,27 @@ export default function OrderPaymentPanel({
     }
   };
 
+  const onSwitchToCod = async () => {
+    try {
+      await modifyOrder({
+        variables: { id: orderTrackingDetails._id, paymentMethod: "COD" },
+      });
+      await onUpdated?.();
+      setPaymentFeedback(t("payment_panel.switched_to_cod"));
+      showToast({
+        type: "success",
+        title: t("order_details_payment_status_title"),
+        message: t("payment_panel.switched_to_cod"),
+      });
+    } catch (err: any) {
+      showToast({
+        type: "error",
+        title: t("order_details_payment_status_title"),
+        message: err?.message || "",
+      });
+    }
+  };
+
   return (
     <PaymentStatusCard
       paymentMethod={orderTrackingDetails.paymentMethod}
@@ -192,10 +215,16 @@ export default function OrderPaymentPanel({
       amount={`${CURRENCY_SYMBOL}${(paymentStatus === "PAID" && orderTrackingDetails.paidAmount > 0 ? orderTrackingDetails.paidAmount : orderTrackingDetails.orderAmount).toFixed(2)}`}
       rechecking={rechecking}
       startingRetry={startingRetry}
+      switchingToCod={switchingToCod}
       autoChecking={autoChecking}
       feedback={paymentFeedback}
       onCheck={onCheckPaymentStatus}
       onRetry={onPayAgain}
+      onSwitchToCod={
+        orderTrackingDetails.orderStatus === "PENDING"
+          ? onSwitchToCod
+          : undefined
+      }
       canRetry={
         !["CANCELLED", "DELIVERED", "COMPLETED"].includes(
           orderTrackingDetails.orderStatus,

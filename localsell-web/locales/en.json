@@ -1100,6 +1100,9 @@
     "opening": "Opening checkout...",
     "checked": "Payment status checked. The latest result is shown above.",
     "check_error": "We could not verify your payment right now. Please check again in a moment.",
-    "provider": "Payments processed by Cashfree"
+    "provider": "Payments processed by Cashfree",
+    "switch_to_cod": "Pay with cash instead",
+    "switching_to_cod": "Switching to cash on delivery...",
+    "switched_to_cod": "Switched to cash on delivery. Pay when your order arrives."
   }
 }

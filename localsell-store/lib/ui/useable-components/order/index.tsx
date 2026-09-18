@@ -205,49 +205,86 @@ const Order = ({
               #{order.orderId}
             </Text>
           </View>
-          <View
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 20,
-              backgroundColor:
-                tab === "delivered"
-                  ? "#eff6ff"
-                  : tab === "processing"
-                    ? "#fff7ed"
-                    : "#ecfdf5",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
+          <View style={{ alignItems: "flex-end", gap: 6 }}>
             <View
               style={{
-                width: 6,
-                height: 6,
-                borderRadius: 3,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 20,
                 backgroundColor:
                   tab === "delivered"
-                    ? "#1d4ed8"
+                    ? "#eff6ff"
                     : tab === "processing"
-                      ? "#b45309"
-                      : "#15803d",
-              }}
-            />
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color:
-                  tab === "delivered"
-                    ? "#1d4ed8"
-                    : tab === "processing"
-                      ? "#92400e"
-                      : "#166534",
+                      ? "#fff7ed"
+                      : "#ecfdf5",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
               }}
             >
-              {t(order.orderStatus ?? "")}
-            </Text>
+              <View
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor:
+                    tab === "delivered"
+                      ? "#1d4ed8"
+                      : tab === "processing"
+                        ? "#b45309"
+                        : "#15803d",
+                }}
+              />
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: "600",
+                  color:
+                    tab === "delivered"
+                      ? "#1d4ed8"
+                      : tab === "processing"
+                        ? "#92400e"
+                        : "#166534",
+                }}
+              >
+                {t(order.orderStatus ?? "")}
+              </Text>
+            </View>
+            {/* Customer — surfaced right here, next to the order number, so
+                the store can identify/call whoever placed the order without
+                scrolling past items and charges first. */}
+            {order?.user && (
+              <TouchableOpacity
+                disabled={!order.user.phone}
+                onPress={() =>
+                  order.user.phone &&
+                  Linking.openURL(`tel:${order.user.phone}`)
+                }
+              >
+                <Text
+                  style={{
+                    color: appTheme.fontMainColor,
+                    fontSize: 13,
+                    fontWeight: "600",
+                    textAlign: "right",
+                  }}
+                >
+                  {order.user.name}
+                </Text>
+                {order.user.phone && (
+                  <Text
+                    style={{
+                      color: appTheme.primary,
+                      fontSize: 12,
+                      fontWeight: "500",
+                      textAlign: "right",
+                    }}
+                  >
+                    {order.user.phone}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -558,40 +595,6 @@ const Order = ({
               {order?.instructions}
             </Text>
           </View>
-        )}
-
-        {/* Customer — always shown so the store can confirm/call the
-            account holder, separate from the optional recipient override
-            below (someone ordering on a different person's behalf). */}
-        {order?.user && (
-          <TouchableOpacity
-            className="py-2"
-            disabled={!order.user.phone}
-            onPress={() =>
-              order.user.phone && Linking.openURL(`tel:${order.user.phone}`)
-            }
-          >
-            <Text
-              style={{
-                color: secondaryText,
-                fontSize: 14,
-                fontWeight: "600",
-              }}
-            >
-              {t("Customer")}
-            </Text>
-            <Text
-              style={{
-                color: appTheme.fontMainColor,
-                fontSize: 16,
-                fontWeight: "500",
-                marginTop: 4,
-              }}
-            >
-              {order.user.name}
-              {order.user.phone ? ` · ${order.user.phone}` : ""}
-            </Text>
-          </TouchableOpacity>
         )}
 
         {/* Recipient contact — set when the customer ordered for someone
