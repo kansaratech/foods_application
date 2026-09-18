@@ -1,7 +1,10 @@
 "use client";
 
 // Components
-import { PaddingContainer } from "@/lib/ui/useable-components/containers";
+import Link from "next/link";
+import OrderPaymentPanel from "@/lib/ui/screen-components/protected/order-tracking/components/order-payment-panel";
+import OrderHandoverCard from "@/lib/ui/screen-components/protected/order-tracking/components/order-handover-card";
+import styles from "./tracking.module.css";
 import GoogleMapTrackingComponent from "@/lib/ui/screen-components/protected/order-tracking/components/gm-tracking-comp";
 import TrackingOrderDetails from "../../../../screen-components/protected/order-tracking/components/tracking-order-details";
 import TrackingHelpCard from "../../../../screen-components/protected/order-tracking/components/tracking-help-card";
@@ -25,17 +28,27 @@ import BackButton from "@/lib/ui/useable-components/back-button";
 
 interface IOrderTrackingScreenProps {
   orderId: string;
+  view?: "confirmation" | "details";
 }
 
 export default function OrderTrackingScreen({
   orderId,
+  view = "details",
 }: IOrderTrackingScreenProps) {
+  const [showMap, setShowMap] = useState(false);
   //states
   const [showRatingModal, setShowRatingModal] = useState<boolean>(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [showChat, setShowChat] = useState(false)
+  const [showChat, setShowChat] = useState(false);
 
   //Queries and Mutations
+  const {
+    orderTrackingDetails,
+    isOrderTrackingDetailsLoading,
+    refetch: refetchTracking,
+    error: trackingError,
+  } = useTracking({ orderId: orderId });
+
   const {
     isLoaded,
     origin,
@@ -46,15 +59,7 @@ export default function OrderTrackingScreen({
     store_user_location_cache_key,
     isCheckingCache,
     setIsCheckingCache,
-  } = useLocation();
-  const {
-    orderTrackingDetails,
-    isOrderTrackingDetailsLoading,
-    subscriptionData,
-    refetch: refetchTracking,
-  } = useTracking({ orderId: orderId });
-
-
+  } = useLocation(orderTrackingDetails);
 
   const { showToast } = useToast();
 
@@ -75,7 +80,6 @@ export default function OrderTrackingScreen({
       duration: 3000,
     });
 
-
     // Add a small delay before navigation
     // Use window.location for a hard redirect
     setTimeout(() => {
@@ -91,19 +95,9 @@ export default function OrderTrackingScreen({
       duration: 3000,
     });
   }
-  // Merge subscription data with order tracking details
-  let mergedOrderDetails =
-    orderTrackingDetails && subscriptionData ?
-      {
-        ...orderTrackingDetails,
-        orderStatus:
-          subscriptionData.orderStatus || orderTrackingDetails.orderStatus,
-        rider: subscriptionData.rider || orderTrackingDetails.rider,
-        completionTime:
-          subscriptionData.completionTime ||
-          orderTrackingDetails.completionTime,
-      }
-      : orderTrackingDetails;
+  // Subscription events trigger a refetch. Render the latest full API snapshot
+  // so an older subscription cannot overwrite a newer payment/order poll.
+  let mergedOrderDetails = orderTrackingDetails;
 
   if (mergedOrderDetails?.orderStatus === "PICKUP") {
     mergedOrderDetails = {
@@ -115,7 +109,7 @@ export default function OrderTrackingScreen({
   // Get restaurant ID for reviews query
   const restaurantId = useMemo(
     () => mergedOrderDetails?.restaurant?._id,
-    [mergedOrderDetails?.restaurant?._id]
+    [mergedOrderDetails?.restaurant?._id],
   );
 
   // Fetch reviews data for the specified restaurant
@@ -133,7 +127,7 @@ export default function OrderTrackingScreen({
     return reviewsData.reviewsByRestaurant.reviews.some(
       (review: IReview) =>
         review?.order?.user?.email === profile.profile.email &&
-        review?.order?._id === orderId
+        review?.order?._id === orderId,
     );
   }, [
     reviewsData?.reviewsByRestaurant?.reviews,
@@ -146,10 +140,12 @@ export default function OrderTrackingScreen({
     try {
       const stored_direction = onUseLocalStorage(
         "get",
-        store_user_location_cache_key
+        store_user_location_cache_key,
       );
       if (stored_direction) {
         setDirections(JSON.parse(stored_direction));
+      } else {
+        setDirections(null);
       }
       setIsCheckingCache(false); // done checking
     } catch (err) {
@@ -164,11 +160,10 @@ export default function OrderTrackingScreen({
     orderId: string | undefined,
     ratingValue: number,
     comment?: string,
-    aspects: string[] = []
+    aspects: string[] = [],
   ) => {
     const reviewDescription = comment?.trim() || undefined;
-    const reviewComments =
-      aspects?.filter(Boolean).join(", ") || undefined;
+    const reviewComments = aspects?.filter(Boolean).join(", ") || undefined;
 
     // Here you would  call an API to save the rating
     try {
@@ -192,8 +187,8 @@ export default function OrderTrackingScreen({
 
   // useEffect to handle order status changes
   useEffect(() => {
-    if (mergedOrderDetails?.orderStatus == 'PICKED') {
-      setShowChat(true)
+    if (mergedOrderDetails?.orderStatus == "PICKED") {
+      setShowChat(true);
     }
 
     if (mergedOrderDetails?.orderStatus == "DELIVERED") {
@@ -202,7 +197,11 @@ export default function OrderTrackingScreen({
         setShowRatingModal(true);
       }, 4000); // 4 seconds delay before showing the modal
       return () => clearTimeout(timer); // Clear timeout on component unmount
-    } else if (mergedOrderDetails?.orderStatus == "ACCEPTED") {
+    } else if (
+      mergedOrderDetails?.orderStatus == "ACCEPTED" &&
+      (mergedOrderDetails.paymentMethod === "COD" ||
+        mergedOrderDetails.paymentStatus === "PAID")
+    ) {
       setShowConfetti(true);
 
       // Reset confetti after a longer delay
@@ -210,7 +209,11 @@ export default function OrderTrackingScreen({
         setShowConfetti(false);
       }, 5000);
     }
-  }, [mergedOrderDetails?.orderStatus]);
+  }, [
+    mergedOrderDetails?.orderStatus,
+    mergedOrderDetails?.paymentMethod,
+    mergedOrderDetails?.paymentStatus,
+  ]);
 
   // useEffect to handle subscription data changes
   useEffect(() => {
@@ -252,67 +255,162 @@ export default function OrderTrackingScreen({
         </>
       )}
       <RatingModal
-        visible={showRatingModal && !hasUserReview}
+        visible={view === "details" && showRatingModal && !hasUserReview}
         onHide={() => setShowRatingModal(false)}
         order={orderTrackingDetails}
         onSubmitRating={handleSubmitRating}
       />
-      <div className="w-screen h-full flex flex-col pb-20 dark:bg-gray-900 dark:text-gray-100">
-        <div className="scrollable-container flex-1">
-          {/* Google Map for Tracking */}
-          <div className="relative">
-            <BackButton
-              fallbackHref="/profile/order-history"
-              className="!absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1.5 shadow-md backdrop-blur hover:bg-white dark:bg-gray-900/90"
-            />
-            <GoogleMapTrackingComponent
-              isLoaded={isLoaded}
-              origin={origin}
-              destination={destination}
-              directions={directions}
-              isCheckingCache={isCheckingCache}
-              directionsCallback={directionsCallback}
-              orderStatus={mergedOrderDetails?.orderStatus || "PENDING"}
-              riderId={mergedOrderDetails?.rider?._id}
-            />
+      <main className={styles.page}>
+        <header className={styles.header}>
+          <div>
+            <BackButton fallbackHref="/profile/order-history" />
+            <h1>
+              {view === "confirmation"
+                ? "Order confirmation"
+                : "Order details & tracking"}
+            </h1>
+            {mergedOrderDetails && (
+              <p>
+                {mergedOrderDetails.restaurant?.name} &middot;{" "}
+                {mergedOrderDetails.orderId}
+              </p>
+            )}
           </div>
-
-          {/* Main Content with increased gap from map */}
-          <div className="mt-8 md:mt-10">
-            <PaddingContainer>
-              {/* Status Card and Help Card in the same row */}
-              <div className="flex flex-col md:flex-row md:items-start items-center justify-between gap-6 mb-8">
-                {/* Order Status Card */}
-                {!isOrderTrackingDetailsLoading && mergedOrderDetails && (
+          <Link
+            href={
+              view === "confirmation"
+                ? `/order/${orderId}/tracking`
+                : "/profile/order-history"
+            }
+          >
+            {view === "confirmation"
+              ? "View details & track order"
+              : "All orders"}
+          </Link>
+        </header>
+        {isOrderTrackingDetailsLoading ? (
+          <TrackingOrderDetailsDummy />
+        ) : !mergedOrderDetails ? (
+          <div role="alert" className={styles.card}>
+            <h2>Unable to load this order</h2>
+            <p>
+              {trackingError?.message ||
+                "Please sign in to the account that placed this order."}
+            </p>
+            <button type="button" onClick={() => refetchTracking()}>
+              Try again
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className={styles.layout}>
+              <aside
+                className={styles.sidebar}
+                aria-label="Payment and delivery information"
+              >
+                <OrderPaymentPanel
+                  orderTrackingDetails={mergedOrderDetails}
+                  onUpdated={refetchTracking}
+                />
+                <OrderHandoverCard order={mergedOrderDetails} />
+                <section className={styles.card}>
+                  <h2>
+                    {mergedOrderDetails.isPickedUp
+                      ? "Pickup address"
+                      : "Delivery address"}
+                  </h2>
+                  <p>
+                    {mergedOrderDetails.isPickedUp
+                      ? mergedOrderDetails.restaurant?.address
+                      : mergedOrderDetails.deliveryAddress?.deliveryAddress}
+                  </p>
+                  <button
+                    type="button"
+                    aria-expanded={showMap}
+                    aria-controls="order-map"
+                    onClick={() => setShowMap(!showMap)}
+                  >
+                    {showMap ? "Hide map" : "Show map"}
+                  </button>
+                  {showMap && (
+                    <div id="order-map" className={styles.map}>
+                      <GoogleMapTrackingComponent
+                        isLoaded={isLoaded}
+                        origin={origin}
+                        destination={destination}
+                        directions={directions}
+                        isCheckingCache={isCheckingCache}
+                        directionsCallback={directionsCallback}
+                        orderStatus={mergedOrderDetails.orderStatus}
+                        riderId={mergedOrderDetails.rider?._id}
+                      />
+                    </div>
+                  )}
+                </section>
+                <TrackingHelpCard />
+              </aside>
+              <div className={styles.mainColumn}>
+                {mergedOrderDetails.paymentMethod === "CASHFREE" &&
+                mergedOrderDetails.paymentStatus !== "PAID" &&
+                mergedOrderDetails.orderStatus === "PENDING" ? (
+                  <section className={styles.card}>
+                    <h2>Order saved - payment not confirmed</h2>
+                    <p>
+                      Check or complete your payment in the payment panel.
+                      Delivery progress will appear after payment and store
+                      confirmation.
+                    </p>
+                  </section>
+                ) : (
                   <TrackingStatusCard
                     orderTrackingDetails={mergedOrderDetails}
                   />
                 )}
-
-                {/* Help Card - positioned on the left */}
-                <div className="md:ml-0 w-full md:w-auto md:flex-none">
-                  <TrackingHelpCard />
-                  {showChat &&
-                    <ChatRider orderId={orderId} customerId={profile?.profile._id} />
-
-                  }
-                </div>
-              </div>
-
-
-              {/* Order Details - Full width to match status card */}
-              <div className="flex justify-center md:justify-start">
-                {isOrderTrackingDetailsLoading ?
-                  <TrackingOrderDetailsDummy />
-                  : <TrackingOrderDetails
-                    orderTrackingDetails={mergedOrderDetails}
+                {view === "confirmation" ? (
+                  <section className={styles.card}>
+                    <h2>
+                      {mergedOrderDetails.orderStatus === "CANCELLED"
+                        ? "Order cancelled"
+                        : "Order received"}
+                    </h2>
+                    <p>
+                      {mergedOrderDetails.isPickedUp
+                        ? "Collect from"
+                        : "Deliver to"}
+                      :{" "}
+                      {mergedOrderDetails.isPickedUp
+                        ? mergedOrderDetails.restaurant?.address
+                        : mergedOrderDetails.deliveryAddress?.deliveryAddress}
+                    </p>
+                    <p>
+                      Order status:{" "}
+                      {mergedOrderDetails.orderStatus
+                        .replaceAll("_", " ")
+                        .toLowerCase()}
+                      . Payment status is shown separately above.
+                    </p>
+                    <Link href={`/order/${orderId}/tracking`}>
+                      View items, bill and tracking
+                    </Link>
+                  </section>
+                ) : (
+                  <section className={styles.card}>
+                    <TrackingOrderDetails
+                      orderTrackingDetails={mergedOrderDetails}
+                    />
+                  </section>
+                )}
+                {showChat && (
+                  <ChatRider
+                    orderId={orderId}
+                    customerId={profile?.profile._id}
                   />
-                }
+                )}
               </div>
-            </PaddingContainer>
-          </div>
-        </div>
-      </div>
+            </div>
+          </>
+        )}
+      </main>
     </>
   );
 }

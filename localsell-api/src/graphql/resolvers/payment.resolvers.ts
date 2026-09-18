@@ -517,9 +517,33 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
         return { success: false, message: 'This order has already been paid for', paymentSessionId: null, cfOrderId: null };
       }
 
+      if (order.refundStatus === 'SUCCESS' || ['CANCELLED', 'DELIVERED', 'COMPLETED'].includes(order.orderStatus)) {
+        return { success: false, message: 'This order is closed and cannot accept another payment', paymentSessionId: null, cfOrderId: null };
+      }
+
       const creds = await getCashfreeCredentials();
       if (!creds) {
         return { success: false, message: 'Online payment is not configured yet — pay with cash on delivery instead.', paymentSessionId: null, cfOrderId: null };
+      }
+
+      // Reconcile/reuse the existing attempt before offering another payment.
+      // A delayed webhook must not make an already-paid order payable again.
+      if (order.cashfreeOrderId) {
+        try {
+          const previous = await fetchCashfreeOrderStatus(creds, order.cashfreeOrderId);
+          if (previous.orderStatus === 'PAID') {
+            await confirmCashfreeOrderPaid(order.id, order.orderAmount, null);
+            return { success: false, message: 'Payment confirmed. This order has already been paid for.', paymentSessionId: null, cfOrderId: order.cashfreeOrderId };
+          }
+          if (previous.orderStatus === 'ACTIVE' && previous.paymentSessionId) {
+            return { success: true, message: 'Continue your existing payment', paymentSessionId: previous.paymentSessionId, cfOrderId: order.cashfreeOrderId };
+          }
+          if (!['EXPIRED', 'TERMINATED'].includes(previous.orderStatus)) {
+            return { success: false, message: 'Your previous payment is still being checked. Please check payment status before trying again.', paymentSessionId: null, cfOrderId: order.cashfreeOrderId };
+          }
+        } catch {
+          return { success: false, message: 'Could not verify the previous payment. Please check payment status before trying again.', paymentSessionId: null, cfOrderId: order.cashfreeOrderId };
+        }
       }
 
       const customer = await prisma.user.findUnique({ where: { id: order.userId } });
@@ -551,6 +575,10 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!order) throw notFoundError('Order not found');
       if (order.userId !== currentUser.id && currentUser.userType !== 'ADMIN') throw forbiddenError();
       if (order.paymentMethod !== 'CASHFREE') throw userInputError('This order is not an online payment order');
+
+      if (order.refundStatus === 'SUCCESS') {
+        return { success: true, message: 'Payment refunded', paymentStatus: 'REFUNDED' };
+      }
 
       if (order.paymentStatus === 'PAID') {
         return { success: true, message: 'Payment already confirmed', paymentStatus: 'PAID' };

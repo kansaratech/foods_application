@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import OrderDispatch, {
   DeliveryModeBadge,
 } from "@/lib/ui/screen-components/home/orders/dispatch";
+import RejectOrderDialog from "@/lib/ui/useable-components/reject-order-dialog";
 
 interface IOrderProps {
   order: IOrder;
@@ -75,7 +76,8 @@ const Order = ({
   const { silenceRing } = useSoundContext();
   const configuration = useContext(ConfigurationContext);
   const { t } = useTranslation();
-  const { cancelOrder, loading: loadingCancelOrder } = useCancelOrder();
+  const { loading: loadingCancelOrder } = useCancelOrder();
+  const [isCancelDialogVisible, setIsCancelDialogVisible] = useState(false);
   const { pickedUp, loading: loadingPicked } = useOrderPickedUp();
   const { markCollected, loading: loadingCollected } =
     useMarkPickupCollected();
@@ -125,9 +127,9 @@ const Order = ({
   }
 
   // Handlers
-  const onCancelOrderHandler = async () => {
+  const onOpenCancelDialog = async () => {
     await silenceRing();
-    await cancelOrder(order._id, "not available");
+    setIsCancelDialogVisible(true);
   };
 
   const onPickupOrder = () => {
@@ -632,7 +634,7 @@ const Order = ({
                 accessibilityRole="button"
                 disabled={loadingCancelOrder}
                 accessibilityState={{ disabled: loadingCancelOrder }}
-                onPress={() => onCancelOrderHandler()}
+                onPress={() => onOpenCancelDialog()}
               >
                 {loadingCancelOrder ? (
                   <SpinnerComponent color="#ef4444" />
@@ -741,6 +743,12 @@ const Order = ({
           </>
         )}
       </View>
+      {isCancelDialogVisible && (
+        <RejectOrderDialog
+          order={order}
+          onClose={() => setIsCancelDialogVisible(false)}
+        />
+      )}
     </View>
   );
 };

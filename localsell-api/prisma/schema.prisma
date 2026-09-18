@@ -864,6 +864,12 @@ model Order {
   cancelledAt          DateTime?
   assignedAt           DateTime?
   reason               String?       @db.Text
+  // Who initiated the cancellation and a display-name snapshot at that
+  // moment — lets the customer/admin UI show "Cancelled by the store" (or
+  // admin) without an extra join, and without breaking if that user's name
+  // changes later.
+  cancelledByType      UserType?
+  cancelledByName      String?
   isRinged             Boolean       @default(false)
   preparationTime      String?
   createdAt            DateTime      @default(now())

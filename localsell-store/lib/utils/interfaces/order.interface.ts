@@ -119,6 +119,12 @@ export interface IOrder {
   paymentStatus: string;
   orderStatus?: string;
   reason?: string;
+  cancelledByType?: string;
+  cancelledByName?: string;
+  refundStatus?: string;
+  refundedAmount?: number;
+  refundedAt?: string;
+  refundError?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

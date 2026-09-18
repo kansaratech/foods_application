@@ -2,7 +2,10 @@
 
 import BrandLoader from "@/lib/ui/useable-components/brand-loader";
 import { ORDER_PAYMENT_STATUS } from "@/lib/api/graphql/queries/order-tracking";
-import { CREATE_CASHFREE_PAYMENT_SESSION } from "@/lib/api/graphql";
+import {
+  CREATE_CASHFREE_PAYMENT_SESSION,
+  RECHECK_CASHFREE_PAYMENT,
+} from "@/lib/api/graphql";
 import useUser from "@/lib/hooks/useUser";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
@@ -87,7 +90,7 @@ export default function CashfreeReturnScreen() {
     onUseLocalStorage("delete", COUPON_RESTAURANT_KEY);
     clearPendingCashfreeState();
     setStatus("paid");
-    router.replace(`/order/${orderDbId}/tracking`);
+    router.replace(`/order/${orderDbId}/confirmation`);
   }, [clearCart, clearPendingCashfreeState, orderDbId, router]);
 
   useEffect(() => {
@@ -106,6 +109,15 @@ export default function CashfreeReturnScreen() {
             : null,
         ) || Date.now();
 
+      // Ask our API to reconcile with Cashfree once, then poll persisted status.
+      try {
+        await client.mutate({
+          mutation: RECHECK_CASHFREE_PAYMENT,
+          variables: { orderId: orderDbId },
+        });
+      } catch {
+        /* The status query below can still observe a webhook update. */
+      }
       while (isMounted && !finalizingRef.current) {
         try {
           const result = await client.query<OrderPaymentStatusResult>({
@@ -174,12 +186,12 @@ export default function CashfreeReturnScreen() {
     status === "failed"
       ? "Payment didn't go through"
       : status === "timeout"
-        ? "Payment submitted"
+        ? "Payment not yet confirmed"
         : "Confirming your payment";
 
   const message =
     status === "failed"
-      ? "Your Cashfree payment failed or was cancelled. Your order is still saved — you can retry the payment or pay cash on delivery instead."
+      ? "Your Cashfree payment failed or was cancelled. Your order is saved. Check the payment status before retrying."
       : status === "timeout"
         ? "We're still waiting for Cashfree's confirmation. Your order may appear in a moment — check your order history if this takes too long."
         : "Please wait while we confirm your payment with Cashfree.";
@@ -215,7 +227,7 @@ export default function CashfreeReturnScreen() {
               onClick={() =>
                 router.push(
                   orderDbId
-                    ? `/order/${orderDbId}/tracking`
+                    ? `/order/${orderDbId}/confirmation`
                     : "/profile/order-history",
                 )
               }

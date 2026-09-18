@@ -1,113 +1,22 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "@/lib/ui/useable-components/safe-image";
 import { IOrderTrackingDetail } from "@/lib/utils/interfaces/order-tracking-detail.interface";
-import PaymentStatusCard from "./payment-status-card";
 import CancelOrderModal from "./cancelOrderModal";
 import CancelOrderSuccessModal from "./cancel-order-success-modal";
 import { onUseLocalStorage } from "@/lib/utils/methods/local-storage";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 import { useTranslations } from "next-intl";
-import { useMutation } from "@apollo/client";
-import {
-  CREATE_CASHFREE_PAYMENT_SESSION,
-  RECHECK_CASHFREE_PAYMENT,
-} from "@/lib/api/graphql";
-import { loadCashfreeSdk, cashfreeSdkMode } from "@/lib/utils/methods/cashfree";
-import useToast from "@/lib/hooks/useToast";
-
 function TrackingOrderDetails({
   orderTrackingDetails,
 }: {
   orderTrackingDetails: IOrderTrackingDetail;
 }) {
   const t = useTranslations();
-  const [paymentStatus, setPaymentStatus] = useState(
-    orderTrackingDetails?.paymentStatus,
-  );
-  const [paymentFeedback, setPaymentFeedback] = useState("");
-  useEffect(() => {
-    setPaymentStatus(orderTrackingDetails?.paymentStatus);
-    setPaymentFeedback("");
-  }, [orderTrackingDetails?._id, orderTrackingDetails?.paymentStatus]);
-  const { showToast } = useToast();
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [setshowCancelOrderSuccessModal, setSetshowCancelOrderSuccessModal] =
-    useState(orderTrackingDetails?.orderStatus === "CANCELLED" ? true : false);
-  const { CURRENCY_SYMBOL, CASHFREE_ENV } = useConfig();
-  const [recheckCashfreePayment, { loading: rechecking }] = useMutation(
-    RECHECK_CASHFREE_PAYMENT,
-  );
-  const [createCashfreePaymentSession, { loading: startingRetry }] =
-    useMutation(CREATE_CASHFREE_PAYMENT_SESSION);
-
-  const onCheckPaymentStatus = async () => {
-    setPaymentFeedback("");
-    try {
-      const { data } = await recheckCashfreePayment({
-        variables: { orderId: orderTrackingDetails._id },
-      });
-      const result = data?.recheckCashfreePayment;
-      if (result?.success && result.paymentStatus)
-        setPaymentStatus(result.paymentStatus);
-      setPaymentFeedback(
-        t(
-          result?.success
-            ? "payment_panel.checked"
-            : "payment_panel.check_error",
-        ),
-      );
-      showToast({
-        type: !result?.success
-          ? "error"
-          : result?.paymentStatus === "PAID"
-            ? "success"
-            : "info",
-        title: t("order_details_payment_status_title"),
-        message: result?.message || "",
-      });
-    } catch (err: any) {
-      setPaymentFeedback(t("payment_panel.check_error"));
-      showToast({
-        type: "error",
-        title: t("order_details_payment_status_title"),
-        message: err?.message || "",
-      });
-    }
-  };
-
-  const onPayAgain = async () => {
-    try {
-      const [{ data }] = await Promise.all([
-        createCashfreePaymentSession({
-          variables: { orderId: orderTrackingDetails._id },
-        }),
-        loadCashfreeSdk(),
-      ]);
-      const session = data?.createCashfreePaymentSession;
-      if (session?.success && session?.paymentSessionId) {
-        const cashfree = (window as any).Cashfree({
-          mode: cashfreeSdkMode(CASHFREE_ENV),
-        });
-        await cashfree.checkout({
-          paymentSessionId: session.paymentSessionId,
-          redirectTarget: "_self",
-        });
-        return;
-      }
-      showToast({
-        type: "error",
-        title: t("order_details_payment_status_title"),
-        message: session?.message || "",
-      });
-    } catch (err: any) {
-      showToast({
-        type: "error",
-        title: t("order_details_payment_status_title"),
-        message: err?.message || "",
-      });
-    }
-  };
+    useState(false);
+  const { CURRENCY_SYMBOL } = useConfig();
   // Format currency values
   const formatCurrency = (amount: number) => {
     return `${CURRENCY_SYMBOL}${amount?.toFixed(2) || "0.00"}`;
@@ -171,21 +80,8 @@ function TrackingOrderDetails({
     t("order_details_no_instructions_text");
 
   return (
-    <div className="mt-8 space-y-6 flex-1 max-w-2xl md:w-auto w-full md:px-0 px-4">
+    <div className="space-y-5 min-w-0 w-full">
       <div>
-        <div className="flex flex-col mb-2 md:mb-4">
-          <h1 className="text-lg font-semibold dark:text-gray-100">
-            {orderTrackingDetails?.restaurant?.name}
-          </h1>
-          <div className="flex items-center gap-2">
-            <h1 className="text-gray-700 dark:text-gray-300">
-              {t("order_details_subheading")} #{" "}
-            </h1>
-            <h1 className="text-secondary-color dark:text-primary-color">
-              {orderTrackingDetails?.orderId}
-            </h1>
-          </div>
-        </div>
         <h3 className="text-lg font-semibold mb-2 dark:text-gray-100">
           {t("order_details_heading")}
         </h3>
@@ -196,23 +92,23 @@ function TrackingOrderDetails({
             key={item._id || index}
             className="flex items-center justify-between mb-4 pb-4 border-b dark:border-gray-700"
           >
-            <div className="flex gap-4 items-center">
+            <div className="flex min-w-0 gap-3 items-center">
               <Image
                 src={
                   item.image ||
                   "https://storage.googleapis.com/a1aa/image/placeholder-food.jpg"
                 }
                 alt={item.title}
-                width={80}
-                height={80}
-                className="rounded-lg"
+                width={56}
+                height={56}
+                className="h-14 w-14 shrink-0 rounded-lg object-cover"
               />
               <div>
                 <p className="font-medium text-gray-900 dark:text-gray-100">
-                  {item.title}
+                  {item.quantity} &times; {item.title}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {item.variation.title}
+                  {item.variation?.title}
                   <br />
                   {item.description?.substring(0, 50)}
                   {item.description?.length > 50 ? "..." : ""}
@@ -242,20 +138,22 @@ function TrackingOrderDetails({
                 )}
               </div>
             </div>
-            <span className="text-secondary-color dark:text-primary-color font-semibold">
+            <span className="ml-3 shrink-0 text-secondary-color dark:text-primary-color font-semibold tabular-nums">
               {formatCurrency(calculateItemTotal(item))}
             </span>
           </div>
         ))}
       </div>
-      <div className="border-gray-200 border-b">
-        <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-base sm:text-lg md:text-[16px] lg:text-[18px] mb-4">
-          {t("order_details_instruction_label")}
-        </h2>
-        <p className="text-gray-500 dark:text-gray-300 mb-4 leading-5 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle">
-          {orderInstructions}
-        </p>
-      </div>
+      {orderTrackingDetails.instructions?.trim() && (
+        <div className="border-gray-200 border-b">
+          <h2 className="font-semibold text-gray-900 dark:text-gray-100 text-base sm:text-lg md:text-[16px] lg:text-[18px] mb-4">
+            {t("order_details_instruction_label")}
+          </h2>
+          <p className="text-gray-500 dark:text-gray-300 mb-4 leading-5 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle">
+            {orderInstructions}
+          </p>
+        </div>
+      )}
       {/* Items Summary */}
       <div>
         <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">
@@ -264,16 +162,6 @@ function TrackingOrderDetails({
           {t("order_details_items_label")})
         </h3>
         <div className="text-sm text-gray-700 dark:text-gray-300 space-y-3">
-          {/* Display each item with quantity and price */}
-          {orderTrackingDetails.items?.map((item, idx) => (
-            <div key={`summary-item-${idx}`} className="flex justify-between">
-              <span>
-                {item.quantity}x {item.title}
-              </span>
-              <span>{formatCurrency(calculateItemTotal(item))}</span>
-            </div>
-          ))}
-
           {/* Subtotal and charges */}
           <div className="flex justify-between pt-2 border-t dark:border-gray-700">
             <span>{t("order_details_subtotal_label")}</span>
@@ -315,18 +203,6 @@ function TrackingOrderDetails({
           </div>
         </div>
       </div>
-
-      <PaymentStatusCard
-        paymentMethod={orderTrackingDetails.paymentMethod}
-        paymentStatus={paymentStatus}
-        amount={formatCurrency(orderTrackingDetails.orderAmount)}
-        rechecking={rechecking}
-        startingRetry={startingRetry}
-        feedback={paymentFeedback}
-        onCheck={onCheckPaymentStatus}
-        onRetry={onPayAgain}
-        canRetry={orderTrackingDetails.orderStatus !== "CANCELLED"}
-      />
 
       {/* Cancel Button - only show for pending/accepted orders */}
       {canCancelOrder() && (

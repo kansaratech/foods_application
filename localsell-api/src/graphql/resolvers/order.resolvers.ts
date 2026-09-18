@@ -15,6 +15,7 @@ import { assertRiderNotRejected } from './rider-docs.resolvers';
 import { assertRiderApproved } from './rider.resolvers';
 import { hasPriorOrder } from './coupon.resolvers';
 import { isValidIndianMobile, normalizeIndianPhone } from '../../utils/phone';
+import { recordAudit } from '../../utils/audit';
 
 const ACTIVE_STATUSES: OrderStatus[] = ['PENDING', 'ACCEPTED', 'PICKED', 'ASSIGNED'];
 const PAST_STATUSES: OrderStatus[] = ['DELIVERED', 'COMPLETED', 'CANCELLED'];
@@ -221,6 +222,12 @@ async function applyOrderStatusUpdate(
   const currentUser = requireRole(context, allowedRoles);
   const status = statusInput.toUpperCase() as OrderStatus;
   if (!ORDER_STATUS_VALUES.includes(status)) throw userInputError(`Invalid order status: ${statusInput}`);
+  // Cancelling always needs a reason and an attributed actor — force every
+  // caller through cancelOrder, which captures both, instead of letting this
+  // generic status setter silently cancel an order with neither.
+  if (status === 'CANCELLED') {
+    throw userInputError('Use cancelOrder to cancel an order — a reason is required.');
+  }
 
   const order = await prisma.order.findUnique({ where: { id } });
   if (!order) throw notFoundError('Order not found');
@@ -247,7 +254,6 @@ async function applyOrderStatusUpdate(
     ACCEPTED: 'acceptedAt',
     PICKED: 'pickedAt',
     DELIVERED: 'deliveredAt',
-    CANCELLED: 'cancelledAt',
   };
   const field = timestampField[status];
 
@@ -255,17 +261,13 @@ async function applyOrderStatusUpdate(
     where: { id },
     data: {
       orderStatus: status,
-      status: status === 'CANCELLED' ? 'CANCELLED' : status === 'DELIVERED' || status === 'COMPLETED' ? 'COMPLETED' : 'ACTIVE',
+      status: status === 'DELIVERED' || status === 'COMPLETED' ? 'COMPLETED' : 'ACTIVE',
       ...(field ? { [field]: new Date() } : {}),
     },
   });
 
   await publishOrderUpdate(updated);
   if (status === 'PICKED' && order.orderStatus !== 'PICKED') notifyOrderEvent(updated.id, 'OUT_FOR_DELIVERY');
-  if (status === 'CANCELLED' && order.orderStatus !== 'CANCELLED') {
-    notifyOrderEvent(updated.id, 'CANCELLED');
-    return refundOrderIfEligible(updated);
-  }
   return updated;
 }
 
@@ -1078,6 +1080,10 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
     cancelOrder: async (_parent, args: { _id: string; reason: string }, context) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
+      const reason = args.reason?.trim() ?? '';
+      if (reason.length < 5) {
+        throw userInputError('Please give a specific reason (at least 5 characters) for cancelling this order.');
+      }
       const order = await prisma.order.findUnique({ where: { id: args._id } });
       if (!order) throw notFoundError('Order not found');
       const restaurant = await prisma.restaurant.findUnique({ where: { id: order.restaurantId } });
@@ -1089,7 +1095,21 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       }
       const updated = await prisma.order.update({
         where: { id: order.id },
-        data: { orderStatus: 'CANCELLED', status: 'CANCELLED', cancelledAt: new Date(), reason: args.reason },
+        data: {
+          orderStatus: 'CANCELLED',
+          status: 'CANCELLED',
+          cancelledAt: new Date(),
+          reason,
+          cancelledByType: currentUser.userType,
+          cancelledByName: currentUser.name ?? currentUser.email ?? currentUser.userType,
+        },
+      });
+      await recordAudit(context, {
+        action: 'order.cancel',
+        targetType: 'Order',
+        targetId: order.id,
+        summary: `${currentUser.userType} cancelled order #${order.orderId}: ${reason}`,
+        changes: { orderStatus: [order.orderStatus, 'CANCELLED'], reason },
       });
       await publishOrderUpdate(updated);
       if (order.orderStatus !== 'CANCELLED') {

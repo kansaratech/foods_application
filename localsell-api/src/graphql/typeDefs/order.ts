@@ -103,6 +103,10 @@ export const orderTypeDefs = /* GraphQL */ `
     completionTime: String
     preparationTime: String
     reason: String
+    "Who cancelled this order: CUSTOMER | VENDOR | ADMIN | RIDER | STAFF. Null unless the order was cancelled."
+    cancelledByType: String
+    "Display name of whoever cancelled this order, snapshotted at cancel time. Null unless the order was cancelled."
+    cancelledByName: String
     isRinged: Boolean
     review: Review
     "4-digit proof-of-delivery code. Visible only to the customer who placed the order and to admins."

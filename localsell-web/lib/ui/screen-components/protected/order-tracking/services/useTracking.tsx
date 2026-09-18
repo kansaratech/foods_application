@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useQuery, useSubscription } from "@apollo/client";
 import { ORDER_TRACKING } from "@/lib/api/graphql/queries/order-tracking";
 import { SUBSCRIPTION_ORDER } from "@/lib/api/graphql/subscription";
@@ -9,6 +9,9 @@ function useTracking({ orderId }: { orderId: string }) {
     data: orderTrackingDetails,
     loading,
     refetch,
+    error,
+    startPolling,
+    stopPolling,
   } = useQuery(ORDER_TRACKING, {
     fetchPolicy: "cache-and-network",
     // Keep the last-known data on screen while a background refetch is in
@@ -19,6 +22,30 @@ function useTracking({ orderId }: { orderId: string }) {
     },
   });
 
+  const order = orderTrackingDetails?.orderDetails;
+  useEffect(() => {
+    const terminal = ["DELIVERED", "COMPLETED", "CANCELLED"].includes(
+      order?.orderStatus,
+    );
+    const paymentPending =
+      order?.paymentMethod === "CASHFREE" && order?.paymentStatus === "PENDING";
+    const refundPending = ["PENDING", "PROCESSING"].includes(
+      order?.refundStatus,
+    );
+    if (order && (!terminal || paymentPending || refundPending))
+      startPolling(15000);
+    else stopPolling();
+    return () => stopPolling();
+  }, [
+    order?._id,
+    order?.orderStatus,
+    order?.paymentStatus,
+    order?.refundStatus,
+    order?.paymentMethod,
+    startPolling,
+    stopPolling,
+  ]);
+
   // Track the last order status we've already synced a full refetch for, so
   // repeated subscription pushes for the same status don't trigger reloads.
   const lastSyncedStatusRef = useRef<string | null>(null);
@@ -27,8 +54,10 @@ function useTracking({ orderId }: { orderId: string }) {
   const { data: subscriptionData } = useSubscription(SUBSCRIPTION_ORDER, {
     variables: { id: orderId },
     onSubscriptionData: ({ subscriptionData }) => {
-      const nextStatus =
-        subscriptionData.data?.subscriptionOrder?.orderStatus ?? null;
+      const update = subscriptionData.data?.subscriptionOrder;
+      const nextStatus = update
+        ? `${update._id}:${update.orderStatus}:${update.paymentStatus}:${update.refundStatus}:${update.rider?._id}:${update.completionTime}`
+        : null;
 
       // Only pull fresh full-order details when the status actually changes.
       // Other subscription fields (rider, completionTime) are already merged
@@ -41,6 +70,7 @@ function useTracking({ orderId }: { orderId: string }) {
   });
 
   return {
+    error,
     refetch,
     orderTrackingDetails: orderTrackingDetails?.orderDetails,
     // Only surface the loading state on the very first fetch (before we have

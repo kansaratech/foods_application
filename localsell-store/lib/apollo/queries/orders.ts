@@ -147,6 +147,12 @@ export const ORDERS_BY_REST_ID = gql`
         isPickedUp
         deliveryMode
         reason
+        cancelledByType
+        cancelledByName
+        refundStatus
+        refundedAmount
+        refundedAt
+        refundError
         createdAt
         orderDate
         deliveredAt

@@ -8,9 +8,11 @@ import {
   faStore,
   faPlus,
   faMinus,
+  faMap,
+  faMoneyBillWave,
+  faCreditCard,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { motion } from "framer-motion";
 
 import React, {
   useCallback,
@@ -25,7 +27,6 @@ import {
   useMutation,
   useQuery,
 } from "@apollo/client";
-import { Message } from "primereact/message";
 import { useRouter } from "next/navigation";
 
 import {
@@ -49,6 +50,7 @@ import { useConfig } from "@/lib/context/configuration/configuration.context";
 import useUser from "@/lib/hooks/useUser";
 import useToast from "@/lib/hooks/useToast";
 import useRestaurant from "@/lib/hooks/useRestaurant";
+import useActiveCoupons from "@/lib/hooks/useActiveCoupons";
 import { useUserAddress } from "@/lib/context/address/address.context";
 import { useAuth } from "@/lib/context/auth/auth.context";
 
@@ -113,17 +115,22 @@ export default function OrderCheckoutScreen() {
   // Persisted the same way orderInstructions is (localStorage, not just
   // component state) — otherwise navigating away to add more items and back
   // remounts this page and silently drops whatever tip was already chosen.
-  const [selectedTip, setSelectedTip] = useState(
-    () => localStorage.getItem("orderTip") || "",
-  );
+  const [selectedTip, setSelectedTip] = useState(() => {
+    const saved = localStorage.getItem("orderTip") || "";
+    return Number.isFinite(Number(saved)) && Number(saved) > 0 ? saved : "";
+  });
   // Ordering for someone else (different recipient/location) — optional, so
   // the store/rider can reach the right person instead of the account holder.
   const [recipientPhone, setRecipientPhone] = useState("");
+  const [showRoute, setShowRoute] = useState(false);
+  const [showCustomTip, setShowCustomTip] = useState(false);
   const [distance, setDistance] = useState("0.0");
   const [shouldLeaveAtDoor, setShouldLeaveAtDoor] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState(
-    PAYMENT_METHOD_LIST[0].value,
+  const [paymentChoice, setPaymentMethod] = useState("");
+  const [activeStep, setActiveStep] = useState<"address" | "payment">(
+    "address",
   );
+  const [confirmedAddressKey, setConfirmedAddressKey] = useState("");
   const [taxValue, setTaxValue] = useState();
   const [directions, setDirections] =
     useState<google.maps.DirectionsResult | null>(null);
@@ -146,6 +153,8 @@ export default function OrderCheckoutScreen() {
     CASHFREE_ENV,
   } = useConfig();
   const CASHFREE_MODE = cashfreeSdkMode(CASHFREE_ENV);
+  const paymentMethod =
+    paymentChoice === "COD" ? "COD" : IS_CASHFREE_ENABLED ? "CASHFREE" : "COD";
   const { authToken, setIsAuthModalVisible, setActivePanel } = useAuth();
   const { showToast } = useToast();
 
@@ -160,6 +169,7 @@ export default function OrderCheckoutScreen() {
     transformCartWithFoodInfo,
   } = useUser();
 
+  const { coupons: availableCoupons } = useActiveCoupons(restaurantId);
   const { userAddress } = useUserAddress();
   const restaurantFromLocalStorage =
     typeof window !== "undefined" ? localStorage.getItem("restaurant") : null;
@@ -464,6 +474,12 @@ export default function OrderCheckoutScreen() {
     VERIFY_COUPON,
     {
       onCompleted: couponCompleted,
+      onError: (error) =>
+        showToast({
+          title: t("promo_code_label"),
+          message: error.message,
+          type: "error",
+        }),
     },
   );
   const [createCashfreePaymentSession] = useMutation(
@@ -479,24 +495,47 @@ export default function OrderCheckoutScreen() {
     error: pricePreviewError,
     loading: pricePreviewLoading,
   } = useQuery(ORDER_PRICE_PREVIEW, {
-    skip: !restaurantId || cart.length === 0 || !userAddress,
+    skip: !authToken || !restaurantId || cart.length === 0 || !userAddress,
     fetchPolicy: "network-only",
     variables: {
       restaurant: restaurantId,
       orderInput: transformOrder(cart),
       couponCode: isCouponApplied ? (coupon ? coupon.title : null) : null,
       isPickedUp: isPickUp,
-      address:
-        userAddress
-          ? {
-              _id: userAddress._id,
-              latitude: "" + userAddress?.location?.coordinates?.[1],
-              longitude: "" + userAddress?.location?.coordinates?.[0],
-            }
-          : null,
+      address: userAddress
+        ? {
+            _id: userAddress._id,
+            latitude: "" + userAddress?.location?.coordinates?.[1],
+            longitude: "" + userAddress?.location?.coordinates?.[0],
+          }
+        : null,
     },
   });
-  const pricePreview = pricePreviewData?.orderPricePreview;
+  const pricePreview = authToken
+    ? pricePreviewData?.orderPricePreview
+    : undefined;
+  const addressKey = JSON.stringify([
+    authToken,
+    userAddress?._id,
+    userAddress?.deliveryAddress,
+    userAddress?.location?.coordinates,
+    isPickUp,
+  ]);
+  const addressConfirmed =
+    !!authToken && !!userAddress && confirmedAddressKey === addressKey;
+  const addressStepOpen =
+    !!authToken &&
+    (!addressConfirmed || activeStep === "address" || !!pricePreviewError);
+  const canConfirmAddress =
+    !!authToken &&
+    !!userAddress &&
+    !!pricePreview &&
+    !pricePreviewLoading &&
+    !pricePreviewError;
+  const openLogin = () => {
+    setActivePanel(0);
+    setIsAuthModalVisible(true);
+  };
 
   // The server recomputes deliveryCharges the same way; once the preview
   // resolves it replaces the client-side distance estimate `onInitDeliveryCharges`
@@ -611,11 +650,21 @@ export default function OrderCheckoutScreen() {
   const onCheckIsOpen = () => isRestaurantOpen(finalRestaurantData?.restaurant);
 
   // API Handlers
-  const onApplyCoupon = () => {
+  // One coupon per order, by design — the promo panel only ever shows the
+  // input when no coupon is applied yet, so picking another offer chip or
+  // typing a new code always means "apply this instead", never "stack this".
+  const applyCouponCode = (code: string) => {
+    if (!authToken) {
+      openLogin();
+      return;
+    }
+    if (!code.trim() || couponLoading || !cart.length) return;
+    setCouponText(code);
     verifyCoupon({
-      variables: { coupon: couponText, restaurantId: restaurantId },
+      variables: { coupon: code.trim(), restaurantId: restaurantId },
     });
   };
+  const onApplyCoupon = () => applyCouponCode(couponText);
 
   // function validateOrder() {
   //   if (!restaurantData.restaurant.isAvailable || !onCheckIsOpen()) {
@@ -702,7 +751,9 @@ export default function OrderCheckoutScreen() {
     if (pricePreviewError || pricePreviewLoading) {
       showToast({
         title: t("restaurant_label"),
-        message: pricePreviewError?.message || "Checking service availability. Please wait.",
+        message:
+          pricePreviewError?.message ||
+          "Checking service availability. Please wait.",
         type: "error",
       });
       return false;
@@ -834,6 +885,10 @@ export default function OrderCheckoutScreen() {
       return;
     }
 
+    if (!addressConfirmed) {
+      setActiveStep("address");
+      return;
+    }
     if (!validateOrder()) {
       return;
     }
@@ -910,14 +965,7 @@ export default function OrderCheckoutScreen() {
       onUseLocalStorage("delete", COUPON_TEXT_STORAGE_KEY);
       onUseLocalStorage("delete", COUPON_APPLIED_STORAGE_KEY);
       onUseLocalStorage("delete", COUPON_RESTAURANT_KEY);
-      router.replace(`/order/${data.placeOrder._id}/tracking`);
-    } else if (paymentMethod === "PAYPAL") {
-      clearCart();
-      onUseLocalStorage("delete", COUPON_STORAGE_KEY);
-      onUseLocalStorage("delete", COUPON_TEXT_STORAGE_KEY);
-      onUseLocalStorage("delete", COUPON_APPLIED_STORAGE_KEY);
-      onUseLocalStorage("delete", COUPON_RESTAURANT_KEY);
-      router.replace(`/paypal?id=${data.placeOrder._id}`);
+      router.replace(`/order/${data.placeOrder._id}/confirmation`);
     } else if (paymentMethod === "CASHFREE") {
       const orderDbId = data.placeOrder._id || "";
       try {
@@ -934,7 +982,7 @@ export default function OrderCheckoutScreen() {
               "Could not start online payment. You can retry from your order.",
             type: "error",
           });
-          router.replace(`/order/${orderDbId}/tracking`);
+          router.replace(`/order/${orderDbId}/confirmation`);
           return;
         }
 
@@ -960,7 +1008,7 @@ export default function OrderCheckoutScreen() {
             "Could not start online payment. You can retry from your order.",
           type: "error",
         });
-        router.replace(`/order/${orderDbId}/tracking`);
+        router.replace(`/order/${orderDbId}/confirmation`);
       }
     }
   }
@@ -1083,346 +1131,783 @@ export default function OrderCheckoutScreen() {
     onInitDirectionCacheSet();
   }, [store_user_location_cache_key]);
 
+  const orderItemCount = cart.reduce((count, item) => count + item.quantity, 0);
+
   return (
     <>
-      {/* <!-- Header with map and navigation --> */}
-      <div className="relative">
-        <BackButton
-          fallbackHref="/discovery"
-          className="!absolute left-4 top-4 z-10 rounded-full bg-white/90 px-3 py-1.5 shadow-md backdrop-blur hover:bg-white dark:bg-gray-900/90"
-        />
-        {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={{
-              width: "100%",
-              height: "clamp(180px, 25vh, 280px)",
-            }}
-            options={{
-              styles:
-                theme === "dark" ? checkoutDarkMapStyle : checkoutLightMapStyle,
-              disableDefaultUI: true,
-            }}
-            center={origin || destination}
-            zoom={13}
-          >
-            {/* Custom Origin Marker */}
-            <Marker
-              position={origin}
-              title={t("tab_restaurants")}
-              icon={{
-                url: "/assets/map/restaurant-pin.svg",
-                scaledSize: new window.google.maps.Size(44, 52),
-                anchor: new window.google.maps.Point(22, 49),
-              }}
-            />
-
-            {/* Custom Destination Marker */}
-            <Marker
-              position={destination}
-              title={t("Address")}
-              icon={{
-                url: "/assets/map/delivery-pin.svg",
-                scaledSize: new window.google.maps.Size(44, 52),
-                anchor: new window.google.maps.Point(22, 49),
-              }}
-            />
-
-            {!directions && !isCheckingCache && (
-              <DirectionsService
-                options={{
-                  destination,
-                  origin,
-                  travelMode: google.maps.TravelMode.DRIVING,
-                }}
-                callback={directionsCallback}
-              />
-            )}
-            {directions && (
-              <DirectionsRenderer
-                directions={directions}
-                options={{
-                  directions,
-                  suppressMarkers: true, // Hide default markers
-                  polylineOptions: {
-                    strokeColor: theme === "dark" ? "#60a5fa" : "#1c5bc7",
-                    strokeOpacity: 1,
-                    strokeWeight: 5,
-                    zIndex: 10,
-                  },
-                }}
-              />
-            )}
-          </GoogleMap>
-        ) : (
-          <>
-            <Image
-              src="https://storage.googleapis.com/a1aa/image/jt1AynRJJVtM9j1LRb30CodA1xsK2R23pWTOmRv3nsM.jpg"
-              alt="Map showing delivery route"
-              width={1200}
-              height={300}
-              className="w-full h-64 object-cover"
-            />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary-color text-white rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold">
-              H
-            </div>{" "}
-          </>
-        )}
-      </div>
-      {/* <!-- Toggle Prices Button for Mobile --> 
-          <div className="sm:hidden fixed top-14 left-0 right-0 bg-transparent z-10 p-4">
-            <button
-              className="bg-white text-primary-color w-full py-2 px-4 rounded-full border border-gray-300 flex justify-between items-center"
-              onClick={togglePriceSummary}
-            >
-              <span className="font-inter text-[14px]">
-                Total: {`${CURRENCY_SYMBOL} ${calculateTotal()}`}
-              </span>
-
-              <FontAwesomeIcon icon={faChevronDown} className="text-[14px]" />
-            </button>
-          </div>
-          */}
-
       {/* <!-- Main Content --> */}
       <div className={styles.checkout}>
+        <header className={styles.heading}>
+          <div>
+            <BackButton fallbackHref="/discovery" />
+            <h1>Checkout</h1>
+            <p>
+              {finalRestaurantData?.restaurant?.name ||
+                t("selected_items_label")}{" "}
+              &middot; {orderItemCount}{" "}
+              {orderItemCount === 1 ? "item" : "items"}
+            </p>
+          </div>
+        </header>
         <div className={styles.grid}>
-          <div className={styles.form}>
-            {/* <!-- Delivery and Pickup Toggle --> */}
-            <div className={styles.fulfilment}>
-              <button
-                className={`w-1/2 ${
-                  deliveryType === "Delivery"
-                    ? "bg-primary-color"
-                    : "bg-gray-100 dark:bg-gray-700"
-                } text-white py-2 rounded-full flex items-center justify-center`}
-                type="button"
-                aria-pressed={deliveryType === "Delivery"}
-                onClick={() => {
-                  setDeliveryType("Delivery");
-                  setIsPickUp(false);
-                }}
-              >
-                <FontAwesomeIcon
-                  icon={faBicycle}
-                  className="mr-2 rtl:ml-2 text-gray-900 dark:text-gray-100"
-                />
-                <span className="font-medium text-gray-900 dark:text-gray-100 font-inter text-xs md:text-sm xl:[14px]">
-                  {t("delivery_label")}
-                </span>
-              </button>
-
-              <button
-                className={`w-1/2 ${
-                  deliveryType === "Pickup"
-                    ? "bg-primary-color"
-                    : "bg-gray-100 dark:bg-gray-700"
-                } px-6 py-2 rounded-full mx-2 flex items-center justify-center`}
-                type="button"
-                aria-pressed={deliveryType === "Pickup"}
-                onClick={() => {
-                  setDeliveryType("Pickup");
-                  setIsPickUp(true);
-                  // Tipping is for the delivery courier — carrying it over
-                  // into a self-pickup order would silently overcharge for
-                  // a courier that never exists.
-                  setSelectedTip("");
-                }}
-              >
-                <FontAwesomeIcon
-                  icon={faStore}
-                  className="mr-2 rtl:ml-2 text-gray-900 dark:text-gray-100"
-                />
-                <span className="font-medium text-gray-900 dark:text-gray-100 font-inter text-xs md:text-sm xl:[14px]">
-                  {t("pickup_label")}
-                </span>
-              </button>
-            </div>
-
-            {/* <!-- Section Title --> */}
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
-              {t("for_greater_hunger_title")}
-            </h2>
-
-            {/* <!-- Delivery Details --> */}
-            <div className="bg-white dark:bg-gray-800 px-4 pt-4 pb-3 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="flex items-start">
-                  {deliveryType === "Pickup" ? (
-                    <FontAwesomeIcon
-                      icon={faStore}
-                      className="mr-2 mt-0.5 rtl:ml-2 text-gray-900 dark:text-gray-100"
-                    />
-                  ) : (
-                    <FontAwesomeIcon
-                      icon={faBicycle}
-                      className="mr-2 mt-0.5 rtl:ml-2 text-gray-900 dark:text-gray-100"
-                    />
-                  )}
-
-                  {pricePreviewError ? (
-                    <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-                      {pricePreviewError.message}
+          <div className={styles.steps}>
+            {/* A signed-in customer doesn't need to be told they're signed
+                in — this step only exists to get a guest to log in, so it's
+                pointless (and wastes a whole card of space) once authToken
+                is already set. */}
+            {!authToken && (
+              <section className={styles.stepCard}>
+                <div className={styles.stepHeading}>
+                  <span className={styles.stepNumber}>1</span>
+                  <div>
+                    <h2>Log in to continue</h2>
+                    <p>
+                      Sign in to select your address and complete your order.
                     </p>
-                  ) : pricePreviewLoading ? (
-                    <p role="status" className="text-sm">Checking service availability...</p>
-                  ) : (
-                    <p className="text-gray-900 dark:text-gray-100 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle">
-                      <span className="font-semibold">
-                        {" "}
-                        {deliveryType === "Pickup"
-                          ? t("pickup_label")
-                          : t("delivery_label")}{" "}
-                      </span>
-                      <span className="font-normal">
-                        {t("in_10_20_min_label")}{" "}
-                      </span>
-                      {deliveryType !== "Pickup" && (
-                        <span className="font-semibold">
-                          {userAddress?.deliveryAddress || (
-                            <span className="font-normal italic text-gray-500 dark:text-gray-400">
-                              {t("checkout_no_address_selected")}
-                            </span>
-                          )}
-                        </span>
-                      )}
-                    </p>
-                  )}
-                </div>
-
-                {(deliveryType !== "Pickup" || pricePreviewError) && (
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setIsUserAddressModalOpen(true)}
-                    className="shrink-0 rounded-full border border-primary-color px-3 py-1 text-xs font-semibold text-primary-color transition hover:bg-primary-color/5"
+                    className={styles.primaryAction}
+                    onClick={openLogin}
                   >
-                    {userAddress?.deliveryAddress
-                      ? t("checkout_change_address")
-                      : t("checkout_add_address")}
+                    Log in / Sign up
                   </button>
-                )}
-              </div>
-            </div>
-
-            {/* <!-- Leave at Door --> */}
-            <div
-              className={
-                deliveryType === "Pickup"
-                  ? "hidden"
-                  : "bg-white dark:bg-gray-800 px-4 pt-4 pb-2 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full"
-              }
+                </div>
+              </section>
+            )}
+            <section
+              className={`${styles.stepCard} ${styles.form}`}
+              id="checkout-address"
             >
-              <div className="flex items-center">
-                <input
-                  className="mr-2 rtl:ml-2"
-                  id="leave-at-door"
-                  type="checkbox"
-                  checked={shouldLeaveAtDoor}
-                  onChange={() => setShouldLeaveAtDoor((prev) => !prev)}
-                />
-                <label
-                  className="text-gray-900 dark:text-gray-100 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle"
-                  htmlFor="leave-at-door"
+              <button
+                type="button"
+                className={styles.stepHeading}
+                disabled={!authToken}
+                aria-expanded={addressStepOpen}
+                aria-controls="checkout-address-content"
+                onClick={() =>
+                  setActiveStep(
+                    addressStepOpen && addressConfirmed ? "payment" : "address",
+                  )
+                }
+              >
+                <span className={styles.stepNumber}>{authToken ? 1 : 2}</span>
+                <span>
+                  <strong>
+                    {isPickUp ? "Pickup location" : "Delivery address"}
+                  </strong>
+                  <small>
+                    {!authToken
+                      ? "Log in to select an address"
+                      : addressConfirmed
+                        ? userAddress?.deliveryAddress
+                        : "Select and confirm your address"}
+                  </small>
+                </span>
+                <span className={styles.stepChevron}>
+                  {addressStepOpen ? "-" : "+"}
+                </span>
+              </button>
+              {addressStepOpen && (
+                <div
+                  id="checkout-address-content"
+                  className={styles.stepContent}
                 >
-                  {t("leave_order_at_my_door_label")}
-                </label>
-              </div>
-              <p className="text-gray-300 dark:text-gray-400 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle mt-2">
-                {t("leave_at_door_info")}
-              </p>
-            </div>
-
-            {/* <!-- Selected Items --> */}
-            <div className="bg-white dark:bg-gray-800 pt-4 px-3  pb-2 rounded-lg mb-4 w-full ">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
-                {t("selected_items_label")}
-              </h2>
-              {/* Map this below section */}
-              {pricedCart.map((item) => {
-                return (
-                  <div
-                    key={item._id}
-                    className="flex items-center justify-between mb-2"
-                  >
-                    <div className="flex items-start">
-                      <Image
-                        src={
-                          item.image ||
-                          "https://storage.googleapis.com/a1aa/image/cPA2BWDjl26C-OR-Sz-gd7gFcDc7QbvTZ_904FkN0Y.jpg"
-                        }
-                        alt={item.foodTitle || t("food_item_label")}
-                        width={50}
-                        height={50}
-                        className="w-12 h-12 rounded-full mr-2 rtl:ml-2 object-cover"
+                  {/* <!-- Delivery and Pickup Toggle --> */}
+                  <div className={styles.fulfilment}>
+                    <button
+                      className={`w-1/2 ${
+                        deliveryType === "Delivery"
+                          ? "bg-primary-color"
+                          : "bg-gray-100 dark:bg-gray-700"
+                      } text-white py-2 rounded-full flex items-center justify-center`}
+                      type="button"
+                      aria-pressed={deliveryType === "Delivery"}
+                      onClick={() => {
+                        setDeliveryType("Delivery");
+                        setIsPickUp(false);
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faBicycle}
+                        className="mr-2 rtl:ml-2 text-gray-900 dark:text-gray-100"
                       />
-                      <div>
-                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base md:text-[12px] lg:text-[14px] xl:text-[16px]">
-                          {item.foodTitle}
-                        </h3>
-                        <div className="flex flex-col items-start">
-                          {item?.optionTitles?.map(
-                            (optionTitle, optionIndex) => {
-                              return (
-                                <p
-                                  key={`${optionTitle}-${optionIndex}`}
-                                  className="text-gray-600  dark:text-gray-400 tracking-normal font-inter text-xs sm:text-[12px] md:text-[12px]"
-                                >
-                                  + {optionTitle}
-                                </p>
-                              );
-                            },
-                          )}
-                        </div>
-                        <p className="text-secondary-color font-semibold text-sm sm:text-base md:text-[11px] lg:text-[12px] xl:text-[14px]">
-                          {CURRENCY_SYMBOL}
-                          {/* Line subtotal (unit price × quantity), not just
-                              the unit price — so this updates when the
-                              stepper does, matching the grand total (Issue 96). */}
-                          {(Number(item.price || 0) * item.quantity).toFixed(2)}
-                        </p>
-                        {item.isOutOfStock && (
-                          <p className="text-xs font-semibold text-red-500">
-                            {t("out_of_stock_label")}
+                      <span className="font-medium text-gray-900 dark:text-gray-100 font-inter text-xs md:text-sm xl:[14px]">
+                        {t("delivery_label")}
+                      </span>
+                    </button>
+
+                    <button
+                      className={`w-1/2 ${
+                        deliveryType === "Pickup"
+                          ? "bg-primary-color"
+                          : "bg-gray-100 dark:bg-gray-700"
+                      } px-6 py-2 rounded-full mx-2 flex items-center justify-center`}
+                      type="button"
+                      aria-pressed={deliveryType === "Pickup"}
+                      onClick={() => {
+                        setDeliveryType("Pickup");
+                        setIsPickUp(true);
+                        // Tipping is for the delivery courier — carrying it over
+                        // into a self-pickup order would silently overcharge for
+                        // a courier that never exists.
+                        setSelectedTip("");
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faStore}
+                        className="mr-2 rtl:ml-2 text-gray-900 dark:text-gray-100"
+                      />
+                      <span className="font-medium text-gray-900 dark:text-gray-100 font-inter text-xs md:text-sm xl:[14px]">
+                        {t("pickup_label")}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* <!-- Delivery Details --> */}
+                  <div className="bg-white dark:bg-gray-800 px-4 pt-4 pb-3 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full">
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="flex items-start">
+                        {deliveryType === "Pickup" ? (
+                          <FontAwesomeIcon
+                            icon={faStore}
+                            className="mr-2 mt-0.5 rtl:ml-2 text-gray-900 dark:text-gray-100"
+                          />
+                        ) : (
+                          <FontAwesomeIcon
+                            icon={faBicycle}
+                            className="mr-2 mt-0.5 rtl:ml-2 text-gray-900 dark:text-gray-100"
+                          />
+                        )}
+
+                        {!userAddress ? (
+                          <p className="text-sm text-gray-600">
+                            {t("checkout_no_address_selected")}
+                          </p>
+                        ) : pricePreviewError ? (
+                          <p
+                            role="alert"
+                            className="text-sm text-red-600 dark:text-red-400"
+                          >
+                            {pricePreviewError.message}
+                          </p>
+                        ) : pricePreviewLoading ? (
+                          <p role="status" className="text-sm">
+                            Checking service availability...
+                          </p>
+                        ) : (
+                          <p className="text-gray-900 dark:text-gray-100 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle">
+                            <span className="font-semibold">
+                              {" "}
+                              {deliveryType === "Pickup"
+                                ? t("pickup_label")
+                                : t("delivery_label")}{" "}
+                            </span>
+                            <span className="font-normal"> </span>
+                            <span className="font-semibold">
+                              {userAddress?.deliveryAddress || (
+                                <span className="font-normal italic text-gray-500 dark:text-gray-400">
+                                  {t("checkout_no_address_selected")}
+                                </span>
+                              )}
+                            </span>
                           </p>
                         )}
                       </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          updateItemQuantity(item.key, -1);
-                        }}
-                        aria-label={`${t("decrease")} ${item.foodTitle}`}
-                        className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
-                        type="button"
-                      >
-                        <FontAwesomeIcon icon={faMinus} size="xs" />
-                      </button>
-
-                      <span className="text-gray-900 dark:text-gray-100 w-6 text-center text-sm font-medium">
-                        {item.quantity}
-                      </span>
 
                       <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (item.isOutOfStock) return;
-                          updateItemQuantity(item.key, 1);
-                        }}
-                        disabled={item.isOutOfStock}
-                        aria-label={`${t("increase")} ${item.foodTitle}`}
-                        className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
                         type="button"
+                        onClick={() => setIsUserAddressModalOpen(true)}
+                        className="shrink-0 rounded-full border border-primary-color px-3 py-1 text-xs font-semibold text-primary-color transition hover:bg-primary-color/5"
                       >
-                        <FontAwesomeIcon icon={faPlus} size="xs" />
+                        {userAddress?.deliveryAddress
+                          ? t("checkout_change_address")
+                          : t("checkout_add_address")}
                       </button>
                     </div>
                   </div>
-                );
-              })}
+
+                  <details className={styles.optionalDetails}>
+                    <summary>
+                      Delivery preferences &amp; recipient details
+                      {recipientPhone || shouldLeaveAtDoor
+                        ? " (added)"
+                        : " (optional)"}
+                    </summary>
+                    {/* <!-- Leave at Door --> */}
+                    <div
+                      className={
+                        deliveryType === "Pickup"
+                          ? "hidden"
+                          : "bg-white dark:bg-gray-800 px-4 pt-4 pb-2 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full"
+                      }
+                    >
+                      <div className="flex items-center">
+                        <input
+                          className="mr-2 rtl:ml-2"
+                          id="leave-at-door"
+                          type="checkbox"
+                          checked={shouldLeaveAtDoor}
+                          onChange={() => setShouldLeaveAtDoor((prev) => !prev)}
+                        />
+                        <label
+                          className="text-gray-900 dark:text-gray-100 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle"
+                          htmlFor="leave-at-door"
+                        >
+                          {t("leave_order_at_my_door_label")}
+                        </label>
+                      </div>
+                      <p className="text-gray-300 dark:text-gray-400 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle mt-2">
+                        {t("leave_at_door_info")}
+                      </p>
+                    </div>
+
+                    {/* <!-- Ordering for someone else --> */}
+                    <div className="bg-white dark:bg-gray-900 mb-6 w-full">
+                      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
+                        {t("Recipient's mobile number")}
+                      </h2>
+                      <p className="text-gray-500 dark:text-gray-400 mb-2 leading-5 tracking-normal font-inter text-xs sm:text-sm">
+                        {t("checkout_recipient_help")}
+                      </p>
+                      <input
+                        aria-label={t("Recipient's mobile number")}
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        value={recipientPhone}
+                        onChange={(e) =>
+                          setRecipientPhone(
+                            e.target.value.replace(/\D/g, "").slice(0, 10),
+                          )
+                        }
+                        placeholder={t("Optional — 10-digit mobile number")}
+                        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-secondary-color"
+                      />
+                    </div>
+                  </details>
+
+                  <button
+                    type="button"
+                    className={styles.mapToggle}
+                    aria-expanded={showRoute}
+                    aria-controls="checkout-route"
+                    onClick={() => setShowRoute(!showRoute)}
+                  >
+                    <FontAwesomeIcon icon={faMap} />
+                    {showRoute ? "Hide map" : "View map"}
+                  </button>
+                  {showRoute && (
+                    <div id="checkout-route" className={styles.route}>
+                      {isLoaded ? (
+                        <GoogleMap
+                          mapContainerStyle={{
+                            width: "100%",
+                            height: "220px",
+                          }}
+                          options={{
+                            styles:
+                              theme === "dark"
+                                ? checkoutDarkMapStyle
+                                : checkoutLightMapStyle,
+                            disableDefaultUI: true,
+                          }}
+                          center={origin || destination}
+                          zoom={13}
+                        >
+                          {/* Custom Origin Marker */}
+                          <Marker
+                            position={origin}
+                            title={t("tab_restaurants")}
+                            icon={{
+                              url: "/assets/map/restaurant-pin.svg",
+                              scaledSize: new window.google.maps.Size(44, 52),
+                              anchor: new window.google.maps.Point(22, 49),
+                            }}
+                          />
+
+                          {/* Custom Destination Marker */}
+                          <Marker
+                            position={destination}
+                            title={t("Address")}
+                            icon={{
+                              url: "/assets/map/delivery-pin.svg",
+                              scaledSize: new window.google.maps.Size(44, 52),
+                              anchor: new window.google.maps.Point(22, 49),
+                            }}
+                          />
+
+                          {!directions && !isCheckingCache && (
+                            <DirectionsService
+                              options={{
+                                destination,
+                                origin,
+                                travelMode: google.maps.TravelMode.DRIVING,
+                              }}
+                              callback={directionsCallback}
+                            />
+                          )}
+                          {directions && (
+                            <DirectionsRenderer
+                              directions={directions}
+                              options={{
+                                directions,
+                                suppressMarkers: true, // Hide default markers
+                                polylineOptions: {
+                                  strokeColor:
+                                    theme === "dark" ? "#60a5fa" : "#1c5bc7",
+                                  strokeOpacity: 1,
+                                  strokeWeight: 5,
+                                  zIndex: 10,
+                                },
+                              }}
+                            />
+                          )}
+                        </GoogleMap>
+                      ) : (
+                        <p role="status">Loading map...</p>
+                      )}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className={styles.primaryAction}
+                    disabled={!canConfirmAddress}
+                    onClick={() => {
+                      setConfirmedAddressKey(addressKey);
+                      setActiveStep("payment");
+                    }}
+                  >
+                    {pricePreviewLoading
+                      ? "Checking address..."
+                      : isPickUp
+                        ? "Confirm pickup location"
+                        : "Deliver to this address"}
+                  </button>
+                </div>
+              )}
+            </section>
+            <section
+              className={`${styles.stepCard} ${styles.form}`}
+              id="checkout-payment"
+            >
+              <button
+                type="button"
+                className={styles.stepHeading}
+                disabled={!addressConfirmed}
+                aria-expanded={
+                  addressConfirmed &&
+                  !pricePreviewError &&
+                  activeStep === "payment"
+                }
+                aria-controls="checkout-payment-content"
+                onClick={() =>
+                  setActiveStep(
+                    activeStep === "payment" ? "address" : "payment",
+                  )
+                }
+              >
+                <span className={styles.stepNumber}>{authToken ? 2 : 3}</span>
+                <span>
+                  <strong>{t("payment_details_label")}</strong>
+                  <small>
+                    {!addressConfirmed
+                      ? "Confirm your address to continue"
+                      : paymentMethod === "CASHFREE"
+                        ? "Online: UPI, card or netbanking"
+                        : "Cash"}
+                  </small>
+                </span>
+                <span className={styles.stepChevron}>
+                  {addressConfirmed &&
+                  !pricePreviewError &&
+                  activeStep === "payment"
+                    ? "-"
+                    : "+"}
+                </span>
+              </button>
+              {addressConfirmed &&
+                !pricePreviewError &&
+                activeStep === "payment" && (
+                  <div
+                    id="checkout-payment-content"
+                    className={styles.stepContent}
+                  >
+                    {/* <!-- Payment Details --> */}
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
+                      {t("payment_details_label")}
+                    </h2>
+                    <div className={styles.paymentMethods}>
+                      {filteredPaymentMethods.map(
+                        (paymentMethodItem, methodIndex) => {
+                          return (
+                            <div
+                              key={`${paymentMethodItem.value}-${methodIndex}`}
+                              className="bg-white dark:bg-gray-800 px-4 pt-4 pb-2 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <label
+                                  className="text-gray-600 dark:text-gray-300 flex items-center gap-2 text-sm sm:text-base md:text-[12px] lg:text-[12px] xl:text-[14px]"
+                                  htmlFor={`payment-${paymentMethodItem.value}`}
+                                >
+                                  <FontAwesomeIcon
+                                    icon={
+                                      paymentMethodItem.value === "COD"
+                                        ? faMoneyBillWave
+                                        : faCreditCard
+                                    }
+                                    className="text-primary-color"
+                                  />
+                                  {t(paymentMethodItem.label)}
+                                </label>
+                                <input
+                                  className="mr-2"
+                                  id={`payment-${paymentMethodItem.value}`}
+                                  name="payment"
+                                  type="radio"
+                                  checked={
+                                    paymentMethod === paymentMethodItem.value
+                                  }
+                                  value={paymentMethod}
+                                  onChange={() =>
+                                    setPaymentMethod(paymentMethodItem.value)
+                                  }
+                                />
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
+
+                    {/* <!-- Promo Code & Tip: side by side, both always open so
+                         available offers are never hidden behind a toggle --> */}
+                    <fieldset disabled={!authToken} className={styles.extras}>
+                      <div className={styles.extrasRow}>
+                      <div className={styles.extraCard} id="checkout-promo">
+                        <div className={styles.extraCardHeader}>
+                          <span className={styles.accordionIcon} aria-hidden="true">
+                            %
+                          </span>
+                          <span className={styles.accordionLabel}>
+                            <strong>{t("promo_code_label")}</strong>
+                            <small>
+                              {isCouponApplied
+                                ? `${coupon?.title} ${t("coupon_applied_title").toLowerCase()}`
+                                : t("enter_promo_code_placeholder")}
+                            </small>
+                          </span>
+                        </div>
+                        <div className={styles.extraCardContent}>
+                          {isCouponApplied ? (
+                            <div className={styles.couponApplied}>
+                              <div className={styles.couponAppliedInfo}>
+                                <span className={styles.couponAppliedBadge}>
+                                  {coupon?.title}
+                                </span>
+                                <span>
+                                  {t("coupon_applied_successfully_message")}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                className={styles.couponAppliedRemove}
+                                onClick={() => {
+                                  setIsCouponApplied(false);
+                                  setCoupon({} as ICouponData);
+                                  setCouponText("");
+
+                                  onUseLocalStorage("delete", COUPON_STORAGE_KEY);
+                                  onUseLocalStorage(
+                                    "delete",
+                                    COUPON_TEXT_STORAGE_KEY,
+                                  );
+                                  onUseLocalStorage(
+                                    "delete",
+                                    COUPON_APPLIED_STORAGE_KEY,
+                                  );
+                                  onUseLocalStorage(
+                                    "delete",
+                                    COUPON_RESTAURANT_KEY,
+                                  );
+                                }}
+                              >
+                                {couponLoading ? (
+                                  <BrandLoader variant="inline" size={16} />
+                                ) : (
+                                  <span>{t("Remove")}</span>
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              {availableCoupons.length > 0 && (
+                                <div className={styles.offerList}>
+                                  <p className={styles.offerListLabel}>
+                                    {t("available_offers_label")}
+                                  </p>
+                                  {availableCoupons.map((c) => (
+                                    <button
+                                      key={c._id}
+                                      type="button"
+                                      className={styles.offerChip}
+                                      disabled={couponLoading || !cart.length}
+                                      onClick={() => applyCouponCode(c.title)}
+                                    >
+                                      <span className={styles.offerChipCode}>
+                                        {c.title}
+                                      </span>
+                                      <span>
+                                        {t("offer_percent_off", {
+                                          pct: Math.round(c.discount),
+                                        })}
+                                      </span>
+                                      <span className={styles.offerChipApply}>
+                                        {t("apply_buttons")}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              <div className={styles.promoInput}>
+                                <input
+                                  className="flex-grow p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-100 dark:bg-gray-800 rounded text-[12px] md:text-[14px]"
+                                  aria-label={t("promo_code_label")}
+                                  placeholder={t("enter_promo_code_placeholder")}
+                                  type="text"
+                                  value={couponText}
+                                  onChange={(e) => setCouponText(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      onApplyCoupon();
+                                    }
+                                  }}
+                                  disabled={couponLoading}
+                                />
+                                <button
+                                  className="bg-primary-color rtl:mr-2 sm:mt-0 mt-2 sm:w-fit w-full h-10 px-8 space-x-2 font-medium text-white dark:text-white  tracking-normal font-inter text-sm sm:text-base md:text-[12px] lg:text-[14px] rounded-full
+                              disabled:opacity-60 disabled:cursor-not-allowed"
+                                  onClick={onApplyCoupon}
+                                  disabled={
+                                    cart.length === 0 ||
+                                    couponLoading ||
+                                    !couponText.trim()
+                                  }
+                                >
+                                  {couponLoading ? (
+                                    <BrandLoader variant="inline" size={20} />
+                                  ) : (
+                                    <span>{t("submit_button")}</span>
+                                  )}
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      {/* <!-- Tip the Courier --> */}
+                      {!isPickUp && (
+                        <div className={styles.extraCard} id="checkout-tip">
+                          <div className={styles.extraCardHeader}>
+                            <span className={styles.accordionIcon} aria-hidden="true">
+                              <FontAwesomeIcon icon={faBicycle} />
+                            </span>
+                            <span className={styles.accordionLabel}>
+                              <strong>{t("tip_the_courier_label")}</strong>
+                              <small>
+                                {selectedTip
+                                  ? `${CURRENCY_SYMBOL}${selectedTip} ${t("tip_label").toLowerCase()}`
+                                  : t("tip_courier_info")}
+                              </small>
+                            </span>
+                          </div>
+                          <div className={styles.extraCardContent}>
+                            <div className={styles.tipOptions}>
+                              <div className={styles.tips}>
+                                <button
+                                  type="button"
+                                  aria-pressed={!selectedTip}
+                                  onClick={() => {
+                                    setSelectedTip("");
+                                    setShowCustomTip(false);
+                                  }}
+                                >
+                                  No tip
+                                </button>
+                                {tipData?.tips?.tipVariations
+                                  ?.filter(
+                                    (tip: string) =>
+                                      Number.isFinite(Number(tip)) &&
+                                      Number(tip) > 0,
+                                  )
+                                  .map((tip: string, index: number) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      aria-pressed={selectedTip === tip}
+                                      className={`text-[12px] ${
+                                        selectedTip === tip
+                                          ? "text-white bg-secondary-color"
+                                          : "text-secondary-color bg-white dark:bg-gray-800 dark:text-secondary-color"
+                                      } border border-secondary-color px-4 py-2 rounded-full w-full`}
+                                      onClick={() => {
+                                        setShowCustomTip(false);
+                                        if (selectedTip === tip) {
+                                          setSelectedTip("");
+                                        } else {
+                                          setSelectedTip(tip);
+                                        }
+                                      }}
+                                    >
+                                      {tip !== "Other" ? CURRENCY_SYMBOL : ""}
+                                      {tip}
+                                    </button>
+                                  ))}
+                                <button
+                                  type="button"
+                                  aria-pressed={showCustomTip}
+                                  onClick={() => setShowCustomTip(!showCustomTip)}
+                                >
+                                  Other
+                                </button>
+                              </div>
+                              {showCustomTip && (
+                                <label className={styles.customTip}>
+                                  Tip amount ({CURRENCY_SYMBOL})
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="1"
+                                    inputMode="decimal"
+                                    value={selectedTip}
+                                    onChange={(event) => {
+                                      const value = event.target.value;
+                                      setSelectedTip(
+                                        Number.isFinite(Number(value)) &&
+                                          Number(value) > 0
+                                          ? value
+                                          : "",
+                                      );
+                                    }}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      </div>
+                    </fieldset>
+                  </div>
+                )}
+            </section>
+          </div>
+
+          {/* Promo, optional tip and a shared responsive order summary. */}
+          <aside
+            className={styles.summaryColumn}
+            aria-label="Order total and savings"
+          >
+            {/* <!-- Selected Items --> */}
+            <div className={styles.cartCard}>
+              <p className={styles.storeName}>
+                {finalRestaurantData?.restaurant?.name}
+              </p>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
+                {t("selected_items_label")}
+              </h2>
+              <div className={styles.cartItems}>
+                {pricedCart.map((item) => {
+                  return (
+                    <div
+                      key={item._id}
+                      className="flex items-center justify-between mb-2"
+                    >
+                      <div className="flex items-start">
+                        <Image
+                          src={
+                            item.image ||
+                            "https://storage.googleapis.com/a1aa/image/cPA2BWDjl26C-OR-Sz-gd7gFcDc7QbvTZ_904FkN0Y.jpg"
+                          }
+                          alt={item.foodTitle || t("food_item_label")}
+                          width={50}
+                          height={50}
+                          className="w-12 h-12 rounded-full mr-2 rtl:ml-2 object-cover"
+                        />
+                        <div>
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base md:text-[12px] lg:text-[14px] xl:text-[16px]">
+                            {item.foodTitle}
+                          </h3>
+                          <div className="flex flex-col items-start">
+                            {item?.optionTitles?.map(
+                              (optionTitle, optionIndex) => {
+                                return (
+                                  <p
+                                    key={`${optionTitle}-${optionIndex}`}
+                                    className="text-gray-600  dark:text-gray-400 tracking-normal font-inter text-xs sm:text-[12px] md:text-[12px]"
+                                  >
+                                    + {optionTitle}
+                                  </p>
+                                );
+                              },
+                            )}
+                          </div>
+                          <p className="text-secondary-color font-semibold text-sm sm:text-base md:text-[11px] lg:text-[12px] xl:text-[14px]">
+                            {CURRENCY_SYMBOL}
+                            {/* Line subtotal (unit price × quantity), not just
+                              the unit price — so this updates when the
+                              stepper does, matching the grand total (Issue 96). */}
+                            {(Number(item.price || 0) * item.quantity).toFixed(
+                              2,
+                            )}
+                          </p>
+                          {item.isOutOfStock && (
+                            <p className="text-xs font-semibold text-red-500">
+                              {t("out_of_stock_label")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            updateItemQuantity(item.key, -1);
+                          }}
+                          aria-label={`${t("decrease")} ${item.foodTitle}`}
+                          className="bg-gray-200 text-gray-600 rounded-full w-6 h-6 flex items-center justify-center"
+                          type="button"
+                        >
+                          <FontAwesomeIcon icon={faMinus} size="xs" />
+                        </button>
+
+                        <span className="text-gray-900 dark:text-gray-100 w-6 text-center text-sm font-medium">
+                          {item.quantity}
+                        </span>
+
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (item.isOutOfStock) return;
+                            updateItemQuantity(item.key, 1);
+                          }}
+                          disabled={item.isOutOfStock}
+                          aria-label={`${t("increase")} ${item.foodTitle}`}
+                          className="bg-secondary-color text-white rounded-full w-6 h-6 flex items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
+                          type="button"
+                        >
+                          <FontAwesomeIcon icon={faPlus} size="xs" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
               <button
                 className="text-gray-900 dark:text-gray-100 mt-2 font-semibold mb-2 text-sm sm:text-base md:text-[12px] lg:text-[12px] xl:text-[14px]"
                 onClick={() => {
@@ -1457,175 +1942,6 @@ export default function OrderCheckoutScreen() {
               ""
             )}
 
-            {/* <!-- Ordering for someone else --> */}
-            <div className="bg-white dark:bg-gray-900 mb-6 w-full">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
-                {t("Recipient's mobile number")}
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 mb-2 leading-5 tracking-normal font-inter text-xs sm:text-sm">
-                {t(
-                  "Ordering for someone else? Add their number so the store/rider can reach them.",
-                )}
-              </p>
-              <input
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                value={recipientPhone}
-                onChange={(e) =>
-                  setRecipientPhone(e.target.value.replace(/\D/g, "").slice(0, 10))
-                }
-                placeholder={t("Optional — 10-digit mobile number")}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-secondary-color"
-              />
-            </div>
-
-            {/* <!-- Payment Details --> */}
-            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
-              {t("payment_details_label")}
-            </h2>
-            {filteredPaymentMethods.map((paymentMethodItem, methodIndex) => {
-              return (
-                <div
-                  key={`${paymentMethodItem.value}-${methodIndex}`}
-                  className="bg-white dark:bg-gray-800 px-4 pt-4 pb-2 rounded-lg mb-4 border border-gray-300 dark:border-gray-700 w-full"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <label
-                      className="text-gray-600 dark:text-gray-300 flex items-center text-sm sm:text-base md:text-[12px] lg:text-[12px] xl:text-[14px]"
-                      htmlFor={`payment-${paymentMethodItem.value}`}
-                    >
-                      <span className="font-medium pr-1">
-                        {CURRENCY_SYMBOL}
-                      </span>
-                      {t(paymentMethodItem.label)}
-                    </label>
-                    <input
-                      className="mr-2"
-                      id={`payment-${paymentMethodItem.value}`}
-                      name="payment"
-                      type="radio"
-                      checked={paymentMethod === paymentMethodItem.value}
-                      value={paymentMethod}
-                      onChange={() => setPaymentMethod(paymentMethodItem.value)}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* <!-- Tip the Courier --> */}
-            {!isPickUp && (
-              <div className="bg-white dark:bg-gray-900 mb-6 w-full">
-                <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
-                  {t("tip_the_courier_label")}
-                </h2>
-                <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-5">
-                  <p className="text-gray-500 dark:text-gray-400 mb-4 leading-5 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle mt-2">
-                    {t("tip_courier_info")}
-                  </p>
-                  <div className={styles.tips}>
-                    {tipData?.tips.tipVariations.map(
-                      (tip: string, index: number) => (
-                        <button
-                          key={index}
-                          className={`text-[12px] ${
-                            selectedTip === tip
-                              ? "text-white bg-secondary-color"
-                              : "text-secondary-color bg-white dark:bg-gray-800 dark:text-secondary-color"
-                          } border border-secondary-color px-4 py-2 rounded-full w-full`}
-                          onClick={() => {
-                            if (selectedTip === tip) {
-                              setSelectedTip("");
-                            } else {
-                              setSelectedTip(tip);
-                            }
-                          }}
-                        >
-                          {tip !== "Other" ? CURRENCY_SYMBOL : ""}
-                          {tip}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* <!-- Promo Code --> */}
-            <div className="bg-white dark:bg-gray-900  pb-2 rounded-lg mb-4 w-full">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-base sm:text-lg md:text-[16px] lg:text-[18px]">
-                {t("promo_code_label")}
-              </h2>
-              {isCouponApplied ? (
-                <div className="flex items-center">
-                  <Message
-                    className="dark:bg-gray-800"
-                    severity="success"
-                    text={t("coupon_applied_successfully_message")}
-                  />
-
-                  <button
-                    className="border border-red-500 text-red-500 hover:bg-red-50 dark:border-red-500 dark:hover:border-red-700 dark:hover:bg-inherit rtl:mr-3 ml-3 sm:mt-0 mt-2 sm:w-fit w-full h-10 px-8 space-x-2 font-medium   tracking-normal font-inter text-sm sm:text-base md:text-[12px] lg:text-[14px] rounded-full"
-                    onClick={() => {
-                      setIsCouponApplied(false);
-                      setCoupon({} as ICouponData);
-                      setCouponText("");
-
-                      // CLEAR FROM LOCALSTORAGE
-                      onUseLocalStorage("delete", COUPON_STORAGE_KEY);
-                      onUseLocalStorage("delete", COUPON_TEXT_STORAGE_KEY);
-                      onUseLocalStorage("delete", COUPON_APPLIED_STORAGE_KEY);
-                      onUseLocalStorage("delete", COUPON_RESTAURANT_KEY);
-                    }}
-                  >
-                    {couponLoading ? (
-                      <BrandLoader variant="inline" size={20} />
-                    ) : (
-                      <span>{t("Remove")}</span>
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4 leading-5 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle mt-2">
-                    {t("promo_code_info")}
-                  </p>
-                  <div className="flex items-center flex-wrap space-x-2">
-                    <input
-                      className="flex-grow p-2 border border-gray-300 dark:border-gray-700 dark:text-gray-100 dark:bg-gray-800 rounded text-[12px] md:text-[14px]"
-                      placeholder={t("enter_promo_code_placeholder")}
-                      type="text"
-                      value={couponText}
-                      onChange={(e) => setCouponText(e.target.value)}
-                      disabled={couponLoading}
-                    />
-                    <button
-                      className="bg-primary-color rtl:mr-2 sm:mt-0 mt-2 sm:w-fit w-full h-10 px-8 space-x-2 font-medium text-white dark:text-white  tracking-normal font-inter text-sm sm:text-base md:text-[12px] lg:text-[14px] rounded-full
-                      disabled:opacity-60 disabled:cursor-not-allowed"
-                      onClick={onApplyCoupon}
-                      disabled={cart.length === 0}
-                    >
-                      {couponLoading ? (
-                        <BrandLoader variant="inline" size={20} />
-                      ) : (
-                        <span>{t("submit_button")}</span>
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* <!-- Order Summary - Large Screen --> */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className={styles.desktopSummary}
-          >
             <div className={styles.summary} id="price-summary">
               <h2 className="text-sm lg:text-lg font-semibold text-left flex justify-between dark:text-white">
                 {t("prices_in_label")} {CURRENCY}
@@ -1728,243 +2044,57 @@ export default function OrderCheckoutScreen() {
               <button
                 className="bg-primary-color text-white dark:text-white w-full py-2 rounded-full font-semibold text-xs lg:text-[16px] disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={onPlaceOrder}
-                disabled={cart.length === 0 || loadingOrderMutation || pricePreviewLoading || !!pricePreviewError || !userAddress}
+                disabled={
+                  cart.length === 0 ||
+                  loadingOrderMutation ||
+                  (!!authToken &&
+                    (pricePreviewLoading ||
+                      !!pricePreviewError ||
+                      !addressConfirmed))
+                }
               >
                 {loadingOrderMutation ? (
                   <BrandLoader variant="inline" size={20} />
                 ) : (
-                  <span> {t("click_to_order_button")}</span>
+                  <span>
+                    {!authToken
+                      ? "Log in to continue"
+                      : !addressConfirmed
+                        ? "Confirm address to continue"
+                        : t("click_to_order_button")}
+                  </span>
                 )}
               </button>
             </div>
-          </motion.div>
-
-          {/* <!-- Order Summary - Medium & Small Screens --> */}
-          <div className={styles.mobileSummary}>
-            <div className={styles.summary} id="price-summary">
-              <h2 className="text-sm lg:text-base font-semibold text-left flex justify-between dark:text-white ">
-                {t("prices_in_label")} {CURRENCY}
-                <InfoSvg />
-              </h2>
-              <p className="text-gray-400 dark:text-white mb-3 text-left leading-5 tracking-normal font-inter text-xs lg:text-[10px]">
-                {t("inc_taxes_label")}
-              </p>
-
-              <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                <span className="font-inter text-gray-900 dark:text-white leading-5">
-                  {t("item_subtotal_label")}
-                </span>
-                <span className="font-inter text-gray-900 dark:text-white leading-5">
-                  {CURRENCY_SYMBOL}
-                  {calculatePrice(0)}
-                </span>
-              </div>
-
-              {deliveryType === "Delivery" && (
-                <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {t("delivery_with_distance_label", {
-                      distance,
-                      unit: t("km_unit"),
-                    })}
-                  </span>
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {CURRENCY_SYMBOL}
-                    {deliveryCharges.toFixed()}
-                  </span>
-                </div>
-              )}
-
-              {selectedTip && (
-                <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {t("tip_label")}
-                  </span>
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {`${CURRENCY_SYMBOL} ${selectedTip}`}
-                    {/*    {`${CURRENCY_SYMBOL} ${parseFloat(calculateTip()).toFixed(
-                      2
-                    )}`} */}
-                  </span>
-                </div>
-              )}
-
-              {Number(taxCalculation()) > 0 && (
-                <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    GST ({taxValue ?? 0}%)
-                  </span>
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {CURRENCY_SYMBOL}
-                    {taxCalculation()}
-                  </span>
-                </div>
-              )}
-              {showInclusiveTaxCaption && (
-                <p className="text-gray-400 dark:text-gray-400 mb-1 text-xs lg:text-[12px]">
-                  Inclusive of all taxes
-                </p>
-              )}
-
-              {/* <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                  <span className="font-inter text-gray-900 leading-5">
-                    Service fee
-                  </span>
-                  <span className="font-inter text-gray-900 leading-5">
-                    $0.40
-                  </span>
-                </div> */}
-
-              <Divider />
-
-              {isCouponApplied && (
-                <div className="flex justify-between mb-1 text-xs lg:text-[12px]">
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {t("discount_label")}
-                  </span>
-                  <span className="font-inter text-gray-900 dark:text-white leading-5">
-                    {`-${CURRENCY_SYMBOL} ${(
-                      Number(calculatePrice(0, false)) -
-                      Number(calculatePrice(0, true))
-                    ).toFixed(2)}`}
-                  </span>
-                </div>
-              )}
-
-              {/* <div className="text-secondary-color mb-1 text-left font-inter text-xs lg:text-[12px]">
-                    Choose an offer (1 available)
-                  </div> */}
-
-              {/* <Divider /> */}
-
-              <div className="flex justify-between font-semibold mb-4 text-xs lg:text-[14px ] dark:text-white">
-                <span>{t("total_sum_label")}</span>
-                <span>{`${CURRENCY_SYMBOL} ${calculateTotal()}`}</span>
-              </div>
-
-              <button
-                className="bg-primary-color text-white dark:text-white w-full py-2 rounded-full text-xs lg:text-[12px]"
-                onClick={onPlaceOrder}
-                disabled={cart.length === 0 || loadingOrderMutation || pricePreviewLoading || !!pricePreviewError || !userAddress}
-              >
-                {loadingOrderMutation ? (
-                  <BrandLoader variant="inline" size={20} />
-                ) : (
-                  <span> {t("click_to_order_button")} </span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Order Summary - Small Screen */}
-          {/* <div className="fixed top-4 right-0 mx-auto md:fixed lg:hidden xl:hidden m-4 p-4 w-full sm:w-64 ml-0 sm:ml-8 mt-16 sm:mt-0 lg:right-auto lg:m-0 lg:w-1/4 lg:sticky lg:top-6">
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      ref={contentRef}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="bg-white p-2 rounded-lg shadow-md border border-gray-300 overflow-hidden"
-                    >
-                      <h2 className="text-base font-semibold text-left flex justify-between">
-                       
-                        <InfoSvg />
-                      </h2>
-                      <p className="text-gray-300 mb-4 text-left  sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle ">
-                        Inc. Taxes (if applicable)
-                      </p>
-
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          
-                        </span>
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          {CURRENCY_SYMBOL}
-                          {calculatePrice(0)}
-                        </span>
-                      </div>
-
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          Delivery ({dstance} km)
-                        </span>
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          {CURRENCY_SYMBOL}
-                          {deliveryCharges.toFixed()}
-                        </span>
-                      </div>
-
-                      {selectedTip && (
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                            Tip
-                          </span>
-                          <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                            {`${CURRENCY_SYMBOL} ${selectedTip}`}
-                              {`${CURRENCY_SYMBOL} ${parseFloat(
-                          calculateTip()
-                        ).toFixed(2)}`} 
-                          </span>
-                        </div>
-                      )}
-
-                      {Number(taxCalculation()) > 0 && (
-                        <div className="flex justify-between mb-1 text-sm">
-                          <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                            GST ({taxValue ?? 0}%)
-                          </span>
-                          <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                            {CURRENCY_SYMBOL}
-                            {taxCalculation()}
-                          </span>
-                        </div>
-                      )}
-                      {showInclusiveTaxCaption && (
-                        <p className="text-gray-400 dark:text-gray-400 mb-1 text-[12px]">
-                          Inclusive of all taxes
-                        </p>
-                      )}
-
-                      <Divider />
-
-                      <div className="flex justify-between mb-1 text-sm">
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          Discount
-                        </span>
-                        <span className="font-inter  text-gray-900 text-[14px] md:text-lg leading-6 md:leading-7">
-                          {`-${CURRENCY_SYMBOL} ${(
-                            Number(calculatePrice(0, false)) -
-                            Number(calculatePrice(0, true))
-                          ).toFixed(2)}`}
-                        </span>
-                      </div>
-
-                      <div className="text-secondary-color mb-1 text-left font-inter text-[14px] md:text-lg leading-6 md:leading-7">
-                        Choose an offer (1 available)
-                      </div>
-                      <Divider />
-
-                      <div className="flex justify-between font-semibold mb-4 text-sm">
-                        <span>Total sum</span>
-                        <span>
-                          {CURRENCY_SYMBOL}
-                          {calculateTotal()}
-                        </span>
-                      </div>
-                      <button
-                        className="bg-primary-color text-white w-full py-2 rounded-full text-sm"
-                        onClick={onPlaceOrder}
-                      >
-                        {loadingOrderMutation ?
-                          <BrandLoader variant="inline" size={20} />
-                        : <span> Click to order</span>}
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div> */}
+          </aside>
+        </div>
+        <div className={styles.mobileBar}>
+          <a href="#price-summary">
+            <span>{t("total_sum_label")}</span>
+            <strong>{`${CURRENCY_SYMBOL} ${calculateTotal()}`}</strong>
+          </a>
+          <button
+            type="button"
+            onClick={onPlaceOrder}
+            disabled={
+              cart.length === 0 ||
+              loadingOrderMutation ||
+              (!!authToken &&
+                (pricePreviewLoading ||
+                  !!pricePreviewError ||
+                  !addressConfirmed))
+            }
+          >
+            {loadingOrderMutation ? (
+              <BrandLoader variant="inline" size={20} />
+            ) : !authToken ? (
+              "Log in to continue"
+            ) : !addressConfirmed ? (
+              "Confirm address to continue"
+            ) : (
+              t("click_to_order_button")
+            )}
+          </button>
         </div>
       </div>
 

@@ -85,6 +85,10 @@ export const ORDER_TRACKING = gql`
       paymentMethod
       paymentStatus
       paidAmount
+      refundStatus
+      refundedAmount
+      refundedAt
+      refundError
       orderAmount
       discountAmount
       orderStatus
@@ -102,6 +106,9 @@ export const ORDER_TRACKING = gql`
       acceptedAt
       pickedAt
       instructions
+      reason
+      cancelledByType
+      cancelledByName
       __typename
     }
   }

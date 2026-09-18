@@ -57,6 +57,8 @@ export interface IExtendedOrder extends IOrder {
   tipping?: number;
   discountAmount?: number;
   reason?: string | null;
+  cancelledByType?: string | null;
+  cancelledByName?: string | null;
   taxationAmount?: number;
   itemsTitle?: string;
   OrderdeliveryAddress?: string;

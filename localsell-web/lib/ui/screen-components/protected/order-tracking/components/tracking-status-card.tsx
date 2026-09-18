@@ -7,6 +7,15 @@ interface TrackingStatusCardProps {
   orderTrackingDetails: IOrderTrackingDetail;
 }
 
+// The raw UserType enum (VENDOR/ADMIN/...) means nothing to a customer
+// reading their own order — word it for them instead.
+const CANCELLED_BY_LABEL: Record<string, string> = {
+  VENDOR: "the store",
+  ADMIN: "support",
+  CUSTOMER: "you",
+  RIDER: "the delivery partner",
+};
+
 function TrackingStatusCard({ orderTrackingDetails }: TrackingStatusCardProps) {
   const t = useTranslations();
   // Helper to determine the step status
@@ -343,27 +352,13 @@ function TrackingStatusCard({ orderTrackingDetails }: TrackingStatusCardProps) {
       <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm">
         {getStatusMessage()}
       </p>
-
-      {/* Proof-of-delivery code — show it to the customer while the order is
-          out for delivery so they can read it to the delivery partner. */}
-      {!orderTrackingDetails.isPickedUp &&
-        orderTrackingDetails.deliveryOtp &&
-        ["ACCEPTED", "ASSIGNED", "PICKED"].includes(
-          orderTrackingDetails.orderStatus,
-        ) && (
-          <div className="mt-4 rounded-xl border border-primary-color/30 bg-primary-light dark:bg-[#16293f] p-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-primary-color">
-                Delivery code
-              </p>
-              <p className="text-[11px] text-gray-600 dark:text-gray-300 mt-0.5">
-                Share this with your delivery partner to receive your order
-              </p>
-            </div>
-            <span className="text-2xl font-black tracking-[0.3em] text-primary-color dark:text-white shrink-0">
-              {orderTrackingDetails.deliveryOtp}
-            </span>
-          </div>
+      {orderTrackingDetails.orderStatus === "CANCELLED" &&
+        orderTrackingDetails.cancelledByType && (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            {t("cancelled_by_label")}{" "}
+            {CANCELLED_BY_LABEL[orderTrackingDetails.cancelledByType] ??
+              orderTrackingDetails.cancelledByType}
+          </p>
         )}
 
       {/* Real-time update indicator */}

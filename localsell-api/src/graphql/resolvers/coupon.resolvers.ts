@@ -63,6 +63,7 @@ export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
     activeCoupons: async (
       _parent,
       args: { restaurantId?: string | null; campaignOnly?: boolean },
+      context,
     ) => {
       const now = new Date();
       // With a restaurantId: that store's coupons + globals. Without one
@@ -71,7 +72,13 @@ export const couponResolvers: IResolvers<unknown, GraphQLContext> = {
         ? { enabled: true, OR: [{ restaurantId: null }, { restaurantId: args.restaurantId }] }
         : { enabled: true };
       const rows = await prisma.coupon.findMany({ where });
+      // A signed-in customer who has already ordered is not eligible for a
+      // `firstOrderOnly` coupon (e.g. a 100%-off welcome offer) - without this
+      // check it kept showing up as a "100% OFF" badge on cards for stores
+      // they'd already ordered from.
+      const ineligibleForFirstOrder = context.user ? await hasPriorOrder(context.user.id) : false;
       return rows.filter((c) => {
+        if (c.firstOrderOnly && ineligibleForFirstOrder) return false;
         if (args.campaignOnly && (c.lifeTimeActive || (!c.startDate && !c.endDate))) return false;
         return (
           c.lifeTimeActive || ((!c.startDate || now >= c.startDate) && (!c.endDate || now <= c.endDate))

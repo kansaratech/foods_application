@@ -131,6 +131,13 @@ export interface IOrder {
   cancelledAt?: string;
   assignedAt?: string;
   instructions?: string;
+  reason?: string;
+  cancelledByType?: string;
+  cancelledByName?: string;
+  refundStatus?: string;
+  refundedAmount?: number;
+  refundedAt?: string;
+  refundError?: string;
 }
 
 export interface IOrdersResponse {

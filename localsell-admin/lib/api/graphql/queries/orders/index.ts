@@ -185,6 +185,9 @@ export const GET_ORDER_BY_RESTAURANT = gql`
         refundedAmount
         refundedAt
         refundError
+        reason
+        cancelledByType
+        cancelledByName
         isActive
         createdAt
         deliveryCharges
@@ -454,6 +457,9 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         refundedAmount
         refundedAt
         refundError
+        reason
+        cancelledByType
+        cancelledByName
         isActive
         isPickedUp
         deliveryMode

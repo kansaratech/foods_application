@@ -81,6 +81,16 @@ export default function PastOrders({
     500 // Debounce time in milliseconds
   );
 
+  // A cancelled order's card had no way to see what happened — order details,
+  // cancellation reason, refund status. That all already lives on the same
+  // tracking page active orders link to, so reuse it here too.
+  const handleTrackOrderClicked = useDebounceFunction(
+    (orderId: string | undefined) => {
+      router.push(`/order/${orderId}/tracking`);
+    },
+    500,
+  );
+
   // handle rate order clicked
   // use debouncefunction if user click multiple times at once it will call function only 1 time
   // this function will set the selected order and show the rating modal
@@ -155,6 +165,7 @@ export default function PastOrders({
               order={order}
               handleReOrderClicked={handleReOrderClicked}
               handleRateOrderClicked={handleRateOrderClicked}
+              handleTrackOrderClicked={handleTrackOrderClicked}
               type="past"
               className="border border-gray-200 rounded-lg shadow-sm"
             />

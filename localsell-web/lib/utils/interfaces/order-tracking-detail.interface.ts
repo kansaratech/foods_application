@@ -82,6 +82,12 @@ export interface IOrderTrackingDetail {
   paymentMethod: string;
   paymentStatus: string;
   paidAmount: number;
+  refundStatus?: string;
+  refundedAmount?: number | null;
+  refundedAt?: string | null;
+  refundError?: string | null;
+  cancelledByType?: string | null;
+  cancelledByName?: string | null;
   orderAmount: number;
   discountAmount:number;
   orderStatus: string;

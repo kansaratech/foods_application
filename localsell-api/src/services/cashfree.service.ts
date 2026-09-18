@@ -86,6 +86,7 @@ export async function createCashfreeOrder(
 }
 
 export interface CashfreeOrderStatus {
+  paymentSessionId?: string;
   orderStatus: string; // ACTIVE | PAID | EXPIRED | TERMINATED | TERMINATION_REQUESTED
   paymentStatus?: string; // from the latest payment on the order, when available
 }
@@ -104,7 +105,7 @@ export async function fetchCashfreeOrderStatus(
   });
   const body: Record<string, any> = (await res.json().catch(() => ({}))) as Record<string, any>;
   if (!res.ok) throw new Error(body?.message || `Cashfree order lookup failed (${res.status})`);
-  return { orderStatus: body.order_status };
+  return { orderStatus: body.order_status, paymentSessionId: body.payment_session_id };
 }
 
 export interface CashfreeRefundInput {

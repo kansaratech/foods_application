@@ -81,6 +81,8 @@ export const SUBSCRIPTION_ORDER = gql`
     subscriptionOrder(id: $id) {
       _id
       orderStatus
+      paymentStatus
+      refundStatus
       rider {
         _id
       }

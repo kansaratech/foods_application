@@ -1,5 +1,5 @@
 .admin-order-dialog {
-  width: 820px;
+  width: min(1200px, calc(100vw - 48px));
   max-width: calc(100vw - 24px);
   max-height: calc(100dvh - 40px);
   border: 1px solid #e2e8f0;
@@ -8,7 +8,7 @@
   box-shadow: 0 24px 80px #16293f33;
 }
 .admin-order-dialog .p-dialog-header {
-  padding: 22px 24px;
+  padding: 16px 20px;
   border-bottom: 1px solid #e2e8f0;
   background: white;
   color: #16293f;
@@ -29,10 +29,10 @@
   color: #475569;
 }
 .admin-order-dialog .order-details-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
   gap: 16px;
-  align-items: stretch;
+  align-items: start;
 }
 .admin-order-dialog .order-dialog-heading {
   display: flex;
@@ -45,9 +45,11 @@
   letter-spacing: 0.12em;
   color: #64748b;
 }
+.admin-order-dialog .order-main-stack,
 .admin-order-dialog .order-financial-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -60,7 +62,7 @@
 .admin-order-dialog .order-customer .information-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-.admin-order-dialog .order-customer .information-item:last-child {
+.admin-order-dialog .order-customer .information-item:last-child:nth-child(odd) {
   grid-column: auto;
 }
 .admin-order-dialog .section-header {
@@ -98,7 +100,7 @@
 }
 .admin-order-dialog .order-section {
   min-width: 0;
-  padding: 20px;
+  padding: 16px;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   background: white;
@@ -107,7 +109,7 @@
   line-height: 1.6;
 }
 .admin-order-dialog .section-header {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   color: #16293f;
   font-size: 15px;
   font-weight: 700;
@@ -178,7 +180,7 @@
   color: #16293f;
 }
 .admin-order-dialog .payment-section {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 .admin-order-dialog .payment-type {
   display: inline-flex;
@@ -210,6 +212,7 @@
 .admin-order-dialog .payment-gateway-ref {
   display: block;
   margin-top: 8px;
+  overflow-wrap: anywhere;
   font-size: 12px;
   color: #7d91b1;
 }
@@ -270,7 +273,7 @@
   background: #172e50;
   color: #93c5fd;
 }
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .admin-order-dialog .order-financial-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;

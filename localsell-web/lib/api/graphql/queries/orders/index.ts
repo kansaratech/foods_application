@@ -118,6 +118,13 @@ export const ORDERS = gql`
       cancelledAt
       assignedAt
       instructions
+      reason
+      cancelledByType
+      cancelledByName
+      refundStatus
+      refundedAmount
+      refundedAt
+      refundError
     }
   }
 `;
@@ -213,6 +220,13 @@ export const GET_USERS_PAST_ORDERS = gql`
       cancelledAt
       assignedAt
       instructions
+      reason
+      cancelledByType
+      cancelledByName
+      refundStatus
+      refundedAmount
+      refundedAt
+      refundError
     }
   }
 `;
@@ -308,6 +322,13 @@ export const GET_USERS_ACTIVE_ORDERS = gql`
       cancelledAt
       assignedAt
       instructions
+      reason
+      cancelledByType
+      cancelledByName
+      refundStatus
+      refundedAmount
+      refundedAt
+      refundError
     }
   }
 `;

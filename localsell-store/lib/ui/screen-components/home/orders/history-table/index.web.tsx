@@ -17,6 +17,12 @@ type HistoryOrder = Pick<
   | "deliveryMode"
   | "isPickedUp"
   | "reason"
+  | "cancelledByType"
+  | "cancelledByName"
+  | "refundStatus"
+  | "refundedAmount"
+  | "refundedAt"
+  | "refundError"
   | "deliveryCharges"
   | "taxationAmount"
   | "tipping"
@@ -38,6 +44,27 @@ type Result = {
     totalPages: number;
   };
 };
+// Legacy orders cancelled before reason-capture existed literally stored the
+// string "not available" as the reason — showing that back verbatim reads as
+// a real (if useless) reason rather than "we don't have one," so treat it the
+// same as no reason at all.
+const hasRealReason = (reason?: string) =>
+  !!reason && reason.trim().toLowerCase() !== "not available";
+
+const CANCELLED_BY_LABEL: Record<string, string> = {
+  VENDOR: "You (the store)",
+  ADMIN: "LocalSell support",
+  CUSTOMER: "The customer",
+  RIDER: "The delivery partner",
+};
+
+const REFUND_LABEL: Record<string, string> = {
+  PENDING: "Refund initiated",
+  PROCESSING: "Refund processing",
+  SUCCESS: "Refunded",
+  FAILED: "Refund failed",
+};
+
 const mode = (o: HistoryOrder) =>
   o.deliveryMode === "PICKUP" || (!o.deliveryMode && o.isPickedUp)
     ? "Pickup"
@@ -545,10 +572,41 @@ export default function WebOrderHistory({
                 </div>
               ))}
             </dl>
-            {selected.reason && (
-              <p className="oh-detail-reason">
-                {t("Cancellation reason")}: {selected.reason}
-              </p>
+            {selected.orderStatus === "CANCELLED" && (
+              <div className="oh-detail-reason">
+                <p className="oh-detail-reason-title">
+                  {t("Cancelled")}
+                  {selected.cancelledByType &&
+                    ` — ${t(
+                      CANCELLED_BY_LABEL[selected.cancelledByType] ??
+                        selected.cancelledByType,
+                    )}`}
+                </p>
+                {hasRealReason(selected.reason) ? (
+                  <p>
+                    {t("Cancellation reason")}: {selected.reason}
+                  </p>
+                ) : (
+                  <p className="oh-detail-reason-muted">
+                    {t("No reason was recorded for this cancellation.")}
+                  </p>
+                )}
+                {selected.refundStatus &&
+                  selected.refundStatus !== "NONE" && (
+                    <p>
+                      {t(
+                        REFUND_LABEL[selected.refundStatus] ??
+                          selected.refundStatus,
+                      )}
+                      {selected.refundedAmount != null &&
+                        selected.refundStatus === "SUCCESS" &&
+                        ` — ${format(selected.refundedAmount)}`}
+                      {selected.refundStatus === "FAILED" &&
+                        selected.refundError &&
+                        `: ${selected.refundError}`}
+                    </p>
+                  )}
+              </div>
             )}
           </>
         )}
@@ -577,6 +635,9 @@ const styles = `
 .oh-detail dl{margin:16px 24px 22px;padding:14px 16px;background:#f8fafc;border:1px solid #eef2f8;border-radius:10px}
 .oh-detail dl div{display:flex;justify-content:space-between;padding:6px 0;font-size:12.5px;color:#48597a}
 .oh-total{margin-top:6px;padding-top:12px!important;border-top:1px solid #dce4f0;font-weight:750!important;color:#122b49!important;font-size:14px!important}
-.oh-detail-reason{margin:0 24px 20px;padding:10px 14px;background:#fef2f2;border:1px solid #fbdada;border-radius:8px;color:#b3261e;font-size:12px;line-height:1.5!important}
+.oh-detail-reason{margin:0 24px 24px;padding:12px 14px;background:#fef2f2;border:1px solid #fbdada;border-radius:8px;color:#b3261e;font-size:12px}
+.oh-detail-reason p{padding:0!important;line-height:1.5!important;margin:4px 0 0}
+.oh-detail-reason-title{margin:0!important;font-weight:700;color:#8f1d15}
+.oh-detail-reason-muted{color:#b3261e99;font-style:italic}
 @media(min-width:1500px){.order-history-web{padding:32px 40px}.oh-toolbar{gap:18px}.oh-card td{height:55px}}@media(max-width:700px){.order-history-web{padding:20px 12px}.oh-heading{flex-wrap:wrap}.oh-heading h1{font-size:23px}.oh-actions{width:100%;justify-content:space-between}.oh-search{flex-basis:100%}.oh-ranges{width:100%}.oh-ranges button{flex:1;padding:0 12px}.oh-toolbar{gap:10px}.oh-toolbar select{flex:1;min-width:120px}.oh-footer{align-items:flex-start;flex-direction:column}.oh-pagination{width:100%;justify-content:flex-end}.oh-pagination label{margin-right:auto}}
 `;

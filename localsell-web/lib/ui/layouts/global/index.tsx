@@ -49,7 +49,11 @@ const AppLayout = ({ children }: IProvider) => {
       <div
         className={`layout-main-container ${isSearchFocused && "blur-md overflow-hidden h-screen "}`}
       >
-        <div className="layout-main min-h-screen w-full min-w-0 flex-col dark:bg-gray-900">
+        {/* No min-h-screen here — the outer .layout-main already covers the
+            viewport; stacking a second one under it forced this div alone to
+            be a full 100vh even on short pages, pushing AppFooter far below
+            the fold and leaving a dead white gap under short content. */}
+        <div className="layout-main w-full min-w-0 flex-col dark:bg-gray-900">
           <CashfreeOrderRecovery />
           {children}
         </div>

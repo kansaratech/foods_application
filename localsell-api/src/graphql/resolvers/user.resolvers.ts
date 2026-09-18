@@ -444,22 +444,64 @@ export const userResolvers: IResolvers<unknown, GraphQLContext> = {
 
     createAddress: async (_parent, args: { addressInput: AddressInputArgs }, context) => {
       const currentUser = requireAuth(context);
+      const latitude = args.addressInput.latitude ? Number(args.addressInput.latitude) : null;
+      const longitude = args.addressInput.longitude ? Number(args.addressInput.longitude) : null;
+      const deliveryAddress = args.addressInput.deliveryAddress;
+
       // A freshly added address is the one the customer means to use right
       // now. Without unselecting the rest here, the previous address stayed
       // `selected: true` and the client's "find the one flagged selected"
       // logic picked it over the new one (#74).
       await prisma.address.updateMany({ where: { userId: currentUser.id }, data: { selected: false } });
-      await prisma.address.create({
-        data: {
+
+      // The confirm-address modal always fires createAddress, even when the
+      // customer is re-confirming a spot they already saved (no `_id` is
+      // tracked client-side). Reuse an existing row for the same spot -
+      // matched by identical coordinates (~11m, 4 decimal places) or an
+      // identical address string - instead of inserting a duplicate every
+      // time someone places another order from the same place.
+      const existing = await prisma.address.findFirst({
+        where: {
           userId: currentUser.id,
-          label: args.addressInput.label,
-          deliveryAddress: args.addressInput.deliveryAddress,
-          details: args.addressInput.details,
-          latitude: args.addressInput.latitude ? Number(args.addressInput.latitude) : null,
-          longitude: args.addressInput.longitude ? Number(args.addressInput.longitude) : null,
-          selected: true,
+          OR: [
+            ...(latitude != null && longitude != null
+              ? [
+                  {
+                    latitude: { gte: latitude - 0.0001, lte: latitude + 0.0001 },
+                    longitude: { gte: longitude - 0.0001, lte: longitude + 0.0001 },
+                  },
+                ]
+              : []),
+            ...(deliveryAddress ? [{ deliveryAddress: { equals: deliveryAddress } }] : []),
+          ],
         },
       });
+
+      if (existing) {
+        await prisma.address.update({
+          where: { id: existing.id },
+          data: {
+            label: args.addressInput.label,
+            deliveryAddress,
+            details: args.addressInput.details,
+            latitude,
+            longitude,
+            selected: true,
+          },
+        });
+      } else {
+        await prisma.address.create({
+          data: {
+            userId: currentUser.id,
+            label: args.addressInput.label,
+            deliveryAddress,
+            details: args.addressInput.details,
+            latitude,
+            longitude,
+            selected: true,
+          },
+        });
+      }
       return prisma.user.findUnique({ where: { id: currentUser.id } });
     },
     editAddress: async (_parent, args: { addressInput: AddressInputArgs }, context) => {

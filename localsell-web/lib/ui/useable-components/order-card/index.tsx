@@ -17,6 +17,55 @@ import useUser from "@/lib/hooks/useUser";
 import { CartItem } from "@/lib/context/User/User.context";
 import { useConfig } from "@/lib/context/configuration/configuration.context";
 
+const CHIP_TONE = {
+  success:
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  pending:
+    "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+  failed: "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+  neutral:
+    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+} as const;
+
+function Chip({ tone, label }: { tone: keyof typeof CHIP_TONE; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${CHIP_TONE[tone]}`}
+    >
+      {label}
+    </span>
+  );
+}
+
+const REFUND_LABEL: Record<string, string> = {
+  PENDING: "Refund initiated",
+  PROCESSING: "Refund processing",
+  SUCCESS: "Refunded",
+  FAILED: "Refund failed",
+};
+
+const ORDER_STATUS_CHIP: Record<
+  string,
+  { label: string; tone: keyof typeof CHIP_TONE }
+> = {
+  PENDING: { label: "Order placed", tone: "pending" },
+  ACCEPTED: { label: "Preparing", tone: "pending" },
+  ASSIGNED: { label: "On the way", tone: "pending" },
+  PICKED: { label: "On the way", tone: "pending" },
+  DELIVERED: { label: "Delivered", tone: "success" },
+  COMPLETED: { label: "Delivered", tone: "success" },
+  CANCELLED: { label: "Cancelled", tone: "failed" },
+};
+
+// Who cancelled it, worded for a customer reading their own order history —
+// the raw UserType enum (VENDOR/ADMIN/...) means nothing to them.
+const CANCELLED_BY_LABEL: Record<string, string> = {
+  VENDOR: "by the store",
+  ADMIN: "by support",
+  CUSTOMER: "by you",
+  RIDER: "by the delivery partner",
+};
+
 const OrderCard: FC<IOrderCardProps> = ({
   order,
   type,
@@ -250,6 +299,32 @@ const OrderCard: FC<IOrderCardProps> = ({
     );
   };
 
+  // Refund state (once raised) takes priority over the plain payment state —
+  // a customer whose refund is processing needs that, not "Payment complete".
+  const paymentChip: { label: string; tone: keyof typeof CHIP_TONE } =
+    order.refundStatus && order.refundStatus !== "NONE"
+      ? {
+          label: REFUND_LABEL[order.refundStatus] ?? order.refundStatus,
+          tone:
+            order.refundStatus === "SUCCESS"
+              ? "success"
+              : order.refundStatus === "FAILED"
+                ? "failed"
+                : "pending",
+        }
+      : order.paymentMethod === "COD"
+        ? { label: "Cash on delivery", tone: "neutral" }
+        : order.paymentStatus === "PAID"
+          ? { label: "Payment complete", tone: "success" }
+          : order.paymentStatus === "FAILED"
+            ? { label: "Payment failed", tone: "failed" }
+            : { label: "Payment pending", tone: "pending" };
+  const statusChip = ORDER_STATUS_CHIP[order.orderStatus] ?? {
+    label: order.orderStatus,
+    tone: "neutral" as const,
+  };
+  const isCancelled = order.orderStatus === "CANCELLED";
+
   return (
     <div
       className={twMerge(
@@ -273,6 +348,10 @@ const OrderCard: FC<IOrderCardProps> = ({
             <h3 className="font-semibold text-lg dark:text-gray-100">
               {order?.restaurant?.name}
             </h3>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+              <Chip tone={statusChip.tone} label={statusChip.label} />
+              <Chip tone={paymentChip.tone} label={paymentChip.label} />
+            </div>
             {type === "active" && (
               <h1 className="text-gray-600 dark:text-gray-300 text-sm">
                 {(order?.items && order?.items[0]?.title) || ""}
@@ -298,6 +377,48 @@ const OrderCard: FC<IOrderCardProps> = ({
                   {t("order_number")} #{order.orderId?.substring(0, 8)}
                 </div>
                 <OrderItems order={order} />
+                {isCancelled && (
+                  <div className="mt-3 rounded-lg border border-rose-100 bg-rose-50 p-3 text-sm dark:border-rose-900 dark:bg-rose-950">
+                    <p className="font-medium text-rose-800 dark:text-rose-300">
+                      Cancelled
+                      {order.cancelledByType &&
+                        ` ${CANCELLED_BY_LABEL[order.cancelledByType] ?? ""}`}
+                    </p>
+                    {order.reason && (
+                      <p className="mt-1 text-rose-700 dark:text-rose-300">
+                        “{order.reason}”
+                      </p>
+                    )}
+                    {order.refundStatus && order.refundStatus !== "NONE" && (
+                      <div className="mt-2 border-t border-rose-200 pt-2 text-rose-700 dark:border-rose-800 dark:text-rose-300">
+                        <p>
+                          {REFUND_LABEL[order.refundStatus] ??
+                            order.refundStatus}
+                          {order.refundedAmount != null &&
+                            order.refundStatus === "SUCCESS" &&
+                            ` — ${CURRENCY_SYMBOL}${order.refundedAmount.toFixed(2)}`}
+                          {order.refundedAt &&
+                            order.refundStatus === "SUCCESS" &&
+                            ` on ${formatDate(order.refundedAt)}`}
+                        </p>
+                        {(order.refundStatus === "PENDING" ||
+                          order.refundStatus === "PROCESSING") && (
+                          <p className="mt-1">
+                            Refunded to your original payment method (card,
+                            UPI or netbanking) — not a wallet. Can take a few
+                            days to reflect depending on your bank.
+                          </p>
+                        )}
+                        {order.refundStatus === "FAILED" && (
+                          <p className="mt-1">
+                            {order.refundError ||
+                              "The refund hasn't gone through yet — contact support."}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -310,23 +431,39 @@ const OrderCard: FC<IOrderCardProps> = ({
             {order.orderAmount?.toFixed(2)}
           </div>
 
-          {(type === "active" || type === "past") && (
-            <CustomIconButton
-              title={
-                type === "active"
-                  ? t("track_order_button_label")
-                  : t("select_item_to_reorder")
-              }
-              iconColor="white"
-              classNames="bg-primary-color text-white w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
-              handleClick={
-                type === "active"
-                  ? () => handleTrackOrder(order)
-                  : () => handleReorder(order)
-              }
-              loading={false}
-            />
-          )}
+          <div className="flex md:flex-col items-center md:items-end gap-2">
+            {/* Past orders had no way to see what actually happened — order
+                details, and for a cancelled order, its refund status — since
+                only "reorder" was ever shown here. This links to the same
+                tracking page an active order uses; it already renders full
+                details plus the payment/refund panel for a finished order. */}
+            {type === "past" && (
+              <CustomIconButton
+                title={t("view_order_details_button")}
+                iconColor="primary"
+                classNames="bg-transparent border border-primary-color text-primary-color w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
+                handleClick={() => handleTrackOrder(order)}
+                loading={false}
+              />
+            )}
+            {(type === "active" || type === "past") && (
+              <CustomIconButton
+                title={
+                  type === "active"
+                    ? t("track_order_button_label")
+                    : t("select_item_to_reorder")
+                }
+                iconColor="white"
+                classNames="bg-primary-color text-white w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
+                handleClick={
+                  type === "active"
+                    ? () => handleTrackOrder(order)
+                    : () => handleReorder(order)
+                }
+                loading={false}
+              />
+            )}
+          </div>
         </div>
       </div>
 

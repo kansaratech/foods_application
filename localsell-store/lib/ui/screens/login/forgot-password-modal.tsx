@@ -80,6 +80,7 @@ export default function ForgotPasswordModal({
       });
       FlashMessageComponent({
         message: "We sent a reset code to your email.",
+        type: "success",
       });
       setStep("reset");
     } catch (err) {
@@ -113,6 +114,7 @@ export default function ForgotPasswordModal({
       });
       FlashMessageComponent({
         message: "Password updated. Please sign in.",
+        type: "success",
       });
       close();
     } catch (err) {

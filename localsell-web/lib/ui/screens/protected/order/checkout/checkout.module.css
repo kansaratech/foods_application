@@ -1,13 +1,13 @@
 .checkout {
   width: 100%;
-  padding: 32px 24px 56px;
+  padding: 20px 24px 40px;
   background: #f7f9fc;
 }
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 32px;
-  max-width: 1160px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px);
+  gap: 24px;
+  max-width: 1600px;
   margin: 0 auto;
   align-items: start;
 }
@@ -16,10 +16,10 @@
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 24px;
+  padding: 20px;
 }
 .form h2 {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.4;
   margin-bottom: 12px;
 }
@@ -62,7 +62,7 @@
   display: flex;
   gap: 6px;
   padding: 6px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   background: #f1f5f9;
 }
 .fulfilment button {
@@ -89,16 +89,8 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
-.desktopSummary {
-  position: sticky;
-  top: 96px;
-  min-width: 0;
-}
-.mobileSummary {
-  display: none;
-}
 .summary {
-  padding: 24px;
+  padding: 20px;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
@@ -111,14 +103,14 @@
 .summary p {
   font-size: 13px;
   line-height: 1.5;
-  margin: 6px 0 20px;
+  margin: 4px 0 12px;
   color: #64748b;
 }
 .summary > div {
   font-size: 14px;
   line-height: 1.6;
-  margin-bottom: 12px;
-  gap: 16px;
+  margin-bottom: 8px;
+  gap: 12px;
 }
 .summary > div > span:last-child {
   white-space: nowrap;
@@ -153,33 +145,714 @@
 :global(html.dark) .fulfilment button[aria-pressed="false"] {
   color: #cbd5e1;
 }
+
+.heading {
+  max-width: 1600px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.heading h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 6px 0 2px;
+}
+.heading p {
+  font-size: 14px;
+  color: #64748b;
+}
+.route {
+  max-width: 1600px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px #16293f08;
+}
+.summaryColumn {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.extras {
+  padding: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+/* Nested inside the Payment details step card — a card-on-card look isn't
+   needed there, just a divider to separate it from the payment methods. */
+.form .extras {
+  margin-top: 16px;
+  padding: 4px 0 0;
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0;
+  background: transparent;
+}
+:global(html.dark) .form .extras {
+  border-color: #374151;
+}
+.couponApplied {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+}
+.couponAppliedInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  color: #047857;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.couponAppliedBadge {
+  flex-shrink: 0;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #047857;
+  color: white;
+  font-size: 12px;
+}
+.couponAppliedRemove {
+  flex-shrink: 0;
+  min-height: auto;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+}
+:global(html.dark) .couponApplied {
+  background: #052e1f;
+  border-color: #047857;
+}
+:global(html.dark) .couponAppliedInfo {
+  color: #6ee7b7;
+}
+.extras h2 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.extras p {
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0 0 10px;
+  color: #64748b;
+}
+.extras button {
+  min-height: 40px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.extras input {
+  min-width: 0;
+  width: 100%;
+  font-size: 16px;
+  border-radius: 8px;
+}
+.offerList {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.offerListLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.offerChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px dashed #93c5fd;
+  border-radius: 10px;
+  background: #eff6ff;
+  text-align: start;
+  font-size: 13px;
+  color: #1c5bc7;
+}
+.offerChip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.offerChipCode {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.offerChipApply {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+  font-weight: 600;
+  text-decoration: underline;
+}
+:global(html.dark) .offerChip {
+  background: #172554;
+  border-color: #1e40af;
+  color: #93c5fd;
+}
+:global(html.dark) .offerListLabel {
+  color: #94a3b8;
+}
+.promoInput {
+  display: flex;
+  gap: 8px;
+}
+.promoInput input {
+  flex: 1;
+}
+.promoInput button {
+  width: auto;
+  margin: 0;
+  padding: 8px 16px;
+}
+
+/* Promo code and tip sit side by side as two always-visible cards — neither
+   is ever collapsed behind a toggle, so available offers stay in view. */
+.extrasRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.extraCard {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+}
+.extraCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.extraCardContent {
+  min-width: 0;
+}
+.accordionIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #eff6ff;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 14px;
+}
+.accordionLabel {
+  flex: 1;
+  min-width: 0;
+}
+.accordionLabel strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.accordionLabel small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:global(html.dark) .extraCard {
+  border-color: #374151;
+}
+:global(html.dark) .accordionIcon {
+  background: #172554;
+  color: #93c5fd;
+}
+:global(html.dark) .accordionLabel strong {
+  color: #f1f5f9;
+}
+:global(html.dark) .accordionLabel small {
+  color: #94a3b8;
+}
+@media (max-width: 640px) {
+  .extrasRow {
+    grid-template-columns: 1fr;
+  }
+}
+.tips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tips button {
+  flex: 1 0 48px;
+  width: auto;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  background: transparent;
+}
+.tips button[aria-pressed="true"] {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: #eff6ff;
+  font-weight: 600;
+}
+.optionalDetails {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 12px 0 16px;
+  padding: 12px 0;
+}
+.optionalDetails summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: #475569;
+  min-height: 24px;
+}
+.optionalDetails[open] summary {
+  margin-bottom: 12px;
+}
+.optionalDetails > div {
+  margin-bottom: 12px;
+}
+.optionalDetails h2 {
+  font-size: 14px;
+}
+.paymentMethods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.paymentMethods > div {
+  margin: 0;
+  padding: 12px;
+}
+.paymentMethods > div:has(input:checked) {
+  border-color: var(--primary-color);
+  background: #eff6ff;
+}
+.paymentMethods label {
+  font-size: 13px;
+  cursor: pointer;
+}
+.paymentMethods > div > div {
+  margin: 0;
+  gap: 8px;
+}
+.mobileBar {
+  display: none;
+}
+.summary {
+  scroll-margin-top: 100px;
+}
+:global(html.dark) .heading h1 {
+  color: #f1f5f9;
+}
+:global(html.dark) .extras {
+  background: #111827;
+  border-color: #374151;
+}
+:global(html.dark) .extras h2 {
+  color: #f1f5f9;
+}
+:global(html.dark) .extras p,
+:global(html.dark) .heading p,
+:global(html.dark) .optionalDetails summary {
+  color: #94a3b8;
+}
+:global(html.dark) .tips button {
+  color: #cbd5e1;
+  border-color: #475569;
+}
+:global(html.dark) .tips button[aria-pressed="true"],
+:global(html.dark) .paymentMethods > div:has(input:checked) {
+  background: #172554;
+  border-color: #60a5fa;
+  color: #bfdbfe;
+}
+@media (min-width: 1024px) and (max-height: 780px) {
+  .summaryColumn {
+    position: static;
+  }
+}
 @media (max-width: 1023px) {
   .grid {
     grid-template-columns: minmax(0, 1fr);
     max-width: 720px;
-    gap: 20px;
+    gap: 16px;
   }
-  .desktopSummary {
+  .heading {
+    max-width: 720px;
+  }
+  .summaryColumn {
+    position: static;
+  }
+  .checkout {
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  }
+  .summary > button {
     display: none;
   }
-  .mobileSummary {
-    display: block;
+  .mobileBar {
+    position: fixed;
+    bottom: 0;
+    inset-inline: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid #e2e8f0;
+    background: white;
+    box-shadow: 0 -4px 20px #16293f0a;
+  }
+  .mobileBar a {
+    display: flex;
+    flex-direction: column;
+    color: #0f172a;
+    font-size: 12px;
+  }
+  .mobileBar strong {
+    font-size: 18px;
+  }
+  .mobileBar button {
+    min-height: 44px;
+    padding: 10px 24px;
+    border-radius: 10px;
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+  }
+  .mobileBar button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  :global(html.dark) .mobileBar {
+    background: #111827;
+    border-color: #374151;
+  }
+  :global(html.dark) .mobileBar a {
+    color: #f1f5f9;
   }
 }
 @media (max-width: 480px) {
   .checkout {
-    padding: 20px 12px 32px;
+    padding: 16px 12px calc(100px + env(safe-area-inset-bottom));
+  }
+  .heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .heading h1 {
+    font-size: 22px;
+  }
+  .heading nav {
+    width: 100%;
+  }
+  .heading nav a,
+  .heading nav button {
+    padding: 8px 10px;
+    font-size: 12px;
   }
   .form,
   .summary {
-    padding: 18px;
+    padding: 16px;
     border-radius: 16px;
   }
   .form h2 {
-    font-size: 17px;
+    font-size: 16px;
   }
   .form p,
   .form label {
-    font-size: 14px;
+    font-size: 13px;
   }
+  .paymentMethods {
+    grid-template-columns: 1fr;
+  }
+}
+
+.customTip {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #64748b;
+}
+.customTip input {
+  border: 1px solid #cbd5e1;
+  padding: 8px 10px;
+  background: transparent;
+  color: inherit;
+}
+.optionalDetails summary:focus-visible,
+.heading a:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+/* Guided checkout: account, address, then payment. */
+.steps {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.stepCard {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  scroll-margin-top: 90px;
+}
+.stepHeading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: start;
+  color: #0f172a;
+}
+.stepHeading h2,
+.stepHeading strong {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+}
+.stepHeading p,
+.stepHeading small {
+  display: block;
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.stepHeading:disabled {
+  cursor: not-allowed;
+  color: #64748b;
+}
+.stepNumber {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #eff6ff;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+.stepChevron {
+  margin-inline-start: auto;
+  font-size: 20px;
+}
+.stepContent {
+  padding-top: 20px;
+}
+.primaryAction {
+  background: var(--primary-color);
+  color: white;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 10px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.stepHeading .primaryAction {
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+.primaryAction:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mapToggle {
+  /* flex (not inline-flex) keeps this a block-level box so it always starts
+     its own line — an inline-level box here would happily share a line with
+     the "Deliver to this address" button right after it whenever there's
+     room, gluing the two together. */
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-color);
+  border: 1px solid #dbe3ef;
+  background: #f8fafc;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+:global(html.dark) .mapToggle {
+  background: #1f2937;
+  border-color: #374151;
+}
+.cartCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+}
+.cartCard .storeName {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.cartCard h2 {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.cartCard h3 {
+  font-size: 14px;
+}
+.cartCard p {
+  font-size: 13px;
+}
+.cartItems {
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.cartItems > div {
+  gap: 12px;
+  padding: 6px 0;
+}
+.cartItems > div > div:first-child {
+  min-width: 0;
+}
+.cartItems > div > div:last-child {
+  flex-shrink: 0;
+}
+.cartItems button {
+  min-width: 32px;
+  min-height: 36px;
+  border-radius: 8px;
+}
+.cartCard > button {
+  min-height: 36px;
+  font-size: 13px;
+  color: var(--primary-color);
+}
+.extras:disabled {
+  opacity: 0.65;
+}
+.summaryColumn {
+  position: static;
+}
+:global(html.dark) .stepCard,
+:global(html.dark) .cartCard {
+  background: #111827;
+  border-color: #374151;
+}
+:global(html.dark) .stepHeading,
+:global(html.dark) .storeName {
+  color: #f1f5f9;
+}
+:global(html.dark) .stepHeading small,
+:global(html.dark) .stepHeading p {
+  color: #94a3b8;
+}
+:global(html.dark) .stepNumber {
+  background: #172554;
+  color: #93c5fd;
+}
+@media (max-width: 1023px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .heading {
+    max-width: 720px;
+  }
+}
+@media (max-width: 480px) {
+  .stepCard {
+    padding: 16px;
+  }
+  .stepHeading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .stepHeading > span:nth-child(2),
+  .stepHeading > div {
+    flex: 1;
+    min-width: 0;
+  }
+  .stepHeading .primaryAction {
+    width: 100%;
+    margin: 6px 0 0;
+  }
+  .stepHeading h2,
+  .stepHeading strong {
+    font-size: 15px;
+  }
+  .mobileBar button {
+    max-width: 65%;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Keep the cart, savings and bill together as one readable order card. */
+.summaryColumn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px;
+  gap: 0;
+}
+.summaryColumn .cartCard,
+.summaryColumn .summary {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 12px 0;
+}
+.summaryColumn .cartCard {
+  padding-top: 0;
+}
+.summaryColumn .summary {
+  border-top: 1px solid #e2e8f0;
+}
+.cartCard .storeName {
+  margin-bottom: 4px;
+}
+.cartCard h2 {
+  margin-bottom: 6px;
+}
+.cartCard > button {
+  min-height: 30px;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.stepContent .fulfilment {
+  border-radius: 12px;
+}
+:global(html.dark) .summaryColumn {
+  background: #111827;
+  border-color: #374151;
+}
+:global(html.dark) .summaryColumn .summary {
+  border-color: #374151;
 }
