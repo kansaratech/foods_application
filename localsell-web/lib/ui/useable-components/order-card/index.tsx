@@ -469,9 +469,12 @@ const OrderCard: FC<IOrderCardProps> = ({
                   );
                 })}
               </ul>
-              <p className="mt-3 font-semibold text-gray-900">
-                {t("order_details_total_label")}: {CURRENCY_SYMBOL}
+              <p className="mt-3 font-semibold text-gray-900 dark:text-white">
+                {t("reorder_items_total_label")}: {CURRENCY_SYMBOL}
                 {calculateSelectedTotal(selectedOrder, selectedItems)}
+              </p>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t("reorder_delivery_note")}
               </p>
             </div>
 

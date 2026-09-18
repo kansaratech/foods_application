@@ -215,6 +215,16 @@ export const CREATE_CASHFREE_PAYMENT_SESSION = gql`
   }
 `;
 
+export const RECHECK_CASHFREE_PAYMENT = gql`
+  mutation RecheckCashfreePayment($orderId: ID!) {
+    recheckCashfreePayment(orderId: $orderId) {
+      success
+      message
+      paymentStatus
+    }
+  }
+`;
+
 export const ABORT_ORDER = gql`
   mutation AbortOrder($id: String!) {
     abortOrder(id: $id) {

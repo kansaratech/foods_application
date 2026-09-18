@@ -795,10 +795,15 @@ model Order {
   paymentStatus        PaymentStatus @default(PENDING)
   // Cashfree's own payment id for this order, set once the webhook reports a
   // terminal outcome — useful for support/refund lookups. Null for COD and
-  // for a CASHFREE order still awaiting the webhook. Order.id itself is
-  // reused as Cashfree's order_id at creation time, so no separate mapping
-  // column is needed to find the order from a webhook payload.
+  // for a CASHFREE order still awaiting the webhook.
   paymentGatewayRef    String?
+  // Cashfree's own order_id for the CURRENT payment attempt. Cashfree rejects
+  // creating a new order under an order_id that already exists, so a retry
+  // ("Pay Again" after an abandoned/failed attempt) needs a fresh one each
+  // time — it can't just reuse Order.id like the very first attempt did.
+  // Format: "<Order.id>-<attempt>", so the webhook can still resolve back to
+  // this row without a separate mapping table (see cashfree-confirm.ts).
+  cashfreeOrderId      String?       @unique
   orderStatus          OrderStatus   @default(PENDING)
   status               String        @default("ACTIVE")
   paidAmount           Float         @default(0)

@@ -15,6 +15,13 @@ export const paymentTypeDefs = /* GraphQL */ `
     CASHFREE
   }
 
+  type CashfreeRecheckResult {
+    success: Boolean!
+    message: String
+    "PENDING | PAID | FAILED — the order's paymentStatus after this check."
+    paymentStatus: String!
+  }
+
   type CashfreePaymentSessionResult {
     success: Boolean!
     message: String
@@ -231,5 +238,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     updateWithdrawReqStatus(id: ID!, status: String!): WithdrawRequestMutationResult!
     "Creates (or re-creates) a Cashfree hosted-checkout session for a CASHFREE order that's still PENDING. Call right after placeOrder/modifyOrder sets paymentMethod to CASHFREE."
     createCashfreePaymentSession(orderId: ID!): CashfreePaymentSessionResult!
+    "Directly asks Cashfree for this order's current status — a fallback for when the webhook is delayed or missed. Safe to call repeatedly; flips paymentStatus to PAID/FAILED exactly like the webhook would."
+    recheckCashfreePayment(orderId: ID!): CashfreeRecheckResult!
   }
 `;

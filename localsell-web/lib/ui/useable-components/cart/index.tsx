@@ -37,8 +37,12 @@ export default function Cart({ onClose }: CartProps) {
   } = useUser();
 
   const { CURRENCY_SYMBOL } = useConfig();
+  // Written straight to the same key the checkout page reads
+  // ("newOrderInstructions") — no separate "close the cart to commit it" step,
+  // which used to leave a race where clicking "Go to Checkout" could navigate
+  // before the copy-on-close ran and silently drop the comment.
   const [instructions, setInstructions] = useState(
-    localStorage.getItem("orderInstructions") || ""
+    localStorage.getItem("newOrderInstructions") || ""
   );
   const [showDialog, setShowDialog] = useState<IFood | null>(null);
 
@@ -388,7 +392,8 @@ export default function Cart({ onClose }: CartProps) {
                 placeholder={t("special_requests_placeholder")}
                 onChange={({ target: { value } }) => {
                   if (value?.length > 500) return;
-                  localStorage.setItem("orderInstructions", value);
+                  localStorage.setItem("newOrderInstructions", value);
+                  window.dispatchEvent(new Event("orderInstructionsUpdated"));
                   setInstructions(value);
                 }}
                 value={instructions}

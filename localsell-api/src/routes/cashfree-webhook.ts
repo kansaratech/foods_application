@@ -1,9 +1,7 @@
 import { Router, raw } from 'express';
 import { prisma } from '../prisma/client';
 import { verifyCashfreeWebhookSignature } from '../services/cashfree.service';
-import { publishOrderUpdate } from '../graphql/resolvers/order.resolvers';
-import { notifyOrderEvent } from '../services/order-notify';
-import { pubsub, TOPICS } from '../utils/pubsub';
+import { confirmCashfreeOrderPaid, markCashfreeOrderFailed } from '../services/cashfree-confirm';
 
 /**
  * Cashfree Payment Gateway webhook.
@@ -16,8 +14,12 @@ import { pubsub, TOPICS } from '../utils/pubsub';
  *
  * Needs the raw body for HMAC signature verification, so — like the WhatsApp
  * webhook — it brings its own body parser and is mounted before express.json().
- * Cashfree's `order_id` is always our Order.id (set at creation in
- * cashfree.service.createCashfreeOrder), so no separate mapping table is needed.
+ * Cashfree's `order_id` is a per-attempt id ("<Order.id>-<attempt>", stored on
+ * Order.cashfreeOrderId at session-creation time — see createCashfreePaymentSession)
+ * rather than Order.id itself, because Cashfree rejects re-creating an order
+ * under an id that already exists, which a "Pay Again" retry would otherwise
+ * hit every time. Older orders (created before this field existed) still used
+ * Order.id directly, so that's the fallback lookup.
  */
 export const cashfreeWebhookRouter = Router();
 
@@ -54,47 +56,24 @@ cashfreeWebhookRouter.post('/', raw({ type: '*/*', limit: '1mb' }), async (req, 
 
   try {
     const body: CashfreeWebhookPayload = JSON.parse(rawBody.toString('utf8') || '{}');
-    const orderId = body.data?.order?.order_id;
-    if (!orderId) return;
+    const cfOrderId = body.data?.order?.order_id;
+    if (!cfOrderId) return;
 
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const order =
+      (await prisma.order.findUnique({ where: { cashfreeOrderId: cfOrderId } })) ??
+      (await prisma.order.findUnique({ where: { id: cfOrderId } })); // legacy: pre-attempt-id orders
     if (!order || order.paymentMethod !== 'CASHFREE') return;
 
     if (body.type === 'PAYMENT_SUCCESS_WEBHOOK') {
-      if (order.paymentStatus === 'PAID') return; // already processed (webhook retry)
-      const updated = await prisma.order.update({
-        where: { id: orderId },
-        data: {
-          paymentStatus: 'PAID',
-          paidAmount: body.data?.payment?.payment_amount ?? order.orderAmount,
-          paymentGatewayRef: body.data?.payment?.cf_payment_id ?? null,
-        },
-      });
-      await publishOrderUpdate(updated);
-      notifyOrderEvent(updated.id, 'PAYMENT_CONFIRMED');
-
-      // Payment just confirmed — this is the first moment the store is allowed
-      // to see this order (placeOrder deliberately held it back for CASHFREE;
-      // see the matching gate there and in the restaurantOrders query).
-      notifyOrderEvent(updated.id, 'PLACED');
-      const restaurant = await prisma.restaurant.findUnique({ where: { id: updated.restaurantId } });
-      if (restaurant) {
-        await pubsub.publish(TOPICS.SUBSCRIBE_PLACE_ORDER(updated.restaurantId), {
-          subscribePlaceOrder: { userId: updated.userId, origin: 'order_service', order: updated },
-        });
-        await prisma.webNotification.create({
-          data: { userId: restaurant.ownerId, body: `New order #${updated.orderId} received`, navigateTo: '/orders' },
-        });
-      }
-      console.log(`[cashfree-webhook] order ${orderId} marked PAID (cf_payment_id=${body.data?.payment?.cf_payment_id})`);
+      const updated = await confirmCashfreeOrderPaid(
+        order.id,
+        body.data?.payment?.payment_amount ?? order.orderAmount,
+        body.data?.payment?.cf_payment_id ?? null,
+      );
+      if (updated) console.log(`[cashfree-webhook] order ${order.id} marked PAID (cf_payment_id=${body.data?.payment?.cf_payment_id})`);
     } else if (body.type === 'PAYMENT_FAILED_WEBHOOK' || body.type === 'PAYMENT_USER_DROPPED_WEBHOOK') {
-      if (order.paymentStatus === 'PAID') return; // a later successful retry already landed
-      const updated = await prisma.order.update({
-        where: { id: orderId },
-        data: { paymentStatus: 'FAILED' },
-      });
-      await publishOrderUpdate(updated);
-      console.log(`[cashfree-webhook] order ${orderId} marked FAILED (${body.type})`);
+      const updated = await markCashfreeOrderFailed(order.id);
+      if (updated) console.log(`[cashfree-webhook] order ${order.id} marked FAILED (${body.type})`);
     }
   } catch (err) {
     console.error('[cashfree-webhook] processing error:', (err as Error).message);

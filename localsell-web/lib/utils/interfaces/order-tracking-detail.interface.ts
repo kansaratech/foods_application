@@ -80,6 +80,7 @@ export interface IOrderTrackingDetail {
   rider: null | any;
   review: null | any;
   paymentMethod: string;
+  paymentStatus: string;
   paidAmount: number;
   orderAmount: number;
   discountAmount:number;

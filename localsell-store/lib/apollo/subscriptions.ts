@@ -77,6 +77,7 @@ export const SUBSCRIBE_PLACE_ORDER = gql`
         orderDate
         deliveryCharges
         isPickedUp
+        instructions
         preparationTime
         acceptedAt
         isRinged

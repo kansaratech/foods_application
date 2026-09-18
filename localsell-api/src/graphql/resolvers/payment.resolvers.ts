@@ -8,7 +8,8 @@ import { forbiddenError, notFoundError, userInputError } from '../../utils/error
 import { riderOutstandingCash } from '../../utils/commission';
 import { recordAudit } from '../../utils/audit';
 import { env } from '../../config/env';
-import { getCashfreeCredentials, createCashfreeOrder } from '../../services/cashfree.service';
+import { getCashfreeCredentials, createCashfreeOrder, fetchCashfreeOrderStatus } from '../../services/cashfree.service';
+import { confirmCashfreeOrderPaid, markCashfreeOrderFailed } from '../../services/cashfree-confirm';
 
 const nanoid = customAlphabet('0123456789', 8);
 type CurrentUser = { id: string; userType: string };
@@ -522,9 +523,13 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
       }
 
       const customer = await prisma.user.findUnique({ where: { id: order.userId } });
+      // Each attempt needs its own Cashfree order_id — Cashfree rejects
+      // creating a new order under an id that already exists, which is
+      // exactly what happens on a retry if we reuse order.id every time.
+      const attemptOrderId = `${order.id}-${Date.now().toString(36)}`;
       try {
         const session = await createCashfreeOrder(creds, {
-          orderId: order.id,
+          orderId: attemptOrderId,
           orderAmount: order.orderAmount,
           customerId: order.userId,
           customerPhone: customer?.phone || '',
@@ -532,10 +537,48 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
           customerName: customer?.name,
           returnUrl: `${env.webClientUrl}/order/cashfree/return?order_id=${order.id}`,
         });
+        await prisma.order.update({ where: { id: order.id }, data: { cashfreeOrderId: session.cfOrderId } });
         return { success: true, message: 'Payment session created', paymentSessionId: session.paymentSessionId, cfOrderId: session.cfOrderId };
       } catch (err) {
         console.error('[cashfree] order creation failed:', (err as Error).message);
         return { success: false, message: (err as Error).message || 'Could not start online payment', paymentSessionId: null, cfOrderId: null };
+      }
+    },
+
+    recheckCashfreePayment: async (_parent, args: { orderId: string }, context) => {
+      const currentUser = requireAuth(context);
+      const order = await prisma.order.findUnique({ where: { id: args.orderId } });
+      if (!order) throw notFoundError('Order not found');
+      if (order.userId !== currentUser.id && currentUser.userType !== 'ADMIN') throw forbiddenError();
+      if (order.paymentMethod !== 'CASHFREE') throw userInputError('This order is not an online payment order');
+
+      if (order.paymentStatus === 'PAID') {
+        return { success: true, message: 'Payment already confirmed', paymentStatus: 'PAID' };
+      }
+
+      if (!order.cashfreeOrderId) {
+        return { success: true, message: "No payment attempt has been made for this order yet", paymentStatus: order.paymentStatus };
+      }
+
+      const creds = await getCashfreeCredentials();
+      if (!creds) {
+        return { success: false, message: 'Online payment is not configured', paymentStatus: order.paymentStatus };
+      }
+
+      try {
+        const status = await fetchCashfreeOrderStatus(creds, order.cashfreeOrderId);
+        if (status.orderStatus === 'PAID') {
+          const updated = await confirmCashfreeOrderPaid(order.id, order.orderAmount, null);
+          return { success: true, message: 'Payment confirmed', paymentStatus: updated?.paymentStatus ?? 'PAID' };
+        }
+        if (['EXPIRED', 'TERMINATED', 'TERMINATION_REQUESTED'].includes(status.orderStatus)) {
+          const updated = await markCashfreeOrderFailed(order.id);
+          return { success: true, message: 'This payment was not completed', paymentStatus: updated?.paymentStatus ?? 'FAILED' };
+        }
+        return { success: true, message: 'Still waiting for Cashfree to confirm this payment', paymentStatus: order.paymentStatus };
+      } catch (err) {
+        console.error('[cashfree] recheck failed:', (err as Error).message);
+        return { success: false, message: (err as Error).message || 'Could not check payment status', paymentStatus: order.paymentStatus };
       }
     },
   },

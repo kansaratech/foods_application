@@ -780,28 +780,10 @@ const AppTopbar = ({ handleModalToggle }: IAppBarProps) => {
       <Sidebar
         position={position} // ✅ dynamic position
         visible={isCartOpen}
-        onHide={() => {
-          setIsCartOpen(false);
-          localStorage.setItem(
-            "newOrderInstructions",
-            localStorage.getItem("orderInstructions") || ""
-          );
-          localStorage.removeItem("orderInstructions");
-          window.dispatchEvent(new Event("orderInstructionsUpdated"));
-        }}
+        onHide={() => setIsCartOpen(false)}
         className={cartStyles.drawer}
       >
-        <Cart
-          onClose={() => {
-            setIsCartOpen(false);
-            localStorage.setItem(
-              "newOrderInstructions",
-              localStorage.getItem("orderInstructions") || ""
-            );
-            localStorage.removeItem("orderInstructions");
-            window.dispatchEvent(new Event("orderInstructionsUpdated"));
-          }}
-        />
+        <Cart onClose={() => setIsCartOpen(false)} />
       </Sidebar>
 
       {/* Logout Confirmation Dialog */}

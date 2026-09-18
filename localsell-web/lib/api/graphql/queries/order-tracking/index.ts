@@ -83,6 +83,7 @@ export const ORDER_TRACKING = gql`
         _id
       }
       paymentMethod
+      paymentStatus
       paidAmount
       orderAmount
       discountAmount
