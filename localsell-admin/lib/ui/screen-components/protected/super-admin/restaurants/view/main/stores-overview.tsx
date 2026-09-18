@@ -40,8 +40,14 @@ export default function StoresOverview(props: Props) {
   const pending = props.stores.filter(
     (s) => s.approvalStatus === 'PENDING'
   ).length;
+  // An APPROVED store has, by definition, already finished setup — document
+  // verification only gates the still-PENDING pipeline. Without the PENDING
+  // scope, every store shows as "incomplete" once documents are required,
+  // since older/grandfathered stores were approved before doc upload existed
+  // and have never submitted any.
   const incomplete = props.stores.filter(
     (s) =>
+      s.approvalStatus === 'PENDING' &&
       s.documentSummary &&
       s.documentSummary.verified < s.documentSummary.required
   ).length;
@@ -118,7 +124,14 @@ export default function StoresOverview(props: Props) {
           },
           {
             label: 'Live',
-            value: props.stores.filter((s) => s.isActive).length,
+            // isActive alone isn't enough — a PENDING store still defaults
+            // to isActive:true (it just hasn't been reviewed yet), and a
+            // REJECTED/SUSPENDED one is forced isActive:false by the backend
+            // already, so this only really adds the PENDING exclusion. Only
+            // an APPROVED, active store is actually visible to customers.
+            value: props.stores.filter(
+              (s) => s.isActive && s.approvalStatus === 'APPROVED'
+            ).length,
             icon: 'circle-fill',
             tone: 'green',
           },

@@ -49,6 +49,10 @@ export interface IExtendedOrder extends IOrder {
   paidAmount?: number;
   paymentMethod?: ReactNode;
   paymentGatewayRef?: string | null;
+  refundStatus?: 'NONE' | 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | string;
+  refundedAmount?: number | null;
+  refundedAt?: string | null;
+  refundError?: string | null;
   deliveryCharges?: number;
   tipping?: number;
   discountAmount?: number;

@@ -984,7 +984,10 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
                   : t("Item is completely removed from your menu, not just marked sold out")}
               </Text>
             </View>
-            <CustomSwitch value={isActive} onToggle={setIsActive} />
+            <CustomSwitch
+              value={!isActive}
+              onToggle={(hidden) => setIsActive(!hidden)}
+            />
           </View>
 
           <View className="flex-row justify-between items-center mt-2">

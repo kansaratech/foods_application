@@ -73,6 +73,12 @@ export const orderTypeDefs = /* GraphQL */ `
     paymentStatus: String!
     "Cashfree's payment id once a webhook confirms this order — null for COD or a still-pending/failed online payment."
     paymentGatewayRef: String
+    "Refund of a CASHFREE payment after cancellation. NONE for COD or a payment that was never charged."
+    refundStatus: String!
+    refundedAmount: Float
+    refundedAt: String
+    "Set only when refundStatus is FAILED — the reason the last attempt didn't go through."
+    refundError: String
     isActive: Boolean!
     isPickedUp: Boolean!
     createdAt: String
@@ -242,6 +248,8 @@ export const orderTypeDefs = /* GraphQL */ `
     "Close a delivery order with the customer's 4-digit code. Used by the LocalSell rider app and the store app (for self-delivery)."
     confirmDelivery(orderId: ID!, otp: String!): Order!
     cancelOrder(_id: String!, reason: String!): Order!
+    "Admin-only: re-fires a Cashfree refund that previously came back FAILED."
+    retryOrderRefund(orderId: String!): Order!
     muteRing(orderId: String): Boolean!
     orderPickedUp(_id: String!): Order!
   }

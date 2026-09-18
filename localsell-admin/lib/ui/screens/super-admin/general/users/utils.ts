@@ -1,5 +1,5 @@
 import { IUserResponse } from '@/lib/utils/interfaces/users.interface';
-export function customerDate(value?: string) {
+export function customerDate(value?: string | null) {
   if (!value) return null;
   const date = new Date(/^\d+$/.test(value) ? Number(value) : value);
   return Number.isNaN(date.getTime()) ? null : date;

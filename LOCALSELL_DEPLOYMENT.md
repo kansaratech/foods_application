@@ -864,6 +864,78 @@ gunzip < <path-to-that-job's-dump>.sql.gz \
 
 ---
 
+## 12.5 Deploying the order-refund release
+
+Adds: automatic Cashfree refund when a paid CASHFREE order is cancelled (store,
+admin, or rider-dispatch cancel — every path that flips an order to
+`CANCELLED`), a refund-status webhook, an admin retry action, and a refund
+panel on the admin order-detail view. COD orders are untouched — they were
+never charged, so there's nothing to refund.
+
+| Change | Server action |
+|---|---|
+| **DB schema** — `Order` gets `refundStatus` (`NONE/PENDING/PROCESSING/SUCCESS/FAILED`), `refundId`, `refundedAmount`, `refundedAt`, `refundError`. Also ships two backfill columns that were silently missing on some existing deployments — `Order.cashfreeOrderId` and `Order.recipientPhone` — see the note below. | `db:deploy` (`prisma db push`) — additive, no data loss |
+| **API** — `refund.service.ts` (new), `cashfree.service.ts` refund calls, `cancelOrder`/`updateOrderStatus`/`updateStatus` all now attempt a refund on cancellation, `retryOrderRefund` mutation (admin-only), Cashfree webhook route handles `REFUND_STATUS_WEBHOOK` | rebuild `api` image |
+| **Admin** — order-detail modal shows refund status/amount/error + a "Retry refund" button when one failed | rebuild `admin` image |
+| **Web / Store / Rider** | unchanged — no rebuild required for this release |
+
+No new env vars. Refunds use the **same** `cashfreeAppId`/`cashfreeSecretKey`/`cashfreeEnv`
+already sitting on `Configuration` for taking payments — if online payments already work on
+this deployment, refunds will too.
+
+> **Important — the two backfill columns.** If this server was ever deployed
+> before `cashfreeOrderId` (Cashfree "Pay Again" retry support) or
+> `recipientPhone` (deliver-to-someone-else) shipped, and only ever ran
+> `db:deploy`/`db push` (never a raw migration), it's possible — as found on
+> one dev box — for a column to exist in `schema.prisma` and the running code
+> but never actually land in that database, because `db push` reconciles
+> drift silently and nobody re-ran it after those two commits. Symptom: **any**
+> full-row read of `Order` (so basically anything touching orders, refunds
+> included) throws `P2022 The column ... does not exist in the current
+> database`. `db:deploy`'s `prisma db push` step (§8) fixes this the same way
+> it fixes any other drift — just make sure it actually runs (it's step one of
+> `SERVER-DEPLOY.sh`) and check its output for `Applying schema changes` rather
+> than `already in sync` if you've seen this symptom before.
+
+### Steps
+
+```powershell
+# 1. dev machine — build the bundle
+powershell -ExecutionPolicy Bypass -File scripts\make-deploy-zip.ps1
+#    -> <Desktop>\localsell-deploy.zip   (upload it in binary mode)
+```
+
+```bash
+# 2. server
+cd <project dir>
+unzip -o ~/localsell-deploy.zip     # -o overwrites; keeps deploy/localsell.env
+bash SERVER-DEPLOY.sh               # up -d --build + db:deploy + field probe
+#    watch the "schema + config defaults + backfill" step for the Order
+#    column additions (refundStatus / refundId / refundedAmount / refundedAt /
+#    refundError, plus cashfreeOrderId / recipientPhone if this box needed them)
+```
+
+### Browser checks
+
+- Place a CASHFREE test order, pay it, then cancel it (store app **Cancel**,
+  or Admin → Management → Orders → Cancel). Open the order in Admin → order
+  detail → a **Refund** row appears under Payment Method with a status.
+- On a **real** Cashfree TEST-mode payment the refund should reach `SUCCESS`
+  automatically. A synthetic/never-actually-paid test order will correctly
+  land on `FAILED` with Cashfree's real error (e.g. "transaction not found")
+  — that's expected, not a bug; it proves the call reached Cashfree.
+- With a `FAILED` refund open, click **Retry refund** — status updates in
+  place.
+- Cancel a **COD** order — no Refund row appears (nothing was ever charged).
+
+### Rollback
+
+Redeploy the previous zip + `up -d --build`. The new `Order` columns are
+additive and harmless to leave in place; an older API build simply never
+reads or writes them.
+
+---
+
 ## 13. Troubleshooting (issues hit on the first deploy)
 
 | Symptom | Cause | Fix |

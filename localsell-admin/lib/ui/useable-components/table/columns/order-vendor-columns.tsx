@@ -40,10 +40,15 @@ export const ORDER_COLUMNS = () => {
       headerName: t('Created At'),
       propertyName: 'DateCreated',
       body: (rowData: IExtendedOrder) => {
-        const formatedDate = new Date(
-          Number(rowData?.createdAt)
-        ).toLocaleDateString('en-US', dateOptions);
-        return <span>{formatedDate}</span>;
+        const value = String(rowData?.createdAt ?? '');
+        const date = new Date(/^\d+$/.test(value) ? Number(value) : value);
+        return (
+          <span>
+            {Number.isNaN(date.getTime())
+              ? '?'
+              : date.toLocaleDateString('en-US', dateOptions)}
+          </span>
+        );
       },
     },
     {

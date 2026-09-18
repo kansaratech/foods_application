@@ -39,12 +39,23 @@ export const USERS_TABLE_COLUMNS = (
   {
     headerName: 'Contact',
     propertyName: 'email',
-    body: (user: IUserResponse) => (
-      <div className="customer-contact">
-        <span title={user.email}>{user.email || '?'}</span>
-        <small>{user.phone || '?'}</small>
-      </div>
-    ),
+    body: (user: IUserResponse) => {
+      const email = user.email?.trim();
+      const phone = user.phone?.trim();
+      return (
+        <div className="customer-contact">
+          {email && <span title={email}>{email}</span>}
+          {phone && (
+            <span className="customer-phone" dir="ltr">
+              {phone}
+            </span>
+          )}
+          {!email && !phone && (
+            <span className="customer-muted">No contact details</span>
+          )}
+        </div>
+      );
+    },
   },
   {
     headerName: 'Joined via',
@@ -84,7 +95,7 @@ export const USERS_TABLE_COLUMNS = (
     propertyName: 'lastLogin',
     body: (user: IUserResponse) => {
       const date = customerDate(user.lastLogin);
-      if (!date) return <span className="customer-muted">?</span>;
+      if (!date) return <span className="customer-muted">Not available</span>;
       const hours = Math.max(
         0,
         Math.floor((Date.now() - date.getTime()) / 3600000)

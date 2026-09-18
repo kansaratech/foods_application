@@ -43,7 +43,7 @@ New-Item -ItemType Directory -Path $stage | Out-Null
 # are always junk. Anything that also exists *inside* an app (assets, lib,
 # scripts) is path-anchored to the repo root so the app copies keep theirs.
 $xd = @(
-  'node_modules', '.next', '.expo', '.expo-shared', '.cache', '.turbo',
+  'node_modules', '.next', '.next-dev', '.expo', '.expo-shared', '.cache', '.turbo',
   '.git', 'dist', 'build', 'coverage', 'cypress', '.nyc_output', '.tmp',
   '.claude', '.vscode', '.idea',
   (Join-Path $src 'localsell-app'),

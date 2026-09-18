@@ -6,6 +6,7 @@ import { requireAuth, requireRole } from '../../middleware/auth';
 import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../services/order.service';
 import { computeDeliveryFee, computeGst } from '../../services/pricing.service';
 import { notifyOrderEvent } from '../../services/order-notify';
+import { attemptCashfreeRefund, refundOrderIfEligible } from '../../services/refund.service';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
@@ -64,25 +65,38 @@ async function publishRiderAssigned(order: Order) {
  * No-op for non-COD orders. (Swiggy/Zomato-style cash limit.)
  */
 /**
- * A non-pickup order's address must sit inside the store's delivery radius.
+ * Every order's address must sit inside the store's delivery radius.
  * Returns the computed distance (km) so the caller can reuse it for a
- * distance-based delivery fee instead of recomputing — null when either
- * point is missing coordinates and distance genuinely can't be known.
+ * distance-based delivery fee. Missing or invalid coordinates are rejected.
  */
-async function assertAddressInDeliveryArea(restaurantId: string, addressId: string | null): Promise<number | null> {
-  if (!addressId) throw userInputError('A delivery address is required for delivery orders.');
+async function assertAddressInDeliveryArea(restaurantId: string, addressId: string | null, pickup = false): Promise<number> {
+  if (!addressId) throw userInputError('Please select an address to check service availability.');
   const [restaurant, addr] = await Promise.all([
     prisma.restaurant.findUnique({ where: { id: restaurantId } }),
     prisma.address.findUnique({ where: { id: addressId } }),
   ]);
-  if (!restaurant || restaurant.latitude == null || restaurant.longitude == null) return null;
-  if (addr?.latitude == null || addr?.longitude == null) return null;
+  return assertCoordinatesInServiceArea(restaurant, addr?.latitude, addr?.longitude, pickup);
+}
+
+function assertCoordinatesInServiceArea(
+  restaurant: { name: string; latitude: number | null; longitude: number | null; deliveryDistance: number | null } | null,
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+  pickup: boolean,
+): number {
+  if (!restaurant || restaurant.latitude == null || restaurant.longitude == null ||
+      latitude == null || longitude == null ||
+      ![latitude, longitude, restaurant.latitude, restaurant.longitude].every(Number.isFinite) ||
+      Math.abs(latitude) > 90 || Math.abs(longitude) > 180 ||
+      Math.abs(restaurant.latitude) > 90 || Math.abs(restaurant.longitude) > 180) {
+    throw userInputError('Unable to verify the selected address. Please select a valid nearby address to continue.');
+  }
   const reachKm = restaurant.deliveryDistance && restaurant.deliveryDistance > 0 ? restaurant.deliveryDistance : 60;
-  const dist = distanceKm(addr.latitude, addr.longitude, restaurant.latitude, restaurant.longitude);
+  const dist = distanceKm(latitude, longitude, restaurant.latitude, restaurant.longitude);
   if (dist > reachKm) {
-    throw userInputError(
-      `This address is outside ${restaurant.name}'s delivery area (${dist.toFixed(1)} km away, limit ${reachKm} km).`,
-    );
+    throw userInputError(pickup
+      ? "Your selected address is outside this store's pickup service area. Please select a nearby address to continue."
+      : `This address is outside ${restaurant.name}'s delivery area (${dist.toFixed(1)} km away, limit ${reachKm} km).`);
   }
   return dist;
 }
@@ -248,7 +262,10 @@ async function applyOrderStatusUpdate(
 
   await publishOrderUpdate(updated);
   if (status === 'PICKED' && order.orderStatus !== 'PICKED') notifyOrderEvent(updated.id, 'OUT_FOR_DELIVERY');
-  if (status === 'CANCELLED' && order.orderStatus !== 'CANCELLED') notifyOrderEvent(updated.id, 'CANCELLED');
+  if (status === 'CANCELLED' && order.orderStatus !== 'CANCELLED') {
+    notifyOrderEvent(updated.id, 'CANCELLED');
+    return refundOrderIfEligible(updated);
+  }
   return updated;
 }
 
@@ -676,27 +693,19 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const gst = computeGst(lines, itemsTotal, discountAmount, restaurant.gstRegistrationType);
 
+      let lat: number | null = null;
+      let lng: number | null = null;
+      if (args.address?._id) {
+        const existing = await prisma.address.findFirst({ where: { id: args.address._id, userId: currentUser.id } });
+        lat = existing?.latitude ?? null;
+        lng = existing?.longitude ?? null;
+      } else if (args.address?.latitude?.trim() && args.address?.longitude?.trim()) {
+        lat = Number(args.address.latitude);
+        lng = Number(args.address.longitude);
+      }
+      const distance = assertCoordinatesInServiceArea(restaurant, lat, lng, args.isPickedUp);
       let deliveryCharges = 0;
       if (!args.isPickedUp) {
-        let distance: number | null = null;
-        if (restaurant.latitude != null && restaurant.longitude != null) {
-          let lat: number | null = null;
-          let lng: number | null = null;
-          if (args.address?._id) {
-            const existing = await prisma.address.findFirst({ where: { id: args.address._id, userId: currentUser.id } });
-            lat = existing?.latitude ?? null;
-            lng = existing?.longitude ?? null;
-          }
-          // Fall back to raw coordinates on the input — covers a not-yet-saved
-          // address, or an `_id` that didn't resolve to one of this user's rows.
-          if (lat == null && args.address?.latitude && args.address?.longitude) {
-            lat = Number(args.address.latitude);
-            lng = Number(args.address.longitude);
-          }
-          if (lat != null && lng != null) {
-            distance = distanceKm(lat, lng, restaurant.latitude, restaurant.longitude);
-          }
-        }
         const config = await prisma.configuration.findFirst();
         deliveryCharges = computeDeliveryFee(
           { costType: config?.costType, deliveryRate: config?.deliveryRate },
@@ -749,9 +758,9 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       const addressId = await resolveOrderAddress(currentUser.id, args.address);
 
-      // A delivery order must land within the store's delivery radius. Pickup skips it.
+      // Both delivery and pickup must be within the store's service radius.
       // The distance is reused below for the delivery fee instead of recomputing it.
-      const distance = args.isPickedUp ? null : await assertAddressInDeliveryArea(args.restaurant, addressId);
+      const distance = await assertAddressInDeliveryArea(args.restaurant, addressId, args.isPickedUp);
 
       let discountAmount = 0;
       if (args.couponCode) {
@@ -881,12 +890,12 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       // trust `args.deliveryCharges`) whenever the caller signals a fulfilment
       // change — either an explicit delivery-charges touch or a pickup→delivery
       // switch. Otherwise the order's existing fee is left as-is.
+      const distance = await assertAddressInDeliveryArea(order.restaurantId, addressId, pickup);
       let deliveryCharges = order.deliveryCharges;
       if (pickup) {
         deliveryCharges = 0;
         if (order.riderId) data.riderId = null;
       } else {
-        const distance = await assertAddressInDeliveryArea(order.restaurantId, addressId);
         if (args.deliveryCharges != null || order.isPickedUp) {
           const [config, rest] = await Promise.all([
             prisma.configuration.findFirst(),
@@ -1083,8 +1092,24 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
         data: { orderStatus: 'CANCELLED', status: 'CANCELLED', cancelledAt: new Date(), reason: args.reason },
       });
       await publishOrderUpdate(updated);
-      if (order.orderStatus !== 'CANCELLED') notifyOrderEvent(updated.id, 'CANCELLED');
+      if (order.orderStatus !== 'CANCELLED') {
+        notifyOrderEvent(updated.id, 'CANCELLED');
+        return refundOrderIfEligible(updated);
+      }
       return updated;
+    },
+
+    // Admin-only: re-fires a refund that came back FAILED (bad credentials at
+    // the time, a transient network error, etc). Refuses anything else so it
+    // can't be used to double-refund a SUCCESS or race a PENDING/PROCESSING one.
+    retryOrderRefund: async (_parent, args: { orderId: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      const order = await prisma.order.findUnique({ where: { id: args.orderId } });
+      if (!order) throw notFoundError('Order not found');
+      if (order.refundStatus !== 'FAILED') {
+        throw userInputError('Only a failed refund can be retried.');
+      }
+      return attemptCashfreeRefund(order);
     },
 
     muteRing: async (_parent, args: { orderId?: string }, context) => {
@@ -1129,6 +1154,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
     deliveredAt: (parent: Order) => parent.deliveredAt?.toISOString() ?? null,
     cancelledAt: (parent: Order) => parent.cancelledAt?.toISOString() ?? null,
     assignedAt: (parent: Order) => parent.assignedAt?.toISOString() ?? null,
+    refundedAt: (parent: Order) => parent.refundedAt?.toISOString() ?? null,
     // "Completion" has no separate milestone from delivery in this schema - it's the same moment.
     completionTime: (parent: Order) => parent.deliveredAt?.toISOString() ?? null,
     // There is no soft-delete concept for orders in this schema (no `isActive` column on Order) -

@@ -2,6 +2,7 @@ import { Router, raw } from 'express';
 import { prisma } from '../prisma/client';
 import { verifyCashfreeWebhookSignature } from '../services/cashfree.service';
 import { confirmCashfreeOrderPaid, markCashfreeOrderFailed } from '../services/cashfree-confirm';
+import { applyRefundWebhookUpdate } from '../services/refund.service';
 
 /**
  * Cashfree Payment Gateway webhook.
@@ -10,7 +11,8 @@ import { confirmCashfreeOrderPaid, markCashfreeOrderFailed } from '../services/c
  *
  * Configure in Cashfree Dashboard → Developers → Webhooks:
  *   URL      https://<api-host>/webhooks/cashfree
- *   Events   PAYMENT_SUCCESS_WEBHOOK, PAYMENT_FAILED_WEBHOOK, PAYMENT_USER_DROPPED_WEBHOOK
+ *   Events   PAYMENT_SUCCESS_WEBHOOK, PAYMENT_FAILED_WEBHOOK, PAYMENT_USER_DROPPED_WEBHOOK,
+ *            REFUND_STATUS_WEBHOOK (a cancellation refund resolving async — see refund.service.ts)
  *
  * Needs the raw body for HMAC signature verification, so — like the WhatsApp
  * webhook — it brings its own body parser and is mounted before express.json().
@@ -28,6 +30,7 @@ interface CashfreeWebhookPayload {
   data?: {
     order?: { order_id?: string; order_amount?: number };
     payment?: { cf_payment_id?: string; payment_status?: string; payment_amount?: number };
+    refund?: { refund_id?: string; cf_refund_id?: string; refund_status?: string; refund_amount?: number };
   };
 }
 
@@ -56,6 +59,14 @@ cashfreeWebhookRouter.post('/', raw({ type: '*/*', limit: '1mb' }), async (req, 
 
   try {
     const body: CashfreeWebhookPayload = JSON.parse(rawBody.toString('utf8') || '{}');
+    if (body.type === 'REFUND_STATUS_WEBHOOK') {
+      const refundId = body.data?.refund?.refund_id;
+      if (!refundId) return;
+      await applyRefundWebhookUpdate(refundId, body.data?.refund?.refund_status, body.data?.refund?.refund_amount);
+      console.log(`[cashfree-webhook] refund ${refundId} -> ${body.data?.refund?.refund_status}`);
+      return;
+    }
+
     const cfOrderId = body.data?.order?.order_id;
     if (!cfOrderId) return;
 

@@ -206,6 +206,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.customer-contact > .customer-phone {
+  overflow: visible;
+  text-overflow: clip;
+  unicode-bidi: isolate;
+}
 .customers-table small,
 .customer-muted {
   font-size: 11px;

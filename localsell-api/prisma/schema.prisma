@@ -31,6 +31,16 @@ enum PaymentStatus {
   FAILED
 }
 
+// Tracks the refund of an online payment back to the customer after a
+// cancelled order. NONE = nothing to refund (COD, or never paid).
+enum RefundStatus {
+  NONE
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
 model User {
   id                     String    @id @default(cuid())
   name                   String?
@@ -804,6 +814,17 @@ model Order {
   // Format: "<Order.id>-<attempt>", so the webhook can still resolve back to
   // this row without a separate mapping table (see cashfree-confirm.ts).
   cashfreeOrderId      String?       @unique
+  // Refund of a CASHFREE payment after cancellation. refundId is our own id
+  // sent to Cashfree (format "<Order.id>-refund-<attempt>", unique per
+  // attempt so a retry after a failure can't collide) — the webhook and
+  // retryOrderRefund both key off it. refundedAmount/refundedAt are only set
+  // once Cashfree confirms SUCCESS; refundError carries the last failure
+  // reason so support/admin can see why a retry is needed.
+  refundStatus         RefundStatus  @default(NONE)
+  refundId             String?       @unique
+  refundedAmount       Float?
+  refundedAt           DateTime?
+  refundError          String?       @db.Text
   orderStatus          OrderStatus   @default(PENDING)
   status               String        @default("ACTIVE")
   paidAmount           Float         @default(0)

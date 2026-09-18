@@ -719,6 +719,31 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       assertRateWithinCap(input.salesTax, 'GST rate');
       assertRateWithinCap(currentUser.userType === 'ADMIN' ? input.commissionRate : null, 'Commission rate');
 
+      // A store's login username is otherwise unchecked on edit — this let a
+      // freshly-duplicated store (created with a blank username) be edited to
+      // reuse another store's exact login, which is confusing at best and a
+      // credential mix-up at worst. Same-owner reuse is fine by design (#59,
+      // one vendor's outlets share a login email, differentiated by
+      // password); a *different* owner reusing it outright is not.
+      if (input.username && input.username !== existing.username) {
+        const sameUsername = await prisma.restaurant.findMany({
+          where: { username: input.username, id: { not: existing.id } },
+        });
+        const otherOwner = sameUsername.find((r) => r.ownerId !== existing.ownerId);
+        if (otherOwner) {
+          throw userInputError(`That login email is already used by another store ("${otherOwner.name}").`);
+        }
+        if (input.password) {
+          for (const candidate of sameUsername) {
+            if (candidate.password && (await comparePassword(input.password, candidate.password))) {
+              throw userInputError(
+                'This vendor already has an outlet with that login email and password. Give this outlet a different password.',
+              );
+            }
+          }
+        }
+      }
+
       return prisma.restaurant.update({
         where: { id: input._id },
         data: {
@@ -794,6 +819,13 @@ export const restaurantResolvers: IResolvers<unknown, GraphQLContext> = {
       if (!source) throw notFoundError('Restaurant not found');
       const owner = await prisma.user.findUnique({ where: { id: args.owner } });
       if (!owner) throw userInputError('Owner not found');
+
+      // A store may only be duplicated once — repeated clicks were creating an
+      // unbounded pile of "(Copy)" stores of the same source.
+      const existingClone = await prisma.restaurant.findFirst({ where: { clonedFromId: source.id } });
+      if (existingClone) {
+        throw userInputError(`"${source.name}" has already been duplicated as "${existingClone.name}".`);
+      }
 
       return prisma.restaurant.create({
         data: {

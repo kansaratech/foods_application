@@ -17,6 +17,7 @@ import { useSoundContext } from "@/lib/context/global/sound.context";
 import { useApptheme } from "@/lib/context/theme.context";
 import useCancelOrder from "@/lib/hooks/useCancelOrder";
 import useOrderPickedUp from "@/lib/hooks/useOrderPickedUp";
+import useMarkPickupCollected from "@/lib/hooks/useMarkPickupCollected";
 import { useTranslation } from "react-i18next";
 import OrderDispatch, {
   DeliveryModeBadge,
@@ -76,6 +77,8 @@ const Order = ({
   const { t } = useTranslation();
   const { cancelOrder, loading: loadingCancelOrder } = useCancelOrder();
   const { pickedUp, loading: loadingPicked } = useOrderPickedUp();
+  const { markCollected, loading: loadingCollected } =
+    useMarkPickupCollected();
 
   // Keep this order's status live in real time. The subscription result is
   // written into the normalized cache (keyed by _id), so orderStatus/isPickedUp
@@ -129,6 +132,13 @@ const Order = ({
 
   const onPickupOrder = () => {
     pickedUp(order._id);
+  };
+
+  // A self-pickup order (customer collects in-store) has no courier leg, so
+  // "picked up" IS delivered — it must go straight to DELIVERED, not the
+  // in-transit "PICKED" status, or it never leaves the Processing tab.
+  const onPickupCollectedByCustomer = () => {
+    markCollected(order._id);
   };
 
   // Use Effects
@@ -703,7 +713,6 @@ const Order = ({
             )}
             {order.orderStatus === "ACCEPTED" && order.isPickedUp && (
               <View className="flex-row gap-x-3 w-full mt-4">
-                {/* Hand Order to Rider */}
                 <TouchableOpacity
                   className="flex-1 h-12 items-center justify-center rounded-xl"
                   style={{
@@ -711,9 +720,9 @@ const Order = ({
                     borderWidth: 1,
                     borderColor: appTheme.primary,
                   }}
-                  onPress={() => onPickupOrder()}
+                  onPress={() => onPickupCollectedByCustomer()}
                 >
-                  {loadingPicked ? (
+                  {loadingCollected ? (
                     <SpinnerComponent color={appTheme.white} />
                   ) : (
                     <Text
@@ -723,7 +732,7 @@ const Order = ({
                         fontWeight: "500",
                       }}
                     >
-                      {t("Deliver Order to Customer")}
+                      {t("Picked Up by Customer")}
                     </Text>
                   )}
                 </TouchableOpacity>

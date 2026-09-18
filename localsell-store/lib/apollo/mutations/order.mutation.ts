@@ -33,3 +33,16 @@ export const PICK_UP_ORDER = gql`
     }
   }
 `;
+
+// A customer self-pickup order has no rider/courier leg — "picked up" IS
+// delivered. Marking it DELIVERED here is what moves it out of Processing
+// and into History (unlike PICK_UP_ORDER, which only sets the in-transit
+// "PICKED" status that a fleet/self-delivery order passes through).
+export const MARK_PICKUP_COLLECTED = gql`
+  mutation MarkPickupCollected($id: String!) {
+    updateOrderStatus(id: $id, status: "DELIVERED") {
+      _id
+      orderStatus
+    }
+  }
+`;

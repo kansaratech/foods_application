@@ -265,7 +265,11 @@ export default function RestaurantsMain() {
       (store: { _id: string }) => store._id
     )
   );
+  // Kept in sync with the "Setup incomplete" stat/tab count in StoresOverview:
+  // an APPROVED store has already finished setup, so document verification
+  // only gates the still-PENDING pipeline.
   const incomplete = (store: StoreListRow) =>
+    store.approvalStatus === 'PENDING' &&
     !!store.documentSummary &&
     store.documentSummary.verified < store.documentSummary.required;
   const filteredStores = allStores.filter((store) => {

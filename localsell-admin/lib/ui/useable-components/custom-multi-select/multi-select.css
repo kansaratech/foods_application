@@ -1,6 +1,32 @@
 .custom-multiselect.p-multiselect {
   border-radius: 6px;
 }
+/* Wrapped selections must expand the field instead of overflowing its 40px box. */
+.ls-field.custom-multiselect.p-multiselect {
+  height: auto;
+  min-height: 2.5rem;
+  min-width: 0;
+}
+.ls-field.custom-multiselect .p-multiselect-label-container {
+  min-width: 0;
+}
+.ls-field.custom-multiselect .p-multiselect-label {
+  height: auto;
+  margin: 0;
+  white-space: normal;
+}
+.ls-field.custom-multiselect .p-multiselect-token {
+  max-width: 100%;
+  min-width: 0;
+}
+.ls-field.custom-multiselect .p-multiselect-token-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ls-field.custom-multiselect .p-multiselect-token-icon,
+.ls-field.custom-multiselect .p-multiselect-trigger {
+  flex-shrink: 0;
+}
 .custom-multiselect .p-multiselect-label {
   display: flex;
   align-items: center;

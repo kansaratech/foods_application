@@ -217,6 +217,29 @@
   padding-top: 14px;
   border-top: 1px solid #e2e8f0;
 }
+.admin-order-dialog .refund-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.admin-order-dialog .refund-error {
+  font-size: 12px;
+  color: #d72d3d;
+  margin: -4px 0 0;
+}
+.admin-order-dialog .refund-retry-button {
+  align-self: flex-start;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #16293f;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+.dark .admin-order-dialog .refund-retry-button {
+  background: #334155;
+}
 .admin-order-dialog .paid-value {
   font-weight: 700;
   color: #16293f;

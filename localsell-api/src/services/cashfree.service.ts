@@ -107,6 +107,77 @@ export async function fetchCashfreeOrderStatus(
   return { orderStatus: body.order_status };
 }
 
+export interface CashfreeRefundInput {
+  /** Our own idempotency key for this refund attempt — Cashfree rejects reuse across attempts. */
+  refundId: string;
+  refundAmount: number;
+  refundNote?: string;
+}
+
+export interface CashfreeRefundResult {
+  status: string; // SUCCESS | PENDING | ONHOLD | CANCELLED
+  cfRefundId?: string;
+  refundAmount: number;
+}
+
+/** Initiates a refund on a Cashfree order. Cashfree processes it async — SUCCESS here is the fast path; PENDING/ONHOLD need the refund webhook (or fetchCashfreeRefundStatus) to resolve later. */
+export async function refundCashfreeOrder(
+  creds: CashfreeCredentials,
+  cfOrderId: string,
+  input: CashfreeRefundInput,
+): Promise<CashfreeRefundResult> {
+  const res = await fetch(`${apiBase(creds.env)}/orders/${encodeURIComponent(cfOrderId)}/refunds`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-client-id': creds.appId,
+      'x-client-secret': creds.secretKey,
+      'x-api-version': API_VERSION,
+    },
+    body: JSON.stringify({
+      refund_amount: Math.round(input.refundAmount * 100) / 100,
+      refund_id: input.refundId,
+      ...(input.refundNote ? { refund_note: input.refundNote } : {}),
+    }),
+  });
+
+  const body: Record<string, any> = (await res.json().catch(() => ({}))) as Record<string, any>;
+  if (!res.ok) {
+    const message = body?.message || `Cashfree refund failed (${res.status})`;
+    throw new Error(message);
+  }
+  return {
+    status: body.refund_status ?? 'PENDING',
+    cfRefundId: body.cf_refund_id != null ? String(body.cf_refund_id) : undefined,
+    refundAmount: body.refund_amount ?? input.refundAmount,
+  };
+}
+
+/** Reconciliation fallback — looks up a specific refund's current status directly, for when a webhook is delayed or missed. */
+export async function fetchCashfreeRefundStatus(
+  creds: CashfreeCredentials,
+  cfOrderId: string,
+  refundId: string,
+): Promise<CashfreeRefundResult> {
+  const res = await fetch(
+    `${apiBase(creds.env)}/orders/${encodeURIComponent(cfOrderId)}/refunds/${encodeURIComponent(refundId)}`,
+    {
+      headers: {
+        'x-client-id': creds.appId,
+        'x-client-secret': creds.secretKey,
+        'x-api-version': API_VERSION,
+      },
+    },
+  );
+  const body: Record<string, any> = (await res.json().catch(() => ({}))) as Record<string, any>;
+  if (!res.ok) throw new Error(body?.message || `Cashfree refund lookup failed (${res.status})`);
+  return {
+    status: body.refund_status ?? 'PENDING',
+    cfRefundId: body.cf_refund_id != null ? String(body.cf_refund_id) : undefined,
+    refundAmount: body.refund_amount,
+  };
+}
+
 /**
  * Verifies a Cashfree webhook's HMAC-SHA256 signature.
  * Per Cashfree's docs: signature = base64(HMAC-SHA256(timestamp + rawBody, secretKey)).

@@ -181,6 +181,10 @@ export const GET_ORDER_BY_RESTAURANT = gql`
         status
         paymentStatus
         paymentGatewayRef
+        refundStatus
+        refundedAmount
+        refundedAt
+        refundError
         isActive
         createdAt
         deliveryCharges
@@ -446,6 +450,10 @@ export const GET_ALL_ORDERS_PAGINATED = gql`
         status
         paymentStatus
         paymentGatewayRef
+        refundStatus
+        refundedAmount
+        refundedAt
+        refundError
         isActive
         isPickedUp
         deliveryMode

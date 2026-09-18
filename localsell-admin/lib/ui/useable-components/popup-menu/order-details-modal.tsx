@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Dialog } from 'primereact/dialog';
+import { gql, useMutation } from '@apollo/client';
 import { IExtendedOrder, Items } from '@/lib/utils/interfaces';
 import './order-detail-modal.css';
 import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import CustomButton from '../button';
+import { ToastContext } from '@/lib/context/global/toast.context';
+import { getGraphQLErrorMessage } from '@/lib/utils/methods/error';
 
 interface IOrderDetailModalProps {
   visible: boolean;
@@ -10,12 +14,63 @@ interface IOrderDetailModalProps {
   restaurantData: IExtendedOrder | null;
 }
 
+const RETRY_ORDER_REFUND = gql`
+  mutation RetryOrderRefund($orderId: String!) {
+    retryOrderRefund(orderId: $orderId) {
+      _id
+      refundStatus
+      refundedAmount
+      refundedAt
+      refundError
+    }
+  }
+`;
+
+const REFUND_STATUS_LABEL: Record<string, string> = {
+  PENDING: 'Refund initiated',
+  PROCESSING: 'Refund processing',
+  SUCCESS: 'Refunded',
+  FAILED: 'Refund failed',
+};
+
 const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
   visible,
   onHide,
   restaurantData,
 }) => {
   const { CURRENT_SYMBOL } = useConfiguration();
+  const { showToast } = useContext(ToastContext);
+  const [refund, setRefund] = useState<{
+    refundStatus?: string | null;
+    refundedAmount?: number | null;
+    refundError?: string | null;
+  } | null>(null);
+  const [retryOrderRefund, { loading: retrying }] = useMutation(RETRY_ORDER_REFUND);
+
+  // Reset the local refund override whenever a different order is opened, so a
+  // retry on one order can't leak its result onto the next one shown.
+  useEffect(() => {
+    setRefund(null);
+  }, [restaurantData?._id]);
+
+  const handleRetryRefund = async () => {
+    if (!restaurantData?._id) return;
+    try {
+      const res = await retryOrderRefund({ variables: { orderId: restaurantData._id } });
+      setRefund(res.data?.retryOrderRefund ?? null);
+      showToast({
+        type: res.data?.retryOrderRefund?.refundStatus === 'SUCCESS' ? 'success' : 'info',
+        title: 'Refund retry',
+        message: `Refund status: ${res.data?.retryOrderRefund?.refundStatus ?? 'unknown'}`,
+      });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Refund retry',
+        message: getGraphQLErrorMessage(err as Error) ?? 'Failed to retry the refund',
+      });
+    }
+  };
   const calculateSubtotal = (items: Items[]) => {
     let Subtotal = 0;
     for (let i = 0; i < items.length; i++) {
@@ -32,6 +87,10 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
     return Subtotal.toFixed(2);
   };
   if (!restaurantData) return null;
+
+  const refundStatus = refund?.refundStatus ?? restaurantData.refundStatus ?? 'NONE';
+  const refundedAmount = refund?.refundedAmount ?? restaurantData.refundedAmount;
+  const refundError = refund?.refundError ?? restaurantData.refundError;
 
   return (
     <Dialog
@@ -217,6 +276,38 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
                   {(restaurantData.paidAmount ?? 0)?.toFixed(2)}
                 </span>
               </div>
+              {restaurantData.paymentMethod === 'CASHFREE' && refundStatus !== 'NONE' && (
+                <div className="refund-block">
+                  <div className="paid-amount">
+                    <span className="paid-label">Refund</span>
+                    <span
+                      className={`payment-status ${refundStatus === 'SUCCESS' ? 'paid' : refundStatus === 'FAILED' ? 'failed' : ''}`}
+                    >
+                      {REFUND_STATUS_LABEL[refundStatus] ?? refundStatus}
+                    </span>
+                  </div>
+                  {refundedAmount != null && (
+                    <div className="paid-amount">
+                      <span className="paid-label">Refunded amount</span>
+                      <span className="paid-value">
+                        {CURRENT_SYMBOL}
+                        {refundedAmount.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  {refundStatus === 'FAILED' && (
+                    <>
+                      {refundError && <p className="refund-error">{refundError}</p>}
+                      <CustomButton
+                        loading={retrying}
+                        label="Retry refund"
+                        className="refund-retry-button"
+                        onClick={handleRetryRefund}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Rider Information Section */}

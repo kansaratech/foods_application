@@ -17,13 +17,13 @@ export interface IUserResponse {
   __typename?: 'User';
   _id: string;
   name: string;
-  email: string;
+  email: string | null;
   emailIsVerified: boolean;
-  phone: string;
+  phone: string | null;
   phoneIsVerified: boolean;
   isActive: boolean;
   status: string;
-  lastLogin: string;
+  lastLogin: string | null;
   registrationMethod: string;
   orders: number;
   totalSpent: number;

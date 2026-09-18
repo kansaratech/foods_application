@@ -474,8 +474,12 @@ export default function OrderCheckoutScreen() {
   // placeOrder uses, so the tax/delivery figures shown here are guaranteed to
   // match what actually gets charged (fixes the previous client-computed tax
   // that placeOrder blindly trusted).
-  const { data: pricePreviewData } = useQuery(ORDER_PRICE_PREVIEW, {
-    skip: !restaurantId || cart.length === 0,
+  const {
+    data: pricePreviewData,
+    error: pricePreviewError,
+    loading: pricePreviewLoading,
+  } = useQuery(ORDER_PRICE_PREVIEW, {
+    skip: !restaurantId || cart.length === 0 || !userAddress,
     fetchPolicy: "network-only",
     variables: {
       restaurant: restaurantId,
@@ -483,7 +487,7 @@ export default function OrderCheckoutScreen() {
       couponCode: isCouponApplied ? (coupon ? coupon.title : null) : null,
       isPickedUp: isPickUp,
       address:
-        deliveryType === "Delivery" && userAddress
+        userAddress
           ? {
               _id: userAddress._id,
               latitude: "" + userAddress?.location?.coordinates?.[1],
@@ -695,6 +699,15 @@ export default function OrderCheckoutScreen() {
   // This is the fixed validateOrder function inside your OrderCheckoutScreen.js file
 
   function validateOrder() {
+    if (pricePreviewError || pricePreviewLoading) {
+      showToast({
+        title: t("restaurant_label"),
+        message: pricePreviewError?.message || "Checking service availability. Please wait.",
+        type: "error",
+      });
+      return false;
+    }
+
     if (!finalRestaurantData?.restaurant) {
       showToast({
         title: t("restaurant_label"),
@@ -867,6 +880,7 @@ export default function OrderCheckoutScreen() {
           //   latitude: "" + location?.latitude,
           // },
           address: {
+            _id: userAddress?._id,
             label: userAddress?.label,
             deliveryAddress: userAddress?.deliveryAddress,
             details: userAddress?.details,
@@ -1245,29 +1259,37 @@ export default function OrderCheckoutScreen() {
                     />
                   )}
 
-                  <p className="text-gray-900 dark:text-gray-100 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle">
-                    <span className="font-semibold">
-                      {" "}
-                      {deliveryType === "Pickup"
-                        ? t("pickup_label")
-                        : t("delivery_label")}{" "}
-                    </span>
-                    <span className="font-normal">
-                      {t("in_10_20_min_label")}{" "}
-                    </span>
-                    {deliveryType !== "Pickup" && (
+                  {pricePreviewError ? (
+                    <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                      {pricePreviewError.message}
+                    </p>
+                  ) : pricePreviewLoading ? (
+                    <p role="status" className="text-sm">Checking service availability...</p>
+                  ) : (
+                    <p className="text-gray-900 dark:text-gray-100 leading-4 sm:leading-5 tracking-normal font-inter text-xs sm:text-sm md:text-sm align-middle">
                       <span className="font-semibold">
-                        {userAddress?.deliveryAddress || (
-                          <span className="font-normal italic text-gray-500 dark:text-gray-400">
-                            {t("checkout_no_address_selected")}
-                          </span>
-                        )}
+                        {" "}
+                        {deliveryType === "Pickup"
+                          ? t("pickup_label")
+                          : t("delivery_label")}{" "}
                       </span>
-                    )}
-                  </p>
+                      <span className="font-normal">
+                        {t("in_10_20_min_label")}{" "}
+                      </span>
+                      {deliveryType !== "Pickup" && (
+                        <span className="font-semibold">
+                          {userAddress?.deliveryAddress || (
+                            <span className="font-normal italic text-gray-500 dark:text-gray-400">
+                              {t("checkout_no_address_selected")}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </p>
+                  )}
                 </div>
 
-                {deliveryType !== "Pickup" && (
+                {(deliveryType !== "Pickup" || pricePreviewError) && (
                   <button
                     type="button"
                     onClick={() => setIsUserAddressModalOpen(true)}
@@ -1706,7 +1728,7 @@ export default function OrderCheckoutScreen() {
               <button
                 className="bg-primary-color text-white dark:text-white w-full py-2 rounded-full font-semibold text-xs lg:text-[16px] disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={onPlaceOrder}
-                disabled={cart.length === 0 || loadingOrderMutation}
+                disabled={cart.length === 0 || loadingOrderMutation || pricePreviewLoading || !!pricePreviewError || !userAddress}
               >
                 {loadingOrderMutation ? (
                   <BrandLoader variant="inline" size={20} />
@@ -1823,7 +1845,7 @@ export default function OrderCheckoutScreen() {
               <button
                 className="bg-primary-color text-white dark:text-white w-full py-2 rounded-full text-xs lg:text-[12px]"
                 onClick={onPlaceOrder}
-                disabled={cart.length === 0 || loadingOrderMutation}
+                disabled={cart.length === 0 || loadingOrderMutation || pricePreviewLoading || !!pricePreviewError || !userAddress}
               >
                 {loadingOrderMutation ? (
                   <BrandLoader variant="inline" size={20} />
