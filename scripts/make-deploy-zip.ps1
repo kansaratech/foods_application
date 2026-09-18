@@ -5,17 +5,27 @@
 
   Produces  <Desktop>\localsell-deploy.zip  (override with -Out).
 
+  ONE zip serves BOTH environments — prod and UAT run identical code, only
+  the env file differs (docker-compose.yml is fully parameterized: ports,
+  container names, image tags, the internal network — all driven by
+  deploy/localsell.env). Unzip this SAME zip into two separate server
+  directories (e.g. ~/localsell-prod/ and ~/localsell-uat/), then in each:
+    - prod dir: cp deploy/localsell.env.example     deploy/localsell.env, fill it, run SERVER-DEPLOY.sh
+    - uat  dir: cp deploy/localsell-uat.env.example  deploy/localsell.env, fill it, run SERVER-DEPLOY.sh
+  See LOCALSELL_DEPLOYMENT.md section 12.6 for the full two-directory flow.
+
   What goes in: the 4 service source folders + every package-lock.json,
-  Dockerfile, .dockerignore, docker-compose.yml, deploy/ (example env only),
-  each app's prisma/ and its own lib/, and api/scripts/ (so
-  `npm run verify` works on the server).
+  Dockerfile, .dockerignore, docker-compose.yml, deploy/ (example envs only,
+  both prod and UAT), each app's prisma/ and its own lib/, and api/scripts/
+  (so `npm run verify` works on the server).
 
   What stays out: node_modules / build output / .git, the customer + rider
   Expo apps (not docker services), root assets|brand|lib|scripts|.github,
-  logs, and every real .env file (recreate deploy/localsell.env on the server).
+  logs, and every real .env file (recreate deploy/localsell.env on the server,
+  once per environment directory).
 
   On the server:  unzip -o ~/localsell-deploy.zip  then follow SERVER-DEPLOY.sh
-  (dropped into the zip root) or LOCALSELL_DEPLOYMENT.md section 12.1.
+  (dropped into the zip root) or LOCALSELL_DEPLOYMENT.md section 12.1/12.6.
 #>
 [CmdletBinding()]
 param(
@@ -88,16 +98,18 @@ $rc = @($src, $stage, '/MIR', '/NFL', '/NDL', '/NJH', '/NJS', '/NP', '/R:1', '/W
 & robocopy @rc | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed (exit $LASTEXITCODE)" }
 
-# keep the example env; make sure no real secret slipped through
+# keep both example envs (prod + UAT); make sure no real secret slipped through
 Copy-Item (Join-Path $src 'deploy\localsell.env.example') (Join-Path $stage 'deploy\localsell.env.example') -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $src 'deploy\localsell-uat.env.example') (Join-Path $stage 'deploy\localsell-uat.env.example') -Force -ErrorAction SilentlyContinue
 Get-ChildItem $stage -Recurse -Filter '*.env' -File |
-  Where-Object { $_.Name -ne 'localsell.env.example' } |
+  Where-Object { $_.Name -notin @('localsell.env.example', 'localsell-uat.env.example') } |
   ForEach-Object { Write-Warning "removing stray env: $($_.FullName.Substring($stage.Length))"; Remove-Item $_.FullName -Force }
 
 # ---- sanity check: every file the server build needs ----------------------
 $must = @(
   'docker-compose.yml',
   'deploy\localsell.env.example',
+  'deploy\localsell-uat.env.example',
   'deploy\backup.sh',
   'LOCALSELL_DEPLOYMENT.md',
   'localsell-api\package-lock.json',
@@ -126,10 +138,20 @@ if ($missing) { throw "staging is missing required files:`n  " + ($missing -join
 # ---- server helper script into the zip root ------------------------------
 $serverScript = @'
 #!/usr/bin/env bash
-# One-shot server deploy. Run from the project dir after: unzip -o ~/localsell-deploy.zip
+# One-shot server deploy. Run from the ENVIRONMENT'"'"'s own directory (e.g.
+# ~/localsell-prod/ or ~/localsell-uat/) after: unzip -o ~/localsell-deploy.zip
 set -e
+[ -f deploy/localsell.env ] || { echo "!! create deploy/localsell.env first (cp deploy/localsell.env.example — or deploy/localsell-uat.env.example for a UAT directory — then fill it)"; exit 1; }
+
+# Compose project name from CONTAINER_PREFIX (localsell_prod -> localsell-prod),
+# so prod and UAT never collide even when this same script/compose file is run
+# from two directories on the same host. Falls back to "localsell" (matching
+# the original single-environment deploy) if CONTAINER_PREFIX isn't set yet.
+PREFIX="$(grep -m1 '^CONTAINER_PREFIX=' deploy/localsell.env | cut -d= -f2- | tr '_' '-')"
+PREFIX="${PREFIX:-localsell}"
+P="-p $PREFIX"
 E="--env-file deploy/localsell.env"
-[ -f deploy/localsell.env ] || { echo "!! create deploy/localsell.env first (cp deploy/localsell.env.example, then fill it)"; exit 1; }
+echo "== compose project: $PREFIX =="
 
 echo "== uploads directory (host bind-mount, see LOCALSELL_DEPLOYMENT.md section 12.3) =="
 UPLOADS_DIR="$(grep -m1 '^UPLOADS_HOST_DIR=' deploy/localsell.env | cut -d= -f2-)"
@@ -144,22 +166,22 @@ else
 fi
 
 echo "== build + (re)start all services =="
-docker compose $E up -d --build
-docker compose $E ps
+docker compose $P $E up -d --build
+docker compose $P $E ps
 
 echo "== schema + config defaults + backfill (idempotent, non-destructive) =="
-docker compose $E exec -T api npm run db:deploy
+docker compose $P $E exec -T api npm run db:deploy
 #  ^ safe on every redeploy. It does NOT touch existing stores/orders/menus.
-#  To replace all data with the clean 4-store Deogarh marketplace instead
-#  (keeps Maps/SMTP keys), run ONCE, deliberately:
-#     docker compose $E exec -T api npm run seed
-#  Never on a marketplace with real vendors/orders.
+#  To reseed instead (destructive — wipes all data), run ONCE, deliberately:
+#     PROD (admin-only):  docker compose $P $E exec -e SEED_DATA_FILE=seed-data.prod.json -e ADMIN_INITIAL_PASSWORD='...' -T api npm run seed:prod
+#     UAT  (demo dataset): docker compose $P $E exec -T api npm run seed
+#  Never run either against a marketplace with real vendors/orders you want to keep.
 
 echo "== scheduler =="
-docker compose $E logs api | grep -m1 scheduler || echo "  (no scheduler line yet - check: docker compose $E logs api)"
+docker compose $P $E logs api | grep -m1 scheduler || echo "  (no scheduler line yet - check: docker compose $P $E logs api)"
 
 echo "== new API surface (introspection is off in prod, so we probe the fields directly) =="
-docker compose $E exec -T api node -e '
+docker compose $P $E exec -T api node -e '
   const q = n => fetch("http://localhost:4000/graphql",{method:"POST",headers:{"content-type":"application/json"},
     body:JSON.stringify({query:"{ "+n+" { __typename } }"})}).then(r=>r.json())
     .then(d=>{const m=(d.errors&&d.errors[0]&&d.errors[0].message)||"";

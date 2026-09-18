@@ -137,8 +137,18 @@ type SeedConfig = {
 };
 
 // ---------------------------------------------------------------- helpers
-const CONFIG_PATH = join(__dirname, 'seed-data.json');
+// SEED_DATA_FILE lets a deployment point at a different config, e.g.
+// `seed-data.prod.json` (admin-only, no demo stores) instead of the default
+// demo dataset.
+const CONFIG_PATH = join(__dirname, process.env.SEED_DATA_FILE || 'seed-data.json');
 const cfg: SeedConfig = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
+
+// ADMIN_INITIAL_PASSWORD overrides cfg.admin.password so a real production
+// password never has to live in a committed JSON file — only in the
+// server's git-ignored deploy env.
+if (process.env.ADMIN_INITIAL_PASSWORD) {
+  cfg.admin.password = process.env.ADMIN_INITIAL_PASSWORD;
+}
 
 const CENTER = cfg.marketplace.center;
 const KM = 1 / 111; // ~degrees per km

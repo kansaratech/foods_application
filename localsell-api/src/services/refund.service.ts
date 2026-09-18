@@ -6,11 +6,40 @@ import { prisma } from '../prisma/client';
 import { Order } from '@prisma/client';
 import { getCashfreeCredentials, refundCashfreeOrder } from './cashfree.service';
 import { publishOrderUpdate } from '../graphql/resolvers/order.resolvers';
+import { sendWhatsAppTemplateAsync } from '../utils/notifications';
 
 function mapCashfreeRefundStatus(status: string | undefined): 'SUCCESS' | 'FAILED' | 'PROCESSING' {
   if (status === 'SUCCESS') return 'SUCCESS';
   if (status === 'FAILED' || status === 'CANCELLED') return 'FAILED';
   return 'PROCESSING'; // PENDING | ONHOLD | anything else Cashfree might add
+}
+
+const money = (n: number) => `₹${Math.round(n)}`;
+const firstName = (name?: string | null) => name?.trim().split(/\s+/)[0] || 'there';
+
+/** Best-effort WhatsApp ping for a refund state change — never blocks the caller. */
+function notifyRefundEvent(orderId: string, event: 'INITIATED' | 'COMPLETED' | 'FAILED', amount?: number): void {
+  setImmediate(() => {
+    void (async () => {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { user: { select: { id: true, name: true, phone: true } } },
+      });
+      if (!order?.user?.phone) return;
+      const num = order.orderId;
+      const params: Record<typeof event, [string, string[]]> = {
+        INITIATED: ['refund_initiated', [firstName(order.user.name), num, money(amount ?? order.paidAmount)]],
+        COMPLETED: ['refund_completed', [firstName(order.user.name), num, money(amount ?? order.refundedAmount ?? order.paidAmount)]],
+        FAILED: ['refund_failed', [firstName(order.user.name), num]],
+      } as const;
+      const [key, bodyParams] = params[event];
+      sendWhatsAppTemplateAsync(key, order.user.phone, bodyParams, {
+        purpose: 'ORDER_UPDATE',
+        userId: order.user.id,
+        userType: 'CUSTOMER',
+      });
+    })().catch((err) => console.error(`[refund-notify] ${event} for ${orderId} failed:`, (err as Error).message));
+  });
 }
 
 /**
@@ -50,6 +79,7 @@ export async function attemptCashfreeRefund(order: Order): Promise<Order> {
     where: { id: order.id },
     data: { refundStatus: 'PENDING', refundId, refundError: null },
   });
+  notifyRefundEvent(order.id, 'INITIATED', order.paidAmount);
 
   try {
     const result = await refundCashfreeOrder(creds, cfOrderId, {
@@ -67,6 +97,8 @@ export async function attemptCashfreeRefund(order: Order): Promise<Order> {
       },
     });
     await publishOrderUpdate(updated);
+    if (mapped === 'SUCCESS') notifyRefundEvent(order.id, 'COMPLETED', result.refundAmount);
+    else if (mapped === 'FAILED') notifyRefundEvent(order.id, 'FAILED');
     return updated;
   } catch (err) {
     const updated = await prisma.order.update({
@@ -74,6 +106,7 @@ export async function attemptCashfreeRefund(order: Order): Promise<Order> {
       data: { refundStatus: 'FAILED', refundError: (err as Error).message.slice(0, 500) },
     });
     await publishOrderUpdate(updated);
+    notifyRefundEvent(order.id, 'FAILED');
     return updated;
   }
 }
@@ -100,4 +133,8 @@ export async function applyRefundWebhookUpdate(
     },
   });
   await publishOrderUpdate(updated);
+  // Only tell the customer once it actually resolves — the PENDING ->
+  // PROCESSING transition itself isn't user-facing.
+  if (mapped === 'SUCCESS') notifyRefundEvent(order.id, 'COMPLETED', refundAmount);
+  else if (mapped === 'FAILED' && order.refundStatus !== 'FAILED') notifyRefundEvent(order.id, 'FAILED');
 }

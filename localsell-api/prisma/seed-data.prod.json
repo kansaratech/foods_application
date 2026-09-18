@@ -1,0 +1,97 @@
+{
+  "_readme": [
+    "LocalSell PRODUCTION seed — admin-only, no demo data.",
+    "",
+    "Run with:  SEED_DATA_FILE=seed-data.prod.json ADMIN_INITIAL_PASSWORD='<generated>' npm run seed",
+    "",
+    "It WIPES every data table exactly like the default seed-data.json does, but",
+    "rebuilds with ONLY the super-admin account + the real marketplace/zone/",
+    "configuration settings. No demo stores, customers, riders, orders, or coupons —",
+    "vendors/stores are added manually via the admin panel from here on.",
+    "",
+    "ADMIN_INITIAL_PASSWORD (env) overrides the `admin.password` below so the real",
+    "production password never has to live in a committed file — see",
+    "seed-from-config.ts. If that env var is unset, the placeholder below is used,",
+    "so always set it when seeding production.",
+    "",
+    "Infra secrets already on the Configuration row (Maps / Cashfree / PayPal /",
+    "SMTP / WhatsApp / Sentry keys) are preserved across a reseed — only the",
+    "operational fields in `configuration` below are reset."
+  ],
+  "marketplace": {
+    "town": "Deogarh",
+    "district": "Rajsamand",
+    "state": "Rajasthan",
+    "postCode": "313331",
+    "center": {
+      "lat": 25.534,
+      "lng": 73.899
+    },
+    "storeSpreadKm": 1.5
+  },
+  "configuration": {
+    "currency": "INR",
+    "currencySymbol": "₹",
+    "deliveryRate": 20,
+    "defaultCommissionRate": 20,
+    "commissionBillingCycle": "MONTHLY",
+    "riderCashLimit": 3000,
+    "platformLegalName": "Maekotech Solutions LLP",
+    "isPaidVersion": true,
+    "skipEmailVerification": false,
+    "skipMobileVerification": false,
+    "skipWhatsAppOTP": false,
+    "_whatsapp": "Meta WhatsApp Cloud API for phone OTP. Non-secret IDs live here; the access token is NOT here — seed reads WHATSAPP_ACCESS_TOKEN from the env, else keeps whatever is on the Configuration row.",
+    "whatsappCloudEnabled": true,
+    "whatsappPhoneNumberId": "551380631388343",
+    "whatsappWabaId": "567424539778633",
+    "whatsappApiVersion": "v22.0",
+    "whatsappOtpTemplate": "localsell_otp",
+    "whatsappOtpLang": "en_US",
+    "_email": "SMTP for transactional email. The password is NOT here — seed reads SMTP_PASSWORD from the env, else keeps whatever is already on the Configuration row.",
+    "enableEmail": true,
+    "email": "localsell.dgh@gmail.com",
+    "emailName": "LocalSell",
+    "smtpHost": "smtp.gmail.com",
+    "smtpPort": 465,
+    "smtpSecure": true,
+    "smtpUser": "localsell.dgh@gmail.com",
+    "formEmail": "localsell.dgh@gmail.com",
+    "termsAndConditions": "LocalSell — Terms of Service. By placing an order you agree to pay the listed price plus applicable delivery fee and taxes. Orders are prepared and fulfilled by independent partner stores; LocalSell operates the marketplace and (where selected) the delivery. Cash-on-delivery orders must be paid in full to the delivery partner. Edit this text in Admin → Configuration.",
+    "privacyPolicy": "LocalSell — Privacy Policy. We collect your name, phone, delivery address and order history to fulfil orders and provide support. We share the minimum necessary details with the partner store and the delivery partner assigned to your order. We do not sell your data. Edit this text in Admin → Configuration."
+  },
+  "shopTypes": [
+    {
+      "name": "Restaurant",
+      "slug": "restaurant"
+    },
+    {
+      "name": "Grocery",
+      "slug": "grocery"
+    }
+  ],
+  "zones": [
+    {
+      "title": "Deogarh Town",
+      "description": "Deogarh & nearby villages, Rajsamand",
+      "radiusKm": 7
+    }
+  ],
+  "admin": {
+    "email": "admin@localsell.in",
+    "name": "LocalSell Admin",
+    "password": "CHANGE_ME_SET_VIA_ADMIN_INITIAL_PASSWORD_ENV"
+  },
+  "customers": [],
+  "riders": [],
+  "demoOrders": {
+    "enabled": false,
+    "perStoreDeliveredOrders": 0,
+    "note": "Production — no demo orders."
+  },
+  "images": {},
+  "addonGroups": {},
+  "vendors": [],
+  "coupons": [],
+  "banners": []
+}

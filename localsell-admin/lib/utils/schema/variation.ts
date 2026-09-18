@@ -13,7 +13,7 @@ export const VariationSchema = Yup.object({
           .matches(/\S/, 'Name cannot be only spaces')
           .required('Required'),
         price: Yup.number()
-          .moreThan(0, 'Price must be greater than 0')
+          .moreThan(0, 'Minimum value must be greater than 0')
           .max(MAX_PRICE)
           .required('Required'),
         // Optional — 0/empty means no discount. When set, it's the actual

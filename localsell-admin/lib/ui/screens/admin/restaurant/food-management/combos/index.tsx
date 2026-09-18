@@ -402,8 +402,20 @@ export default function CombosScreen() {
               <span className="mb-1 text-gray-500">{t('Combo price')} (₹)</span>
               <input
                 type="number"
+                min={0}
                 value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e') e.preventDefault();
+                }}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    price:
+                      e.target.value && parseFloat(e.target.value) < 0
+                        ? '0'
+                        : e.target.value,
+                  })
+                }
                 className="ls-field w-full"
               />
             </label>
@@ -413,9 +425,19 @@ export default function CombosScreen() {
               </span>
               <input
                 type="number"
+                min={0}
                 value={form.compareAtPrice}
+                onKeyDown={(e) => {
+                  if (e.key === '-' || e.key === 'e') e.preventDefault();
+                }}
                 onChange={(e) =>
-                  setForm({ ...form, compareAtPrice: e.target.value })
+                  setForm({
+                    ...form,
+                    compareAtPrice:
+                      e.target.value && parseFloat(e.target.value) < 0
+                        ? '0'
+                        : e.target.value,
+                  })
                 }
                 placeholder={itemsWorth ? String(Math.round(itemsWorth)) : ''}
                 className="ls-field w-full"

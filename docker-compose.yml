@@ -1,27 +1,36 @@
-# LocalSell — production stack for localsell.in
+# LocalSell — this SAME zip/repo is unzipped into TWO separate directories on
+# the server, one per environment (e.g. ~/localsell-prod/ and ~/localsell-uat/).
+# Each directory gets its own deploy/localsell.env (same filename, different
+# content: different DB, ports, hostnames, CONTAINER_PREFIX). Deploy from
+# inside each directory:
 #
-#   Build + run:   docker compose --env-file deploy/localsell.env up -d --build
-#   Logs:          docker compose --env-file deploy/localsell.env logs -f
-#   Stop:          docker compose --env-file deploy/localsell.env down
+#   Prod:  cd ~/localsell-prod && docker compose -p localsell-prod --env-file deploy/localsell.env up -d --build
+#   UAT:   cd ~/localsell-uat  && docker compose -p localsell-uat  --env-file deploy/localsell.env up -d --build
+#   Logs:  docker compose -p <project> --env-file deploy/localsell.env logs -f
+#   Stop:  docker compose -p <project> --env-file deploy/localsell.env down
+#
+# Every container name, the internal network name, and every host port are
+# parameterized (CONTAINER_PREFIX / *_PORT below) so the two projects never
+# collide even though the compose file content is identical — the actual
+# values come from each directory's own deploy/localsell.env.
 #
 # Host ports (bound to 127.0.0.1 only — Apache/Sentora reverse-proxies to them):
-#   6000 -> web    (container :3000)   localsell.in
-#   6001 -> admin  (container :3000)   admin.localsell.in
-#   6002 -> api    (container :4000)   api.localsell.in
-#   6004 -> store  (container :80)     store.localsell.in  (Expo web static export)
-#   6005 -> rider  (container :80)     rider.localsell.in  (Expo web static export)
-#        (6003 is taken by the money_visior container on this host)
+#   Prod (CONTAINER_PREFIX=localsell_prod):  web 6000, admin 6001, api 6002, store 6004, rider 6005
+#   UAT  (CONTAINER_PREFIX=localsell_uat):   web 6100, admin 6101, api 6102, store 6104, rider 6105
+#        (6003/6103 skipped — 6003 is taken by the money_visior container on this host)
 #
 # The api joins the EXTERNAL `mysql_config_dev_default` network so it can reach
-# the shared MySQL container by name (same pattern as ams_container).
+# the shared MySQL container by name (same pattern as ams_container). Prod uses
+# DB `localsell_prod`, UAT uses DB `localsell_uat` — same MySQL container, see
+# LOCALSELL_DEPLOYMENT.md section 4.
 #
 # Uploads (`/app/uploads` in the api container) are bind-mounted to a plain
 # directory on the HOST — not a Docker-managed named volume — so it's a normal
 # folder any backup/rsync/replica tool can read directly, no
 # `docker run --rm -v ... tar` step needed. Override the host path with
-# UPLOADS_HOST_DIR in deploy/localsell.env; defaults to /var/localsell/uploads.
-
-name: localsell
+# UPLOADS_HOST_DIR in the env file; defaults to /var/localsell/uploads (prod)
+# — UAT MUST override this to a different path (e.g. /var/localsell-uat/uploads)
+# or the two environments will share/clobber the same upload files.
 
 x-logging: &default-logging
   driver: json-file
@@ -33,17 +42,17 @@ services:
   api:
     build:
       context: ./localsell-api
-    image: localsell-api:latest
-    container_name: localsell_api
+    image: ${CONTAINER_PREFIX:-localsell}-api:latest
+    container_name: ${CONTAINER_PREFIX:-localsell}_api
     restart: unless-stopped
     env_file:
       - ./deploy/localsell.env
     ports:
-      - "127.0.0.1:6002:4000"
+      - "127.0.0.1:${API_PORT:-6002}:4000"
     volumes:
       - ${UPLOADS_HOST_DIR:-/var/localsell/uploads}:/app/uploads
     networks:
-      - localsell_internal
+      - internal
       - mysql_config_dev_default
     logging: *default-logging
     healthcheck:
@@ -64,13 +73,13 @@ services:
         NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/localsell.env}
         NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/localsell.env}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/localsell.env}
-    image: localsell-web:latest
-    container_name: localsell_web
+    image: ${CONTAINER_PREFIX:-localsell}-web:latest
+    container_name: ${CONTAINER_PREFIX:-localsell}_web
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6000:3000"
+      - "127.0.0.1:${WEB_PORT:-6000}:3000"
     networks:
-      - localsell_internal
+      - internal
     logging: *default-logging
 
   admin:
@@ -80,13 +89,13 @@ services:
         NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:?set it in deploy/localsell.env}
         NEXT_PUBLIC_WS_SERVER_URL: ${NEXT_PUBLIC_WS_SERVER_URL:?set it in deploy/localsell.env}
         NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:?set it in deploy/localsell.env}
-    image: localsell-admin:latest
-    container_name: localsell_admin
+    image: ${CONTAINER_PREFIX:-localsell}-admin:latest
+    container_name: ${CONTAINER_PREFIX:-localsell}_admin
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6001:3000"
+      - "127.0.0.1:${ADMIN_PORT:-6001}:3000"
     networks:
-      - localsell_internal
+      - internal
     logging: *default-logging
 
   store:
@@ -95,17 +104,16 @@ services:
       args:
         EXPO_PUBLIC_GRAPHQL_URL: ${EXPO_PUBLIC_GRAPHQL_URL:?set it in deploy/localsell.env}
         EXPO_PUBLIC_WS_GRAPHQL_URL: ${EXPO_PUBLIC_WS_GRAPHQL_URL:?set it in deploy/localsell.env}
-    image: localsell-store:latest
-    container_name: localsell_store
+    image: ${CONTAINER_PREFIX:-localsell}-store:latest
+    container_name: ${CONTAINER_PREFIX:-localsell}_store
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6004:80"
+      - "127.0.0.1:${STORE_PORT:-6004}:80"
     networks:
-      - localsell_internal
+      - internal
     logging: *default-logging
 
   # Rider (delivery) app — Expo web static export, served by nginx.
-  #   6005 -> rider (container :80)   rider.localsell.in
   rider:
     build:
       context: ./localsell-rider
@@ -113,17 +121,17 @@ services:
         EXPO_PUBLIC_GRAPHQL_URL: ${EXPO_PUBLIC_GRAPHQL_URL:?set it in deploy/localsell.env}
         EXPO_PUBLIC_WS_GRAPHQL_URL: ${EXPO_PUBLIC_WS_GRAPHQL_URL:?set it in deploy/localsell.env}
         EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:-}
-    image: localsell-rider:latest
-    container_name: localsell_rider
+    image: ${CONTAINER_PREFIX:-localsell}-rider:latest
+    container_name: ${CONTAINER_PREFIX:-localsell}_rider
     restart: unless-stopped
     ports:
-      - "127.0.0.1:6005:80"
+      - "127.0.0.1:${RIDER_PORT:-6005}:80"
     networks:
-      - localsell_internal
+      - internal
     logging: *default-logging
 
 networks:
-  localsell_internal:
-    name: localsell_internal
+  internal:
+    name: ${CONTAINER_PREFIX:-localsell}_internal
   mysql_config_dev_default:
     external: true

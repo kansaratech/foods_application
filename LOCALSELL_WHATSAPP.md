@@ -126,6 +126,50 @@ Optional header (Text): `Order cancelled`
 
 ---
 
+### 5a. `localsell_refund_initiated`  ·  UTILITY  ·  to the customer
+
+> **Body**
+> Hi {{1}}, we've initiated a refund of {{3}} for your order {{2}}. It will reflect in your original payment method within 5-7 business days.
+
+| Var | Fills with | Sample |
+|---|---|---|
+| {{1}} | customer first name | Rahul |
+| {{2}} | order number | D2504 |
+| {{3}} | refund amount (₹) | ₹450 |
+
+Optional header (Text): `Refund initiated`
+
+---
+
+### 5b. `localsell_refund_completed`  ·  UTILITY  ·  to the customer
+
+> **Body**
+> Hi {{1}}, {{3}} has been refunded to your original payment method for order {{2}}. It may take a few days to reflect in your bank statement.
+
+| Var | Fills with | Sample |
+|---|---|---|
+| {{1}} | customer first name | Rahul |
+| {{2}} | order number | D2504 |
+| {{3}} | refunded amount (₹) | ₹450 |
+
+Optional header (Text): `Refund completed`
+
+---
+
+### 5c. `localsell_refund_failed`  ·  UTILITY  ·  to the customer
+
+> **Body**
+> Hi {{1}}, we couldn't process your refund for order {{2}}. Our support team has been notified and will contact you shortly. Sorry for the inconvenience.
+
+| Var | Fills with | Sample |
+|---|---|---|
+| {{1}} | customer first name | Rahul |
+| {{2}} | order number | D2504 |
+
+Optional header (Text): `Refund issue`
+
+---
+
 ### 6. `localsell_vendor_new_order`  ·  UTILITY  ·  to the store owner
 
 > **Body**
@@ -170,9 +214,12 @@ Optional header (Text): `New delivery`
 | `localsell_vendor_new_order` | APPROVED | ✅ |
 | `localsell_rider_assigned` | APPROVED | ✅ |
 | `localsell_order_out_for_delivery` | **PENDING** Meta review | ⏳ auto-works on approval |
+| `localsell_refund_initiated` | APPROVED | ✅ |
+| `localsell_refund_completed` | APPROVED | ✅ |
+| `localsell_refund_failed` | APPROVED | ✅ |
 
-All 8 are registered in the `WhatsappTemplate` table and wired to their order events. Nothing else
-to build — `order_out_for_delivery` starts sending the moment Meta approves it.
+All 11 are registered in the `WhatsappTemplate` table and wired to their order/refund events. Nothing
+else to build — `order_out_for_delivery` starts sending the moment Meta approves it.
 
 ## Webhook (delivery/read receipts + template status)
 
@@ -232,3 +279,6 @@ Codes live in the `PhoneVerification` table (5-min expiry, 30-sec resend cooldow
 | `order_delivered` | `localsell_order_delivered` | delivery confirmed | customer |
 | `order_cancelled` | `localsell_order_cancelled` | `cancelOrder` / reject | customer |
 | `rider_assigned` | `localsell_rider_assigned` | order assigned to a rider | rider |
+| `refund_initiated` | `localsell_refund_initiated` | Cashfree refund submitted (refundStatus → PENDING) | customer |
+| `refund_completed` | `localsell_refund_completed` | Cashfree refund confirmed (refundStatus → SUCCESS, incl. via webhook) | customer |
+| `refund_failed` | `localsell_refund_failed` | Cashfree refund rejected/errored (refundStatus → FAILED) | customer |

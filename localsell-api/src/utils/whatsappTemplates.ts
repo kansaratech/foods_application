@@ -98,6 +98,41 @@ export const WA_TEMPLATES: WaTemplateDef[] = [
     bodyVars: ['customerName', 'orderNumber', 'storeName', 'reason'],
   },
   {
+    // Fires the moment a Cashfree refund attempt is submitted (refundStatus
+    // -> PENDING) — separate from order_cancelled since a refund can land
+    // well after the cancellation message, or not need one at all (COD).
+    key: 'refund_initiated',
+    metaName: 'localsell_refund_initiated',
+    language: 'en_US',
+    category: 'UTILITY',
+    audience: 'CUSTOMER',
+    purpose: 'ORDER_UPDATE',
+    bodyVars: ['customerName', 'orderNumber', 'refundAmount'],
+  },
+  {
+    // Fires when Cashfree confirms the refund (immediately, or later via the
+    // refund-status webhook for a PROCESSING attempt that resolves async).
+    key: 'refund_completed',
+    metaName: 'localsell_refund_completed',
+    language: 'en_US',
+    category: 'UTILITY',
+    audience: 'CUSTOMER',
+    purpose: 'ORDER_UPDATE',
+    bodyVars: ['customerName', 'orderNumber', 'refundAmount'],
+  },
+  {
+    // Cashfree rejected the refund, or LocalSell's own gateway config was
+    // missing — refundStatus FAILED. Points the customer at support rather
+    // than leaving them guessing why the money hasn't shown up.
+    key: 'refund_failed',
+    metaName: 'localsell_refund_failed',
+    language: 'en_US',
+    category: 'UTILITY',
+    audience: 'CUSTOMER',
+    purpose: 'ORDER_UPDATE',
+    bodyVars: ['customerName', 'orderNumber'],
+  },
+  {
     key: 'vendor_new_order',
     metaName: 'localsell_vendor_new_order',
     language: 'en_US',

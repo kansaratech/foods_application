@@ -62,6 +62,12 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
     const [isRequired, setIsRequired] = useState(false);
     const [quantityMinimum, setQuantityMinimum] = useState(0);
     const [quantityMaximum, setQuantityMaximum] = useState(1);
+    // Separate raw text mirrors of the two fields above, so the input can sit
+    // empty while the vendor is mid-edit instead of the numeric clamp
+    // snapping it back to "1" on every keystroke (which made the field
+    // un-clearable — new digits kept appending to the stuck "1").
+    const [minText, setMinText] = useState("0");
+    const [maxText, setMaxText] = useState("1");
     const [options, setOptions] = useState<OptionRow[]>([]);
     const [error, setError] = useState("");
 
@@ -73,6 +79,8 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
         setIsRequired(addon?.isRequired ?? (addon?.quantityMinimum ?? 0) >= 1);
         setQuantityMinimum(addon?.quantityMinimum ?? 0);
         setQuantityMaximum(addon?.quantityMaximum ?? 1);
+        setMinText(String(addon?.quantityMinimum ?? 0));
+        setMaxText(String(addon?.quantityMaximum ?? 1));
         setOptions(
           (addon?.options ?? []).map((o) => ({
             ...o,
@@ -136,6 +144,10 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
         setError(t("Title is required"));
         return;
       }
+      if (isRequired && quantityMinimum > quantityMaximum) {
+        setError(t("\"At least\" cannot be greater than \"At most\""));
+        return;
+      }
       if (options.some((o) => !o.title?.trim())) {
         setError(t("Every option needs a title"));
         return;
@@ -169,19 +181,32 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
     const loading = creating || editing;
 
     return (
-      <ResponsiveFormSheet ref={sheetRef} snapPoint="75%">
-          <View className="gap-1">
-            <Text
-              className="text-lg font-semibold"
-              style={{ color: appTheme.fontMainColor }}
-            >
-              {editingId ? t("Edit Customisation Group") : t("New Customisation Group")}
-            </Text>
-            <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
-              {t('e.g. "Choose your toppings" or "Spice level" — a group of choices customers pick from')}
-            </Text>
+      <ResponsiveFormSheet
+        ref={sheetRef}
+        snapPoint="75%"
+        header={
+          <View className="flex-row justify-between items-start">
+            <View className="flex-1 gap-1" style={{ paddingRight: 16 }}>
+              <Text
+                className="text-lg font-semibold"
+                style={{ color: appTheme.fontMainColor }}
+              >
+                {editingId ? t("Edit Customisation Group") : t("New Customisation Group")}
+              </Text>
+              <Text className="text-xs" style={{ color: appTheme.fontSecondColor }}>
+                {t('e.g. "Choose your toppings" or "Spice level" — a group of choices customers pick from')}
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => sheetRef.current?.dismiss()}>
+              <Ionicons
+                name="close"
+                size={22}
+                color={appTheme.fontSecondColor}
+              />
+            </TouchableOpacity>
           </View>
-
+        }
+      >
           <View className="gap-2">
             <Text
               className="text-sm"
@@ -242,6 +267,8 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
                   setIsRequired(checked);
                   setQuantityMinimum(rules.quantityMinimum);
                   setQuantityMaximum(rules.quantityMaximum);
+                  setMinText(String(rules.quantityMinimum));
+                  setMaxText(String(rules.quantityMaximum));
                 }}
               />
             </View>
@@ -257,13 +284,19 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
                   </Text>
                   <TextInput
                     className="rounded-md border-2 border-gray-300 p-3"
-                    value={String(quantityMinimum)}
+                    value={minText}
                     keyboardType="number-pad"
                     style={{ color: appTheme.fontSecondColor }}
                     onChangeText={(val) => {
-                      const min = Math.max(1, Number(val) || 1);
+                      setMinText(val);
+                      if (val.trim() === "") return;
+                      const parsed = Number(val);
+                      if (Number.isFinite(parsed)) setQuantityMinimum(parsed);
+                    }}
+                    onBlur={() => {
+                      const min = Math.max(1, Number(minText) || 1);
                       setQuantityMinimum(min);
-                      if (min > quantityMaximum) setQuantityMaximum(min);
+                      setMinText(String(min));
                     }}
                   />
                 </View>
@@ -277,13 +310,19 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
                 </Text>
                 <TextInput
                   className="rounded-md border-2 border-gray-300 p-3"
-                  value={String(quantityMaximum)}
+                  value={maxText}
                   keyboardType="number-pad"
                   style={{ color: appTheme.fontSecondColor }}
                   onChangeText={(val) => {
-                    const max = Math.max(1, Number(val) || 1);
+                    setMaxText(val);
+                    if (val.trim() === "") return;
+                    const parsed = Number(val);
+                    if (Number.isFinite(parsed)) setQuantityMaximum(parsed);
+                  }}
+                  onBlur={() => {
+                    const max = Math.max(1, Number(maxText) || 1);
                     setQuantityMaximum(max);
-                    if (isRequired && quantityMinimum > max) setQuantityMinimum(max);
+                    setMaxText(String(max));
                   }}
                 />
               </View>
@@ -355,6 +394,15 @@ const AddonFormSheet = forwardRef<AddonFormSheetHandle, Props>(
               />
             </View>
           ))}
+
+          {!!error && (
+            <Text
+              accessibilityRole="alert"
+              style={{ color: appTheme.error }}
+            >
+              {error}
+            </Text>
+          )}
 
           <CustomContinueButton
             title={loading ? t("Please wait") : t("Save")}

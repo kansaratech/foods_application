@@ -29,8 +29,11 @@ built from a single "prefix + zone" token pair.
 | Project dir on server | `/var/sentora/hostdata/<host>/public_html/localsell/server` | where `docker-compose.yml` lives — adjust `<host>` to the real Sentora account |
 | Shared MySQL container | `mysql_dev_3308` | `mysql:8.0`, internal port **3306** |
 | Shared Docker network | `mysql_config_dev_default` | the API joins this to reach MySQL by name |
-| DB name / user | `localsell` / `localsell` | |
-| Host ports | web `6000`, admin `6001`, api `6002`, store `6004`, rider `6005` | 6003 was taken on this host; pick any free `ss -ltn` ports |
+| DB name / user (prod) | `localsell_prod` / `localsell_prod` | admin-only seed — see §4 |
+| DB name / user (UAT) | `localsell_uat` / `localsell_uat` | copy of the old `localsell` DB (tester data) |
+| Host ports (prod) | web `6000`, admin `6001`, api `6002`, store `6004`, rider `6005` | 6003 was taken on this host; pick any free `ss -ltn` ports |
+| Host ports (UAT) | web `6100`, admin `6101`, api `6102`, store `6104`, rider `6105` | mirrors prod ports +100; 6103 skipped to match prod's gap, not because it's taken — free to use if needed |
+| UAT hosts | `uat.localsell.in`, `uat-admin.localsell.in`, `uat-api.localsell.in`, `uat-store.localsell.in`, `uat-rider.localsell.in` | same server, own DNS records, own Apache vhosts, own DB (`localsell_uat`) — see §9d |
 
 ---
 
@@ -106,37 +109,67 @@ Confirm before requesting certs: `dig +short localsell.in`.
 
 ---
 
-## 4. Database — create `localsell` on the shared MySQL
+## 4. Database — split the original `localsell` DB into `localsell_prod` + `localsell_uat`
+
+Historical note: the first deployment (Sep 2026) used one DB, `localsell`/`localsell`,
+holding the demo/tester data (`hot-pizza-corner` etc). As of Sep 2026 this is
+being split: **`localsell_uat` keeps a full copy of that tester data**, and
+**`localsell_prod` is a fresh, empty-except-admin DB** for the real launch —
+real vendors get added manually from here on, nothing demo ships in prod again.
 
 ```bash
 docker network inspect mysql_config_dev_default \
   --format '{{range .Containers}}{{.Name}} {{end}}'      # find the MySQL container
 
-DBPW=$(openssl rand -hex 24); echo "$DBPW" > /root/localsell_db_pw.txt; echo "$DBPW"
+# 4a. Safety backup of the current (pre-split) DB — keep this until the split is verified
+docker exec mysql_dev_3308 mysqldump -uroot -p localsell > ~/localsell_pre_split_backup_$(date +%F).sql
 
+# 4b. UAT — new DB/user, restore the full current DB into it (tester data preserved)
+UATPW=$(openssl rand -hex 24); echo "$UATPW" > /root/localsell_uat_db_pw.txt; echo "$UATPW"
 docker exec -it mysql_dev_3308 mysql -uroot -p -e "
-  CREATE DATABASE IF NOT EXISTS localsell CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-  CREATE USER IF NOT EXISTS 'localsell'@'%' IDENTIFIED BY '$DBPW';
-  ALTER USER 'localsell'@'%' IDENTIFIED BY '$DBPW';
-  GRANT ALL PRIVILEGES ON localsell.* TO 'localsell'@'%';
+  CREATE DATABASE IF NOT EXISTS localsell_uat CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE USER IF NOT EXISTS 'localsell_uat'@'%' IDENTIFIED BY '$UATPW';
+  GRANT ALL PRIVILEGES ON localsell_uat.* TO 'localsell_uat'@'%';
+  FLUSH PRIVILEGES;"
+docker exec -i mysql_dev_3308 mysql -uroot -p localsell_uat < ~/localsell_pre_split_backup_$(date +%F).sql
+
+# 4c. Prod — fresh, empty DB/user (schema pushed + admin-only seeded in §8)
+PRODPW=$(openssl rand -hex 24); echo "$PRODPW" > /root/localsell_prod_db_pw.txt; echo "$PRODPW"
+docker exec -it mysql_dev_3308 mysql -uroot -p -e "
+  CREATE DATABASE IF NOT EXISTS localsell_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+  CREATE USER IF NOT EXISTS 'localsell_prod'@'%' IDENTIFIED BY '$PRODPW';
+  GRANT ALL PRIVILEGES ON localsell_prod.* TO 'localsell_prod'@'%';
   FLUSH PRIVILEGES;"
 
-docker exec -it mysql_dev_3308 mysql -ulocalsell -p"$DBPW" localsell -e 'SELECT 1;'   # verify
+docker exec -it mysql_dev_3308 mysql -ulocalsell_prod -p"$PRODPW" localsell_prod -e 'SELECT 1;'   # verify
+docker exec -it mysql_dev_3308 mysql -ulocalsell_uat -p"$UATPW" localsell_uat -e 'SELECT 1;'       # verify
 ```
 
 `DATABASE_URL` host = the **container name**, port = **3306** (container‑internal,
 even though this one publishes 3308 on the host):
 
 ```
-mysql://localsell:<DBPW>@mysql_dev_3308:3306/localsell
+# prod deploy/localsell.env
+DATABASE_URL=mysql://localsell_prod:<PRODPW>@mysql_dev_3308:3306/localsell_prod
+
+# uat deploy/localsell-uat.env (see §12.2, added when we do the Docker split)
+DATABASE_URL=mysql://localsell_uat:<UATPW>@mysql_dev_3308:3306/localsell_uat
 ```
+
+Point prod's `api` container at `localsell_prod`, run `npm run db:deploy` (schema
+push) then `npm run seed:prod` (see §8a) to create the admin-only baseline —
+**do not** run the destructive `npm run seed` (no `:prod`) against `localsell_prod`,
+that pulls in the demo dataset instead. Once the split is verified working, the
+old `localsell` DB can be dropped (keep the §4a backup a while first, just in case).
 
 > ⚠️ **Do NOT import a `mysqldump` taken from a Windows / case‑insensitive MySQL.**
 > Prisma's models are PascalCase (`Configuration`, `User`, …); a Windows dump
 > writes lowercase `CREATE TABLE` statements, and on a case‑sensitive Linux MySQL
 > Prisma then can't find its tables (`The table Configuration does not exist`).
-> **Seed instead** (§8). Importing real data cross‑platform needs the dump's
-> identifiers rewritten to PascalCase first — separate task.
+> The `localsell → localsell_uat` restore above is Linux‑to‑Linux (same MySQL
+> container) so this does not apply there. **Seed instead for a truly fresh DB**
+> (§8). Importing real data cross‑platform needs the dump's identifiers
+> rewritten to PascalCase first — separate task.
 
 ---
 
@@ -492,6 +525,173 @@ for h in localsell.in admin.localsell.in store.localsell.in api.localsell.in; do
 done
 apachectl configtest && systemctl reload httpd
 ```
+
+---
+
+### 9d. UAT vhosts + TLS (same server, own hostnames/ports/DB)
+
+Same two-phase flow as §9a–9c, just pointed at the UAT ports (`uat*.localsell.in`
+→ `6100`–`6105`, mirroring prod +100 — see §0). **DNS must already resolve**
+before certbot will issue anything:
+
+```bash
+dig +short uat.localsell.in uat-admin.localsell.in uat-api.localsell.in uat-store.localsell.in uat-rider.localsell.in
+# every line must print 103.92.235.209 before continuing — add the A records
+# in your DNS provider first if any line is empty, then wait for propagation
+```
+
+**Phase 1 — HTTP vhosts (for cert validation):**
+
+```bash
+mkdir -p /var/www/letsencrypt/.well-known/acme-challenge
+
+for pair in "uat.localsell.in:6100" "uat-admin.localsell.in:6101" "uat-store.localsell.in:6104" "uat-rider.localsell.in:6105"; do
+  host=${pair%:*}; port=${pair#*:}
+  cat > /etc/httpd/conf.d/${host}.conf <<EOF
+<VirtualHost *:80>
+    ServerName ${host}
+    Alias /.well-known/acme-challenge/ "/var/www/letsencrypt/.well-known/acme-challenge/"
+    <Directory "/var/www/letsencrypt/.well-known/acme-challenge/">
+        Require all granted
+    </Directory>
+    ProxyPreserveHost On
+    ProxyRequests Off
+    RequestHeader set X-Forwarded-Proto "http"
+    ProxyTimeout 60
+    ProxyPass /.well-known/acme-challenge/ !
+    ProxyPass        / http://127.0.0.1:${port}/ retry=0
+    ProxyPassReverse / http://127.0.0.1:${port}/
+    ErrorLog  /var/log/httpd/${host}-error.log
+    CustomLog /var/log/httpd/${host}-access.log combined
+</VirtualHost>
+EOF
+done
+
+cat > /etc/httpd/conf.d/uat-api.localsell.in.conf <<'EOF'
+<VirtualHost *:80>
+    ServerName uat-api.localsell.in
+    Alias /.well-known/acme-challenge/ "/var/www/letsencrypt/.well-known/acme-challenge/"
+    <Directory "/var/www/letsencrypt/.well-known/acme-challenge/">
+        Require all granted
+    </Directory>
+    ProxyPreserveHost On
+    ProxyRequests Off
+    RequestHeader set X-Forwarded-Proto "http"
+    ProxyTimeout 60
+    LimitRequestBody 26214400
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/?(.*) ws://127.0.0.1:6102/$1 [P,L]
+    ProxyPass /.well-known/acme-challenge/ !
+    ProxyPass        / http://127.0.0.1:6102/ retry=0
+    ProxyPassReverse / http://127.0.0.1:6102/
+    ErrorLog  /var/log/httpd/uat-api-error.log
+    CustomLog /var/log/httpd/uat-api-access.log combined
+</VirtualHost>
+EOF
+
+apachectl configtest && systemctl reload httpd
+```
+
+**Certificates:**
+
+```bash
+for d in uat.localsell.in uat-admin.localsell.in uat-store.localsell.in uat-rider.localsell.in uat-api.localsell.in; do
+  certbot certonly --webroot -w /var/www/letsencrypt \
+    -d ${d} --non-interactive --agree-tos -m you@example.com \
+    || echo "FAILED: $d"
+done
+ls -d /etc/letsencrypt/live/uat*
+```
+
+**Phase 2 — HTTPS + redirect** (same `cert.pem` + `SSLCertificateChainFile`
+requirement as prod — see the Apache-2.4.6 note in §9c, applies here too):
+
+```bash
+for pair in "uat.localsell.in:6100" "uat-admin.localsell.in:6101" "uat-store.localsell.in:6104" "uat-rider.localsell.in:6105"; do
+  host=${pair%:*}; port=${pair#*:}
+  cat > /etc/httpd/conf.d/${host}.conf <<EOF
+<VirtualHost *:80>
+    ServerName ${host}
+    Alias /.well-known/acme-challenge/ "/var/www/letsencrypt/.well-known/acme-challenge/"
+    <Directory "/var/www/letsencrypt/.well-known/acme-challenge/">
+        Require all granted
+    </Directory>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://${host}%{REQUEST_URI} [R=301,L]
+    ErrorLog  /var/log/httpd/${host}-error.log
+    CustomLog /var/log/httpd/${host}-access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName ${host}
+    SSLEngine On
+    SSLCertificateFile      /etc/letsencrypt/live/${host}/cert.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/${host}/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/${host}/chain.pem
+    ProxyPreserveHost On
+    ProxyRequests Off
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-SSL "on"
+    ProxyTimeout 60
+    Timeout 60
+    ProxyPass        / http://127.0.0.1:${port}/ retry=0
+    ProxyPassReverse / http://127.0.0.1:${port}/
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    ErrorLog  /var/log/httpd/${host}-error.log
+    CustomLog /var/log/httpd/${host}-access.log combined
+</VirtualHost>
+EOF
+done
+
+cat > /etc/httpd/conf.d/uat-api.localsell.in.conf <<'EOF'
+<VirtualHost *:80>
+    ServerName uat-api.localsell.in
+    Alias /.well-known/acme-challenge/ "/var/www/letsencrypt/.well-known/acme-challenge/"
+    <Directory "/var/www/letsencrypt/.well-known/acme-challenge/">
+        Require all granted
+    </Directory>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+    RewriteRule ^ https://uat-api.localsell.in%{REQUEST_URI} [R=301,L]
+    ErrorLog  /var/log/httpd/uat-api-error.log
+    CustomLog /var/log/httpd/uat-api-access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName uat-api.localsell.in
+    SSLEngine On
+    SSLCertificateFile      /etc/letsencrypt/live/uat-api.localsell.in/cert.pem
+    SSLCertificateKeyFile   /etc/letsencrypt/live/uat-api.localsell.in/privkey.pem
+    SSLCertificateChainFile /etc/letsencrypt/live/uat-api.localsell.in/chain.pem
+    ProxyPreserveHost On
+    ProxyRequests Off
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-SSL "on"
+    ProxyTimeout 60
+    Timeout 60
+    LimitRequestBody 26214400
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/?(.*) ws://127.0.0.1:6102/$1 [P,L]
+    ProxyPass        / http://127.0.0.1:6102/ retry=0
+    ProxyPassReverse / http://127.0.0.1:6102/
+    Header always set X-Content-Type-Options "nosniff"
+    ErrorLog  /var/log/httpd/uat-api-error.log
+    CustomLog /var/log/httpd/uat-api-access.log combined
+</VirtualHost>
+EOF
+
+apachectl configtest && systemctl reload httpd
+```
+
+Verify each host's chain like prod (§9c): `echo | openssl s_client -connect <host>:443 -servername <host> -showcerts 2>/dev/null | grep -c "BEGIN CERTIFICATE"` → should print **3**.
+
+The containers behind ports 6100–6105 don't exist yet — that's the Docker topic, next. The vhosts will just 502 until those containers are up; that's expected and fine to leave in this state.
 
 ---
 
@@ -933,6 +1133,55 @@ bash SERVER-DEPLOY.sh               # up -d --build + db:deploy + field probe
 Redeploy the previous zip + `up -d --build`. The new `Order` columns are
 additive and harmless to leave in place; an older API build simply never
 reads or writes them.
+
+---
+
+## 12.6 Deploying to prod vs UAT (one zip, two server directories)
+
+One `scripts/make-deploy-zip.ps1` output (`localsell-deploy.zip`) serves both
+environments — the code is identical, only the env file differs. `docker-compose.yml`
+is fully parameterized (`CONTAINER_PREFIX`, `WEB_PORT`/`ADMIN_PORT`/`API_PORT`/
+`STORE_PORT`/`RIDER_PORT`) so prod and UAT never collide even though they run
+the same compose file.
+
+**One-time setup per environment directory** (prod: `~/localsell-prod/`, UAT: `~/localsell-uat/`):
+
+```bash
+mkdir -p ~/localsell-prod ~/localsell-uat
+```
+
+**Every deploy — build once, ship to whichever environment(s) changed:**
+
+```bash
+# on your dev machine
+powershell -ExecutionPolicy Bypass -File scripts\make-deploy-zip.ps1
+# -> <Desktop>\localsell-deploy.zip — upload this ONE file to the server (FTP/SCP)
+```
+
+```bash
+# on the server — deploy to PROD
+cd ~/localsell-prod
+unzip -o ~/localsell-deploy.zip
+[ -f deploy/localsell.env ] || cp deploy/localsell.env.example deploy/localsell.env   # first time only — then fill it in
+bash SERVER-DEPLOY.sh
+```
+
+```bash
+# on the server — deploy to UAT
+cd ~/localsell-uat
+unzip -o ~/localsell-deploy.zip
+[ -f deploy/localsell.env ] || cp deploy/localsell-uat.env.example deploy/localsell.env   # first time only — then fill it in
+bash SERVER-DEPLOY.sh
+```
+
+`SERVER-DEPLOY.sh` reads `CONTAINER_PREFIX` out of that directory's own
+`deploy/localsell.env` and runs `docker compose -p <prefix> ...`, so re-running
+it in `~/localsell-uat/` can never touch prod's containers, images, network,
+or uploads directory (as long as `UPLOADS_HOST_DIR` is set differently per
+environment — the UAT example already points it at `/var/localsell-uat/uploads`).
+
+**Redeploy only one environment**: just run the `unzip` + `bash SERVER-DEPLOY.sh`
+pair in that one directory — the other is untouched.
 
 ---
 

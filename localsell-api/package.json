@@ -14,6 +14,7 @@
     "db:backfill": "ts-node --transpile-only prisma/backfill-commission.ts",
     "verify": "node scripts/verify-launch.mjs",
     "seed": "ts-node --transpile-only prisma/seed-from-config.ts",
+    "seed:prod": "SEED_DATA_FILE=seed-data.prod.json ts-node --transpile-only prisma/seed-from-config.ts",
     "rebrand:emails": "ts-node --transpile-only prisma/rebrand-emails.ts",
     "db:clean-test-data": "node prisma/clean-test-data.cjs",
     "db:remove-restaurant": "node prisma/remove-restaurant.cjs"

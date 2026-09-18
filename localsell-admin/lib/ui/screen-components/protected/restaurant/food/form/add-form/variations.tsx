@@ -464,16 +464,16 @@ export default function VariationAddForm({
                                                   )
                                                 }
                                                 showLabel={true}
-                                                style={{
-                                                  borderColor:
-                                                    onErrorMessageMatcher(
-                                                      'title',
-                                                      _errors[index]?.title,
-                                                      VariationErrors
-                                                    )
-                                                      ? 'red'
-                                                      : '',
-                                                }}
+                                                error={
+                                                  onErrorMessageMatcher(
+                                                    'title',
+                                                    _errors[index]?.title,
+                                                    VariationErrors
+                                                  )
+                                                    ? (_errors[index]
+                                                        ?.title as string)
+                                                    : undefined
+                                                }
                                               />
                                             </div>
 
@@ -490,16 +490,16 @@ export default function VariationAddForm({
                                                 onChangeFieldValue={
                                                   setFieldValue
                                                 }
-                                                style={{
-                                                  borderColor:
-                                                    onErrorMessageMatcher(
-                                                      'price',
-                                                      _errors[index]?.price,
-                                                      VariationErrors
-                                                    )
-                                                      ? 'red'
-                                                      : '',
-                                                }}
+                                                error={
+                                                  onErrorMessageMatcher(
+                                                    'price',
+                                                    _errors[index]?.price,
+                                                    VariationErrors
+                                                  )
+                                                    ? (_errors[index]
+                                                        ?.price as string)
+                                                    : undefined
+                                                }
                                               />
                                               {value.discounted > 0 &&
                                                 value.discounted <
@@ -536,17 +536,16 @@ export default function VariationAddForm({
                                                 onChangeFieldValue={
                                                   setFieldValue
                                                 }
-                                                style={{
-                                                  borderColor:
-                                                    onErrorMessageMatcher(
-                                                      'discounted',
-                                                      _errors[index]
-                                                        ?.discounted,
-                                                      VariationErrors
-                                                    )
-                                                      ? 'red'
-                                                      : '',
-                                                }}
+                                                error={
+                                                  onErrorMessageMatcher(
+                                                    'discounted',
+                                                    _errors[index]?.discounted,
+                                                    VariationErrors
+                                                  )
+                                                    ? (_errors[index]
+                                                        ?.discounted as string)
+                                                    : undefined
+                                                }
                                               />
                                             </div>
 
@@ -572,17 +571,17 @@ export default function VariationAddForm({
                                                     setIsAddAddonVisible(true),
                                                 }}
                                                 isLoading={loading}
-                                                style={{
-                                                  borderColor:
-                                                    onErrorMessageMatcher(
-                                                      'addons',
-                                                      _errors[index]
-                                                        ?.addons as string,
-                                                      VariationErrors
-                                                    )
-                                                      ? 'red'
-                                                      : '',
-                                                }}
+                                                error={
+                                                  onErrorMessageMatcher(
+                                                    'addons',
+                                                    _errors[index]
+                                                      ?.addons as string,
+                                                    VariationErrors
+                                                  )
+                                                    ? (_errors[index]
+                                                        ?.addons as string)
+                                                    : undefined
+                                                }
                                               />
 
                                               <div className="col-span-12 mt-4 flex justify-end sm:col-span-12">
