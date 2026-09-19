@@ -1,9 +1,8 @@
-const { getDefaultConfig } = require('@expo/metro-config')
+const { getDefaultConfig } = require('expo/metro-config')
 const path = require('path')
 
 const defaultConfig = getDefaultConfig(__dirname)
 defaultConfig.resolver.sourceExts.push('cjs')
-defaultConfig.useWatchman = false
 
 // react-native-maps has no web build (pulls in native-only codegen modules).
 // Redirect it to a local stub when bundling for web so the app stays buildable.
