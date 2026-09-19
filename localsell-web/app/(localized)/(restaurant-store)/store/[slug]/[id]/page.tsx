@@ -1,5 +1,30 @@
 import StoreDetailScreen from "@/lib/ui/screens/protected/resturant-store/store";
+import { getPublicStore, storeMetadata, storePath } from "@/lib/seo/catalog";
+import { PageStructuredData } from "@/lib/seo/StructuredData";
 
-export default function StoreDetailPage() {
-  return <StoreDetailScreen />;
+type Props = { params: Promise<{ id: string; slug: string }> };
+export async function generateMetadata({ params }: Props) {
+  const { id, slug } = await params;
+  return storeMetadata(
+    id,
+    `/store/${encodeURIComponent(slug)}/${encodeURIComponent(id)}`,
+  );
+}
+export default async function Page({ params }: Props) {
+  const { id } = await params;
+  const store = await getPublicStore(id);
+  return (
+    <>
+      {store && (
+        <PageStructuredData
+          title={store.name}
+          description={
+            store.description || `Browse ${store.name} on Localsell.`
+          }
+          path={storePath(store)}
+        />
+      )}
+      <StoreDetailScreen />
+    </>
+  );
 }

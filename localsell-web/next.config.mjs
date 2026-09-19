@@ -52,6 +52,10 @@ const nextConfig = {
   },
   async headers() {
     return [
+      ...["/profile/:path*", "/auth/:path*", "/order/:path*", "/search/:path*", "/see-all/:path*", "/mapview/:path*", "/category/:path*", "/not-found", "/forbidden"].map((source) => ({
+        source,
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      })),
       {
         // The service worker must never be HTTP-cached, or update checks stall.
         source: "/sw.js",

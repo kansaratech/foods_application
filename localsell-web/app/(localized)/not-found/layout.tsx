@@ -1,9 +1,8 @@
-import ClientLayout from "./client-layout";
 import { PRIVATE_ROBOTS } from "@/lib/seo/metadata";
 export const metadata = {
-  title: "Your account | Localsell",
+  title: "Page not found | Localsell",
   robots: PRIVATE_ROBOTS,
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <ClientLayout>{children}</ClientLayout>;
+  return children;
 }

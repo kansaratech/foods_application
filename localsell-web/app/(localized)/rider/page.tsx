@@ -1,14 +1,15 @@
-// library
-import React from 'react'
+import Rider from "@/lib/ui/screens/unprotected/Rider";
+import { publicPageMetadata, PUBLIC_PAGES } from "@/lib/seo/metadata";
+import { PageStructuredData } from "@/lib/seo/StructuredData";
 
-// Rider Page
-import Rider from '@/lib/ui/screens/unprotected/Rider'
+export const metadata = publicPageMetadata("/rider");
 
-
-const RestaurantInfo:React.FC = () => {
+export default function Page() {
+  const page = PUBLIC_PAGES.find((entry) => entry.path === "/rider")!;
   return (
-   <Rider/>
-  )
+    <>
+      <PageStructuredData {...page} type="WebPage" />
+      <Rider />
+    </>
+  );
 }
-
-export default RestaurantInfo

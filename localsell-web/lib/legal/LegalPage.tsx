@@ -1,38 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  LEGAL_EMAIL,
-  LEGAL_ORIGIN,
-  LEGAL_UPDATED,
-  type LegalDocument,
-} from "./content";
+import { LEGAL_EMAIL, LEGAL_UPDATED, type LegalDocument } from "./content";
 import styles from "./legal.module.css";
+import { publicPageMetadata } from "@/lib/seo/metadata";
+import { PageStructuredData } from "@/lib/seo/StructuredData";
 
 export function legalMetadata(document: LegalDocument): Metadata {
-  return {
-    title: `${document.title} | Localsell`,
-    description: document.description,
-    alternates: { canonical: `${LEGAL_ORIGIN}${document.path}` },
-    robots: { index: true, follow: true },
-    openGraph: {
-      title: `${document.title} | Localsell`,
-      description: document.description,
-      url: `${LEGAL_ORIGIN}${document.path}`,
-      siteName: "Localsell",
-      type: "website",
-      locale: "en_IN",
-    },
-    twitter: {
-      card: "summary",
-      title: `${document.title} | Localsell`,
-      description: document.description,
-    },
-  };
+  return publicPageMetadata(document.path);
 }
 
 export default function LegalPage({ document }: { document: LegalDocument }) {
   return (
     <div className={styles.page} lang="en" dir="ltr">
+      <PageStructuredData
+        title={document.title}
+        description={document.description}
+        path={document.path}
+        modified="2026-09-19"
+      />
       <a className={styles.skip} href="#legal-content">
         Skip to policy content
       </a>

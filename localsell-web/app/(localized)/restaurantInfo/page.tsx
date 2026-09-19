@@ -1,13 +1,15 @@
-// library
-import React from 'react'
+import RestInfo from "@/lib/ui/screens/unprotected/RestaurantInfo";
+import { publicPageMetadata, PUBLIC_PAGES } from "@/lib/seo/metadata";
+import { PageStructuredData } from "@/lib/seo/StructuredData";
 
-// Restaurant Info Page
-import RestInfo from '@/lib/ui/screens/unprotected/RestaurantInfo'
+export const metadata = publicPageMetadata("/restaurantInfo");
 
-const RestaurantInfo:React.FC = () => {
+export default function Page() {
+  const page = PUBLIC_PAGES.find((entry) => entry.path === "/restaurantInfo")!;
   return (
-  <RestInfo/>
-  )
+    <>
+      <PageStructuredData {...page} type="WebPage" />
+      <RestInfo />
+    </>
+  );
 }
-
-export default RestaurantInfo

@@ -1,7 +1,30 @@
-
 import RestaurantDetailsScreen from "@/lib/ui/screens/protected/resturant-store/restaurant";
-import React from "react";
+import { getPublicStore, storeMetadata, storePath } from "@/lib/seo/catalog";
+import { PageStructuredData } from "@/lib/seo/StructuredData";
 
-export default function RestaurantDetailPage() {
-  return <RestaurantDetailsScreen />;
+type Props = { params: Promise<{ id: string; slug: string }> };
+export async function generateMetadata({ params }: Props) {
+  const { id, slug } = await params;
+  return storeMetadata(
+    id,
+    `/restaurant/${encodeURIComponent(slug)}/${encodeURIComponent(id)}`,
+  );
+}
+export default async function Page({ params }: Props) {
+  const { id } = await params;
+  const store = await getPublicStore(id);
+  return (
+    <>
+      {store && (
+        <PageStructuredData
+          title={store.name}
+          description={
+            store.description || `Browse ${store.name} on Localsell.`
+          }
+          path={storePath(store)}
+        />
+      )}
+      <RestaurantDetailsScreen />
+    </>
+  );
 }

@@ -4,11 +4,51 @@ import { DirectionHandler } from "@/lib/ui/layouts/global/rtl/DirectionHandler";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
+import type { Metadata, Viewport } from "next";
+import {
+  SITE_NAME,
+  SITE_URL,
+  SITE_DESCRIPTION,
+  pageMetadata,
+} from "@/lib/seo/metadata";
 
-export const metadata = {
-  title: "Localsell",
-  description: "Shop Local. Find More.",
+const defaultPageMetadata = pageMetadata({
+  title: "Shop Local. Find More.",
+  description: SITE_DESCRIPTION,
+  path: "/",
+});
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
+  title: defaultPageMetadata.title,
+  description: SITE_DESCRIPTION,
+  openGraph: defaultPageMetadata.openGraph,
+  twitter: defaultPageMetadata.twitter,
+  robots: defaultPageMetadata.robots,
+  authors: [{ name: "Maekotech Solutions LLP", url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: "Maekotech Solutions LLP",
+  category: "shopping",
+  referrer: "strict-origin-when-cross-origin",
+  formatDetection: { telephone: false },
+  icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: "default" },
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION
+      ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+      : {}),
+    ...(process.env.BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": process.env.BING_SITE_VERIFICATION } }
+      : {}),
+  },
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#1c5bc7",
 };
 
 export default async function RootLayout({
@@ -31,8 +71,6 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={dir} suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/png" href="/favicon.png" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         {/* Inline theme script to prevent flash of wrong theme */}
         <Script id="theme-flash-prevention" strategy="beforeInteractive">
           {`
@@ -62,12 +100,7 @@ export default async function RootLayout({
           `}
         </Script>
 
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1c5bc7" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="Localsell" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
         {/* Apple splash screen for specific device */}
         <link
