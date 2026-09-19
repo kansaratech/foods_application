@@ -69,7 +69,7 @@ export default function WebSidebar() {
     return pathname === route || pathname.startsWith(`${route}/`);
   };
 
-  const initials = (dataProfile?.name ?? "LocalSell Store")
+  const initials = (dataProfile?.name ?? "Localsell Store")
     .split(" ")
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())

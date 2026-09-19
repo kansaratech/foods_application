@@ -4,7 +4,7 @@ Scope: admin and vendor/store dashboards. Customer and mobile UI redesign is out
 
 ## MVP money flow
 
-Customer pays the store directly, whether pickup or store delivery. LocalSell earns commission on the food subtotal of delivered orders. Commission becomes a vendor bill; LocalSell records actual cash, UPI or bank-transfer receipts against it. A partial receipt reduces the balance; only a fully covered bill is Paid. Recording a receipt does not initiate a bank transfer.
+Customer pays the store directly, whether pickup or store delivery. Localsell earns commission on the food subtotal of delivered orders. Commission becomes a vendor bill; Localsell records actual cash, UPI or bank-transfer receipts against it. A partial receipt reduces the balance; only a fully covered bill is Paid. Recording a receipt does not initiate a bank transfer.
 
 Historical fleet accounting and old paid bills remain intact. New orders use pickup or store delivery. Fleet dispatch, rider cash and platform payouts are absent from MVP navigation.
 

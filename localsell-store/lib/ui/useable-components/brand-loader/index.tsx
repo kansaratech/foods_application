@@ -35,7 +35,7 @@ export default function BrandLoader({
   return (
     <View
       accessibilityRole="progressbar"
-      accessibilityLabel={`LocalSell: ${label}`}
+      accessibilityLabel={`Localsell: ${label}`}
       style={{
         flex: variant === "page" ? 1 : undefined,
         minHeight: compact ? undefined : 180,

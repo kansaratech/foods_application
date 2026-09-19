@@ -1,6 +1,6 @@
-# LocalSell — Local Setup Guide (for a new teammate)
+# Localsell — Local Setup Guide (for a new teammate)
 
-How to get the LocalSell stack running on your own machine. For **server /
+How to get the Localsell stack running on your own machine. For **server /
 production** deployment, see [LOCALSELL_DEPLOYMENT.md](LOCALSELL_DEPLOYMENT.md)
 instead — this doc is dev-machine only.
 

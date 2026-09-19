@@ -123,7 +123,7 @@ The required credentials and keys have been set already. You can setup your own 
 
 The version of nodejs should be between 18 to 20 (with 16 as minor version and 0 as patch)
 
-[![Guide Badge](https://img.shields.io/badge/Do_with_guided_tutorial-blue?style=for-the-badge&logo=book-reader)](https://enatega.com/multi-vendor-doc/)
+[![Guide Badge](https://img.shields.io/badge/Do_with_guided_tutorial-blue?style=for-the-badge&logo=book-reader)](https://localsell.in/multi-vendor-doc/)
 
 ## :information_source: Prerequisites: <a id="heading-4"></a>
 
@@ -200,7 +200,7 @@ NOTE: Email provider has been only been tested for gmail accounts
 
 ## :book: Documentation <a id="heading-8"></a>
 
-Find the link for the complete documentation of the Enatega Multi Vendor Solution [here](https://enatega.com/multivendor-documentation/).
+Find the link for the complete documentation of the Enatega Multi Vendor Solution [here](https://localsell.in/multivendor-documentation/).
 
 ## :tv: Demo Videos: <a id="heading-14"></a>
 
@@ -230,7 +230,7 @@ The frontend source code for our solution is completely open source. However, th
 
 ## :mailbox_with_mail: Contact Us: <a id="heading-13"></a>
 
-[Check out the Product Page and Pricing and more for Enatega Multivendor Food Delivery Solution](https://enatega.com/?utm_source=github&utm_medium=referral&utm_campaign=github_guide&utm_id=12345678)
+[Check out the Product Page and Pricing and more for Enatega Multivendor Food Delivery Solution](https://localsell.in/?utm_source=github&utm_medium=referral&utm_campaign=github_guide&utm_id=12345678)
 
 ## :computer: Project Setup Guide <a id="heading-15"></a>
 

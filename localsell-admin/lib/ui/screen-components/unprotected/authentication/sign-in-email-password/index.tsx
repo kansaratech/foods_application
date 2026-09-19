@@ -92,7 +92,7 @@ export default function LoginEmailPasswordMain() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/assets/brand/localsell-logo-inverse.png"
-            alt="LocalSell"
+            alt="Localsell"
             draggable={false}
           />
         </div>

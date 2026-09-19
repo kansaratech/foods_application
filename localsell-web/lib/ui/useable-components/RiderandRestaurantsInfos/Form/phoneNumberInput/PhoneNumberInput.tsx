@@ -6,7 +6,7 @@ const PhoneNumberInput = () => {
   return (
     <div>
       <PhoneInput
-      // LocalSell is India-only — lock the country and the +91 dial code.
+      // Localsell is India-only — lock the country and the +91 dial code.
       country={"in"}
       onlyCountries={["in"]}
       countryCodeEditable={false}

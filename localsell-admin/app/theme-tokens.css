@@ -1,12 +1,12 @@
 /*
- * LocalSell Admin — design tokens (single source of truth).
+ * Localsell Admin — design tokens (single source of truth).
  *
  * Layered on top of PrimeReact's `lara-light-blue` theme (always loaded) and
  * `prime-dark.generated.css` (scoped under `.dark`, toggled by next-themes).
  * This file is imported UNLAYERED so its token values win the cascade.
  *
  * Three groups:
- *   1. Brand palette          — raw LocalSell colours (`--ls-*`), see LOCALSELL_BRAND.md
+ *   1. Brand palette          — raw Localsell colours (`--ls-*`), see LOCALSELL_BRAND.md
  *   2. PrimeReact overrides    — repoint the component library's semantic tokens
  *   3. App semantic aliases    — what Tailwind + component classNames consume
  *

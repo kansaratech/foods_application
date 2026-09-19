@@ -21,7 +21,7 @@ const sections = [
   },
   {
     title: "Your choices",
-    text: "Restaurant administrators can review and update store information in the app. For access, correction or deletion requests that are not available in the app, contact your LocalSell account manager.",
+    text: "Restaurant administrators can review and update store information in the app. For access, correction or deletion requests that are not available in the app, contact your Localsell account manager.",
   },
 ];
 
@@ -39,9 +39,9 @@ export default function PrivacyPolicy() {
           <View className="h-12 w-12 rounded-2xl bg-white/10 items-center justify-center mb-5">
             <Ionicons name="shield-checkmark-outline" size={25} color="#BFD6F7" />
           </View>
-          <Text className="text-white text-4xl font-bold">Privacy at LocalSell</Text>
+          <Text className="text-white text-4xl font-bold">Privacy at Localsell</Text>
           <Text className="text-white/75 text-base leading-7 mt-4">
-            A clear overview of how information is handled in the LocalSell Merchant service.
+            A clear overview of how information is handled in the Localsell Merchant service.
           </Text>
           <Text className="text-[#BFD6F7] text-xs font-semibold mt-5">Updated 29 August 2026</Text>
         </View>
@@ -72,7 +72,7 @@ export default function PrivacyPolicy() {
         <View className="rounded-3xl p-6 mt-6" style={{ backgroundColor: appTheme.lowOpacityPrimaryColor }}>
           <Text className="font-bold" style={{ color: appTheme.fontMainColor }}>Questions about privacy?</Text>
           <Text className="text-sm leading-6 mt-2" style={{ color: appTheme.fontSecondColor }}>
-            Contact your LocalSell account manager for privacy questions or account-data requests.
+            Contact your Localsell account manager for privacy questions or account-data requests.
           </Text>
         </View>
       </View>

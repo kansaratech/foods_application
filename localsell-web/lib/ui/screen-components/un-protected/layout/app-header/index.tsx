@@ -132,7 +132,7 @@ function LocationButton({
 
 /**
  * The single application header — same chrome on every route (landing, discovery,
- * store, checkout, profile…). Clean LocalSell styling from the old LandingHeader,
+ * store, checkout, profile…). Clean Localsell styling from the old LandingHeader,
  * with the working pieces from the old AppTopbar folded in: a delivery-location
  * selector, the cart sidebar, and the profile menu.
  */
@@ -328,10 +328,19 @@ export default function AppHeader() {
       <div className="grid grid-cols-[minmax(0,1fr)_auto] min-h-16 w-full items-center gap-x-2 gap-y-2 px-3 py-2 sm:gap-x-4 md:flex md:h-16 md:flex-nowrap md:px-6 md:py-0 lg:px-12 xl:px-20 2xl:px-[80px]">
         <Link
           href="/"
-          className="flex w-[96px] min-[360px]:w-[112px] shrink-0 items-center [&>svg]:h-auto [&>svg]:w-full sm:w-auto"
+          className="flex shrink-0 items-center"
           aria-label={t("homeAriaLabel")}
         >
-          <Logo fillColor="#000000" darkmode="#FFFFFF" />
+          {/* Both original 800 x 222 logos have visible pixels at x=85..720.
+              Crop only that transparent horizontal padding so the visible mark
+              aligns with the page gutter without changing the brand asset. */}
+          <span className="relative block aspect-[635/222] h-8 overflow-hidden min-[360px]:h-10 md:h-12">
+            <Logo
+              fillColor="#000000"
+              darkmode="#FFFFFF"
+              className="absolute -left-[13.385827%] top-0 h-full w-auto max-w-none"
+            />
+          </span>
         </Link>
 
         <div className={isLandingPage ? "hidden" : "relative hidden lg:block"}>

@@ -253,7 +253,7 @@ export const orderTypeDefs = /* GraphQL */ `
     assignOrder(id: String!): Order!
     updateOrderStatusRider(id: String!, status: String!): Order!
     acceptOrder(_id: String!, time: String): Order!
-    "Close a delivery order with the customer's 4-digit code. Used by the LocalSell rider app and the store app (for self-delivery)."
+    "Close a delivery order with the customer's 4-digit code. Used by the Localsell rider app and the store app (for self-delivery)."
     confirmDelivery(orderId: ID!, otp: String!): Order!
     cancelOrder(_id: String!, reason: String!): Order!
     "Admin-only: re-fires a Cashfree refund that previously came back FAILED."

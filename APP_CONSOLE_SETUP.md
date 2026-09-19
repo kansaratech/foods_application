@@ -1,6 +1,6 @@
 # Phase 2 — Console setup runbook
 
-Everything that has to be created **inside** the LocalSell accounts, and exactly
+Everything that has to be created **inside** the Localsell accounts, and exactly
 where each resulting value goes in the repo. Work top to bottom. At the end,
 hand the **§7 handoff list** back and the repo wiring is finished in one pass.
 
@@ -25,17 +25,17 @@ Portal: <https://developer.apple.com/account/resources>
 ### 1a. App Group
 
 Identifiers › **App Groups** › `+`
-- Description: `LocalSell Customer Shared`
+- Description: `Localsell Customer Shared`
 - Identifier: **`group.in.localsell.customer.shared`**
 
 ### 1b. App IDs (Identifiers › App IDs › `+` › App)
 
 | Description | Bundle ID | Capabilities to tick |
 |---|---|---|
-| LocalSell Customer | `in.localsell.customer` | Push Notifications · App Groups (→ `group.in.localsell.customer.shared`) · Sign In with Apple · Associated Domains¹ |
-| LocalSell Customer — Order Activity | `in.localsell.customer.orderActivity` | App Groups (→ same group) |
-| LocalSell Store | `in.localsell.store` | Push Notifications |
-| LocalSell Rider | `in.localsell.rider` | Push Notifications |
+| Localsell Customer | `in.localsell.customer` | Push Notifications · App Groups (→ `group.in.localsell.customer.shared`) · Sign In with Apple · Associated Domains¹ |
+| Localsell Customer — Order Activity | `in.localsell.customer.orderActivity` | App Groups (→ same group) |
+| Localsell Store | `in.localsell.store` | Push Notifications |
+| Localsell Rider | `in.localsell.rider` | Push Notifications |
 
 ¹ Associated Domains only if you want `localsell.in` links to open the app —
 see §6 (optional, can add later).
@@ -63,9 +63,9 @@ Project settings (gear) › **Your apps**.
 
 | Package name | App nickname | Debug SHA-1 |
 |---|---|---|
-| `in.localsell.customer` | LocalSell Customer (Android) | *(add release SHA-1 in Phase 3)* |
-| `in.localsell.store` | LocalSell Store (Android) | — |
-| `in.localsell.rider` | LocalSell Rider (Android) | — |
+| `in.localsell.customer` | Localsell Customer (Android) | *(add release SHA-1 in Phase 3)* |
+| `in.localsell.store` | Localsell Store (Android) | — |
+| `in.localsell.rider` | Localsell Rider (Android) | — |
 
 Download **`google-services.json`** for each → they go to:
 
@@ -82,9 +82,9 @@ Download **`google-services.json`** for each → they go to:
 
 | Bundle ID | App nickname |
 |---|---|
-| `in.localsell.customer` | LocalSell Customer (iOS) |
-| `in.localsell.store` | LocalSell Store (iOS) |
-| `in.localsell.rider` | LocalSell Rider (iOS) |
+| `in.localsell.customer` | Localsell Customer (iOS) |
+| `in.localsell.store` | Localsell Store (iOS) |
+| `in.localsell.rider` | Localsell Rider (iOS) |
 
 Download **`GoogleService-Info.plist`** for each:
 
@@ -119,8 +119,8 @@ Geocoding API · Directions API.
 
 | Key name | Application restriction | API restriction |
 |---|---|---|
-| `LocalSell Maps — Android` | Android apps: add `in.localsell.customer`, `in.localsell.store`, `in.localsell.rider`, each with its release signing SHA-1 (Phase 3) — for now add the debug SHA-1 so dev builds work | Maps SDK for Android |
-| `LocalSell Maps — iOS` | iOS apps: `in.localsell.customer`, `in.localsell.store`, `in.localsell.rider` | Maps SDK for iOS |
+| `Localsell Maps — Android` | Android apps: add `in.localsell.customer`, `in.localsell.store`, `in.localsell.rider`, each with its release signing SHA-1 (Phase 3) — for now add the debug SHA-1 so dev builds work | Maps SDK for Android |
+| `Localsell Maps — iOS` | iOS apps: `in.localsell.customer`, `in.localsell.store`, `in.localsell.rider` | Maps SDK for iOS |
 
 → handoff `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID` and `_IOS` (same value in
 all three apps' `.env.production`).
@@ -131,7 +131,7 @@ all three apps' `.env.production`).
 ### 3c. OAuth consent screen (APIs & Services › OAuth consent screen)
 
 - User type: **External** · Publishing status: in production once verified
-- App name `LocalSell`, support email, authorised domain **`localsell.in`**,
+- App name `Localsell`, support email, authorised domain **`localsell.in`**,
   logo, privacy policy `https://localsell.in/privacy`, terms `https://localsell.in/terms`
 - Scopes: `openid`, `email`, `profile` (the defaults) — nothing sensitive
 
@@ -141,7 +141,7 @@ Only the **customer** app does Google Sign-In. Create:
 
 | Type | Settings | Repo target |
 |---|---|---|
-| **Web application** | name `LocalSell Web (Google Sign-In)`; no redirect URIs needed for native SDK | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` **and** server `GOOGLE_WEB_CLIENT_ID` (§5 / Phase 8) |
+| **Web application** | name `Localsell Web (Google Sign-In)`; no redirect URIs needed for native SDK | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` **and** server `GOOGLE_WEB_CLIENT_ID` (§5 / Phase 8) |
 | **iOS** | bundle id `in.localsell.customer` | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`; its reversed form → `EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID` |
 | **Android** | package `in.localsell.customer` + release signing SHA-1 (Phase 3; add debug SHA-1 now) | `EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID` |
 
@@ -166,9 +166,9 @@ first manual upload.
 
 | Name | Bundle ID | SKU | Primary language |
 |---|---|---|---|
-| LocalSell | `in.localsell.customer` | `localsell-customer` | English (India) |
-| LocalSell Store | `in.localsell.store` | `localsell-store` | English (India) |
-| LocalSell Rider | `in.localsell.rider` | `localsell-rider` | English (India) |
+| Localsell | `in.localsell.customer` | `localsell-customer` | English (India) |
+| Localsell Store | `in.localsell.store` | `localsell-store` | English (India) |
+| Localsell Rider | `in.localsell.rider` | `localsell-rider` | English (India) |
 
 After creation, each app's **Apple ID** (a 10-digit number, App Information ›
 General) → handoff. The customer one replaces
@@ -247,7 +247,7 @@ localsell-rider/GoogleService-Info.plist     (in.localsell.rider, iOS — for Ph
 - replaces `REPLACE_WITH_LOCALSELL_IOS_OAUTH_REVERSED` in `localsell-app/app.config.js`
 - replaces `REPLACE_WITH_LOCALSELL_ASC_APP_ID` in `localsell-app/src/components/Update/ForceUpdate.js`
 - adds `localsell-store/GoogleService-Info.plist` / rider to their configs' `ios.googleServicesFile` (commented, ready for Phase 8) or leaves as-is
-- `npx expo config --type prebuild` re-verify, commit `chore(apps): wire LocalSell services (Phase 2)`
+- `npx expo config --type prebuild` re-verify, commit `chore(apps): wire Localsell services (Phase 2)`
 - Phase 3 (local Android build + keystores) can then start; its release SHA-1 /
   SHA-256 get added back into Firebase (§2a), the Maps Android key (§3b) and the
   Android OAuth client (§3d).

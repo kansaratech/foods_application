@@ -1,4 +1,4 @@
-# LocalSell — QA Punch List (round 2)
+# Localsell — QA Punch List (round 2)
 
 Client / QA review — items 38–60 (continuation of round 1's 1–37).
 Branch: `feat/platform-hardening`.

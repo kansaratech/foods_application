@@ -1,8 +1,8 @@
 {
-  "name": "LocalSell Rider",
+  "name": "Localsell Rider",
   "short_name": "LS Rider",
   "id": "/",
-  "description": "Deliver with LocalSell — accept trips, track deliveries and cash, see your earnings.",
+  "description": "Deliver with Localsell — accept trips, track deliveries and cash, see your earnings.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

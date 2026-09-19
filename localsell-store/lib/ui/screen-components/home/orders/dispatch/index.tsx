@@ -31,7 +31,7 @@ export function DeliveryModeBadge({ order }: { order: IOrder }) {
       ? t("Pickup")
       : mode === "SELF"
         ? `${t("My delivery")}${order.storeDeliveryAgent?.name ? ` · ${order.storeDeliveryAgent.name}` : ""}`
-        : t("LocalSell fleet");
+        : t("Localsell fleet");
   return (
     <View
       className="px-3 py-1 rounded-[12px] border self-start"
@@ -52,7 +52,7 @@ export function DeliveryModeBadge({ order }: { order: IOrder }) {
 
 /**
  * Per-order delivery dispatch — always shown for a delivery order the store is
- * working, no admin needed. The store picks LocalSell fleet vs its own person,
+ * working, no admin needed. The store picks Localsell fleet vs its own person,
  * confirms hand-over to whoever collects, and (for self-delivery) marks it
  * delivered.
  */
@@ -105,7 +105,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
     if (mode === "SELF") {
       await assign({ variables: { orderId: order._id, agentId: null } });
       showMessage({
-        message: t("Moved to the LocalSell fleet"),
+        message: t("Moved to the Localsell fleet"),
         type: "success",
       });
       await after();
@@ -193,7 +193,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
         <View className="flex-row gap-2 mb-3">
           <Segment
             icon="bicycle-outline"
-            label={t("LocalSell fleet")}
+            label={t("Localsell fleet")}
             active={fleetSelected}
             onPress={chooseFleet}
             disabled={assigning}
@@ -429,7 +429,7 @@ export default function OrderDispatch({ order }: { order: IOrder }) {
               style={{ color: appTheme.fontSecondColor }}
             >
               {t(
-                "Waiting for a LocalSell rider to accept… You can switch to your own person above at any time.",
+                "Waiting for a Localsell rider to accept… You can switch to your own person above at any time.",
               )}
             </Text>
           )}

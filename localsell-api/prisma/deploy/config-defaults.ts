@@ -27,7 +27,7 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
     // GST number / address deliberately not defaulted — an admin fills the
     // real ones in via Finance -> Vendor settlements -> Invoice billing entity.
     platformLegalName: process.env.PLATFORM_LEGAL_NAME || 'Maekotech Solutions LLP',
-    // LocalSell owns this fork — the upstream Enatega "paid version" gate on the
+    // Localsell owns this fork — the upstream Enatega "paid version" gate on the
     // admin Configuration screen is not applicable.
     isPaidVersion: true,
     // COD-only launch, no SMTP/WhatsApp wired — users are born verified.
@@ -42,7 +42,7 @@ export async function ensureConfigDefaults(prisma: PrismaClient): Promise<void> 
     smtpSecure: (process.env.SMTP_SECURE || 'true') === 'true',
     smtpUser: process.env.SMTP_USER || 'localsell.dgh@gmail.com',
     email: process.env.SMTP_FROM || process.env.SMTP_USER || 'localsell.dgh@gmail.com',
-    emailName: process.env.SMTP_FROM_NAME || 'LocalSell',
+    emailName: process.env.SMTP_FROM_NAME || 'Localsell',
   };
   const smtpPassword = process.env.SMTP_PASSWORD?.trim();
   const whatsappToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim();

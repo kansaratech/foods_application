@@ -508,7 +508,7 @@ export default function RestaurantDetails({
                           {t('Platform commission')}: {DEFAULT_COMMISSION_RATE}%
                         </p>
                         <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400">
-                          {t('LocalSell charges this % of each order as commission. Set by LocalSell, not editable here.')}
+                          {t('Localsell charges this % of each order as commission. Set by Localsell, not editable here.')}
                         </p>
                       </div>
 

@@ -1,5 +1,5 @@
 /**
- * Build the 11 LocalSell master PNGs from code (no external art needed).
+ * Build the 11 Localsell master PNGs from code (no external art needed).
  *
  *   node scripts/build-localsell-masters.mjs
  *

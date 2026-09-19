@@ -6,7 +6,7 @@
 export const Colors = {
   light: {
     primary: "#1c5bc7",
-    // LocalSell brand navy — dark brand surfaces (drawer header, avatar tiles).
+    // Localsell brand navy — dark brand surfaces (drawer header, avatar tiles).
     brand: "#16293F",
     brandDark: "#0E1B2B",
     themeBackground: "#FAFAFA",

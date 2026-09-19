@@ -57,7 +57,7 @@ async function buildPayoutStatement(item: PayoutRunItem) {
     issuedOn: item.createdAt.toISOString(),
     periodLabel: periodLabel(run.periodStart, run.periodEnd),
     runLabel: run.label,
-    platformName: config?.platformLegalName || 'LocalSell',
+    platformName: config?.platformLegalName || 'Localsell',
     platformAddress: config?.platformAddress ?? null,
     platformGstin: config?.platformGstin ?? null,
     payeeType: item.subjectType,

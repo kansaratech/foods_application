@@ -1,5 +1,5 @@
 /**
- * The WhatsApp templates LocalSell sends, keyed by an internal event name. This
+ * The WhatsApp templates Localsell sends, keyed by an internal event name. This
  * constant is the source of truth for which Meta template each event uses and
  * what its positional {{n}} variables mean; the `WhatsappTemplate` DB table
  * mirrors Meta's live review status (populated by `syncWhatsappTemplates`) and
@@ -124,7 +124,7 @@ export const WA_TEMPLATES: WaTemplateDef[] = [
     bodyVars: ['customerName', 'orderNumber', 'refundAmount'],
   },
   {
-    // Cashfree rejected the refund, or LocalSell's own gateway config was
+    // Cashfree rejected the refund, or Localsell's own gateway config was
     // missing — refundStatus FAILED. Points the customer at support rather
     // than leaving them guessing why the money hasn't shown up.
     key: 'refund_failed',

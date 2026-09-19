@@ -17,7 +17,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Partner",
     links: [
       { label: "List your store", href: "/restaurantInfo" },
-      { label: "Ride with LocalSell", href: "/rider" },
+      { label: "Ride with Localsell", href: "/rider" },
       { label: "Store login", href: "/restaurantInfo" },
     ],
   },
@@ -26,7 +26,8 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "About", href: "/about" },
       { label: "Support", href: "/profile/getHelp" },
-      { label: "Terms & privacy", href: "/terms" },
+      { label: "Privacy policy", href: "/privacy" },
+      { label: "Terms & conditions", href: "/terms" },
     ],
   },
 ];
@@ -64,7 +65,7 @@ export default function LandingFooter() {
       </div>
       <div className="border-t border-white/10">
         <div className="w-full px-4 py-5 text-xs text-white/50 md:px-6 lg:px-12 xl:px-20 2xl:px-[80px]">
-          © {new Date().getFullYear()} LocalSell. All rights reserved.
+          © {new Date().getFullYear()} Localsell. All rights reserved.
         </div>
       </div>
     </footer>

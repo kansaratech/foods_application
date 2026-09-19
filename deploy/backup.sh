@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Nightly uploads backup for LocalSell. Install via cron — see
+# Nightly uploads backup for Localsell. Install via cron — see
 # LOCALSELL_DEPLOYMENT.md section 12.4. Safe to also run by hand.
 #
 # DB backups are NOT done here — handled by the existing midnight DB backup

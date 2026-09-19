@@ -236,7 +236,7 @@ const AppTopbar = () => {
             <FontAwesomeIcon icon={faBars} />
           </button>
         </div>
-        <Link href="/home" aria-label="LocalSell home" className={classes.logo}>
+        <Link href="/home" aria-label="Localsell home" className={classes.logo}>
           <AppLogo />
         </Link>
       </div>

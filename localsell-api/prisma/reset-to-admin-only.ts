@@ -101,7 +101,7 @@ async function seedWhatsappTemplates() {
 }
 
 async function main() {
-  console.log('LocalSell reset — wipe to admin-only\n');
+  console.log('Localsell reset — wipe to admin-only\n');
 
   console.log('=== Wipe ===');
   const preservedConfig = await wipeEverything();

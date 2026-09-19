@@ -60,11 +60,11 @@ function PayoutsSection() {
       <header>
         <div>
           <ChannelBadge channel="online" />
-          <h2>Payouts from LocalSell</h2>
+          <h2>Payouts from Localsell</h2>
           <p>
-            Online (Cashfree) orders are collected into LocalSell&apos;s own
+            Online (Cashfree) orders are collected into Localsell&apos;s own
             account, so unlike your other stores&apos; direct payments,
-            LocalSell owes you your share of these orders — the order total
+            Localsell owes you your share of these orders — the order total
             minus commission. This is separate from the commission you pay
             above.
           </p>
@@ -124,13 +124,13 @@ export default function MyCommissionMain() {
     <FinanceFrame
       vendor
       title="Bills & payments"
-      description="Review the commission your stores owe LocalSell and check recorded payments."
+      description="Review the commission your stores owe Localsell and check recorded payments."
     >
       <div className="finance-money-flow">
         <p>
           <strong>Your stores receive customer payments directly.</strong> Pay
-          LocalSell the commission shown on your bills using the payment details
-          agreed with your account contact. After LocalSell records your
+          Localsell the commission shown on your bills using the payment details
+          agreed with your account contact. After Localsell records your
           payment, the remaining balance and receipt appear on the bill.
         </p>
       </div>
@@ -147,8 +147,8 @@ export default function MyCommissionMain() {
             </strong>
             <small>
               {summary.netBalance > 0
-                ? 'LocalSell owes you this much overall (Cashfree payouts pending minus commission you owe).'
-                : 'You owe LocalSell this much overall (commission owed minus Cashfree payouts pending).'}
+                ? 'Localsell owes you this much overall (Cashfree payouts pending minus commission you owe).'
+                : 'You owe Localsell this much overall (commission owed minus Cashfree payouts pending).'}
             </small>
           </div>
         </div>

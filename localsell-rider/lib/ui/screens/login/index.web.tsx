@@ -331,7 +331,7 @@ export default function LoginScreen() {
           >
             {t("New rider? Register here")}
           </button>
-          <span>© {new Date().getFullYear()} LocalSell</span>
+          <span>© {new Date().getFullYear()} Localsell</span>
         </footer>
       </section>
       <dialog

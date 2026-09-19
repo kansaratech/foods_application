@@ -1,6 +1,6 @@
 /**
  * Customer-facing GST tax invoice for a DELIVERED order — issued by the
- * STORE (its own GSTIN/address), not by LocalSell. Generated once, on
+ * STORE (its own GSTIN/address), not by Localsell. Generated once, on
  * delivery, saved to uploads/invoices/<order.id>.pdf (served statically at
  * `${PUBLIC_UPLOAD_URL}/invoices/<id>.pdf`) and sent to the customer via a
  * WhatsApp document template — see order-notify.ts. Also linked from the
@@ -298,7 +298,7 @@ export async function renderInvoicePdf(
       addPage();
       if (fs.existsSync(LOGO_PATH))
         doc.image(LOGO_PATH, LEFT + 10, y, { fit: [108, 30] });
-      else text("LocalSell", LEFT, y, 140, 22, true, BLUE);
+      else text("Localsell", LEFT, y, 140, 22, true, BLUE);
       text(title, 212, y, 206, 16, true, NAVY, "right");
       text(
         "Original for recipient",
@@ -636,7 +636,7 @@ export async function renderInvoicePdf(
             MUTED,
           );
           text(
-            "LocalSell | localsell.in",
+            "Localsell | localsell.in",
             LEFT + 10,
             heights[i] - 29,
             290,

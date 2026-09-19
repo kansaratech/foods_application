@@ -24,7 +24,7 @@ const wasRecentlyDismissed = (): boolean => {
 };
 
 /**
- * One-time, dismissible "add LocalSell to your home screen" banner. Shows a few
+ * One-time, dismissible "add Localsell to your home screen" banner. Shows a few
  * seconds after load for visitors who haven't installed and haven't dismissed it
  * in the last two weeks. Covers iOS too (opens the manual steps dialog).
  */
@@ -68,7 +68,15 @@ export default function InstallPrompt() {
     setShowSteps(true);
   };
 
-  if (isInstalled || pathname?.startsWith("/order/") || pathname?.startsWith("/profile")) return null;
+  if (
+    isInstalled ||
+    pathname?.startsWith("/order/") ||
+    pathname?.startsWith("/profile") ||
+    pathname === "/privacy-policy" ||
+    pathname === "/terms-and-conditions" ||
+    pathname === "/privacy" ||
+    pathname === "/terms"
+  ) return null;
 
   return (
     <>

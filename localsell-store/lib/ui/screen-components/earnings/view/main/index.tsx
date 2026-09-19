@@ -115,8 +115,8 @@ export default function EarningsMain() {
     }
   }, [userId]);
 
-  // Online (Cashfree) orders settle into LocalSell's own account first, so
-  // unlike COD — which the store already holds — LocalSell owes the store
+  // Online (Cashfree) orders settle into Localsell's own account first, so
+  // unlike COD — which the store already holds — Localsell owes the store
   // its net share of these. Nothing else in the app surfaces this, so it's
   // otherwise invisible that this money is owed at all.
   const { data: payablesData, loading: isPayablesLoading } =
@@ -227,7 +227,7 @@ export default function EarningsMain() {
             </Text>
           </View>
           <Text style={{ color: appTheme.fontSecondColor, fontSize: 12 }}>
-            {t("Owed to you by LocalSell")} · {pendingPayables.length}{" "}
+            {t("Owed to you by Localsell")} · {pendingPayables.length}{" "}
             {t("online order(s) not yet paid out")}
           </Text>
         </View>

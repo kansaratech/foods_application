@@ -1,6 +1,6 @@
 module.exports = () => {
   // Google Maps key. Maps SDK keys always ship inside the app binary, so restrict
-  // the LocalSell key by Android package + signing SHA-1 and by iOS bundle id in
+  // the Localsell key by Android package + signing SHA-1 and by iOS bundle id in
   // the Google Cloud console. Local release builds inject the real key via
   // `.env.production` (see APP_BUILD_PLAN.md §3); the placeholder below only keeps
   // `expo prebuild` from failing when no env is present.
@@ -15,7 +15,7 @@ module.exports = () => {
   const fallbackUrlTypes = [
     {
       // Reversed iOS OAuth client id (Google Cloud project localsell, client
-      // "LocalSell Customer (iOS)"). `.env.production` overrides via
+      // "Localsell Customer (iOS)"). `.env.production` overrides via
       // EXPO_PUBLIC_GOOGLE_IOS_REVERSED_CLIENT_ID; this keeps prebuild working
       // without env.
       CFBundleURLSchemes: [
@@ -37,11 +37,11 @@ module.exports = () => {
   ]
 
   return {
-    name: 'LocalSell',
+    name: 'Localsell',
     scheme: 'localsell',
     version: '1.0.0',
     description:
-      'LocalSell — order from the shops and restaurants around you. Shop Local. Find More.',
+      'Localsell — order from the shops and restaurants around you. Shop Local. Find More.',
     slug: 'localsell-customer',
     androidStatusBar: {
       backgroundColor: '#16293f'
@@ -85,7 +85,7 @@ module.exports = () => {
         ...(iosGoogleMapsApiKey ? { googleMapsApiKey: iosGoogleMapsApiKey } : {})
       },
       usesAppleSignIn: true,
-      // TODO(localsell): LocalSell Apple Developer Team ID — see APP_BUILD_PLAN.md §3.
+      // TODO(localsell): Localsell Apple Developer Team ID — see APP_BUILD_PLAN.md §3.
       appleTeamId: process.env.APPLE_TEAM_ID || 'REPLACE_WITH_LOCALSELL_APPLE_TEAM_ID'
     },
     notification: {
@@ -93,7 +93,7 @@ module.exports = () => {
       color: '#1c5bc7',
       icon: './assets/not-icon.png',
       androidMode: 'default',
-      androidCollapsedTitle: 'LocalSell'
+      androidCollapsedTitle: 'Localsell'
     },
     android: {
       versionCode: 1,
@@ -155,7 +155,7 @@ module.exports = () => {
           // a 1x1 transparent PNG — only the background color shows. The animated
           // pin / wordmark is drawn by the JS AnimatedSplash component, whose
           // first frame uses these same colors so the handoff shows no flash.
-          backgroundColor: '#16293f', // light (LocalSell navy)
+          backgroundColor: '#16293f', // light (Localsell navy)
           image: './assets/splashTransparent.png',
           imageWidth: 1,
           resizeMode: 'contain',
@@ -177,7 +177,7 @@ module.exports = () => {
         'expo-location',
         {
           locationAlwaysAndWhenInUsePermission:
-            'Allow LocalSell to use your location.'
+            'Allow Localsell to use your location.'
         }
       ],
       '@react-native-firebase/app',
@@ -207,7 +207,7 @@ module.exports = () => {
       liveActivity: {
         appGroupId: 'group.in.localsell.customer.shared',
         appScheme: 'localsell',
-        brandName: 'LocalSell',
+        brandName: 'Localsell',
         primaryColor: '#1c5bc7',
         accentColor: '#FFA921',
         // Internal Xcode asset-catalog names (targets/widget/Assets.xcassets) —

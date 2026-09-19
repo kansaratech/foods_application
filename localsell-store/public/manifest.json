@@ -1,8 +1,8 @@
 {
-  "name": "LocalSell Store",
+  "name": "Localsell Store",
   "short_name": "LS Store",
   "id": "/",
-  "description": "Manage your LocalSell store — orders, menu, delivery and earnings.",
+  "description": "Manage your Localsell store — orders, menu, delivery and earnings.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

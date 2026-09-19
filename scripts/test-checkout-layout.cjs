@@ -123,7 +123,7 @@ test('promo submission supports Enter and cannot repeat during validation', () =
 if (process.env.CHECKOUT_FIXTURE) {
   const html = renderToStaticMarkup(fixture().tree());
   const css = fs.readFileSync(path.join(root, 'localsell-web/lib/ui/screens/protected/order/checkout/checkout.module.css'), 'utf8').replaceAll(':global(html.dark)', 'html.dark');
-  fs.writeFileSync(path.join(root, '.tmp/checkout-preview.html'), `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="checkout-tailwind.css"><style>:root{--primary-color:#1c5bc7;--secondary-color:#182f41}body{margin:0;font-family:Arial,sans-serif}header.site{padding:22px 6%;border-bottom:1px solid #e2e8f0;color:#182f41;font-weight:bold}${css}</style><header class="site">LocalSell</header>${html}`);
+  fs.writeFileSync(path.join(root, '.tmp/checkout-preview.html'), `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="checkout-tailwind.css"><style>:root{--primary-color:#1c5bc7;--secondary-color:#182f41}body{margin:0;font-family:Arial,sans-serif}header.site{padding:22px 6%;border-bottom:1px solid #e2e8f0;color:#182f41;font-weight:bold}${css}</style><header class="site">Localsell</header>${html}`);
 }
 
 test('guest sees login first, locked address/payment steps, and an enabled login action', () => {

@@ -24,17 +24,17 @@ key. Google Sign-In on Android dev builds won't work until Phase 3 — fine.
 <https://developer.apple.com/account/resources/identifiers/list>
 
 - [ ] **A1** — Identifiers › **App Groups** › `+` → identifier
-      `group.in.localsell.customer.shared`, description "LocalSell Customer Shared"
+      `group.in.localsell.customer.shared`, description "Localsell Customer Shared"
 - [ ] **A2** — Identifiers › **App IDs** › `+` › App →
-      `in.localsell.customer` ("LocalSell Customer"). Tick: **Push Notifications**,
+      `in.localsell.customer` ("Localsell Customer"). Tick: **Push Notifications**,
       **App Groups** (assign `group.in.localsell.customer.shared`),
       **Sign In with Apple**. Save.
 - [ ] **A3** — App ID `in.localsell.customer.orderActivity`
-      ("LocalSell Customer Order Activity"). Tick: **App Groups**
+      ("Localsell Customer Order Activity"). Tick: **App Groups**
       (assign the same group). Save.
-- [ ] **A4** — App ID `in.localsell.store` ("LocalSell Store"). Tick:
+- [ ] **A4** — App ID `in.localsell.store` ("Localsell Store"). Tick:
       **Push Notifications**. Save.
-- [ ] **A5** — App ID `in.localsell.rider` ("LocalSell Rider"). Tick:
+- [ ] **A5** — App ID `in.localsell.rider` ("Localsell Rider"). Tick:
       **Push Notifications**. Save.
 - [ ] **A6** — Membership (left nav) → copy the **Team ID** (10 chars).
       → record as `APPLE_TEAM_ID`
@@ -47,12 +47,12 @@ key. Google Sign-In on Android dev builds won't work until Phase 3 — fine.
 
 <https://appstoreconnect.apple.com/apps>
 
-- [ ] **B1** — `+` › New App → Name **LocalSell**, Platform iOS, Bundle ID
+- [ ] **B1** — `+` › New App → Name **Localsell**, Platform iOS, Bundle ID
       `in.localsell.customer`, SKU `localsell-customer`, Primary language
       **English (India)**. Create.
-- [ ] **B2** — New App → **LocalSell Store**, Bundle ID `in.localsell.store`,
+- [ ] **B2** — New App → **Localsell Store**, Bundle ID `in.localsell.store`,
       SKU `localsell-store`.
-- [ ] **B3** — New App → **LocalSell Rider**, Bundle ID `in.localsell.rider`,
+- [ ] **B3** — New App → **Localsell Rider**, Bundle ID `in.localsell.rider`,
       SKU `localsell-rider`.
 - [ ] **B4** — Open each app › App Information › General Information → copy the
       **Apple ID** (10-digit number).
@@ -69,7 +69,7 @@ key. Google Sign-In on Android dev builds won't work until Phase 3 — fine.
 settings → **Your apps**.
 
 - [ ] **C1** — Add app › **Android** → package `in.localsell.customer`,
-      nickname "LocalSell Customer (Android)". Register. **Download
+      nickname "Localsell Customer (Android)". Register. **Download
       `google-services.json`** → save as `localsell-app/google-services.json`
       (overwrite the placeholder).
 - [ ] **C2** — Add app › Android → `in.localsell.store` →
@@ -77,7 +77,7 @@ settings → **Your apps**.
 - [ ] **C3** — Add app › Android → `in.localsell.rider` →
       `localsell-rider/google-services.json`
 - [ ] **C4** — Add app › **iOS** → bundle `in.localsell.customer`,
-      nickname "LocalSell Customer (iOS)". Register. **Download
+      nickname "Localsell Customer (iOS)". Register. **Download
       `GoogleService-Info.plist`** → save as
       `localsell-app/GoogleService-Info.plist` (overwrite the placeholder).
 - [ ] **C5** — Add app › iOS → `in.localsell.store` →
@@ -107,29 +107,29 @@ localsell-rider/google-services.json         localsell-rider/GoogleService-Info.
       not): Maps SDK for Android, Maps SDK for iOS, Maps JavaScript API,
       Places API, Geocoding API, Directions API.
 - [ ] **D2** — APIs & Services › **Credentials** › `+ Create credentials` ›
-      **API key**. Rename to `LocalSell Maps — Android`. Edit →
+      **API key**. Rename to `Localsell Maps — Android`. Edit →
       **API restrictions**: "Restrict key" → **Maps SDK for Android**.
       **Application restrictions**: leave **None** for now (locked down in
       Phase 3 with the release SHA-1). Save.
       → record `MAPS_KEY_ANDROID`
-- [ ] **D3** — `+ Create credentials` › API key → `LocalSell Maps — iOS`.
+- [ ] **D3** — `+ Create credentials` › API key → `Localsell Maps — iOS`.
       API restrictions → **Maps SDK for iOS**. Application restrictions →
       **iOS apps** → add bundle IDs `in.localsell.customer`,
       `in.localsell.store`, `in.localsell.rider`. Save.
       → record `MAPS_KEY_IOS`
 - [ ] **D4** — APIs & Services › **OAuth consent screen** →
-      User type **External** → App name **LocalSell**, user support email,
+      User type **External** → App name **Localsell**, user support email,
       App logo, **Authorised domain** `localsell.in`, Developer contact email.
       App domain links: home `https://localsell.in`, privacy
       `https://localsell.in/privacy`, terms `https://localsell.in/terms`.
       Scopes: keep defaults (`openid`, `email`, `profile`). Save. Publish →
       "In production" (or leave "Testing" + add test users for now).
 - [ ] **D5** — Credentials › `+ Create credentials` › **OAuth client ID** →
-      Application type **Web application**, name `LocalSell Web (Google Sign-In)`.
+      Application type **Web application**, name `Localsell Web (Google Sign-In)`.
       No redirect URIs needed. Create.
       → record `GOOGLE_WEB_CLIENT_ID`  (`...apps.googleusercontent.com`)
 - [ ] **D6** — `+ Create credentials` › OAuth client ID → type **iOS**,
-      name `LocalSell Customer (iOS)`, Bundle ID `in.localsell.customer`. Create.
+      name `Localsell Customer (iOS)`, Bundle ID `in.localsell.customer`. Create.
       → record `GOOGLE_IOS_CLIENT_ID`  and its **reversed** form
       (`com.googleusercontent.apps.NNNNN-hash`) → `GOOGLE_IOS_REVERSED_CLIENT_ID`
 - [ ] **D7** — *(deferred to Phase 3)* Android OAuth client — needs the release
@@ -141,10 +141,10 @@ localsell-rider/google-services.json         localsell-rider/GoogleService-Info.
 
 <https://play.google.com/console>
 
-- [ ] **E1** — Create app → **LocalSell**, default language English (India),
+- [ ] **E1** — Create app → **Localsell**, default language English (India),
       App, Free.
-- [ ] **E2** — Create app → **LocalSell Store**.
-- [ ] **E3** — Create app → **LocalSell Rider**.
+- [ ] **E2** — Create app → **Localsell Store**.
+- [ ] **E3** — Create app → **Localsell Rider**.
 - [ ] **E4** — Decide track for store + rider: public production vs
       closed/internal only for partners (recommended: closed for partners).
       *(No values to record — package names lock on first upload in Phase 3.)*
@@ -191,7 +191,7 @@ GOOGLE_ANDROID_CLIENT_ID       =   ⬜ Phase 3 (needs release keystore SHA-1)
 - `localsell-app/app.config.js` — real reversed iOS OAuth client id
 - `localsell-app/src/components/Update/ForceUpdate.js` — real App Store id `6809771171`
 - `npx expo config --type prebuild` re-verified clean on all 3 (with `.env.production` sourced)
-- next: commit `chore(apps): wire LocalSell services (Phase 2)`
+- next: commit `chore(apps): wire Localsell services (Phase 2)`
 
 **Phase 3** then: JDK 17 + Android SDK, 3 release keystores, first
 `gradlew bundleRelease` per app — its SHA-1/SHA-256 go back into Firebase

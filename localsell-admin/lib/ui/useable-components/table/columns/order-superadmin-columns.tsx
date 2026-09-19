@@ -99,7 +99,7 @@ export const ORDER_SUPER_ADMIN_COLUMNS = () => {
             ? 'Pickup'
             : mode === 'SELF'
               ? `Store${row.storeDeliveryAgent?.name ? ` · ${row.storeDeliveryAgent.name}` : ''}`
-              : 'LocalSell fleet';
+              : 'Localsell fleet';
         const proof =
           row.orderStatus === 'DELIVERED' && row.deliveryConfirmedBy
             ? row.deliveryConfirmedBy === 'OTP'

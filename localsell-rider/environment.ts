@@ -41,7 +41,7 @@ const getEnvVars = (env = Updates.channel) => {
   }
 
   return {
-    // Deployed LocalSell backend. For LAN testing use
+    // Deployed Localsell backend. For LAN testing use
     // http://<PC-LAN-IP>:4000 instead.
     GRAPHQL_URL: graphqlUrl,
     WS_GRAPHQL_URL: wsGraphqlUrl,

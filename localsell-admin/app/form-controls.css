@@ -1,5 +1,5 @@
 /* ============================================================================
-   LocalSell Admin — ONE form-control spec.
+   Localsell Admin — ONE form-control spec.
 
    Every field wrapper in lib/ui/useable-components/form/ adds the `.ls-field`
    class to its PrimeReact control (or native input). This file makes all of

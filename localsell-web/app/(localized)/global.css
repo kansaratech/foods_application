@@ -13,7 +13,7 @@
 }
 
 :root {
-  /* LocalSell palette — blue = primary/CTA, navy = brand/secondary, sky = accent, mist = tint */
+  /* Localsell palette — blue = primary/CTA, navy = brand/secondary, sky = accent, mist = tint */
   --primary-color: #1c5bc7;
   --primary-light: #e8f0fc;
   --primary-dark: #17499e;
@@ -23,7 +23,7 @@
   --primary-disabled: #a7c1ea;
   --secondary-color: #16293f;
 
-  /* names kept for back-compat; values are the LocalSell blue/navy palette */
+  /* names kept for back-compat; values are the Localsell blue/navy palette */
   --brand-maroon: #16293f;
   --brand-maroon-dark: #0e1b2b;
   --brand-orange: #1c5bc7;
@@ -285,7 +285,7 @@ body {
   font-weight: 400;
 }
 
-/* Scroll Bar — thin, unobtrusive, consistent across LocalSell apps */
+/* Scroll Bar — thin, unobtrusive, consistent across Localsell apps */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(100, 116, 139, 0.4) transparent;

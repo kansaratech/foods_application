@@ -94,7 +94,7 @@ export default function PartnerLanding({
             </div>
             <div className="absolute -bottom-5 left-5 flex items-center gap-3 rounded-2xl border border-white/80 bg-white/95 px-5 py-4 shadow-xl backdrop-blur dark:border-gray-700 dark:bg-gray-900/95 sm:left-8">
               <span className="grid h-9 w-9 place-items-center rounded-full bg-[#1c5bc7]/12 text-[#1c5bc7]"><FiCheck aria-hidden="true" /></span>
-              <span><span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">LocalSell partner</span><span className="mt-0.5 block text-sm font-bold">{heroBadge}</span></span>
+              <span><span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">Localsell partner</span><span className="mt-0.5 block text-sm font-bold">{heroBadge}</span></span>
             </div>
           </div>
         </div>

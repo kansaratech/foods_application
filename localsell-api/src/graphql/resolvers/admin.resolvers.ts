@@ -389,10 +389,10 @@ export const adminResolvers: IResolvers<unknown, GraphQLContext> = {
         // complete, working setup flow, not just a pointer to go trigger a
         // separate "forgot password" request themselves.
         const message =
-          `Welcome to LocalSell! Your vendor account (${vendor.email}) has been created. ` +
+          `Welcome to Localsell! Your vendor account (${vendor.email}) has been created. ` +
           `Go to the vendor login page, choose "Forgot Password", and enter this code to set your password: ${vendor.otpCode}. ` +
           `This code expires in 10 minutes — request a new one from "Forgot Password" if it lapses.`;
-        const emailed = await sendEmail(vendor.email, 'Set up your LocalSell vendor account', message);
+        const emailed = await sendEmail(vendor.email, 'Set up your Localsell vendor account', message);
         if (!emailed) {
           // eslint-disable-next-line no-console
           console.error(`[createVendor] setup-invite email failed to send to ${vendor.email} (vendor ${vendor.id})`);

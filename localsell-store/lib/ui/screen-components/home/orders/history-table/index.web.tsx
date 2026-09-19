@@ -53,7 +53,7 @@ const hasRealReason = (reason?: string) =>
 
 const CANCELLED_BY_LABEL: Record<string, string> = {
   VENDOR: "You (the store)",
-  ADMIN: "LocalSell support",
+  ADMIN: "Localsell support",
   CUSTOMER: "The customer",
   RIDER: "The delivery partner",
 };

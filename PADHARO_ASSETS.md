@@ -116,7 +116,7 @@ IDs. This is a release/ops call.
 These sit in the **privacy policy and terms** translation strings (all locales),
 e.g. `enatega-multivendor-web/locales/en.json`:
 
-- `"privacy_policy_intro"` … *"we, Padharo, a brand of https://enatega.com/…"*
+- `"privacy_policy_intro"` … *"we, Padharo, a brand of https://localsell.in/…"*
 - `"privacy_policy_use_of_info"` / `"privacy_policy_access_info"` … *"email us at info@enatega.com"*
 
 They're **real contact endpoints**, so they were left pointing at the working

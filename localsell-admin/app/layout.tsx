@@ -12,7 +12,7 @@ import './global.css';
 import './ui-system.css';
 
 export const metadata = {
-  title: 'LocalSell Admin',
+  title: 'Localsell Admin',
   description: 'Shop Local. Find More.',
   manifest: '/manifest.webmanifest',
   icons: {

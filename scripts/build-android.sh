@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local Android build for a LocalSell app.
+# Local Android build for a Localsell app.
 #
 #   scripts/build-android.sh <app> [abis] [gradleTask]
 #     <app>       customer | store | rider

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "LocalSell Store",
+    "name": "Localsell Store",
     "slug": "localsell-store",
-    "description": "LocalSell — restaurant/store partner app. Shop Local. Find More.",
+    "description": "Localsell — restaurant/store partner app. Shop Local. Find More.",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./lib/assets/images/icon.png",

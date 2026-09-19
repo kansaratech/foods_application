@@ -2,7 +2,7 @@
   "name": "localsell-api",
   "version": "0.1.0",
   "private": true,
-  "description": "Node.js + Apollo GraphQL + Prisma/MySQL backend for the LocalSell multivendor marketplace",
+  "description": "Node.js + Apollo GraphQL + Prisma/MySQL backend for the Localsell multivendor marketplace",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",

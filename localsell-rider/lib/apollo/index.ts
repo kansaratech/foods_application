@@ -190,7 +190,7 @@ const setupApollo = () => {
       nonce: nonce || "",
       "x-platform": platform,
       "accept-language": locale,
-      "user-agent": `LocalSell-Rider-App/${platform}`,
+      "user-agent": `Localsell-Rider-App/${platform}`,
       ...operation.getContext().headers,
     };
 

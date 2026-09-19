@@ -1,17 +1,17 @@
-# LocalSell — Brand Reference
+# Localsell — Brand Reference
 
-Rebrand of the platform from **Padharo** → **LocalSell** (2026-09-04).
+Rebrand of the platform from **Padharo** → **Localsell** (2026-09-04).
 Supersedes `PADHARO_BRAND.md` (kept for history + the per-app theme-entry-point map,
 which is still accurate).
 
-- **Name:** LocalSell
-- **Home-screen label:** LocalSell
+- **Name:** Localsell
+- **Home-screen label:** Localsell
 - **Tagline:** `Shop Local. Find More.`
-- **Rider app:** LocalSell Rider   ·   **Store app:** LocalSell Store   ·   **Admin:** LocalSell Admin
+- **Rider app:** Localsell Rider   ·   **Store app:** Localsell Store   ·   **Admin:** Localsell Admin
 
 ## Palette
 
-| Token role | Old (Padharo) | New (LocalSell) |
+| Token role | Old (Padharo) | New (Localsell) |
 |---|---|---|
 | Primary / CTA | `#F5820A` orange | **`#1C5BC7`** blue |
 | Primary hover | `#E8760A` | `#1A52B4` |
@@ -30,7 +30,7 @@ Also folded in leftover Enatega greens that the Padharo pass missed
 
 ## What changed in code (done, verified)
 
-- **Name + tagline:** `Padharo` → `LocalSell` and `Jo Chahiye, Padharo Par Mile.` →
+- **Name + tagline:** `Padharo` → `Localsell` and `Jo Chahiye, Padharo Par Mile.` →
   `Shop Local. Find More.` across 193 files — all 5 apps, every locale/translation file,
   `APP_NAME` constants, `app.config.js` / `app.json` (`name`, `androidCollapsedTitle`,
   `brandName`, splash/location strings), `layout.tsx` titles, `manifest.json`, UA strings,

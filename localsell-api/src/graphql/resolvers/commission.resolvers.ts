@@ -109,7 +109,7 @@ async function buildCommissionInvoice(bill: CommissionBill, records: CommissionR
     invoiceNumber: bill.invoiceNumber ?? `PDR-INV-${bill.id.slice(-8).toUpperCase()}`,
     issuedOn: bill.createdAt.toISOString(),
     periodLabel: periodLabel(bill.periodStart, bill.periodEnd),
-    platformName: config?.platformLegalName || 'LocalSell',
+    platformName: config?.platformLegalName || 'Localsell',
     platformAddress: config?.platformAddress ?? null,
     platformGstin: config?.platformGstin ?? null,
     vendorName: vendor?.name || vendor?.email || 'Vendor',
@@ -250,8 +250,8 @@ export const commissionResolvers: IResolvers<unknown, GraphQLContext> = {
     },
 
     // Admin-only "balance sheet": one row per vendor with any open position —
-    // consolidates the two ledgers (CommissionBill = vendor owes LocalSell,
-    // VendorPayable = LocalSell owes vendor) that are otherwise only ever
+    // consolidates the two ledgers (CommissionBill = vendor owes Localsell,
+    // VendorPayable = Localsell owes vendor) that are otherwise only ever
     // shown separately, so it's never obvious at a glance who to pay and who
     // to collect from.
     vendorBalances: async (

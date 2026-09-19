@@ -1,4 +1,4 @@
-# LocalSell — this SAME zip/repo is unzipped into TWO separate directories on
+# Localsell — this SAME zip/repo is unzipped into TWO separate directories on
 # the server, one per environment (e.g. ~/localsell-prod/ and ~/localsell-uat/).
 # Each directory gets its own deploy/localsell.env (same filename, different
 # content: different DB, ports, hostnames, CONTAINER_PREFIX). Deploy from

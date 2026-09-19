@@ -1045,7 +1045,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       return updated;
     },
 
-    // Whoever delivers the order — a LocalSell rider or the store's own person —
+    // Whoever delivers the order — a Localsell rider or the store's own person —
     // closes it here with the 4-digit code the customer shows them.
     confirmDelivery: async (_parent, args: { orderId: string; otp: string }, context) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR', 'RIDER']);

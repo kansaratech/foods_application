@@ -164,7 +164,7 @@ export default function CommissionSettingsPanel() {
         <header>
           <div>
             <h2>Invoice issuer</h2>
-            <p>LocalSell&apos;s legal details displayed on commission statements.</p>
+            <p>Localsell&apos;s legal details displayed on commission statements.</p>
           </div>
         </header>
         <form

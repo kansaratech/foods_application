@@ -48,7 +48,7 @@ const RETRY_DELAYS_MS = [750, 2000, 5000]
 const defaultConfiguration = {
   appGroupId: 'group.in.localsell.customer.shared',
   appScheme: 'localsell',
-  brandName: 'LocalSell',
+  brandName: 'Localsell',
   primaryColor: '#1c5bc7',
   accentColor: '#FFA921',
   logoResourceName: 'enatega_logo',

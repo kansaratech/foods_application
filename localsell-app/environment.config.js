@@ -1,6 +1,6 @@
 const ENV_CONFIG = {
   development: {
-    // Deployed LocalSell backend (Sentora VPS). For LAN testing swap these to
+    // Deployed Localsell backend (Sentora VPS). For LAN testing swap these to
     // http://<PC-LAN-IP>:4000.
     GRAPHQL_URL: 'https://api.localsell.in/graphql',
     WS_GRAPHQL_URL: 'wss://api.localsell.in/graphql',

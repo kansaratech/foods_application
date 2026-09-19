@@ -1,4 +1,4 @@
-// LocalSell admin logo. Replace the files in /public/assets/brand/ to update it.
+// Localsell admin logo. Replace the files in /public/assets/brand/ to update it.
 
 export function AppLogo() {
   return (
@@ -7,14 +7,14 @@ export function AppLogo() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/brand/localsell-logo.png"
-        alt="LocalSell"
+        alt="Localsell"
         className="block h-11 w-auto dark:hidden"
         draggable={false}
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/assets/brand/localsell-logo-inverse.png"
-        alt="LocalSell"
+        alt="Localsell"
         className="hidden h-11 w-auto dark:block"
         draggable={false}
       />

@@ -45,7 +45,7 @@ export default function ConfigurationsScreen() {
           Loading settings...
         </div>
       ) : (
-        // LocalSell owns this fork; the upstream paid-version flag is obsolete.
+        // Localsell owns this fork; the upstream paid-version flag is obsolete.
         <ConfigMain />
       )}
     </div>

@@ -1,7 +1,7 @@
-# LocalSell — Mobile App Build & Release Plan
+# Localsell — Mobile App Build & Release Plan
 
 Getting the three Expo apps (**customer**, **store**, **rider**) off the
-inherited Enatega identity and Expo's cloud, onto **LocalSell identifiers**,
+inherited Enatega identity and Expo's cloud, onto **Localsell identifiers**,
 **our own Firebase / Google / Apple accounts**, **local machine builds**, and a
 **self-hosted OTA** server — then into the Play Store and App Store.
 
@@ -14,7 +14,7 @@ inherited Enatega identity and Expo's cloud, onto **LocalSell identifiers**,
 | OTA updates | **Self-hosted `expo-updates`** — our own update server, no EAS Update |
 | Distribution | **Google Play + Apple App Store** (all three apps) |
 
-> The apps are already visually rebranded to LocalSell (name, icons, splash,
+> The apps are already visually rebranded to Localsell (name, icons, splash,
 > colours — see `LOCALSELL_BRAND.md`). This plan is **identifiers + accounts +
 > build pipeline only**, not design.
 
@@ -31,7 +31,7 @@ inherited Enatega identity and Expo's cloud, onto **LocalSell identifiers**,
 | `scheme` (deep link) | `enategamultivendor` | `localsell` |
 | iOS App Group | `group.com.enatega.multivendor.shared` | `group.in.localsell.customer.shared` |
 | Live Activity widget bundle | `com.enatega.multivendor.orderActivity` | `in.localsell.customer.orderActivity` |
-| `ios.appleTeamId` | `GDFK7MVY6P` (not ours) | *new LocalSell Team ID* |
+| `ios.appleTeamId` | `GDFK7MVY6P` (not ours) | *new Localsell Team ID* |
 | iOS OAuth reversed client id | `com.googleusercontent.apps.650001300965-…` | *new iOS OAuth client* |
 | `extra.eas.projectId` | `c21fa0cc-…` | **removed** |
 | App Store id (`ForceUpdate.js`) | `id1526488093` | *new ASC app id* |
@@ -75,7 +75,7 @@ Also drop the deprecated `sentry-expo` dep (keep `@sentry/react-native`).
 
 - Google Maps key literal `AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q` appears as a
   fallback in all three configs **and** in every `eas.json` — replace with the
-  new LocalSell Maps keys (or a placeholder until §2).
+  new Localsell Maps keys (or a placeholder until §2).
 - **Delete `eas.json` in all three apps** — not building or updating via Expo cloud.
 - All three `google-services.json` point at Firebase project **`enatega-b7cd2`**
   (project number `505610605704`) — the upstream demo project. New project in §1.
@@ -311,7 +311,7 @@ all native changes.
 - [ ] **Code-signing** so the client only accepts our updates:
       ```bash
       npx expo-updates codesigning:generate --key-output-dir keys \
-        --certificate-output-dir certs --certificate-common-name LocalSell
+        --certificate-output-dir certs --certificate-common-name Localsell
       npx expo-updates codesigning:configure --certificate-input-dir certs \
         --key-input-dir keys
       ```

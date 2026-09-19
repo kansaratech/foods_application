@@ -62,7 +62,7 @@ export const restaurantTypeDefs = /* GraphQL */ `
     postCode: String
     pickup: Boolean
     delivery: Boolean
-    "Who fulfils a delivery order: PLATFORM (LocalSell fleet) | SELF (store's own people) | BOTH (store picks per order)."
+    "Who fulfils a delivery order: PLATFORM (Localsell fleet) | SELF (store's own people) | BOTH (store picks per order)."
     deliveryProvider: String
     minDeliveryFee: Float
     deliveryDistance: Float

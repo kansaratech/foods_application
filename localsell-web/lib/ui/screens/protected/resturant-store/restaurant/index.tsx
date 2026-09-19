@@ -308,7 +308,7 @@ export default function RestaurantDetailsScreen() {
 
   // Is this store reachable from the customer's chosen delivery location?
   // `restaurant.deliveryDistance` when the vendor has set one, else the
-  // marketplace radius (every LocalSell store serves within it).
+  // marketplace radius (every Localsell store serves within it).
   const router = useRouter();
   const { showToast } = useToast();
   const { userAddress } = useUserAddress();

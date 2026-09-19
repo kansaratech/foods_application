@@ -399,7 +399,7 @@ export async function sendPhoneOtp(
 
   // SMS fallback (only worth it once a WhatsApp transport exists but the send
   // failed, or when Cloud isn't configured at all).
-  const sms = await sendSms(phone, `${code} is your LocalSell verification code. It expires in 5 minutes.`);
+  const sms = await sendSms(phone, `${code} is your Localsell verification code. It expires in 5 minutes.`);
   if (sms) {
     await logPhoneMessage({
       toPhone: toWhatsAppNumber(phone),

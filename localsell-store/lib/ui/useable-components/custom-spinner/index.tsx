@@ -32,7 +32,7 @@ export default function CustomSpinner({
   return (
     <View
       accessibilityRole="progressbar"
-      accessibilityLabel="LocalSell loading"
+      accessibilityLabel="Localsell loading"
       style={{
         width: size,
         height: size,

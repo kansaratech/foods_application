@@ -1,10 +1,8 @@
-import Privacy from '@/lib/ui/screens/unprotected/Privacy'
-import React from 'react'
+import LegalPage, { legalMetadata } from "@/lib/legal/LegalPage";
+import { privacyPolicy } from "@/lib/legal/content";
 
-const page = () => {
-  return (
-    <Privacy />
-  )
+export const metadata = legalMetadata(privacyPolicy);
+
+export default function PrivacyPolicyPage() {
+  return <LegalPage document={privacyPolicy} />;
 }
-
-export default page

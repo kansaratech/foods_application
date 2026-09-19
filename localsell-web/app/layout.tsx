@@ -6,7 +6,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import Script from "next/script";
 
 export const metadata = {
-  title: "LocalSell",
+  title: "Localsell",
   description: "Shop Local. Find More.",
   manifest: "/manifest.json",
 };
@@ -66,7 +66,7 @@ export default async function RootLayout({
         <meta name="theme-color" content="#1c5bc7" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="LocalSell" />
+        <meta name="apple-mobile-web-app-title" content="Localsell" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
         {/* Apple splash screen for specific device */}

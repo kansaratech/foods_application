@@ -267,7 +267,7 @@ export default function ReportsScreen() {
                         value={String(totals?.selfDelivery ?? 0)}
                       />
                       <Stat
-                        label={t("LocalSell fleet")}
+                        label={t("Localsell fleet")}
                         value={String(totals?.platformDelivery ?? 0)}
                       />
                     </View>

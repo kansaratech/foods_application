@@ -1,4 +1,4 @@
-# LocalSell — Platform Hardening Roadmap
+# Localsell — Platform Hardening Roadmap
 
 Clearing the Enatega starter-kit debt across all 5 apps **without a feature freeze**.
 Companion to [ADMIN_UI_CONSISTENCY.md](ADMIN_UI_CONSISTENCY.md) (the admin-specific instance

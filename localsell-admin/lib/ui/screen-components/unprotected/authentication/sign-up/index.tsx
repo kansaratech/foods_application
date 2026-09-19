@@ -60,7 +60,7 @@ export default function SignupMain() {
             <div className="mb-2 flex flex-col p-2">
               <span className="text-2xl">Let&apos;s get started!</span>
               <span className="text-sm text-gray-400">
-                First, let&apos;s create your LocalSell account
+                First, let&apos;s create your Localsell account
               </span>
             </div>
 

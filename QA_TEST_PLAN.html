@@ -1,5 +1,5 @@
-<title>LocalSell QA Test Plan</title>
-<meta name="description" content="End-to-end test pass for the LocalSell marketplace — every flow from platform setup to a delivered order." />
+<title>Localsell QA Test Plan</title>
+<meta name="description" content="End-to-end test pass for the Localsell marketplace — every flow from platform setup to a delivered order." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" />
@@ -508,7 +508,7 @@
 
 <header class="bar">
   <div class="bar-inner">
-    <div class="brand"><span class="mark">LocalSell</span><span class="sub">QA Test Plan</span></div>
+    <div class="brand"><span class="mark">Localsell</span><span class="sub">QA Test Plan</span></div>
     <div class="build-field">
       <label for="build">Build / date</label>
       <input id="build" placeholder="e.g. 799a0f0b" />
@@ -530,7 +530,7 @@
 
   <div class="intro">
     <h1>One full pass, from an empty marketplace to a delivered order.</h1>
-    <p class="lede">This is the acceptance script for LocalSell — the customer site, the admin console, the store app and the rider app. Work the suites <strong>in order</strong>: each one leans on data the last one created (a vendor before a store, a store before a menu, a menu before an order).</p>
+    <p class="lede">This is the acceptance script for Localsell — the customer site, the admin console, the store app and the rider app. Work the suites <strong>in order</strong>: each one leans on data the last one created (a vendor before a store, a store before a menu, a menu before an order).</p>
     <p>Mark every step <span class="mono">P</span> pass, <span class="mono">F</span> fail or <span class="mono">–</span> not-applicable. Your marks and notes are saved in this browser automatically. When you finish, hit <strong>Copy report</strong> and paste it into the bug tracker.</p>
   </div>
 
@@ -580,7 +580,7 @@
 </div>
 
 <footer class="foot">
-  <span>LocalSell acceptance script · work suites top to bottom</span>
+  <span>Localsell acceptance script · work suites top to bottom</span>
   <span id="foot-count">0 checks</span>
 </footer>
 
@@ -1022,7 +1022,7 @@ document.getElementById("btn-print").addEventListener("click", () => window.prin
 
 document.getElementById("btn-report").addEventListener("click", () => {
   const lines = [];
-  lines.push(`LocalSell QA — ${state.build ? "build " + state.build + " — " : ""}${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
+  lines.push(`Localsell QA — ${state.build ? "build " + state.build + " — " : ""}${new Date().toISOString().slice(0, 16).replace("T", " ")}`);
   let P = 0, F = 0, N = 0, T = 0;
   SUITES.forEach((s) => {
     const st = suiteStats(s);

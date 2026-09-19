@@ -264,7 +264,7 @@ export function RiderWebShell({ children }: { children: ReactNode }) {
             </button>
           )}
           <div className="rd-brand">
-            <img src="/brand/localsell-logo-inverse.png" alt="LocalSell" />
+            <img src="/brand/localsell-logo-inverse.png" alt="Localsell" />
             <span>RIDER</span>
           </div>
           <div className="rd-identity">

@@ -1,6 +1,6 @@
-# Brand Swap Kit — LocalSell
+# Brand Swap Kit — Localsell
 
-The **code** rebrand (Padharo → LocalSell: name, tagline, colour theme) is **done**
+The **code** rebrand (Padharo → Localsell: name, tagline, colour theme) is **done**
 — see `LOCALSELL_BRAND.md`.
 
 **Artwork:** clean placeholder art (blue storefront-pin mark + "localsell" wordmark
@@ -60,7 +60,7 @@ cd enatega-multivendor-rider && npx expo prebuild --clean && cd ..
 cd enatega-multivendor-store && npx expo prebuild --clean && cd ..
 ```
 
-That's it — the apps then show LocalSell everywhere.
+That's it — the apps then show Localsell everywhere.
 
 ---
 
@@ -69,5 +69,5 @@ That's it — the apps then show LocalSell everywhere.
 - **Bundle IDs / package names** (`com.enatega.*`, `enatega-store`) unchanged.
   Changing them = new store listings + re-issued push/Firebase creds. See `PADHARO_ASSETS.md` §2.
 - **`enatega.com` / `info@enatega.com`** still in the web privacy/terms text — they're
-  real, working endpoints. Swap when you have a LocalSell domain + inbox (`PADHARO_ASSETS.md` §3).
+  real, working endpoints. Swap when you have a Localsell domain + inbox (`PADHARO_ASSETS.md` §3).
 - Adaptive-icon background is set to white in all three app configs so the blue mark reads.

@@ -1,4 +1,4 @@
-# Seeding the LocalSell database
+# Seeding the Localsell database
 
 There is **one** seed now — config-driven, defined by
 [`prisma/seed-data.json`](./seed-data.json).

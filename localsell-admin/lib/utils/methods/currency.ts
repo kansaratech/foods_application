@@ -1,4 +1,4 @@
-// LocalSell is India-only — everything is ₹ with Indian digit grouping
+// Localsell is India-only — everything is ₹ with Indian digit grouping
 // (₹1,80,000, not ₹180,000). Do not thread a currency code/locale through here.
 
 const INR_0 = new Intl.NumberFormat('en-IN', {

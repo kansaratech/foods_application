@@ -372,7 +372,7 @@ export default function Home() {
   const exportCsv = () => {
     const esc = (x: any) => `"${String(x ?? '').replace(/"/g, '""')}"`;
     const lines: string[] = [
-      `LocalSell dashboard,${iso(start)} to ${iso(end)}`,
+      `Localsell dashboard,${iso(start)} to ${iso(end)}`,
       '',
       'Metric,Value',
       ...metrics.map((m) => `${esc(m.label)},${esc(m.value)}`),

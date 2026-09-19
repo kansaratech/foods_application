@@ -71,7 +71,7 @@ web-build/
 enatega-multivendor-app/.env
 goodbite-multivendor-app
 
-# LocalSell deploy — real secrets, keep only the .example in git
+# Localsell deploy — real secrets, keep only the .example in git
 deploy/padharo.env
 deploy/localsell.env
 

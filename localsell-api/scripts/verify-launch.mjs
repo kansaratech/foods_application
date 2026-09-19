@@ -163,7 +163,7 @@ if (RID && food && cust) {
   const P = mk(false);
 
   // --- COD, store's own SELF delivery: store holds the cash directly (same
-  // as pickup) → commission IS billable. LocalSell's own rider fleet
+  // as pickup) → commission IS billable. Localsell's own rider fleet
   // (deliveryMode PLATFORM — a rider collects 100% of the cash and owes it
   // to the platform) is out of MVP scope: placeOrder only ever sets PICKUP
   // or SELF now, so there's nothing to assign a fleet rider to here anymore.

@@ -422,9 +422,9 @@ export const riderResolvers: IResolvers<unknown, GraphQLContext> = {
 
       if (sendingInvite) {
         const message =
-          `Welcome to LocalSell! Your rider account has been created. ` +
+          `Welcome to Localsell! Your rider account has been created. ` +
           `Use "Forgot Password" on the rider app${rider.email ? ` with ${rider.email}` : rider.phone ? ` with ${rider.phone}` : ''} to set your password and get started.`;
-        if (rider.email) await sendEmail(rider.email, 'Set up your LocalSell rider account', message);
+        if (rider.email) await sendEmail(rider.email, 'Set up your Localsell rider account', message);
         if (rider.phone) await sendPhoneMessage(rider.phone, message);
       }
 

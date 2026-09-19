@@ -425,7 +425,7 @@ function OrderDetail(props) {
           )}
         </View>
         {/* Proof-of-delivery code — the customer reads this to whoever hands
-            over the order (LocalSell rider or the store's own person). */}
+            over the order (Localsell rider or the store's own person). */}
         {!order?.isPickedUp &&
           order?.deliveryOtp &&
           [

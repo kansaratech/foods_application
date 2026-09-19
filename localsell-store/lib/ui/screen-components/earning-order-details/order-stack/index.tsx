@@ -23,7 +23,7 @@ export default function OrderStack({
       : deliveryMode === "SELF"
         ? t("My delivery")
         : deliveryMode === "PLATFORM"
-          ? t("LocalSell fleet")
+          ? t("Localsell fleet")
           : null;
 
   return (

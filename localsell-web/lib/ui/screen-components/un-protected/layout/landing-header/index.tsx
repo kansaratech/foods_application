@@ -61,7 +61,7 @@ export default function LandingHeader() {
         <Link
           href="/"
           className="flex shrink-0 items-center"
-          aria-label="LocalSell home"
+          aria-label="Localsell home"
         >
           <Logo fillColor="#000000" darkmode="#FFFFFF" />
         </Link>

@@ -141,7 +141,7 @@ export default function ServiceAreas() {
             Delivery areas near you
           </h2>
           <p className="mt-2 text-slate-600 dark:text-gray-300">
-            Explore active LocalSell zones and start ordering from available
+            Explore active Localsell zones and start ordering from available
             stores.
           </p>
         </div>

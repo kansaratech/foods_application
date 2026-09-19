@@ -1,13 +1,13 @@
-# LocalSell — Deployment Runbook
+# Localsell — Deployment Runbook
 
-Reusable procedure for deploying the LocalSell stack (customer web, admin, GraphQL
+Reusable procedure for deploying the Localsell stack (customer web, admin, GraphQL
 API, store merchant web) behind Apache on a Docker host with a **shared MySQL
 container**. First run: `localsell.in`, Sep 2026 — every step below is
 what actually worked, with the traps folded in.
 
 To deploy to a **new domain or server**, fill in §0. Unlike the hyphenated
 scheme an earlier deployment of this stack used
-(`prefix-admin.zone.tld`), LocalSell hosts on **dot‑prefixed subdomains** of
+(`prefix-admin.zone.tld`), Localsell hosts on **dot‑prefixed subdomains** of
 its own apex domain, so search‑replace the container/DB name prefix
 (`localsell` → your prefix) and the four hostnames directly — they aren't
 built from a single "prefix + zone" token pair.
@@ -91,7 +91,7 @@ openssl rand -hex 24   # MySQL password for the localsell user  (hex = URL-safe)
 
 ## 3. DNS (one‑time)
 
-Four `A` records → server public IP. LocalSell uses **dot‑prefixed**
+Four `A` records → server public IP. Localsell uses **dot‑prefixed**
 subdomains (`admin.localsell.in`), not the hyphenated style
 (`localsell-admin...`) an earlier deployment of this stack used — so the
 apex record covers the customer site and each other service gets its own

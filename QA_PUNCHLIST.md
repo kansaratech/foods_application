@@ -1,4 +1,4 @@
-# LocalSell — QA Punch List (round 1)
+# Localsell — QA Punch List (round 1)
 
 Client / QA review of **localsell-web** (customer site) + **localsell-admin**.
 37 reported items (numbering as received — `09` was used twice, `32` was skipped).

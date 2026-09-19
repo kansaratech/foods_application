@@ -47,7 +47,7 @@ export const fetchPublicAccessToken = async (graphqlUrl) => {
         link: createHttpLink({
           uri: graphqlUrl,
           headers: {
-            'user-agent': `LocalSellApp/${Platform.OS}`,
+            'user-agent': `LocalsellApp/${Platform.OS}`,
             'accept-language': 'en-US',
             'x-platform': Platform.OS,
             nonce: nonce

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import countryCallingCodes from '../screens/PhoneNumber/countryCodes'
 
-// LocalSell operates in India only — the phone country is always IN (+91),
+// Localsell operates in India only — the phone country is always IN (+91),
 // regardless of the device locale. (Kept as a function so the rest of the hook
 // is untouched; flip this back to locale detection if the product expands.)
 function getDeviceRegionCode() {

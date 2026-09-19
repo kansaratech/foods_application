@@ -10,7 +10,7 @@ interface StratingImageProps {
 
 const StartingImage: React.FC<StratingImageProps> = ({
   image,
-  alt = "LocalSell delivery partner",
+  alt = "Localsell delivery partner",
 }) => {
   return (
     <div className="mx-auto mt-10 w-full max-w-5xl px-4 sm:mt-12">

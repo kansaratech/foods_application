@@ -1,5 +1,5 @@
 /**
- * LocalSell — config-driven marketplace seed.
+ * Localsell — config-driven marketplace seed.
  *
  *   1. edit  prisma/seed-data.json
  *   2. run   npm run seed
@@ -307,7 +307,7 @@ async function seedWhatsappTemplates() {
 }
 
 async function main() {
-  console.log(`LocalSell seed — ${cfg.marketplace.town} (${CENTER.lat}, ${CENTER.lng})`);
+  console.log(`Localsell seed — ${cfg.marketplace.town} (${CENTER.lat}, ${CENTER.lng})`);
 
   console.log('\n=== Wipe ===');
   const preservedConfig = await wipeEverything();

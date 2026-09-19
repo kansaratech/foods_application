@@ -1,5 +1,5 @@
 /*
- * LocalSell service worker — offline shell, safe update model.
+ * Localsell service worker — offline shell, safe update model.
  *
  * Design (learned from the previous Workbox precache that got stuck on stale
  * `/_next/static` chunk URLs after every rebuild):

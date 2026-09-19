@@ -23,7 +23,7 @@ export default function BrandLoader({
     return (
       <span
         role="status"
-        aria-label={`LocalSell: ${label}`}
+        aria-label={`Localsell: ${label}`}
         className={`${styles.mark} ${className}`}
         style={{ width: size, height: size, ...style }}
       >
@@ -45,7 +45,7 @@ export default function BrandLoader({
   return (
     <span
       role="status"
-      aria-label={`LocalSell: ${label}`}
+      aria-label={`Localsell: ${label}`}
       data-localsell-loader={variant}
       className={`${styles.loader} ${styles[variant]} ${className}`}
       style={style}

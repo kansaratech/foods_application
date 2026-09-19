@@ -1,5 +1,5 @@
 /**
- * LocalSell brand raster generator.
+ * Localsell brand raster generator.
  *
  * Masters (PNG, high-res) live in:
  *   enatega-multivendor-web/public/assets/brand/masters/
@@ -147,7 +147,7 @@ const MANIFEST = [
       { out: "enatega-multivendor-store/lib/ui/useable-components/splash/assets/pin.png", w: 632, h: 834 },
     ],
   },
-  // ---- Horizontal lockup (mark + "LocalSell") for in-app headers/footers --
+  // ---- Horizontal lockup (mark + "Localsell") for in-app headers/footers --
   {
     src: "localsell-logo",
     transparent: true,

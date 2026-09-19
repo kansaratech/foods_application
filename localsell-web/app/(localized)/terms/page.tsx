@@ -1,12 +1,8 @@
-import TermsConditions from '@/lib/ui/screens/unprotected/TermsConditions'
-import React from 'react'
+import LegalPage, { legalMetadata } from "@/lib/legal/LegalPage";
+import { termsConditions } from "@/lib/legal/content";
 
-const page = () => {
-  return (
-    <div>
-    <TermsConditions/>
-    </div>
-  )
+export const metadata = legalMetadata(termsConditions);
+
+export default function TermsAndConditionsPage() {
+  return <LegalPage document={termsConditions} />;
 }
-
-export default page

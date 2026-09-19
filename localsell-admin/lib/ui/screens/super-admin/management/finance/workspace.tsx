@@ -527,7 +527,7 @@ export function FinanceOverview() {
             <h2>Commission to collect</h2>
             <p>
               The store already holds this cash (COD pickup / self-delivery)
-              — LocalSell bills the vendor for its commission and collects it
+              — Localsell bills the vendor for its commission and collects it
               separately.
             </p>
           </div>
@@ -567,7 +567,7 @@ export function FinanceOverview() {
             <ChannelBadge channel="online" />
             <h2>Owed to vendors</h2>
             <p>
-              Cashfree orders settle into LocalSell&apos;s own account first,
+              Cashfree orders settle into Localsell&apos;s own account first,
               so — the reverse of COD — the platform owes the vendor their
               net share (order total minus commission) here.
             </p>
@@ -613,7 +613,7 @@ export function FinanceOverview() {
         {[
           [
             'Balance sheet',
-            'See exactly who LocalSell owes and who owes LocalSell.',
+            'See exactly who Localsell owes and who owes Localsell.',
             'balances',
             'pi-book',
           ],
@@ -705,18 +705,18 @@ export function FinanceBalances() {
   return (
     <FinanceFrame
       title="Balance sheet"
-      description="Every vendor's consolidated position — COD commission they owe LocalSell, netted against CASHFREE payouts LocalSell owes them. Only vendors with an open position on either side show up here; a vendor fully settled on both drops off automatically."
+      description="Every vendor's consolidated position — COD commission they owe Localsell, netted against CASHFREE payouts Localsell owes them. Only vendors with an open position on either side show up here; a vendor fully settled on both drops off automatically."
     >
       <div className="finance-metrics">
         <section>
           <span>Total to pay out</span>
           <strong className="finance-net-owe">{money(totals.owe)}</strong>
-          <small>Sum of every vendor LocalSell currently owes</small>
+          <small>Sum of every vendor Localsell currently owes</small>
         </section>
         <section>
           <span>Total to collect</span>
           <strong className="finance-net-collect">{money(totals.collect)}</strong>
-          <small>Sum of every vendor who currently owes LocalSell</small>
+          <small>Sum of every vendor who currently owes Localsell</small>
         </section>
       </div>
       <div className="ls-filter-toolbar">
@@ -756,13 +756,13 @@ export function FinanceBalances() {
           },
           {
             propertyName: 'commissionOutstanding',
-            headerName: 'Owes LocalSell (COD)',
+            headerName: 'Owes Localsell (COD)',
             align: 'right',
             body: (b: VendorBalance) => money(b.commissionOutstanding),
           },
           {
             propertyName: 'payoutPending',
-            headerName: 'LocalSell owes (Cashfree)',
+            headerName: 'Localsell owes (Cashfree)',
             align: 'right',
             body: (b: VendorBalance) => money(b.payoutPending),
           },
@@ -812,7 +812,7 @@ export function FinanceCollections() {
   return (
     <FinanceFrame
       title="Collect commission"
-      description="Open a vendor bill to review its orders. Record a payment only after the money reaches LocalSell."
+      description="Open a vendor bill to review its orders. Record a payment only after the money reaches Localsell."
     >
       <ChannelBadge channel="offline" />
       <div className="ls-filter-toolbar">
@@ -979,7 +979,7 @@ export function FinanceBilling() {
         <p>
           Create bills for {preview?.unbilledOrderCount ?? 0} unbilled orders,
           totalling {money(preview?.unbilledCommissionTotal)}. The vendor will
-          owe this amount to LocalSell.
+          owe this amount to Localsell.
         </p>
         {issueError && (
           <p role="alert" className="finance-error">
@@ -1172,7 +1172,7 @@ export function FinanceVendorPayouts() {
   return (
     <FinanceFrame
       title="Vendor payables"
-      description="CASHFREE orders are collected into LocalSell's own account, so unlike COD the platform owes the vendor their net share (order total minus commission). Select a vendor's orders and record the payout once you've sent the money."
+      description="CASHFREE orders are collected into Localsell's own account, so unlike COD the platform owes the vendor their net share (order total minus commission). Select a vendor's orders and record the payout once you've sent the money."
     >
       <ChannelBadge channel="online" />
       <div className="finance-money-flow">

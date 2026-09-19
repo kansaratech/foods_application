@@ -62,7 +62,7 @@ const LoginScreen = () => {
           <View className="flex-1 flex-row">
             {isDesktop && (
               <LinearGradient
-                // LocalSell brand: navy -> blue
+                // Localsell brand: navy -> blue
                 colors={["#16293F", "#173C74", "#1C5BC7"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -254,7 +254,7 @@ const LoginScreen = () => {
                   className="text-center text-xs mt-9"
                   style={{ color: appTheme.fontSecondColor }}
                 >
-                  Need help? Contact your LocalSell account manager.
+                  Need help? Contact your Localsell account manager.
                 </Text>
               </View>
             </View>

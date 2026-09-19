@@ -10,7 +10,7 @@ import InstallAppButton from "@/lib/ui/pwa/InstallAppButton";
 
 const footerGroups = [
   {
-    title: "Partner with LocalSell",
+    title: "Partner with Localsell",
     links: [
       { label: "For riders", href: "/rider" },
       { label: "For restaurants", href: "/restaurantInfo" },
@@ -51,7 +51,7 @@ const AppFooter = () => {
           <div aria-hidden="true" className="absolute -bottom-32 -right-24 h-80 w-80 rounded-full border-[70px] border-white/[0.035]" />
           <div className="relative flex h-full max-w-xl flex-col justify-between gap-12">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.24em] text-blue-200">LocalSell to something better</p>
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-blue-200">Localsell to something better</p>
               <h2 className="mt-5 max-w-lg text-[38px] font-semibold leading-[1.05] tracking-[-0.045em] sm:text-5xl lg:text-[54px]">
                 Local favourites,
                 <span className="block font-serif font-normal italic text-[#8fbdf0]">closer than ever.</span>
@@ -71,8 +71,8 @@ const AppFooter = () => {
 
         <section className="flex flex-col justify-between px-5 py-10 sm:px-8 lg:min-h-[430px] lg:px-[4.5vw] lg:py-14">
           <div>
-            <Link href="/" aria-label="LocalSell home" className="inline-block">
-              <Image src="/assets/brand/localsell-logo-inverse.png" alt="LocalSell" width={150} height={46} className="h-auto w-[138px] object-contain" />
+            <Link href="/" aria-label="Localsell home" className="inline-block">
+              <Image src="/assets/brand/localsell-logo-inverse.png" alt="Localsell" width={150} height={46} className="h-auto w-[138px] object-contain" />
             </Link>
             <div className="mt-10 grid gap-9 sm:grid-cols-3">
               {footerGroups.map((group) => (
@@ -92,7 +92,7 @@ const AppFooter = () => {
 
           <div className="mt-12 flex flex-col gap-5 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span>© {new Date().getFullYear()} LocalSell, operated by Maekotech Solutions LLP</span>
+              <span>© {new Date().getFullYear()} Localsell, operated by Maekotech Solutions LLP</span>
               <span className="inline-flex items-center gap-1.5"><FiMapPin aria-hidden="true" className="text-[#1c5bc7]" /> Deogarh, Rajasthan</span>
             </div>
           </div>

@@ -16,9 +16,9 @@ import SpinnerComponent from "@/lib/ui/useable-components/spinner";
 type Provider = "PLATFORM" | "SELF" | "BOTH";
 
 const PROVIDERS: { value: Provider; title: string; hint: string }[] = [
-  { value: "PLATFORM", title: "LocalSell delivery fleet", hint: "The LocalSell hyperlocal riders pick up and deliver every order." },
+  { value: "PLATFORM", title: "Localsell delivery fleet", hint: "The Localsell hyperlocal riders pick up and deliver every order." },
   { value: "SELF", title: "My own delivery people", hint: "You deliver with your own staff. Add them under Delivery Staff." },
-  { value: "BOTH", title: "Both — I choose per order", hint: "Assign your own person or push the order to the LocalSell fleet after you accept it." },
+  { value: "BOTH", title: "Both — I choose per order", hint: "Assign your own person or push the order to the Localsell fleet after you accept it." },
 ];
 
 export default function DeliverySettingsScreen() {

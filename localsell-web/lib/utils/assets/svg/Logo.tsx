@@ -1,5 +1,5 @@
 // components/Logo.tsx
-// LocalSell wordmark. Swap the files in /public/assets/brand/ to update the logo everywhere.
+// Localsell wordmark. Swap the files in /public/assets/brand/ to update the logo everywhere.
 
 import { useTheme } from "@/lib/providers/ThemeProvider";
 
@@ -31,7 +31,7 @@ const Logo = ({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
-      alt="LocalSell"
+      alt="Localsell"
       className={className}
       draggable={false}
     />

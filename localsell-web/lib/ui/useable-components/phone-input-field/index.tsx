@@ -71,7 +71,7 @@ export default function CustomPhoneTextField({
         className={`flex items-center ${className} ${style?.borderColor === "red" ? "phone-error" : ""} bg-white text-black dark:bg-gray-800 dark:text-white `}
       >
         <PhoneInput
-          // LocalSell is India-only — lock the country and the +91 dial code.
+          // Localsell is India-only — lock the country and the +91 dial code.
           country={"in"}
           onlyCountries={["in"]}
           countryCodeEditable={false}

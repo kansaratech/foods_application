@@ -1,4 +1,4 @@
-# LocalSell Admin — UI consistency pass
+# Localsell Admin — UI consistency pass
 
 Branch: `feat/admin-theme-tokens` (builds on the theme-token foundation).
 Goal: one design system across the whole admin app — same table, same inputs,

@@ -58,7 +58,7 @@ function modeLabel(
   const mode = order.deliveryMode ?? (order.isPickedUp ? "PICKUP" : "PLATFORM");
   if (mode === "PICKUP") return t("Pickup");
   if (mode === "SELF") return `${t("Self")}${order.storeDeliveryAgent?.name ? ` · ${order.storeDeliveryAgent.name}` : ""}`;
-  return t("LocalSell");
+  return t("Localsell");
 }
 
 interface Col<T> {

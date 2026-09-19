@@ -1,5 +1,5 @@
 // Google Maps key. Maps SDK keys always ship inside the app binary, so restrict
-// the LocalSell key by Android package + signing SHA-1 and by iOS bundle id in
+// the Localsell key by Android package + signing SHA-1 and by iOS bundle id in
 // the Google Cloud console. Local release builds inject the real key via
 // `.env.production` (see APP_BUILD_PLAN.md §3); the placeholder below only keeps
 // `expo prebuild` from failing when no env is present.
@@ -17,9 +17,9 @@ const androidGoogleMapsApiKey =
 
 module.exports = {
   expo: {
-    name: 'LocalSell Rider',
+    name: 'Localsell Rider',
     description:
-      'LocalSell Rider — the delivery partner app for LocalSell. Shop Local. Find More.',
+      'Localsell Rider — the delivery partner app for Localsell. Shop Local. Find More.',
     version: '1.0.0',
     slug: 'localsell-rider',
     orientation: 'portrait',
@@ -38,7 +38,7 @@ module.exports = {
           // a 1x1 transparent PNG — only the background color shows. The animated
           // pin / wordmark is drawn by the JS AnimatedSplash component, whose
           // first frame uses these same colors so the handoff shows no flash.
-          backgroundColor: '#16293f', // light (LocalSell navy)
+          backgroundColor: '#16293f', // light (Localsell navy)
           image: './lib/assets/images/splashTransparent.png',
           imageWidth: 1,
           resizeMode: 'contain',

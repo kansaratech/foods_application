@@ -2,10 +2,10 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'LocalSell Admin',
+    name: 'Localsell Admin',
     short_name: 'LS Admin',
     id: '/',
-    description: 'LocalSell marketplace admin & vendor console.',
+    description: 'Localsell marketplace admin & vendor console.',
     start_url: '/',
     scope: '/',
     display: 'standalone',
