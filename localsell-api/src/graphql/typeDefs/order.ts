@@ -113,6 +113,10 @@ export const orderTypeDefs = /* GraphQL */ `
     deliveryOtp: String
     "How the hand-over was confirmed: OTP | MANUAL"
     deliveryConfirmedBy: String
+    "GST tax invoice / bill-of-supply number, set once the order is DELIVERED. Null until then."
+    invoiceNumber: String
+    "Direct link to the invoice PDF. Null until invoiceNumber is set."
+    invoiceUrl: String
   }
 
   type OrdersActiveOrdersResult {
@@ -254,6 +258,8 @@ export const orderTypeDefs = /* GraphQL */ `
     cancelOrder(_id: String!, reason: String!): Order!
     "Admin-only: re-fires a Cashfree refund that previously came back FAILED."
     retryOrderRefund(orderId: String!): Order!
+    "Admin-only: re-checks a refund stuck at PENDING/PROCESSING directly against Cashfree — a fallback for a missed REFUND_STATUS_WEBHOOK. No-op if already resolved."
+    recheckOrderRefund(orderId: String!): Order!
     muteRing(orderId: String): Boolean!
     orderPickedUp(_id: String!): Order!
   }

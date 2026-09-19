@@ -10,6 +10,7 @@ import { IWellDoneComponentProps } from "@/lib/utils/interfaces";
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
+import { useApptheme } from "@/lib/context/global/theme.context";
 
 const DELIVERED_REDIRECT_DELAY_MS = 4500;
 
@@ -34,6 +35,7 @@ export default function WelldoneComponent({
 
   // Hooks
   const { t } = useTranslation();
+  const { appTheme } = useApptheme();
   return (
     <Modal
       isVisible={!!orderId}
@@ -41,7 +43,10 @@ export default function WelldoneComponent({
       coverScreen={false}
     >
       <View className="h-fit w-full bg-transparent items-center">
-        <View className="h-[120px] w-[95%] items-center justify-around bg-white border-white rounded-[16px]">
+        <View
+          className="h-[120px] w-[95%] items-center justify-around rounded-[16px]"
+          style={{ backgroundColor: appTheme.cartContainer, borderColor: appTheme.cartContainer }}
+        >
           {/* <View> */}
           {/* <WellDoneIcon /> */}
           <Image
@@ -51,10 +56,16 @@ export default function WelldoneComponent({
 
           {/* </View> */}
           <View className="items-center">
-            <Text className="font-inter text-lg font-bold text-centertext-gray-900">
+            <Text
+              className="font-inter text-lg font-bold text-center"
+              style={{ color: appTheme.fontMainColor }}
+            >
               {t("Well Done Rider")}
             </Text>
-            <Text className="font-inter text-sm font-normal leading-[22px] text-center">
+            <Text
+              className="font-inter text-sm font-normal leading-[22px] text-center"
+              style={{ color: appTheme.fontSecondColor }}
+            >
               {t("Order Number")} #{orderId.substring(0, 5)} {status}
             </Text>
           </View>

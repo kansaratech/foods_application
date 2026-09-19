@@ -51,6 +51,17 @@ export default function StoresOverview(props: Props) {
       s.documentSummary &&
       s.documentSummary.verified < s.documentSummary.required
   ).length;
+  // The bucket "Live" (APPROVED && isActive) and "Pending approval" (PENDING)
+  // don't cover: REJECTED, SUSPENDED, and an APPROVED store someone manually
+  // deactivated. Without this, Total stores never equalled Live + Pending —
+  // it was always exactly this many short, with nowhere in the UI to see
+  // why (#118).
+  const inactive = props.stores.filter(
+    (s) =>
+      s.approvalStatus === 'REJECTED' ||
+      s.approvalStatus === 'SUSPENDED' ||
+      (s.approvalStatus === 'APPROVED' && !s.isActive)
+  ).length;
   const zones = Array.from(
     new Map(
       props.stores.filter((s) => s.zone).map((s) => [s.zone!._id, s.zone!])
@@ -147,6 +158,12 @@ export default function StoresOverview(props: Props) {
             icon: 'cog',
             tone: 'slate',
           },
+          {
+            label: 'Inactive',
+            value: inactive,
+            icon: 'ban',
+            tone: 'red',
+          },
         ].map((stat) => (
           <div className="stores-stat" key={stat.label}>
             <span className={`stores-stat-icon ${stat.tone}`}>
@@ -164,6 +181,7 @@ export default function StoresOverview(props: Props) {
           ['all', 'All stores', props.stores.length],
           ['pending', 'Pending approval', pending],
           ['incomplete', 'Setup incomplete', incomplete],
+          ['inactive', 'Inactive', inactive],
           ['cloned', 'Cloned stores', props.clonedCount],
         ].map(([value, label, count]) => (
           <button

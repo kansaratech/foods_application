@@ -959,7 +959,10 @@ const FoodFormSheet = forwardRef<FoodFormSheetHandle, Props>(
             // (Composition dealers are legally barred from itemizing tax, and
             // Unregistered stores don't charge it at all) — showing a rate
             // field here would promise a tax line that never actually applies.
-            <View className="gap-1 rounded-lg bg-gray-100 p-3 dark:bg-gray-800">
+            <View
+              className="gap-1 rounded-lg p-3"
+              style={{ backgroundColor: appTheme.cartContainer }}
+            >
               <Text className="text-sm" style={{ color: appTheme.fontSecondColor }}>
                 {t(
                   "GST rate override is only available for stores registered as GST Regular. Update the store's GST registration in Store Profile to enable this.",

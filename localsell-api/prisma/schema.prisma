@@ -175,6 +175,11 @@ model Restaurant {
   // User.gstRegistrationType when a store is created, editable per store.
   gstRegistrationType   String    @default("UNREGISTERED")
   gstin                 String?
+  // Customer-facing GST tax invoice numbering (Order.invoiceNumber), per
+  // store, resets when invoiceSeqFY changes. Never read/written directly —
+  // always go through invoice.service.ts's nextOrderInvoiceNumber().
+  invoiceSeq            Int       @default(0)
+  invoiceSeqFY          String?
   commissionRate        Float     @default(0)
   isActive              Boolean   @default(true)
   isAvailable           Boolean   @default(true)
@@ -872,6 +877,10 @@ model Order {
   cancelledByName      String?
   isRinged             Boolean       @default(false)
   preparationTime      String?
+  // GST tax invoice PDF, generated once the order reaches DELIVERED (store
+  // issues it, using the store's own GSTIN — see invoice.service.ts). Null
+  // until then. The PDF itself lives at uploads/invoices/<order.id>.pdf.
+  invoiceNumber        String?       @unique
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 

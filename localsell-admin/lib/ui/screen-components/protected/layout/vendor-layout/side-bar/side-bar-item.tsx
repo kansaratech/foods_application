@@ -68,24 +68,26 @@ export default function SidebarItem({
     ? `${((subMenu?.length || 0) * 40 + (subMenu! && 15)).toString()}px`
     : 0;
 
-  const bg_color = pathname.includes(route ?? '')
-    ? isParent
-      ? 'primary-color'
-      : 'secondary-color'
-    : '[#71717A]';
-
-  const text_color = pathname.includes(route ?? '') ? 'white' : '[#71717A]';
   const isActive = pathname.includes(route ?? '');
+  const hasSubMenu = !!subMenu;
+  // Same token-based state classes as the super-admin sidebar
+  // (side-bar-item.tsx in super-admin-layout) — this file previously used a
+  // hardcoded '[#71717A]' gray for both the inactive bg AND text plus an
+  // unconditional trailing `dark:text-white` that fought the computed color,
+  // so it looked fine by accident in dark mode but broke (gray-on-gray) in light.
+  const isLeafActive = isActive && !hasSubMenu;
+  const isParentHighlighted = isActive && hasSubMenu;
+  const buttonStateClass = isLeafActive
+    ? 'bg-primary-color text-white hover:bg-primary-dark'
+    : isParentHighlighted
+      ? 'bg-primary-light text-primary-color font-semibold dark:bg-dark-600 dark:text-white'
+      : 'text-content-muted hover:bg-primary-light dark:text-white dark:hover:bg-dark-600';
 
   return (
     <div className={`mt-[0.4rem] flex flex-col rounded-md`}>
       <div>
         <button
-          className={`group relative flex w-full cursor-pointer items-center rounded-md px-3 py-2 transition-colors ${
-            isActive && !subMenu
-              ? `bg-${isClickable ? bg_color : ''} text-${isClickable ? text_color : '[#71717A]'}`
-              : `bg-${bg_color} text-${text_color} hover:bg-primary-light dark:hover:bg-dark-600`
-          } ${!expanded && 'hidden sm:flex'} dark:text-white `}
+          className={`group relative flex w-full cursor-pointer items-center rounded-md px-3 py-2 transition-colors ${buttonStateClass} ${!expanded && 'hidden sm:flex'}`}
           onClick={() => {
             if (!isParent || isClickable) {
               router.push(route ?? '');
@@ -140,7 +142,7 @@ export default function SidebarItem({
         className={`${classes['sub-menu']} relative pl-6`}
         style={{ height: subMenuHeight }}
       >
-        <div className="absolute bottom-0 left-6 top-0 w-px bg-gray-300"></div>
+        <div className="absolute bottom-0 left-6 top-0 w-px bg-gray-300 dark:bg-dark-600"></div>
 
         {expanded &&
           subMenu?.map((item, index) => {

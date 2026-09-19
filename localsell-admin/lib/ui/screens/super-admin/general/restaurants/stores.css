@@ -123,6 +123,10 @@
   background: #edf0f6;
   color: #6c7b9c;
 }
+.stores-page .red {
+  background: #fde8e8;
+  color: #c81e1e;
+}
 .stores-tabs {
   display: flex;
   gap: 18px;

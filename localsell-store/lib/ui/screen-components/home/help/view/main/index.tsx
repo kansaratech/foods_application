@@ -82,7 +82,7 @@ export default function HelpMain() {
 
   return (
     <View
-      className="flex-1 w-full dark:bg-gray-900"
+      className="flex-1 w-full"
       style={{ backgroundColor: appTheme.screenBackground }}
     >
       <StatusBar barStyle="light-content" />

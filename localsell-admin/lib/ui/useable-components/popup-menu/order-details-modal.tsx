@@ -26,6 +26,18 @@ const RETRY_ORDER_REFUND = gql`
   }
 `;
 
+const RECHECK_ORDER_REFUND = gql`
+  mutation RecheckOrderRefund($orderId: String!) {
+    recheckOrderRefund(orderId: $orderId) {
+      _id
+      refundStatus
+      refundedAmount
+      refundedAt
+      refundError
+    }
+  }
+`;
+
 const REFUND_STATUS_LABEL: Record<string, string> = {
   PENDING: 'Refund initiated',
   PROCESSING: 'Refund processing',
@@ -54,6 +66,9 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
   } | null>(null);
   const [retryOrderRefund, { loading: retrying }] =
     useMutation(RETRY_ORDER_REFUND);
+  const [recheckOrderRefund, { loading: rechecking }] = useMutation(
+    RECHECK_ORDER_REFUND
+  );
 
   // Reset the local refund override whenever a different order is opened, so a
   // retry on one order can't leak its result onto the next one shown.
@@ -82,6 +97,31 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
         title: 'Refund retry',
         message:
           getGraphQLErrorMessage(err as Error) ?? 'Failed to retry the refund',
+      });
+    }
+  };
+
+  const handleRecheckRefund = async () => {
+    if (!restaurantData?._id) return;
+    try {
+      const res = await recheckOrderRefund({
+        variables: { orderId: restaurantData._id },
+      });
+      setRefund(res.data?.recheckOrderRefund ?? null);
+      showToast({
+        type:
+          res.data?.recheckOrderRefund?.refundStatus === 'SUCCESS'
+            ? 'success'
+            : 'info',
+        title: 'Refund recheck',
+        message: `Refund status: ${res.data?.recheckOrderRefund?.refundStatus ?? 'unknown'}`,
+      });
+    } catch (err) {
+      showToast({
+        type: 'error',
+        title: 'Refund recheck',
+        message:
+          getGraphQLErrorMessage(err as Error) ?? 'Failed to recheck the refund',
       });
     }
   };
@@ -346,6 +386,15 @@ const OrderDetailModal: React.FC<IOrderDetailModalProps> = ({
                           onClick={handleRetryRefund}
                         />
                       </>
+                    )}
+                    {(refundStatus === 'PENDING' ||
+                      refundStatus === 'PROCESSING') && (
+                      <CustomButton
+                        loading={rechecking}
+                        label="Recheck refund"
+                        className="refund-retry-button"
+                        onClick={handleRecheckRefund}
+                      />
                     )}
                   </div>
                 )}

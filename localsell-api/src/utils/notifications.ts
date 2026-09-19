@@ -254,6 +254,72 @@ export async function sendWhatsAppTemplate(
   return { delivered: false, channel: 'WHATSAPP_CLOUD', errorCode: result.errorCode, errorDetail: result.errorDetail };
 }
 
+/**
+ * Send a template whose HEADER component is a document (PDF) — e.g. the
+ * delivered-order GST invoice. `documentUrl` must be a public HTTPS URL
+ * Meta's servers can fetch (our /uploads static route). Same log/transport
+ * plumbing as sendWhatsAppTemplate; kept separate rather than folding a
+ * header param into that function since only one template needs this today.
+ */
+export async function sendWhatsAppDocumentTemplate(
+  key: string,
+  phone: string,
+  bodyParams: string[],
+  documentUrl: string,
+  filename: string,
+  opts: { purpose?: PhonePurpose; userId?: string | null; userType?: string | null } = {},
+): Promise<TemplateSendResult> {
+  const purpose = opts.purpose ?? 'GENERIC';
+  const to = toWhatsAppNumber(phone);
+
+  if (!phone || to.length < 10) {
+    return { delivered: false, channel: 'CONSOLE', errorDetail: 'no/invalid recipient phone' };
+  }
+
+  const transport = await getWhatsAppTransport();
+  const tpl = await resolveTemplate(key);
+  if (!transport || !tpl) {
+    console.log(`[dev] WhatsApp document ${key} to ${to}: ${documentUrl}`);
+    await logPhoneMessage({
+      toPhone: to, userId: opts.userId, userType: opts.userType,
+      channel: 'CONSOLE', purpose, templateKey: key, status: 'FALLBACK',
+      errorDetail: !transport ? 'whatsapp cloud not configured' : `template ${key} inactive/unknown`,
+    });
+    return { delivered: false, channel: 'CONSOLE' };
+  }
+
+  const headerComponent: TemplateComponent = {
+    type: 'header',
+    parameters: [{ type: 'document', document: { link: documentUrl, filename } }],
+  };
+  const bodyComponent: TemplateComponent = {
+    type: 'body',
+    parameters: bodyParams.map((text) => ({ type: 'text', text: String(text ?? '') })),
+  };
+
+  const result = await postWhatsAppTemplate(
+    transport.phoneNumberId, transport.apiVersion, transport.accessToken,
+    to, tpl.metaName, tpl.language, [headerComponent, bodyComponent],
+  );
+
+  if (result.ok) {
+    await logPhoneMessage({
+      toPhone: to, userId: opts.userId, userType: opts.userType,
+      channel: 'WHATSAPP_CLOUD', purpose, templateKey: key,
+      metaMessageId: result.metaMessageId, status: 'SENT',
+    });
+    return { delivered: true, channel: 'WHATSAPP_CLOUD', metaMessageId: result.metaMessageId };
+  }
+
+  console.error(`[whatsapp-cloud] ${key} send failed (${result.errorCode}): ${result.errorDetail}`);
+  await logPhoneMessage({
+    toPhone: to, userId: opts.userId, userType: opts.userType,
+    channel: 'WHATSAPP_CLOUD', purpose, templateKey: key, status: 'FAILED',
+    errorCode: result.errorCode, errorDetail: result.errorDetail,
+  });
+  return { delivered: false, channel: 'WHATSAPP_CLOUD', errorCode: result.errorCode, errorDetail: result.errorDetail };
+}
+
 /** Fire-and-forget wrapper for non-critical sends (order updates) — never throws,
  *  never blocks the caller's response. */
 export function sendWhatsAppTemplateAsync(

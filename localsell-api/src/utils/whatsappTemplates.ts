@@ -25,6 +25,9 @@ export interface WaTemplateDef {
   bodyVars: string[];
   /** authentication templates carry Meta's copy-code button */
   hasOtpButton?: boolean;
+  /** template's HEADER component is a document (PDF) — sender must pass a
+   *  document link, see sendWhatsAppDocumentTemplate in notifications.ts */
+  hasDocumentHeader?: boolean;
 }
 
 export const WA_TEMPLATES: WaTemplateDef[] = [
@@ -131,6 +134,22 @@ export const WA_TEMPLATES: WaTemplateDef[] = [
     audience: 'CUSTOMER',
     purpose: 'ORDER_UPDATE',
     bodyVars: ['customerName', 'orderNumber'],
+  },
+  {
+    // Sent right after order_delivered, carrying the GST invoice PDF as a
+    // document header. NOT YET CREATED IN META — see LOCALSELL_WHATSAPP.md
+    // "Invoice template" for the exact content to submit for approval before
+    // this can go live (document-header templates need a sample PDF
+    // uploaded at creation time, which isn't automatable the way the other
+    // 8 templates were).
+    key: 'order_invoice',
+    metaName: 'localsell_order_invoice',
+    language: 'en_US',
+    category: 'UTILITY',
+    audience: 'CUSTOMER',
+    purpose: 'ORDER_UPDATE',
+    bodyVars: ['customerName', 'orderNumber'],
+    hasDocumentHeader: true,
   },
   {
     key: 'vendor_new_order',

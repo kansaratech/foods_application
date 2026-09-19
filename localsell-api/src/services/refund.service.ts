@@ -4,7 +4,7 @@
 // drift out of sync on what "refunded" means.
 import { prisma } from '../prisma/client';
 import { Order } from '@prisma/client';
-import { getCashfreeCredentials, refundCashfreeOrder } from './cashfree.service';
+import { getCashfreeCredentials, refundCashfreeOrder, fetchCashfreeRefundStatus } from './cashfree.service';
 import { publishOrderUpdate } from '../graphql/resolvers/order.resolvers';
 import { sendWhatsAppTemplateAsync } from '../utils/notifications';
 
@@ -108,6 +108,33 @@ export async function attemptCashfreeRefund(order: Order): Promise<Order> {
     await publishOrderUpdate(updated);
     notifyRefundEvent(order.id, 'FAILED');
     return updated;
+  }
+}
+
+/**
+ * Reconciliation fallback for a refund stuck at PENDING/PROCESSING — the
+ * REFUND_STATUS_WEBHOOK path is the only other way this resolves, and unlike
+ * payment confirmation (which has recheckCashfreePayment as a customer/admin
+ * fallback), refunds had nothing: a missed or never-configured webhook meant
+ * a genuinely-completed Cashfree refund could sit "processing" in our DB
+ * forever. Safe to call repeatedly — a no-op once resolved.
+ */
+export async function reconcileOrderRefund(orderId: string): Promise<Order | null> {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order || order.paymentMethod !== 'CASHFREE') return order;
+  if (!['PENDING', 'PROCESSING'].includes(order.refundStatus) || !order.refundId) return order;
+
+  const creds = await getCashfreeCredentials();
+  if (!creds) return order;
+
+  const cfOrderId = order.cashfreeOrderId ?? order.id;
+  try {
+    const result = await fetchCashfreeRefundStatus(creds, cfOrderId, order.refundId);
+    await applyRefundWebhookUpdate(order.refundId, result.status, result.refundAmount);
+    return prisma.order.findUnique({ where: { id: orderId } });
+  } catch (err) {
+    console.error(`[refund-reconcile] ${orderId} failed:`, (err as Error).message);
+    return order;
   }
 }
 

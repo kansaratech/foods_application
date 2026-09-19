@@ -77,8 +77,14 @@ function SearchSeeAllSection() {
     restaurantSlug?: string | null,
     shopType?: string | null,
   ) => {
+    // Same rule as every other navigator (BannerCard, pickRestaurant, Card):
+    // only an exact "restaurant" shopType goes to /restaurant/, everything
+    // else (grocery, and any future shop type) goes to /store/. Previously
+    // inverted (shopType === "grocery" ? store : restaurant) — equivalent
+    // today since those are the only two shop types, but would silently
+    // break for a third one.
     router.push(
-      `/${shopType === "grocery" ? "store" : "restaurant"}/${restaurantSlug}/${restaurantId}`,
+      `/${shopType === "restaurant" ? "restaurant" : "store"}/${restaurantSlug}/${restaurantId}`,
     );
   };
 

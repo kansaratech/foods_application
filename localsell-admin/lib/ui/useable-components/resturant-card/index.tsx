@@ -203,7 +203,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
 
       <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-4 py-3 dark:border-dark-600 lg:border-l lg:border-t-0">
         {/* Delivery Time */}
-        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
+        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs dark:bg-dark-900 dark:text-white">
           <FrameSVG width="24" height="24" />
           <span>
             {restaurant?.deliveryTime} {t('min')}
@@ -211,7 +211,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         </div>
 
         {/* Delivery Fee */}
-        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
+        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1.5 text-xs dark:bg-dark-900 dark:text-white">
           <CarSVG width="24" height="24" />
           <span>
             {CURRENT_SYMBOL} {deliveryInfo?.deliveryFee ?? deliveryRate}
@@ -219,7 +219,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
         </div>
 
         {/* Minimum Order */}
-        <div className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1.5 text-xs">
+        <div className="flex items-center gap-1 rounded-md bg-slate-50 px-2 py-1.5 text-xs dark:bg-dark-900 dark:text-white">
           <span>{t('Min Order')}</span>
           <span>
             {CURRENT_SYMBOL}
@@ -264,7 +264,7 @@ export default function RestaurantCard({ restaurant }: IRestaurantCardProps) {
             type="button"
             aria-label={t('Delete')}
             onClick={handleDelete}
-            className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500"
+            className="grid h-8 w-8 place-items-center rounded text-slate-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950 dark:hover:text-red-400"
           >
             <FontAwesomeIcon icon={faTrash} />
           </button>

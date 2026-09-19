@@ -159,6 +159,21 @@ export const RESTAURANT_TABLE_COLUMNS = ({
         const summary = store.documentSummary;
         if (!summary) return <span className="text-slate-400">?</span>;
         const complete = summary.verified >= summary.required;
+        // Document verification only GATES onboarding for a store still
+        // PENDING approval — an already-APPROVED store (including every
+        // admin-created / pre-existing store, which defaults to APPROVED
+        // and never had a StoreDocument to begin with, per schema.prisma)
+        // isn't blocked on this, so it shouldn't show "Missing" either.
+        // Matches the same PENDING gate stores-overview.tsx uses for the
+        // "Setup incomplete" stat card and tab.
+        if (!complete && store.approvalStatus !== 'PENDING') {
+          return (
+            <span title="Document verification only applies while pending approval" className="stores-badge green">
+              <i className="pi pi-check-circle" />
+              Not required
+            </span>
+          );
+        }
         return (
           <span
             title="Verified required documents"

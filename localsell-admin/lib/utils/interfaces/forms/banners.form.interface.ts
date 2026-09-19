@@ -8,7 +8,7 @@ export type IBannersForm = {
   file: string;
   placement: IDropdownSelectItem | null;
   priority: number;
-  couponCode: string;
+  couponCode: IDropdownSelectItem | null;
   startDate: string;
   endDate: string;
   isActive: boolean;

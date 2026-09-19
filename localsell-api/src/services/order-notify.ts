@@ -5,7 +5,8 @@
  * back into the order mutation. Templates + variable order: LOCALSELL_WHATSAPP.md.
  */
 import { prisma } from '../prisma/client';
-import { sendWhatsAppTemplateAsync } from '../utils/notifications';
+import { sendWhatsAppTemplateAsync, sendWhatsAppDocumentTemplate } from '../utils/notifications';
+import { ensureInvoice } from './invoice.service';
 
 export type OrderNotifyEvent =
   | 'PLACED'
@@ -87,6 +88,21 @@ async function run(orderDbId: string, event: OrderNotifyEvent): Promise<void> {
       sendWhatsAppTemplateAsync('order_delivered', customer?.phone, [
         firstName(customer?.name), num, storeName, `${money(order.orderAmount)}, ${paid}`,
       ], { purpose: 'ORDER_UPDATE', userId: customer?.id, userType: 'CUSTOMER' });
+
+      // Invoice PDF + WhatsApp document send — best-effort, must never affect
+      // the order itself or block the status message above.
+      if (customer?.phone) {
+        ensureInvoice(orderDbId)
+          .then((inv) => {
+            if (!inv) return;
+            void sendWhatsAppDocumentTemplate(
+              'order_invoice', customer.phone!, [firstName(customer.name), num],
+              inv.publicUrl, `Invoice-${inv.invoiceNumber.replace(/\//g, '-')}.pdf`,
+              { purpose: 'ORDER_UPDATE', userId: customer.id, userType: 'CUSTOMER' },
+            );
+          })
+          .catch((err) => console.error(`[order-notify] invoice for ${orderDbId} failed:`, (err as Error).message));
+      }
       return;
     }
     case 'CANCELLED':

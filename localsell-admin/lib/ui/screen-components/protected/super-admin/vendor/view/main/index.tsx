@@ -108,7 +108,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
           <div className="mb-4 flex items-center justify-between">
             <HeaderText text={t('Vendors')} />
             <TextIconClickable
-              className="rounded border-gray-300 bg-black dark:bg-dark-950 dark:border-dark-600 text-white sm:w-auto"
+              className="rounded border border-primary bg-primary text-white dark:border-dark-600 sm:w-auto"
               icon={faAdd}
               iconStyles={{ color: 'white' }}
               title={t('Add Vendor')}
@@ -140,7 +140,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
             <p className="text-sm font-semibold text-slate-900 dark:text-white">
               {t('Vendors')} ({vendorTotal})
             </p>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               Select a vendor to manage its stores
             </p>
           </div>
@@ -179,7 +179,7 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
         </div>
         {vendorTotal > 0 && (
           <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-xs dark:border-dark-600">
-            <span className="text-slate-500">
+            <span className="text-slate-500 dark:text-slate-400">
               {(vendorPage - 1) * vendorPageSize + 1}–
               {Math.min(vendorPage * vendorPageSize, vendorTotal)} of{' '}
               {vendorTotal}
@@ -232,11 +232,11 @@ export default function VendorMain({ activeTab }: IVendorMainComponentProps) {
                 <p className="truncate text-base font-semibold text-slate-900 dark:text-white">
                   {selectedVendor.businessName || selectedVendor.name || t('Vendor')}
                 </p>
-                <p className="truncate text-xs text-slate-500">
+                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                   {selectedVendor.email}
                 </p>
               </div>
-              <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600">
+              <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600 dark:bg-green-950 dark:text-green-400">
                 Active
               </span>
             </div>

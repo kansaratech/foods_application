@@ -19,7 +19,7 @@ export default function VendorHeader() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <HeaderText text={`${t('Vendors')} & ${t('Stores')}`} />
-          <p className="mt-1 text-sm text-slate-500">Manage vendor accounts and their store locations</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Manage vendor accounts and their store locations</p>
         </div>
 
         <TextIconClickable

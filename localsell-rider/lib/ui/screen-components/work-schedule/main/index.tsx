@@ -365,17 +365,21 @@ export default function ScheduleScreen() {
                                   type: "start",
                                 })
                               }
-                              className={`w-[40%] bg-white p-2 rounded-md`}
-                              style={
-                                isStartTapped ? style.tappedSlot : style.slot
-                              }
+                              className="w-[40%] p-2 rounded-md"
+                              style={[
+                                { backgroundColor: appTheme.cartContainer },
+                                isStartTapped ? style.tappedSlot : style.slot,
+                              ]}
                             >
-                              <Text className="text-center">
+                              <Text
+                                className="text-center"
+                                style={{ color: appTheme.fontMainColor }}
+                              >
                                 {slot.startTime}
                               </Text>
                             </TouchableOpacity>
 
-                            <Text>-</Text>
+                            <Text style={{ color: appTheme.fontMainColor }}>-</Text>
 
                             {/* End Time Button */}
                             <TouchableOpacity
@@ -386,12 +390,16 @@ export default function ScheduleScreen() {
                                   type: "end",
                                 })
                               }
-                              className="w-[40%] bg-white p-2 rounded-md"
-                              style={
-                                isEndTapped ? style.tappedSlot : style.slot
-                              }
+                              className="w-[40%] p-2 rounded-md"
+                              style={[
+                                { backgroundColor: appTheme.cartContainer },
+                                isEndTapped ? style.tappedSlot : style.slot,
+                              ]}
                             >
-                              <Text className="text-center">
+                              <Text
+                                className="text-center"
+                                style={{ color: appTheme.fontMainColor }}
+                              >
                                 {slot.endTime}
                               </Text>
                             </TouchableOpacity>
@@ -482,7 +490,7 @@ export default function ScheduleScreen() {
               bottom: -80,
               left: 5,
               right: 5,
-              backgroundColor: "white",
+              backgroundColor: appTheme.cartContainer,
               shadowColor: "#000",
               shadowOpacity: 0.2,
               shadowRadius: 5,
@@ -529,7 +537,10 @@ export default function ScheduleScreen() {
                   }
                   className="p-2 border-b border-gray-300"
                 >
-                  <Text className="font-[Inter] text-center text-lg">
+                  <Text
+                    className="font-[Inter] text-center text-lg"
+                    style={{ color: appTheme.fontMainColor }}
+                  >
                     {time}
                   </Text>
                 </TouchableOpacity>

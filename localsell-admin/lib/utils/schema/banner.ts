@@ -31,7 +31,12 @@ export const BannerSchema = Yup.object().shape({
     })
     .required('Required'),
   priority: Yup.number().min(0, 'Must be zero or more').required('Required'),
-  couponCode: Yup.string().max(35).trim(),
+  couponCode: Yup.object()
+    .shape({
+      label: Yup.string().required(),
+      code: Yup.string().required(),
+    })
+    .nullable(),
   startDate: Yup.string(),
   endDate: Yup.string().test(
     'after-start',

@@ -16,6 +16,8 @@ export const GET_BANNERS = gql`
       priority
       couponCode
       isActive
+      shopType
+      slug
     }
   }
 `;

@@ -13,6 +13,9 @@ export const bannerTypeDefs = /* GraphQL */ `
     priority: Int
     couponCode: String
     isActive: Boolean
+    "Only set when action is 'Navigate Specific Restaurant' (screen holds that restaurant's id) — resolved LIVE from the restaurant, never cached on the banner, so routing never goes stale if the store's type/slug changes after the banner was created."
+    shopType: String
+    slug: String
   }
 
   input BannerInput {

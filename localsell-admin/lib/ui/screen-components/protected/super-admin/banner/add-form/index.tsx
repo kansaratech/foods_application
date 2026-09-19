@@ -5,6 +5,7 @@ import {
   GET_RESTAURANTS_DROPDOWN,
 } from '@/lib/api/graphql';
 import { GET_BANNERS } from '@/lib/api/graphql/queries/banners';
+import { GET_COUPONS } from '@/lib/api/graphql/queries/coupons';
 import { useQueryGQL } from '@/lib/hooks/useQueryQL';
 import useToast from '@/lib/hooks/useToast';
 // import useToast from '@/lib/hooks/useToast';
@@ -46,6 +47,16 @@ const BannersAddForm = ({
     { restaurants?: Pick<IRestaurantResponse, '_id' | 'name'>[] } | undefined,
     undefined
   >;
+  // A banner's coupon code has to be a REAL, enabled coupon — a free-typed
+  // code that doesn't exist in the Coupon table just silently never applies
+  // at checkout (#118). Sourcing options from the same Coupons screen data
+  // makes that impossible instead of relying on the admin typing it exactly right.
+  const { data: couponsData } = useQueryGQL(GET_COUPONS, {
+    fetchPolicy: 'cache-and-network',
+  }) as IQueryResult<
+    { coupons?: { _id: string; title: string; enabled?: boolean | null }[] } | undefined,
+    undefined
+  >;
 
   // Hooks
   const t = useTranslations();
@@ -58,6 +69,14 @@ const BannersAddForm = ({
       })) ?? []
     ); // Using nullish coalescing operator
   }, [data]);
+
+  const COUPON_OPTIONS = useMemo(() => {
+    return (
+      couponsData?.coupons
+        ?.filter((c) => c.enabled !== false)
+        .map((c) => ({ label: c.title, code: c.title })) ?? []
+    );
+  }, [couponsData]);
 
   //State
   const initialValues: IBannersForm = {
@@ -90,7 +109,9 @@ const BannersAddForm = ({
         }
       : PLACEMENT_OPTIONS[0],
     priority: banner?.priority ?? 0,
-    couponCode: banner?.couponCode || '',
+    couponCode: banner?.couponCode
+      ? { label: banner.couponCode, code: banner.couponCode }
+      : null,
     startDate: banner?.startDate ? banner.startDate.split('T')[0] : '',
     endDate: banner?.endDate ? banner.endDate.split('T')[0] : '',
     isActive: banner?.isActive ?? true,
@@ -120,7 +141,7 @@ const BannersAddForm = ({
           screen: values.screen?.code,
           placement: values.placement?.code ?? 'HOME',
           priority: Number(values.priority) || 0,
-          couponCode: values.couponCode?.trim() || null,
+          couponCode: values.couponCode?.code || null,
           startDate: values.startDate || null,
           endDate: values.endDate || null,
           isActive: values.isActive,
@@ -375,15 +396,28 @@ const BannersAddForm = ({
                   </div>
 
                   <div>
-                    <CustomTextField
-                      type="text"
-                      name="couponCode"
+                    <CustomDropdownComponent
                       placeholder={t('Coupon Code')}
-                      maxLength={35}
-                      value={values.couponCode}
-                      onChange={handleChange}
+                      options={COUPON_OPTIONS}
                       showLabel={true}
+                      name="couponCode"
+                      selectedItem={values.couponCode}
+                      setSelectedItem={setFieldValue}
+                      style={{
+                        borderColor: onErrorMessageMatcher(
+                          'couponCode',
+                          errors?.couponCode,
+                          BannersErrors
+                        )
+                          ? 'red'
+                          : '',
+                      }}
                     />
+                    {COUPON_OPTIONS.length === 0 && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        {t('No enabled coupons yet — create one in the Coupons screen first.')}
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>

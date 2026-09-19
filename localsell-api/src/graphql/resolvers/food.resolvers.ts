@@ -112,10 +112,14 @@ async function assertUniqueFoodTitle(restaurantId: string, title: string, exclud
   const normalizedTitle = title.trim().replace(/\s+/g, ' ').toLowerCase();
   if (!normalizedTitle) throw userInputError('Title is required');
   // Compare existing titles too: older records may contain extra whitespace.
-  // Uniqueness is store-wide, regardless of category, price or visibility.
+  // Uniqueness is store-wide, regardless of category or price — but NOT
+  // regardless of visibility: an inactive/deactivated food (soft-deleted, or
+  // left behind by a menu-replace on a store with order history — see
+  // cloneMenu) shouldn't block reusing its title for a new or edited item.
   const foods = await prisma.food.findMany({
     where: {
       restaurantId,
+      isActive: true,
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
     select: { title: true },
@@ -124,6 +128,22 @@ async function assertUniqueFoodTitle(restaurantId: string, title: string, exclud
     food.title.trim().replace(/\s+/g, ' ').toLowerCase() === normalizedTitle,
   );
   if (existing) throw userInputError(`A food item named "${title.trim()}" already exists in this store.`);
+}
+
+async function assertUniqueCategoryTitle(restaurantId: string, title: string, excludeId?: string): Promise<void> {
+  const normalizedTitle = title.trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!normalizedTitle) throw userInputError('Title is required');
+  const categories = await prisma.category.findMany({
+    where: {
+      restaurantId,
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+    select: { title: true },
+  });
+  const existing = categories.some(
+    (c) => c.title.trim().replace(/\s+/g, ' ').toLowerCase() === normalizedTitle,
+  );
+  if (existing) throw userInputError(`A category named "${title.trim()}" already exists in this store.`);
 }
 
 interface ComboItemInputArgs {
@@ -470,13 +490,28 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
         }
       }
 
-      // 1. Add-ons + options (old id → new id).
-      const srcAddons = await prisma.addon.findMany({
-        where: { restaurantId: source.id },
-        include: { options: true },
-      });
+      // Normalized-title lookups of what the target already has, so a second
+      // clone run (e.g. re-syncing after the source menu changed) skips what's
+      // already there instead of creating duplicate categories/foods with the
+      // same title — the duplicates were otherwise invisible in the UI (two
+      // same-named categories look identical) but broke editing, since the
+      // per-store unique-title check would find the "other" copy (#118-clone).
+      const norm = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
+
+      // 1. Add-ons + options (old id → new id). Reuse a same-titled target
+      // add-on instead of creating a second one.
+      const [srcAddons, existingTargetAddons] = await Promise.all([
+        prisma.addon.findMany({ where: { restaurantId: source.id }, include: { options: true } }),
+        prisma.addon.findMany({ where: { restaurantId: target.id }, select: { id: true, title: true } }),
+      ]);
+      const existingAddonByTitle = new Map(existingTargetAddons.map((a) => [norm(a.title), a.id]));
       const addonIdMap = new Map<string, string>();
       for (const a of srcAddons) {
+        const reuseId = existingAddonByTitle.get(norm(a.title));
+        if (reuseId) {
+          addonIdMap.set(a.id, reuseId);
+          continue;
+        }
         const created = await prisma.addon.create({
           data: {
             restaurantId: target.id,
@@ -492,17 +527,36 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
         addonIdMap.set(a.id, created.id);
       }
 
-      // 2. Categories → foods → variations → variation/add-on links.
-      const srcCategories = await prisma.category.findMany({
-        where: { restaurantId: source.id },
-        include: { foods: { include: { variations: { include: { addons: true } } } } },
-      });
+      // 2. Categories → foods → variations → variation/add-on links. Reuse a
+      // same-titled target category; skip a food that already exists there.
+      const [srcCategories, existingTargetCategories, existingTargetFoods] = await Promise.all([
+        prisma.category.findMany({
+          where: { restaurantId: source.id },
+          include: { foods: { include: { variations: { include: { addons: true } } } } },
+        }),
+        prisma.category.findMany({ where: { restaurantId: target.id }, select: { id: true, title: true } }),
+        // Only active foods count as "already there" — a deactivated one
+        // (e.g. from a `replace` on a store with order history, which can
+        // only deactivate, never delete, per the FK note above) should still
+        // get a fresh active replacement, not be treated as a duplicate.
+        prisma.food.findMany({ where: { restaurantId: target.id, isActive: true }, select: { title: true } }),
+      ]);
+      const existingCategoryByTitle = new Map(existingTargetCategories.map((c) => [norm(c.title), c.id]));
+      const existingFoodTitles = new Set(existingTargetFoods.map((f) => norm(f.title)));
       let items = 0;
+      let skipped = 0;
       for (const c of srcCategories) {
-        const newCategory = await prisma.category.create({
-          data: { restaurantId: target.id, title: c.title, image: c.image },
-        });
+        const reuseCategoryId = existingCategoryByTitle.get(norm(c.title));
+        const newCategory = reuseCategoryId
+          ? { id: reuseCategoryId }
+          : await prisma.category.create({
+              data: { restaurantId: target.id, title: c.title, image: c.image },
+            });
         for (const f of c.foods) {
+          if (existingFoodTitles.has(norm(f.title))) {
+            skipped += 1;
+            continue;
+          }
           const newFood = await prisma.food.create({
             data: {
               restaurantId: target.id,
@@ -516,6 +570,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
               isOutOfStock: f.isOutOfStock,
             },
           });
+          existingFoodTitles.add(norm(f.title));
           items += 1;
           for (const v of f.variations) {
             const newVariation = await prisma.variation.create({
@@ -540,13 +595,14 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
         action: 'menu.clone',
         targetType: 'Restaurant',
         targetId: target.id,
-        summary: `Cloned menu from ${source.name} to ${target.name} (${srcCategories.length} categories, ${items} items${args.replace ? ', replaced existing' : ''})`,
+        summary: `Cloned menu from ${source.name} to ${target.name} (${srcCategories.length} categories, ${items} items${skipped ? `, ${skipped} already present skipped` : ''}${args.replace ? ', replaced existing' : ''})`,
       });
       return prisma.restaurant.findUnique({ where: { id: target.id } });
     },
 
     createCategory: async (_parent, args: { category: CategoryInputArgs }, context) => {
       await assertOwnsRestaurant(context, args.category.restaurant);
+      await assertUniqueCategoryTitle(args.category.restaurant, args.category.title);
       await prisma.category.create({
         data: { restaurantId: args.category.restaurant, title: args.category.title, image: args.category.image },
       });
@@ -555,6 +611,7 @@ export const foodResolvers: IResolvers<unknown, GraphQLContext> = {
     editCategory: async (_parent, args: { category: CategoryInputArgs }, context) => {
       await assertOwnsRestaurant(context, args.category.restaurant);
       if (!args.category._id) throw notFoundError('Category _id is required to edit');
+      await assertUniqueCategoryTitle(args.category.restaurant, args.category.title, args.category._id);
       await prisma.category.update({
         where: { id: args.category._id },
         data: { title: args.category.title, image: args.category.image },

@@ -272,6 +272,14 @@ export default function RestaurantsMain() {
     store.approvalStatus === 'PENDING' &&
     !!store.documentSummary &&
     store.documentSummary.verified < store.documentSummary.required;
+  // Kept in sync with the "Inactive" stat/tab count in StoresOverview — the
+  // one bucket the other three (Live / Pending / [implicit APPROVED&&active])
+  // don't cover, so Total always equalled Live + Pending + 1 unaccounted
+  // store whenever one existed (#118).
+  const isInactive = (store: StoreListRow) =>
+    store.approvalStatus === 'REJECTED' ||
+    store.approvalStatus === 'SUSPENDED' ||
+    (store.approvalStatus === 'APPROVED' && !store.isActive);
   const filteredStores = allStores.filter((store) => {
     const search = debouncedSearchTerm.trim().toLowerCase();
     return (
@@ -286,6 +294,7 @@ export default function RestaurantsMain() {
       (currentTab !== 'Cloned' || clonedIds.has(store._id)) &&
       (view !== 'pending' || store.approvalStatus === 'PENDING') &&
       (view !== 'incomplete' || incomplete(store)) &&
+      (view !== 'inactive' || isInactive(store)) &&
       (!zone || store.zone?._id === zone) &&
       (!approval || store.approvalStatus === approval) &&
       (!availability || store.isActive === (availability === 'live')) &&

@@ -13,6 +13,7 @@
     "db:deploy": "ts-node --transpile-only prisma/deploy/run.ts",
     "db:backfill": "ts-node --transpile-only prisma/backfill-commission.ts",
     "verify": "node scripts/verify-launch.mjs",
+    "test:cashfree": "node scripts/test-cashfree-scenarios.mjs",
     "seed": "ts-node --transpile-only prisma/seed-from-config.ts",
     "seed:prod": "SEED_DATA_FILE=seed-data.prod.json ts-node --transpile-only prisma/seed-from-config.ts",
     "rebrand:emails": "ts-node --transpile-only prisma/rebrand-emails.ts",
@@ -35,6 +36,7 @@
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^3.3.7",
     "nodemailer": "^10.0.0",
+    "pdfkit": "^0.15.2",
     "subscriptions-transport-ws": "^0.11.0",
     "twilio": "^6.1.0",
     "ws": "^8.18.0"
@@ -49,6 +51,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.16.0",
     "@types/nodemailer": "^8.0.1",
+    "@types/pdfkit": "^0.13.9",
     "@types/ws": "^8.5.12",
     "prisma": "^6.19.3",
     "ts-node": "^10.9.2",

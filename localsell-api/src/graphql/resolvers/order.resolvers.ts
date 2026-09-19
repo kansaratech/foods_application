@@ -6,7 +6,8 @@ import { requireAuth, requireRole } from '../../middleware/auth';
 import { buildOrderItems, generateDisplayOrderId, OrderItemInput } from '../../services/order.service';
 import { computeDeliveryFee, computeGst } from '../../services/pricing.service';
 import { notifyOrderEvent } from '../../services/order-notify';
-import { attemptCashfreeRefund, refundOrderIfEligible } from '../../services/refund.service';
+import { invoicePublicUrl } from '../../services/invoice.service';
+import { attemptCashfreeRefund, refundOrderIfEligible, reconcileOrderRefund } from '../../services/refund.service';
 import { notFoundError, userInputError } from '../../utils/errors';
 import { distanceKm, pointInPolygon } from '../../utils/geo';
 import { pubsub, TOPICS } from '../../utils/pubsub';
@@ -1132,6 +1133,18 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       return attemptCashfreeRefund(order);
     },
 
+    // Admin-only: a PENDING/PROCESSING refund only ever resolves via the
+    // REFUND_STATUS_WEBHOOK — if that's missed (or never configured in the
+    // Cashfree dashboard), it sits "processing" forever with no other way to
+    // find out it actually succeeded. This checks directly against Cashfree.
+    recheckOrderRefund: async (_parent, args: { orderId: string }, context) => {
+      requireRole(context, ['ADMIN']);
+      const order = await prisma.order.findUnique({ where: { id: args.orderId } });
+      if (!order) throw notFoundError('Order not found');
+      const updated = await reconcileOrderRefund(order.id);
+      return updated ?? order;
+    },
+
     muteRing: async (_parent, args: { orderId?: string }, context) => {
       const currentUser = requireRole(context, ['ADMIN', 'VENDOR']);
       if (!args.orderId) return true;
@@ -1165,6 +1178,7 @@ export const orderResolvers: IResolvers<unknown, GraphQLContext> = {
       return u.userType === 'ADMIN' || u.id === parent.userId ? parent.deliveryOtp : null;
     },
     items: (parent: Order) => prisma.orderItem.findMany({ where: { orderId: parent.id } }),
+    invoiceUrl: (parent: Order) => (parent.invoiceNumber ? invoicePublicUrl(parent.id) : null),
     orderDate: (parent: Order) => parent.orderDate?.toISOString(),
     createdAt: (parent: Order) => parent.createdAt?.toISOString(),
     updatedAt: (parent: Order) => parent.updatedAt?.toISOString(),
