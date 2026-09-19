@@ -10,9 +10,12 @@ import {
   IMyPayoutHistoryResponse,
   IPayoutRunItemRow,
 } from '@/lib/utils/interfaces';
+import { formatCurrency } from '@/lib/utils/methods/currency';
 
-const money = (n: number) =>
-  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+// Canonical always-2dp formatter — this is the vendor's OWN payout history,
+// must agree exactly with what admin sees for the same payout (see LOCALSELL
+// money-formatting audit).
+const money = (n: number) => formatCurrency(n ?? 0, true);
 const day = (d?: string | null) =>
   d
     ? new Date(d).toLocaleDateString(undefined, {

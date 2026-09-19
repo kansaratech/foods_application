@@ -7,8 +7,8 @@ import CustomNumberField from '@/lib/ui/useable-components/number-input-field';
 import useToast from '@/lib/hooks/useToast';
 import { useMutation } from '@apollo/client';
 import { CREATE_WITHDRAW_REQUEST } from '@/lib/api/graphql';
-import { useConfiguration } from '@/lib/hooks/useConfiguration';
 import { useTranslations } from 'next-intl';
+import { formatCurrency } from '@/lib/utils/methods';
 import * as Yup from 'yup';
 
 interface IWithdrawRequestFormProps {
@@ -32,7 +32,6 @@ export default function WithdrawRequestAddForm({
   const { restaurantProfileResponse } = useContext(ProfileContext);
 
   const t = useTranslations();
-  const { CURRENT_SYMBOL } = useConfiguration();
 
   const currentWalletAmount =
     restaurantProfileResponse?.data?.restaurant?.currentWalletAmount || 0;
@@ -119,8 +118,7 @@ export default function WithdrawRequestAddForm({
                   )}
 
                   <div className="text-sm text-gray-500 dark:text-white">
-                    {t('available_balance')}: {CURRENT_SYMBOL}
-                    {currentWalletAmount?.toLocaleString('en-US')}
+                    {t('available_balance')}: {formatCurrency(currentWalletAmount ?? 0, true)}
                   </div>
 
                   <CustomButton

@@ -11,7 +11,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { ToastContext } from '@/lib/context/global/toast.context';
 import ActionMenu from '@/lib/ui/useable-components/action-menu';
-import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import { formatCurrency } from '@/lib/utils/methods';
 import { useMutation } from '@apollo/client';
 import {
   UPDATE_WITHDRAW_REQUEST,
@@ -45,8 +45,6 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
   });
   const [selectedWithDrawRequest, setSelectedWithDrawRequest] =
     useState<string>('');
-
-  const { CURRENT_SYMBOL } = useConfiguration();
 
   const [updateWithdrawReqStatus, { loading: status_change_loading }] =
     useMutation(UPDATE_WITHDRAW_REQUEST, {
@@ -251,8 +249,7 @@ export const WITHDRAW_REQUESTS_TABLE_COLUMNS = ({
         propertyName: 'requestAmount',
         body: (rowData: IWithDrawRequest) => (
           <span className="font-medium">
-            {CURRENT_SYMBOL || '₹'}
-            {rowData?.requestAmount.toFixed(2)}
+            {formatCurrency(rowData?.requestAmount ?? 0, true)}
           </span>
         ),
       },

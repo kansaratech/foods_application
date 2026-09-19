@@ -1,194 +1,30 @@
 "use client";
-import { useRouter } from "next/navigation";
-import Image from '@/lib/ui/useable-components/safe-image';
-import React, { useEffect, useRef, useState } from "react";
-import CustomDialog from "@/lib/ui/useable-components/custom-dialog";
-import {
-  isRestaurantOpen,
-  Restaurant,
-} from "../../../../../lib/utils/constants/isRestaurantOpen";
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import Image from "@/lib/ui/useable-components/safe-image";
+import { FiArrowUpRight, FiMapPin, FiStar, FiCheck } from "react-icons/fi";
+import { IRestaurant } from "@/lib/utils/interfaces/restaurants.interface";
+import { isRestaurantOpen } from "@/lib/utils/constants/isRestaurantOpen";
+import styles from "./explore.module.css";
 
-interface SideListProps {
-  slug: string;
-  data: Array<Restaurant>;
-  onHover: (coordinates: { lat: number; lng: number } | null) => void;
+export default function SideList({ data, selectedId, onSelect }: { data: IRestaurant[]; selectedId: string | null; onSelect: (id: string) => void }) {
+  const refs = useRef<Record<string, HTMLElement | null>>({});
+  useEffect(() => { if (selectedId) (() => {
+    const card = refs.current[selectedId];
+    const scroller = card?.parentElement?.parentElement;
+    if (!card || !scroller) return;
+    const cardBox = card.getBoundingClientRect();
+    const listBox = scroller.getBoundingClientRect();
+    if (cardBox.top < listBox.top || cardBox.bottom > listBox.bottom) scroller.scrollBy({ top: cardBox.top - listBox.top - 12, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  })(); }, [selectedId]);
+  return <div className={styles.cards}>{data.map((item) => {
+    const open = isRestaurantOpen(item);
+    return <article key={item._id} ref={node => { refs.current[item._id] = node; }} className={`${styles.card} ${selectedId === item._id ? styles.selected : ""}`}>
+      <button type="button" className={styles.cardMain} onClick={() => onSelect(item._id)} aria-pressed={selectedId === item._id} aria-label={`Show ${item.name} on map`}>
+        <div className={styles.photo}><Image src={item.image} alt="" width={88} height={88} /><span>{selectedId === item._id ? <FiCheck /> : <FiMapPin />}</span></div>
+        <div className={styles.details}><h2>{item.name}</h2><p><FiMapPin />{item.address || "Address not listed"}</p><div className={styles.meta}><span><FiStar />{Number(item.reviewAverage) > 0 ? `${Number(item.reviewAverage).toFixed(1)} (${item.reviewCount || 0})` : "New here"}</span><span className={open ? styles.open : styles.closed}>{open ? "Open now" : "Closed"}</span></div></div>
+      </button>
+      <div className={styles.cardFooter}><span>{selectedId === item._id ? "Selected on map" : "Select to locate on map"}</span><Link href={`/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item.slug}/${item._id}`}>{item.shopType === "restaurant" ? "View menu" : "Visit store"}<FiArrowUpRight /></Link></div>
+    </article>;
+  })}</div>;
 }
-
-const SideList: React.FC<SideListProps> = ({ data, onHover }) => {
-  const router = useRouter();
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  const [isModalOpen, setIsModalOpen] = useState({
-    value: false,
-    id: null as string | null,
-  });
-
-  const [selectedItem, setSelectedItem] = useState<Restaurant | null>(null);
-
-  const handleUpdateIsModalOpen = (value: boolean, id: string, item?: any) => {
-    setIsModalOpen({ value, id });
-    if (value && item) setSelectedItem(item);
-  };
-
-  const getRedirectUrl = (item: Restaurant) => {
-    return `/${item.shopType === "restaurant" ? "restaurant" : "store"}/${item.slug}/${item._id}`;
-  };
-
-  useEffect(() => {
-    const isTouchDevice = window.matchMedia("(hover: none)").matches;
-    if (!isTouchDevice) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const index = itemRefs.current.findIndex(
-              (ref) => ref === entry.target
-            );
-            if (index !== -1) {
-              const item = data[index];
-              onHover({
-                lat: Number(item.location.coordinates[1]),
-                lng: Number(item.location.coordinates[0]),
-              });
-            }
-          }
-        });
-      },
-      { root: null, threshold: 0.6 }
-    );
-
-    itemRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => {
-      itemRefs.current.forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
-    };
-  }, [data, onHover]);
-
-  return (
-    <>
-      {/* LIST UI */}
-      <div className="md:shadow-lg md:pt-8 md:bg-white dark:bg-gray-900 md:rounded-lg overflow-y-auto h-full md:pb-12 md:p-4 pl-2">
-        <div
-          className="flex md:flex-col gap-4 flex-shrink-0 overflow-x-auto scroll-snap-x w-full md:pb-0 pb-2"
-          style={{ scrollSnapType: "x mandatory" }}
-        >
-          {data.map((item, index) => {
-            const open = isRestaurantOpen(item);
-
-            return (
-              <div
-                key={item._id}
-                ref={(el) => {
-                  itemRefs.current[index] = el;
-                }}
-                className="bg-white dark:bg-gray-800 flex items-center p-3 border border-gray-200 dark:border-gray-400 rounded-lg hover:shadow-md transition-shadow flex-shrink-0 md:w-auto w-[85%] cursor-pointer"
-                style={{ scrollSnapAlign: "start" }}
-                onMouseEnter={() =>
-                  onHover({
-                    lat: Number(item.location.coordinates[1]),
-                    lng: Number(item.location.coordinates[0]),
-                  })
-                }
-                onClick={() => {
-                  if (!open) {
-                    handleUpdateIsModalOpen(true, item._id, item);
-                    return;
-                  }
-                  router.push(getRedirectUrl(item));
-                }}
-              >
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  width={64}
-                  height={64}
-                  className="object-cover rounded-md mr-4 rtl:ml-4"
-                  style={{ minWidth: "64px", minHeight: "64px" }}
-                />
-
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                    {item.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-white">
-                    {item.address}
-                  </p>
-
-                  <div className="flex items-center text-sm text-gray-500 mt-1 dark:text-white">
-                    {Number(item.reviewAverage) > 0 ? (
-                      <>
-                        <span className="mr-2 rtl:ml-2">
-                          ⭐ {Number(item.reviewAverage).toFixed(1)}
-                        </span>
-                        <span>({item.reviewCount ?? 0} reviews)</span>
-                      </>
-                    ) : (
-                      <span>No reviews yet</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center text-sm font-semibold mt-1">
-                    {open ? (
-                      <span className="text-green-600">Open</span>
-                    ) : (
-                      <span className="text-red-600">Closed</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* MODAL */}
-      {selectedItem && (
-        <CustomDialog
-          className="max-w-[300px]"
-          visible={isModalOpen.value && isModalOpen.id === selectedItem._id}
-          onHide={() => handleUpdateIsModalOpen(false, selectedItem._id)}
-        >
-          <div className="text-center pt-10 dark:text-white">
-            <p className="text-lg font-bold pb-3">
-              {selectedItem.shopType === "restaurant" ? "Restaurant" : "Store"}{" "}
-              is closed
-            </p>
-
-            <p className="text-sm">Do you want to see menu?</p>
-
-            <div className="flex pt-9 px-2 pb-2 flex-row justify-center items-center gap-2 w-full">
-              <button
-                style={{ fontSize: "14px", fontWeight: "normal" }}
-                onClick={() => handleUpdateIsModalOpen(false, selectedItem._id)}
-                className="w-1/2 bg-red-300 text-black dark:text-white dark:bg-red-500 rounded-md min-h-10"
-              >
-                Close
-              </button>
-
-              <button
-                style={{ fontSize: "14px", fontWeight: "normal" }}
-                onClick={() => {
-                  handleUpdateIsModalOpen(false, selectedItem._id);
-
-                  setTimeout(() => {
-                    router.push(getRedirectUrl(selectedItem));
-                  }, 100);
-                }}
-                className="w-1/2 bg-primary-color text-white dark:text-white rounded-md min-h-10"
-              >
-                See Menu
-              </button>
-            </div>
-          </div>
-        </CustomDialog>
-      )}
-    </>
-  );
-};
-
-export default SideList;

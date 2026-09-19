@@ -17,7 +17,12 @@ export type OrderNotifyEvent =
   | 'CANCELLED'
   | 'RIDER_ASSIGNED';
 
-const money = (n: number) => `₹${Math.round(n)}`;
+// Was rounding to whole rupees — a ₹639.50 payment showed as "₹640" here
+// while the order-details page (which uses .toFixed(2), see
+// order-payment-panel.tsx) correctly showed the exact ₹639.50, so the two
+// never agreed. Match the same precise formatting everywhere paid/order
+// amounts are shown to the customer.
+const money = (n: number) => `₹${n.toFixed(2)}`;
 const paymentLabel = (m: string) => (m?.toUpperCase() === 'COD' ? 'Cash on delivery' : m || 'Online');
 const firstName = (name?: string | null) => (name?.trim().split(/\s+/)[0] || 'there');
 const shortArea = (a?: { label?: string | null; details?: string | null; deliveryAddress?: string | null } | null) =>

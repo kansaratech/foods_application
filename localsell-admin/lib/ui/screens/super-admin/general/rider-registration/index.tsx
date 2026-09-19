@@ -697,8 +697,10 @@ export default function RiderRegistrationScreen() {
 
               <ReauthGate
                 open={needsReauth}
-                title={t('Confirm your password')}
-                description={t('For security, re-enter your password to edit this rider.')}
+                title={t('Confirm your admin password')}
+                description={t(
+                  'For security, re-enter your own admin login password to edit this rider — this is not the rider\'s password.'
+                )}
                 onVerified={() => setReauthed(true)}
                 onCancel={() => router.push('/general/riders')}
               />

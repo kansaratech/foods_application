@@ -1235,3 +1235,11 @@ html.dark button.p-button.bg-white:hover:not(:disabled) {
   outline-offset: 3px;
   box-shadow: 0 0 0 4px var(--primary-focus);
 }
+
+/* Keep focused fields readable without mobile Safari zooming the whole page. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea, select { font-size: 16px; }
+}
+
+html { scroll-padding-top: calc(var(--app-header-height, 64px) + 12px); }

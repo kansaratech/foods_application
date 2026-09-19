@@ -91,7 +91,7 @@ export default function Start() {
                 Show Items <FiArrowRight aria-hidden="true" />
               </button>
             </div>
-            <LocationPopover open={isLocationOpen} onClose={() => setIsLocationOpen(false)} currentAddress={userAddress?.deliveryAddress || ""} anchorClassName="left-0 top-full !w-full sm:!w-[400px]" />
+            <LocationPopover open={isLocationOpen} onClose={() => setIsLocationOpen(false)} currentAddress={userAddress?.deliveryAddress || ""} anchorClassName="left-0 top-full !w-full" />
           </div>
           {error && <p role="alert" className={styles.error}>{error}</p>}
           <div className={styles.categories} role="group" aria-label="Choose what to explore">

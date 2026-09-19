@@ -42,7 +42,7 @@ function UserTicketCard({
   // Format time ago from timestamp
   const formatTimeAgo = (timestamp: string) => {
     try {
-      const date = new Date(parseInt(timestamp));
+      const date = new Date(timestamp);
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
       

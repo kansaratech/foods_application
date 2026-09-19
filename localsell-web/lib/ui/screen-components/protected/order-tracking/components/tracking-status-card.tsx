@@ -82,6 +82,19 @@ function TrackingStatusCard({ orderTrackingDetails }: TrackingStatusCardProps) {
       return `${formatTime(min)} - ${formatTime(max)}`;
     };
 
+    // Once picked up, prep is finished — the remaining leg is purely the
+    // rider's travel time, so this must NOT reuse `prep` minutes (that would
+    // silently re-add kitchen prep time that has already happened).
+    const getLastMileRangeFrom = (base: Date | string | number) => {
+      const min = new Date(base);
+      min.setMinutes(min.getMinutes() + 10);
+
+      const max = new Date(base);
+      max.setMinutes(max.getMinutes() + 20);
+
+      return `${formatTime(min)} - ${formatTime(max)}`;
+    };
+
     switch (d.orderStatus) {
       case "PENDING":
         return `${Math.max(5, prep - 10)} - ${prep} min`;
@@ -94,7 +107,10 @@ function TrackingStatusCard({ orderTrackingDetails }: TrackingStatusCardProps) {
         return `${Math.max(5, prep - 10)} - ${prep} min`;
 
       case "PICKED":
-        return d.pickedAt ? formatTime(d.pickedAt) : "10 - 15 min";
+        // Was formatting `pickedAt` itself — the moment the rider picked up
+        // the order (effectively "now") — as if it were the delivery
+        // estimate. Project forward a last-mile window instead.
+        return d.pickedAt ? getLastMileRangeFrom(d.pickedAt) : "10 - 15 min";
 
       case "DELIVERED":
       case "COMPLETED":
@@ -206,9 +222,11 @@ function TrackingStatusCard({ orderTrackingDetails }: TrackingStatusCardProps) {
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 w-full max-w-2xl">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-sm sm:text-base font-semibold dark:text-white">
-          {orderTrackingDetails.orderStatus === "DELIVERED"
-            ? "Delivered"
-            : t("estimated_Delivery_time")}
+          {orderTrackingDetails.orderStatus === "CANCELLED"
+            ? t("order_status_cancelled_label")
+            : ["DELIVERED", "COMPLETED"].includes(orderTrackingDetails.orderStatus)
+              ? "Delivered"
+              : t("estimated_Delivery_time")}
         </h3>
 
         {orderTrackingDetails.orderStatus === "CANCELLED" && (

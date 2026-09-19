@@ -152,7 +152,11 @@ export default function TicketChatModal({
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
     try {
-      const date = new Date(parseInt(timestamp));
+      // `timestamp` is an ISO date string from the API (e.g.
+      // "2026-09-19T12:06:00.000Z") — parseInt() used to chop it at the
+      // first "-" and parse just "2026" as a millisecond offset, landing on
+      // Jan 1 1970. Date() parses ISO strings natively; no parseInt needed.
+      const date = new Date(timestamp);
       return (
         date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
         ' ' +

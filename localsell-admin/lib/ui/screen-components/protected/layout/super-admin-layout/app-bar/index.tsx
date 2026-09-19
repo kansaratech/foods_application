@@ -104,7 +104,7 @@ const AppTopbar = () => {
   const languageMenuRef = useRef<Menu>(null);
 
   // Context
-  const { showSuperAdminSidebar } =
+  const { showSuperAdminSidebar, isSuperAdminSidebarVisible } =
     useContext<LayoutContextProps>(LayoutContext);
   const { user, setUser } = useUserContext();
 
@@ -141,7 +141,7 @@ const AppTopbar = () => {
 
   const onDevicePixelRatioChange = useCallback(() => {
     setIsMenuOpen(false);
-    showSuperAdminSidebar(false);
+    if (window.innerWidth < 768) showSuperAdminSidebar(false);
   }, [showSuperAdminSidebar]);
 
   const shouldShow = (permission: string) => {
@@ -230,17 +230,17 @@ const AppTopbar = () => {
     <div
       className={` dark:bg-dark-950 dark:text-white  dark:border-dark-600 ${classes['layout-topbar']}`}
     >
-      <div className="flex items-center cursor-pointer">
+      <div className={classes.brand}>
         <div id="sidebar-opening-icon">
-          <button onClick={() => showSuperAdminSidebar()}>
+          <button type="button" aria-label="Toggle navigation" aria-controls="app-sidebar" aria-expanded={isSuperAdminSidebarVisible} className={classes.menuButton} onClick={() => showSuperAdminSidebar()}>
             <FontAwesomeIcon icon={faBars} />
           </button>
         </div>
-        <div onClick={() => onRedirectToPage('/home')}>
+        <Link href="/home" aria-label="LocalSell home" className={classes.logo}>
           <AppLogo />
-        </div>
+        </Link>
       </div>
-      <div className="hidden items-center space-x-5 md:flex">
+      <div className={`hidden items-center md:flex ${classes.actions}`}>
         {shouldShow('Zone') && (
           <TextIconClickable
             icon={faMap}

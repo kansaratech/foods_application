@@ -123,7 +123,7 @@ export default function TicketChatModal({
   // Format timestamp
   const formatTimestamp = (timestamp: string) => {
     try {
-      const date = new Date(parseInt(timestamp));
+      const date = new Date(timestamp);
       return (
         date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
         " " +

@@ -1,11 +1,16 @@
-.layout-topbar {
-  height: 100%;
-  width: 100%;
-  padding: 0 2rem;
-  background-color: var(--surface-card);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  /* justify-content: space-between; */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
+.layout-topbar { height:100%; width:100%; padding:0 32px; background:var(--surface-card); display:flex; justify-content:space-between; align-items:center; gap:24px; box-shadow:0 1px 2px #16293f05; }
+.brand { display:flex; align-items:center; gap:16px; flex-shrink:0; }
+.menuButton { display:grid; place-items:center; width:40px; height:40px; border:1px solid var(--app-border,#e2e8f0); border-radius:10px; color:var(--app-text,#16293f); background:var(--app-surface,#fff); transition:background .15s; }
+.menuButton:hover { background:var(--primary-light,#eaf1ff); }
+.menuButton:focus-visible,.logo:focus-visible { outline:2px solid #1c5bc7; outline-offset:3px; }
+/* No fixed width — the logo's own aspect ratio (see AppLogo's h-11 w-auto)
+   sets its width; a fixed box here that doesn't match that ratio squashes it.
+   flex-shrink:0 keeps it from being compressed if the topbar ever runs tight. */
+.logo { display:flex; align-items:center; flex-shrink:0; }
+.logo svg { width:100%; height:auto; }
+.logo img { flex-shrink:0; }
+.actions { gap:16px; min-width:0; }
+.actions > div:last-child { border-left:1px solid var(--app-border,#e2e8f0); padding-left:16px; }
+.actions button { min-height:40px; }
+@media(max-width:1023px) { .layout-topbar { padding-inline:24px; } .actions { gap:12px; } }
+@media(max-width:767px) { .layout-topbar { padding-inline:16px; gap:12px; } .brand { gap:12px; } .logo img { height:36px; } }

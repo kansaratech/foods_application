@@ -2,6 +2,7 @@
 
 // Components
 import Link from "next/link";
+import OrderContactCard from "@/lib/ui/screen-components/protected/order-tracking/components/order-contact-card";
 import OrderPaymentPanel from "@/lib/ui/screen-components/protected/order-tracking/components/order-payment-panel";
 import OrderHandoverCard from "@/lib/ui/screen-components/protected/order-tracking/components/order-handover-card";
 import styles from "./tracking.module.css";
@@ -366,6 +367,7 @@ export default function OrderTrackingScreen({
                     orderTrackingDetails={mergedOrderDetails}
                   />
                 )}
+                <OrderContactCard order={mergedOrderDetails} />
                 {view === "confirmation" ? (
                   <section className={styles.card}>
                     <h2>

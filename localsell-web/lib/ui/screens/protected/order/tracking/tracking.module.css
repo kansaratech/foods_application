@@ -119,3 +119,9 @@
     grid-row: auto;
   }
 }
+
+@media (max-width: 900px) {
+  .mainColumn { grid-row: 1; }
+  .sidebar { grid-row: 2; }
+  .header p, .card p { overflow-wrap: anywhere; }
+}

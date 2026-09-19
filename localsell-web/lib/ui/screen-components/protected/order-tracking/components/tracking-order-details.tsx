@@ -90,9 +90,9 @@ function TrackingOrderDetails({
         {orderTrackingDetails.items?.map((item, index) => (
           <div
             key={item._id || index}
-            className="flex items-center justify-between mb-4 pb-4 border-b dark:border-gray-700"
+            className="flex flex-wrap items-center justify-between gap-y-2 mb-4 pb-4 border-b dark:border-gray-700"
           >
-            <div className="flex min-w-0 gap-3 items-center">
+            <div className="flex min-w-0 flex-1 basis-[200px] gap-3 items-center">
               <Image
                 src={
                   item.image ||
@@ -138,7 +138,7 @@ function TrackingOrderDetails({
                 )}
               </div>
             </div>
-            <span className="ml-3 shrink-0 text-secondary-color dark:text-primary-color font-semibold tabular-nums">
+            <span className="ml-auto pl-3 shrink-0 text-secondary-color dark:text-primary-color font-semibold tabular-nums">
               {formatCurrency(calculateItemTotal(item))}
             </span>
           </div>

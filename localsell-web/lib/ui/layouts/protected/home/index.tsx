@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 // Svg
 import { CutlerySvg, StoreSvg } from "@/lib/utils/assets/svg";
 import PaddingContainer from "@/lib/ui/useable-components/containers/padding";
-import { useEffect, useState } from "react";
 // context
 import { useSearchUI } from "@/lib/context/search/search.context";
 import TabItem from "@/lib/ui/useable-components/tab-item/TabItem";
@@ -18,7 +17,6 @@ export default function HomeLayout({
 }: IProtectedHomeLayoutComponent) {
   const router = useRouter();
   const pathname = usePathname();
-  const [stickyTop, setStickyTop] = useState(0);
   const { isSearchFocused, setIsSearchFocused } = useSearchUI();
 
   const onChangeScreen = (name: "Discovery" | "Restaurants" | "Store") => {
@@ -44,16 +42,9 @@ export default function HomeLayout({
 
   const t = useTranslations();
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setStickyTop(window.scrollY > 300 ? 16 : 0);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   return (
-    <div className="w-full min-w-0 flex flex-col ">
+    <div className="w-full min-w-0 flex flex-col pb-[calc(76px+env(safe-area-inset-bottom))] sm:pb-0">
       {/* click-away handler */}
       {isSearchFocused && (
         <div
@@ -67,9 +58,9 @@ export default function HomeLayout({
       )}
       {/* Sticky Top Tabs */}
       <div
-        className={`sm:sticky sm:top-${stickyTop} sm:left-0 fixed bottom-0 left-0 w-full bg-gray-100 dark:bg-gray-900 sm:bg-white z-30 pt-2 pb-2 sm:pt-3 sm:pb-3 ${isSearchFocused && "opacity-0"}`}
+        className={`sm:sticky sm:top-[var(--app-header-height,64px)] sm:left-0 fixed bottom-0 left-0 w-full bg-gray-100 dark:bg-gray-900 sm:bg-white z-30 pt-1 pb-[max(4px,env(safe-area-inset-bottom))] sm:py-2 ${isSearchFocused && "opacity-0"}`}
       >
-        <div className="flex justify-center items-center space-x-4 md:space-x-6 p-2 md:p-4 overflow-x-auto mt-6 lg:mt-0">
+        <div className="flex justify-center items-center gap-1 sm:gap-4 p-1 sm:p-2 overflow-x-auto">
           <TabItem
             active={isDiscovery}
             label={t("tab_discovery")}

@@ -20,9 +20,10 @@ import {
   IRiderCashOutstandingRow,
   IRiderCashSummaryResponse,
 } from '@/lib/utils/interfaces';
+import { formatCurrency } from '@/lib/utils/methods/currency';
 
-const money = (n: number) =>
-  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+// Canonical always-2dp formatter — see LOCALSELL money-formatting audit.
+const money = (n: number) => formatCurrency(n ?? 0, true);
 const day = (d?: string | null) =>
   d
     ? new Date(d).toLocaleDateString(undefined, {

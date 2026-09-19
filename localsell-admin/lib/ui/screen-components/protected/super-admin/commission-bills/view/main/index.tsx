@@ -21,9 +21,13 @@ import {
   ICommissionPeriodPreviewResponse,
 } from '@/lib/utils/interfaces';
 import { Dialog } from 'primereact/dialog';
+import { formatCurrency } from '@/lib/utils/methods/currency';
 
-const money = (n: number) =>
-  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+// Was a local `toLocaleString` with no minimumFractionDigits, so a whole
+// amount dropped its decimals ("₹640" here vs "₹640.00" elsewhere the same
+// commissionTotal is shown) — use the canonical, always-2dp formatter so
+// this always agrees with every other screen showing the same field.
+const money = (n: number) => formatCurrency(n ?? 0, true);
 const day = (d: string) =>
   new Date(d).toLocaleDateString(undefined, {
     day: '2-digit',

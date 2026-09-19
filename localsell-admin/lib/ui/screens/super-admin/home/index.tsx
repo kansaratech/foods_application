@@ -3,7 +3,7 @@ import ActionButton from '@/lib/ui/useable-components/button/action-button';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/navigation';
@@ -26,7 +26,6 @@ import {
   faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { LayoutContext } from '@/lib/context/global/layout.context';
 import { useUserContext } from '@/lib/hooks/useUser';
 
 // Chart.js wrapper — client-only, separate chunk.
@@ -102,7 +101,7 @@ function MetricCard({
       className={`${CARD} min-w-0 p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/30`}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
           {label}
         </span>
         <span
@@ -207,7 +206,6 @@ function BreakdownChart({
 export default function Home() {
   const t = useTranslations('home_dashboard');
   const locale = useLocale();
-  const { isSuperAdminSidebarVisible } = useContext(LayoutContext);
   const { user } = useUserContext();
   const router = useRouter();
 
@@ -407,9 +405,9 @@ export default function Home() {
 
   return (
     <div
-      className={`${isSuperAdminSidebarVisible ? 'w-[99%]' : 'w-full'} h-full overflow-x-hidden bg-[#f8fafc] dark:bg-dark-950`}
+      className="min-h-full w-full bg-[#f8fafc] dark:bg-dark-950"
     >
-      <main className="mx-auto max-w-[1660px] space-y-5 p-4 lg:p-6">
+      <main className="w-full space-y-5 p-4 lg:p-6 xl:p-8">
         <header className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -480,7 +478,7 @@ export default function Home() {
           </div>
         </header>
 
-        <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
           {metrics.map((m) => (
             <MetricCard
               key={m.label}
@@ -492,7 +490,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.3fr_1fr]">
           <section className={`${CARD} p-5 shadow-sm`}>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                 {t('revenue_orders_breakdown')}
               </h2>
@@ -502,6 +500,7 @@ export default function Home() {
                     key={mode}
                     type="button"
                     onClick={() => setChartMode(mode)}
+                    aria-pressed={chartMode === mode}
                     className={`rounded px-3 py-1.5 font-semibold capitalize ${
                       chartMode === mode
                         ? 'bg-primary-light text-primary'
@@ -532,7 +531,7 @@ export default function Home() {
           </section>
 
           <section className={`${CARD} flex flex-col p-5 shadow-sm`}>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-slate-900 dark:text-white">
                 {t('top_stores')}
               </h2>
@@ -595,7 +594,7 @@ export default function Home() {
                   className={`${CARD} p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/30`}
                 >
                   <div className="flex items-start justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       {k.label}
                     </span>
                     <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-light text-primary">

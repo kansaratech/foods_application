@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
+import styles from "./shell.module.css";
+
 // Core
 import { useEffect } from 'react';
 import { initialize, isFirebaseSupported, hasFirebaseMessagingConfig, firebaseOptions } from '@/firebase';
@@ -95,7 +97,7 @@ const Layout = ({ children }: IProvider) => {
     FIREBASE_MEASUREMENT_ID, FIREBASE_VAPID_KEY]);
 
   return (
-    <div className="layout-main bg-white dark:bg-dark-950 dark:text-white">
+    <div className={`layout-main bg-white dark:bg-dark-950 dark:text-white ${styles.shell}`}>
       <div className="layout-top-container">
         <AppTopbar />
       </div>

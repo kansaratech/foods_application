@@ -104,13 +104,13 @@ export default function LocationPopover({
   return (
     <div
       ref={panelRef}
-      className={`absolute z-50 mt-2 w-[min(92vw,360px)] rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_20px_60px_rgba(15,23,42,0.18)] dark:border-gray-700 dark:bg-gray-900 ${anchorClassName}`}
+      className={`absolute z-50 mt-2 w-[min(600px,calc(100vw-32px))] rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.18)] dark:border-gray-700 dark:bg-gray-900 ${anchorClassName}`}
       role="dialog"
       aria-label={t("ariaLabel")}
     >
       <div className="flex items-start gap-2">
-      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-      <div className="relative min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2.5">
+      <div className="relative min-w-[min(100%,240px)] flex-[1_1_240px]">
         <FontAwesomeIcon
           icon={faLocationDot}
           style={{ width: 15, height: 17 }}
@@ -125,7 +125,7 @@ export default function LocationPopover({
           }}
           placeholder={t("searchPlaceholder")}
           aria-label={t("searchPlaceholder")}
-          className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+          className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50/70 py-3 pl-10 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
         />
         {searching && <span className="absolute right-3 top-1/2 -translate-y-1/2"><BrandLoader variant="inline" size={20} /></span>}
       </div>
@@ -133,7 +133,7 @@ export default function LocationPopover({
         type="button"
         onClick={pickCurrent}
         disabled={locating}
-        className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2.5 text-xs font-semibold text-[#1c5bc7] transition hover:bg-blue-100 disabled:opacity-60 dark:bg-gray-800 dark:text-blue-300"
+        className="flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-3 text-xs font-semibold text-[#1c5bc7] transition hover:bg-blue-100 disabled:opacity-60 dark:bg-gray-800 dark:text-blue-300"
       >
         {locating ? (
           <BrandLoader variant="inline" size={20} />
@@ -144,7 +144,7 @@ export default function LocationPopover({
       </button>
 
       </div>
-      <button type="button" onClick={onClose} aria-label={t("close")} className="flex h-10 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:bg-gray-800">
+      <button type="button" onClick={onClose} aria-label={t("close")} className="flex h-12 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:bg-gray-800">
         <FontAwesomeIcon icon={faXmark} style={{ width: 14, height: 14 }} />
       </button>
       </div>

@@ -13,9 +13,10 @@ import {
 
 import { GET_RECONCILIATION_REPORT } from '@/lib/api/graphql';
 import { IReconciliationReportResponse } from '@/lib/utils/interfaces';
+import { formatCurrency } from '@/lib/utils/methods/currency';
 
-const money = (n: number) =>
-  `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+// Canonical always-2dp formatter — see LOCALSELL money-formatting audit.
+const money = (n: number) => formatCurrency(n ?? 0, true);
 
 export default function ReconciliationMain() {
   const t = useTranslations();

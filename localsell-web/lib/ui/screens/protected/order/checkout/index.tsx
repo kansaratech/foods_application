@@ -1993,7 +1993,7 @@ export default function OrderCheckoutScreen() {
                   </span>
                   <span className="font-inter text-gray-900  dark:text-white leading-5">
                     {CURRENCY_SYMBOL}
-                    {deliveryCharges.toFixed()}
+                    {deliveryCharges.toFixed(2)}
                   </span>
                 </div>
               )}

@@ -1,7 +1,7 @@
 "use client";
 import { GET_USER_PROFILE } from "@/lib/api/graphql";
 import ProfileDetailsSkeleton from "@/lib/ui/useable-components/custom-skeletons/profile.details.skelton";
-import TextComponent from "@/lib/ui/useable-components/text-field";
+import styles from "./profile-details.module.css";
 import { getInitials } from "@/lib/utils/methods";
 import { useQuery } from "@apollo/client";
 import UpdatePhoneModal from "../../settings/main/update-phone";
@@ -43,89 +43,30 @@ export default function PersonalInfoMain() {
   if (!profileLoading) {
     return (
       <div className="p-6 w-full bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-        <div className="flex items-center gap-4 mb-6 ">
-          {/* Custom Avatar with Tailwind */}
-          <div className="relative h-16 w-16 flex-shrink-0 bg-primary-light dark:bg-gray-800 rounded-full border-2 border-white dark:border-gray-700 shadow-sm  shadow-gray-400 dark:shadow-black/40">
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-primary text-sm font-medium text-gray-500 dark:text-gray-200">
-              {initials}
-            </div>
-          </div>
-          <TextComponent
-            text={profileData?.profile?.name || "N/A"}
-            className="md:text-xl text-lg font-semibold text-gray-900 dark:text-white"
-          />
+        <div className={styles.identity}>
+          <div className={styles.avatar} aria-hidden="true">{initials}</div>
+          <div className={styles.name}>{profileData?.profile?.name || "N/A"}</div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
-          <div>
-            <div className="flex items-center gap-2">
-              <TextComponent
-                text={t("Email")}
-                className="text-black dark:text-white font-semibold text-base md:text-lg"
-              />
-              <button
-                type="button"
-                aria-label={t("update_email_title")}
-                onClick={handleUpdateEmailModal}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-light text-primary-color"
-              >
-                <i
-                  aria-hidden="true"
-                  className="pi pi-pen-to-square cursor-pointer dark:text-white text-sm"
-                />
+        <div className={styles.contacts}>
+          {[
+            { label: t("Email"), value: profileData?.profile?.email, verified: profileData?.profile?.emailIsVerified, icon: "pi-envelope", editLabel: t("update_email_title"), onEdit: handleUpdateEmailModal },
+            { label: t("Phone"), value: profileData?.profile?.phone, verified: profileData?.profile?.phoneIsVerified, icon: "pi-phone", editLabel: t("updatePhoneTitle"), onEdit: handleUpdatePhoneModal },
+          ].map((contact) => (
+            <div className={styles.contact} key={contact.icon}>
+              <span className={styles.contactIcon} aria-hidden="true"><i className={`pi ${contact.icon}`} /></span>
+              <div className={styles.contactBody}>
+                <p className={styles.label}>{contact.label}</p>
+                <p className={styles.value}>{contact.value || "N/A"}</p>
+                <span className={contact.verified ? styles.verified : styles.unverified}>
+                  <i aria-hidden="true" className={`pi ${contact.verified ? "pi-check-circle" : "pi-info-circle"}`} />
+                  {contact.verified ? t("verified") : t("not_verified")}
+                </span>
+              </div>
+              <button type="button" aria-label={contact.editLabel} onClick={contact.onEdit} className={styles.edit}>
+                <i aria-hidden="true" className="pi pi-pen-to-square" />
               </button>
             </div>
-            <button
-              type="button"
-              onClick={handleUpdateEmailModal}
-              title="Update email address"
-              className="text-secondary-color dark:text-primary-color hover:text-primary-dark font-normal text-sm md:text-base cursor-pointer"
-            >
-              {profileData?.profile?.email || "N/A"}
-            </button>
-            <TextComponent
-              text={
-                profileData?.profile?.emailIsVerified
-                  ? t("verified")
-                  : t("not_verified")
-              }
-              className={`text-sm font-medium ${profileData?.profile?.emailIsVerified ? "text-secondary-color dark:text-primary-color" : "text-red-500 dark:text-red-500"}`}
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <TextComponent
-                text={t("Phone")}
-                className="text-black dark:text-gray-200 font-semibold text-base md:text-lg"
-              />
-              <button
-                type="button"
-                aria-label={t("updatePhoneTitle")}
-                onClick={handleUpdatePhoneModal}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-light text-primary-color"
-              >
-                <i
-                  aria-hidden="true"
-                  className="pi pi-pen-to-square cursor-pointer dark:text-white text-sm"
-                />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={handleUpdatePhoneModal}
-              title="Update phone number"
-              className=" text-secondary-color dark:text-primary-color hover:text-primary-dark font-normal text-sm md:text-base cursor-pointer"
-            >
-              {profileData?.profile?.phone || "N/A"}
-            </button>
-            <TextComponent
-              text={
-                profileData?.profile?.phoneIsVerified
-                  ? t("verified")
-                  : t("not_verified")
-              }
-              className={`text-sm font-medium ${profileData?.profile?.phoneIsVerified ? "text-secondary-color dark:text-primary-color" : "text-red-500 dark:text-red-500"}`}
-            />
-          </div>
+          ))}
         </div>
         <UpdatePhoneModal
           userPhone={profileData?.profile?.phone || ""}

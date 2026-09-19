@@ -226,7 +226,7 @@ export default function PaymentStatusCard({
             >
               {refundStatus === "FAILED"
                 ? "Your order was cancelled. The refund needs attention — it hasn't gone through yet. Contact support; your payment source is unchanged until it's retried."
-                : `Your order was cancelled. ${amount} will be refunded to the original payment method you used (card, UPI or netbanking) — not to a wallet. This is handled automatically via Cashfree and can take a few days to show up, depending on your bank; no action is needed from you.`}
+                : `Your order was cancelled; refund confirmation is still pending for ${amount}. Refunds go to your original payment method (card, UPI or netbanking), not a wallet. Once confirmed, your bank may take a few days to reflect the amount.`}
             </p>
           )}
         {feedback && (

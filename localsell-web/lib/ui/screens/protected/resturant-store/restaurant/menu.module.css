@@ -7,7 +7,7 @@
 }
 .navigation {
   position: sticky;
-  top: 88px;
+  top: calc(var(--app-header-height, 64px) + 16px);
   padding: 16px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
@@ -61,7 +61,7 @@
 }
 .content {
   min-width: 0;
-  scroll-margin-top: 144px;
+  scroll-margin-top: calc(var(--app-header-height, 64px) + 80px);
 }
 .toolbar {
   display: flex;
@@ -194,7 +194,7 @@
     padding: 16px 0 0;
   }
   .navigation {
-    top: 120px;
+    top: var(--app-header-height, 176px);
     z-index: 20;
     padding: 10px 0;
     border: 0;
@@ -217,7 +217,7 @@
     background: #f8fafc;
   }
   .content {
-    scroll-margin-top: 230px;
+    scroll-margin-top: calc(var(--app-header-height, 176px) + 112px);
   }
   .menuTitle {
     font-size: 22px;

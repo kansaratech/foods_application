@@ -14,7 +14,9 @@ function mapCashfreeRefundStatus(status: string | undefined): 'SUCCESS' | 'FAILE
   return 'PROCESSING'; // PENDING | ONHOLD | anything else Cashfree might add
 }
 
-const money = (n: number) => `₹${Math.round(n)}`;
+// Matches order-notify.ts's fix — exact amount, not rounded to whole rupees,
+// so a WhatsApp refund message always agrees with the order page (#118).
+const money = (n: number) => `₹${n.toFixed(2)}`;
 const firstName = (name?: string | null) => name?.trim().split(/\s+/)[0] || 'there';
 
 /** Best-effort WhatsApp ping for a refund state change — never blocks the caller. */

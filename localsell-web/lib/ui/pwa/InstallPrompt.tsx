@@ -68,7 +68,7 @@ export default function InstallPrompt() {
     setShowSteps(true);
   };
 
-  if (isInstalled) return null;
+  if (isInstalled || pathname?.startsWith("/order/") || pathname?.startsWith("/profile")) return null;
 
   return (
     <>

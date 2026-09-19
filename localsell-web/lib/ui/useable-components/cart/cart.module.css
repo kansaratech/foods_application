@@ -254,3 +254,11 @@
     margin-inline-start: auto;
   }
 }
+
+@media (max-width: 640px) {
+  .drawer { height: 100dvh; max-height: 100dvh; }
+  .quantity button { width: 40px; height: 40px; }
+  .item { flex-wrap: wrap; }
+  .itemInfo { min-width: 0; flex: 1 1 190px; }
+  .quantity { margin-inline-start: auto; }
+}

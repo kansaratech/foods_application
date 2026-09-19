@@ -16,8 +16,8 @@ export default function ProfileTabs({ className, tabs }: IProfileTabsProps & { t
   const tabsToRender: ITabItem[] = tabs ?? defaultTabs; // ✅ safe fallback
 
   const scrollableStyles: CSSProperties = {
-    msOverflowStyle: "none", // IE and Edge
-    scrollbarWidth: "none", // Firefox
+    msOverflowStyle: "auto", // IE and Edge
+    scrollbarWidth: "thin", // Firefox
     WebkitOverflowScrolling: "touch", // Smooth scrolling
   };
 

@@ -179,6 +179,7 @@ export const restaurantFragment = gql`
           restaurant {
             _id
             name
+        phone
             image
             address
             slug
@@ -444,6 +445,7 @@ export const order = `query Order($id:String!){
     restaurant{
       _id
       name
+        phone
       image
       address
       location{coordinates}
@@ -497,6 +499,7 @@ export const myOrders = `query Orders($offset:Int){
     restaurant{
       _id
       name
+        phone
       image
       address
       location{coordinates}
@@ -589,6 +592,7 @@ const ordersFieldsBody = `
     restaurant{
       _id
       name
+        phone
       image
       address
       location{coordinates}
@@ -1051,6 +1055,7 @@ export const orderFragment = `fragment NewOrder on Order {
   restaurant{
     _id
     name
+        phone
     image
     address
     location{coordinates}
@@ -1095,6 +1100,7 @@ export const orderFragment = `fragment NewOrder on Order {
   rider{
     _id
     name
+    phone
   }
   review{
     _id

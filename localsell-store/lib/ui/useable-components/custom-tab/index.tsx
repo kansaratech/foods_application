@@ -48,7 +48,8 @@ const CustomTab = ({
               <Text
                 className="font-semibold"
                 style={{
-                  color: isSelected ? appTheme.white : appTheme.fontMainColor,
+                  // The toggle surface stays light in both themes.
+                  color: isSelected ? appTheme.white : appTheme.brand,
                 }}
               >
                 {t(option)}

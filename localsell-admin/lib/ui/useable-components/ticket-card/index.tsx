@@ -58,7 +58,7 @@ function TicketCard({
   // Format time ago
   const formatTimeAgo = (timestamp: string) => {
     try {
-      const date = new Date(parseInt(timestamp));
+      const date = new Date(timestamp);
       const now = new Date();
       const diffMs = now.getTime() - date.getTime();
 
@@ -99,7 +99,7 @@ function TicketCard({
   // Format date for display
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(parseInt(dateString));
+      const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',

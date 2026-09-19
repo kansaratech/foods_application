@@ -328,14 +328,14 @@ const OrderCard: FC<IOrderCardProps> = ({
   return (
     <div
       className={twMerge(
-        "p-6 dark:bg-gray-900 dark:border-gray-700",
+        "p-3 sm:p-6 dark:bg-gray-900 dark:border-gray-700",
         className,
       )}
     >
       <div className="flex flex-col md:flex-row gap-4">
         {/* Restaurant Info */}
-        <div className="flex items-start gap-4 flex-1">
-          <div className="w-16 h-16 relative flex-shrink-0">
+        <div className="flex min-w-0 items-start gap-3 sm:gap-4 flex-1">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 relative flex-shrink-0">
             <Image
               src={order?.restaurant?.image || "https://placehold.co/400"}
               alt={order?.restaurant?.name || "Restaurant"}
@@ -344,8 +344,8 @@ const OrderCard: FC<IOrderCardProps> = ({
               className="rounded-md object-cover w-full h-full"
             />
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg dark:text-gray-100">
+          <div className="min-w-0 flex-1 break-words">
+            <h3 className="font-semibold text-base sm:text-lg dark:text-gray-100">
               {order?.restaurant?.name}
             </h3>
             <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
@@ -353,9 +353,9 @@ const OrderCard: FC<IOrderCardProps> = ({
               <Chip tone={paymentChip.tone} label={paymentChip.label} />
             </div>
             {type === "active" && (
-              <h1 className="text-gray-600 dark:text-gray-300 text-sm">
+              <p className="text-gray-600 dark:text-gray-300 text-sm">
                 {(order?.items && order?.items[0]?.title) || ""}
-              </h1>
+              </p>
             )}
             {type === "active" ? (
               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400  mt-1">
@@ -425,13 +425,13 @@ const OrderCard: FC<IOrderCardProps> = ({
         </div>
 
         {/* Price and Action */}
-        <div className="flex md:flex-col md:items-end justify-between gap-2">
-          <div className="font-semibold text-lg dark:text-gray-100">
+        <div className="flex flex-wrap md:flex-col md:items-end justify-between gap-3">
+          <div className="font-semibold text-base sm:text-lg dark:text-gray-100">
             {CURRENCY_SYMBOL}
             {order.orderAmount?.toFixed(2)}
           </div>
 
-          <div className="flex md:flex-col items-center md:items-end gap-2">
+          <div className="flex w-full flex-wrap md:w-auto md:flex-col items-center md:items-end gap-2">
             {/* Past orders had no way to see what actually happened — order
                 details, and for a cancelled order, its refund status — since
                 only "reorder" was ever shown here. This links to the same
@@ -441,7 +441,7 @@ const OrderCard: FC<IOrderCardProps> = ({
               <CustomIconButton
                 title={t("view_order_details_button")}
                 iconColor="primary"
-                classNames="bg-transparent border border-primary-color text-primary-color w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
+                classNames="bg-transparent border border-primary-color text-primary-color min-h-11 flex-1 md:flex-none px-3 gap-x-0 text-[12px] font-medium m-0"
                 handleClick={() => handleTrackOrder(order)}
                 loading={false}
               />
@@ -454,7 +454,7 @@ const OrderCard: FC<IOrderCardProps> = ({
                     : t("select_item_to_reorder")
                 }
                 iconColor="white"
-                classNames="bg-primary-color text-white w-[content] px-4 gap-x-0 text-[12px] font-medium m-0"
+                classNames="bg-primary-color text-white min-h-11 flex-1 md:flex-none px-3 gap-x-0 text-[12px] font-medium m-0"
                 handleClick={
                   type === "active"
                     ? () => handleTrackOrder(order)
@@ -470,7 +470,7 @@ const OrderCard: FC<IOrderCardProps> = ({
       {/* Rating for past orders */}
       {type === "past" && order.orderStatus === "DELIVERED" && (
         <div className="mt-4 pt-4 dark:border-gray-700">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-sm font-medium dark:text-gray-100">
               {t("rate_the_order")}
             </span>
@@ -544,6 +544,7 @@ const OrderCard: FC<IOrderCardProps> = ({
                       <div className="flex items-center gap-3 w-full">
                         <input
                           type="checkbox"
+                          aria-label={item.title}
                           className="w-5 h-5 rounded border-gray-300 text-primary-color focus:ring-primary-color bg-white"
                           checked={selectedItems.includes(id)}
                           onChange={() => {
@@ -558,7 +559,7 @@ const OrderCard: FC<IOrderCardProps> = ({
                             }
                           }}
                         />
-                        <div className="flex flex-col flex-1">
+                        <div className="flex min-w-0 flex-col flex-1 break-words">
                           <span className="text-gray-800 font-medium text-sm dark:text-white">
                             {item.title}
                           </span>
@@ -618,13 +619,13 @@ const OrderCard: FC<IOrderCardProps> = ({
             {/* Confirmation */}
             <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
               <button
-                className="px-5 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto transition"
+                className="min-h-11 px-5 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto transition"
                 onClick={handleCloseDialog}
               >
                 {t("cancel_label")}
               </button>
               <button
-                className="px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-primary-hover text-white w-full sm:w-auto disabled:opacity-50 transition"
+                className="min-h-11 px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-primary-hover text-white w-full sm:w-auto disabled:opacity-50 transition"
                 disabled={selectedItems.length === 0}
                 onClick={
                   handleConfirmReorder
@@ -662,13 +663,13 @@ const OrderCard: FC<IOrderCardProps> = ({
           </p>
           <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
             <button
-              className="px-5 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto transition"
+              className="min-h-11 px-5 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto transition"
               onClick={handleCloseClearCartDialog}
             >
               Cancel
             </button>
             <button
-              className="px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-primary-hover text-white w-full sm:w-auto transition"
+              className="min-h-11 px-5 py-2 text-sm rounded-lg bg-primary-color hover:bg-primary-hover text-white w-full sm:w-auto transition"
               onClick={handleClearCartAndReorder}
             >
               Clear Cart & Reorder

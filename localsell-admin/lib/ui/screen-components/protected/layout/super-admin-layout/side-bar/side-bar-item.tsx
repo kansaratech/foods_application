@@ -130,7 +130,7 @@ export default function SidebarItem({
         <button
           aria-current={isLeafActive ? 'page' : undefined}
           aria-expanded={hasSubMenu ? expandSubMenu : undefined}
-          className={`group relative flex w-full cursor-pointer items-center rounded-md px-3 py-2 transition-colors ${buttonStateClass} ${!expanded && 'hidden sm:flex'}`}
+          className={`group relative flex w-full cursor-pointer min-h-11 items-center rounded-xl px-3 py-2.5 transition-colors ${buttonStateClass} ${!expanded && 'hidden sm:flex'}`}
           onClick={() => {
             if (!isParent || isClickable) {
               if (

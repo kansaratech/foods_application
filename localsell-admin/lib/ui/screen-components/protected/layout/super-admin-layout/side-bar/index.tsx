@@ -45,7 +45,7 @@ function SuperAdminSidebar({ children }: IGlobalComponentProps) {
         <nav
           className={`flex h-full flex-col border-r bg-white dark:bg-dark-950 dark:border-dark-600 dark:text-white shadow-sm transition-opacity duration-300 ${isSuperAdminSidebarVisible ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
         >
-          <ul className="flex min-h-0 flex-1 flex-col pl-2">{children}</ul>
+          <ul className="flex min-h-0 flex-1 flex-col px-3 pt-3">{children}</ul>
         </nav>
       </aside>
     </div>
@@ -284,7 +284,7 @@ export default function MakeSidebar() {
   return (
     <>
       <SuperAdminSidebar>
-        <div className="h-full min-h-0 flex-1 overscroll-contain pb-4 overflow-y-auto overflow-x-hidden pr-2">
+        <div className="h-full min-h-0 flex-1 overscroll-contain pb-4 overflow-y-auto overflow-x-hidden">
           {navBarItems.map((item, index) =>
             item.shouldShow && !item.shouldShow() ? null : (
               <SidebarItem

@@ -72,15 +72,19 @@ export default function CustomerTicketsMain() {
   
   // Sort tickets by creation date (newest first)
   const sortedTickets = [...tickets].sort((a, b) => {
-    const dateA = new Date(parseInt(a.updatedAt)).getTime();
-    const dateB = new Date(parseInt(b.updatedAt)).getTime();
+    const dateA = new Date(a.updatedAt).getTime();
+    const dateB = new Date(b.updatedAt).getTime();
     return dateB - dateA; // Newest first
   });
-  
+
   // Format date for display
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(parseInt(dateString));
+      // dateString is an ISO string from the API — parseInt() used to chop
+      // it at the first "-" (e.g. "2026-09-19..." -> 2026) and parse that as
+      // a millisecond offset, landing on Jan 1 1970. Date() parses ISO
+      // strings natively.
+      const date = new Date(dateString);
       return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'short', 

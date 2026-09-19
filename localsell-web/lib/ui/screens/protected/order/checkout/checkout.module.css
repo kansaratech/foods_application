@@ -173,7 +173,7 @@
 }
 .summaryColumn {
   position: sticky;
-  top: 88px;
+  top: calc(var(--app-header-height, 64px) + 24px);
   display: grid;
   gap: 12px;
   min-width: 0;
@@ -460,7 +460,7 @@
   display: none;
 }
 .summary {
-  scroll-margin-top: 100px;
+  scroll-margin-top: calc(var(--app-header-height, 64px) + 28px);
 }
 :global(html.dark) .heading h1 {
   color: #f1f5f9;
@@ -621,7 +621,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   padding: 20px;
-  scroll-margin-top: 90px;
+  scroll-margin-top: calc(var(--app-header-height, 64px) + 24px);
 }
 .stepHeading {
   display: flex;

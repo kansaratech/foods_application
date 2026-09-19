@@ -155,6 +155,7 @@ export default function AppHeader() {
   const profileMenuRef = useRef<Menu>(null);
   const didInitLocation = useRef(false);
   const didAutoLocate = useRef(false);
+  const headerRef = useRef<HTMLElement>(null);
   const searchBoxRef = useRef<HTMLDivElement>(null);
   const { detectCurrentLocation } = useLocationSearch();
   const {
@@ -166,6 +167,16 @@ export default function AppHeader() {
     search: runSearch,
     close: closeSearch,
   } = useSearchSuggestions();
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const update = () => document.documentElement.style.setProperty("--app-header-height", `${header.getBoundingClientRect().height}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   const isLoggedIn = Boolean(authToken);
   const isHindi = locale === "hi";
@@ -313,11 +324,11 @@ export default function AppHeader() {
   const openLocation = () => setIsLocationOpen(true);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
-      <div className="flex h-16 w-full items-center gap-2 px-4 sm:gap-4 md:px-6 lg:px-12 xl:px-20 2xl:px-[80px]">
+    <header ref={headerRef} className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] min-h-16 w-full items-center gap-x-2 gap-y-2 px-3 py-2 sm:gap-x-4 md:flex md:h-16 md:flex-nowrap md:px-6 md:py-0 lg:px-12 xl:px-20 2xl:px-[80px]">
         <Link
           href="/"
-          className="flex shrink-0 items-center"
+          className="flex w-[96px] min-[360px]:w-[112px] shrink-0 items-center [&>svg]:h-auto [&>svg]:w-full sm:w-auto"
           aria-label={t("homeAriaLabel")}
         >
           <Logo fillColor="#000000" darkmode="#FFFFFF" />
@@ -338,8 +349,9 @@ export default function AppHeader() {
           />
         </div>
 
-        <div ref={searchBoxRef} className={isLandingPage ? "hidden" : "relative mx-auto hidden max-w-2xl flex-1 md:block"}>
+        <div ref={searchBoxRef} className={`relative col-span-2 order-last w-full min-w-0 md:order-none md:mx-auto md:max-w-2xl md:flex-1 ${isLandingPage ? "md:hidden" : ""}`}>
           <form
+            role="search"
             onSubmit={submitSearch}
             className="flex items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#1c5bc7] focus-within:ring-2 focus-within:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800"
           >
@@ -352,12 +364,14 @@ export default function AppHeader() {
               placeholder={t("searchPlaceholder")}
               aria-label={t("searchPlaceholder")}
               autoComplete="off"
+              enterKeyHint="search"
+              onKeyDown={(event) => { if (event.key === "Escape") closeSearch(); }}
               className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
             />
             <button
               type="submit"
               aria-label="Search"
-              className="p-1 text-slate-500 transition hover:text-[#16293f] dark:text-gray-300"
+              className="flex h-11 w-11 shrink-0 items-center justify-center text-slate-500 transition hover:text-[#16293f] dark:text-gray-300"
             >
               <Icon icon={faMagnifyingGlass} size={15} />
             </button>
@@ -376,11 +390,11 @@ export default function AppHeader() {
           )}
         </div>
 
-        <div className="ml-auto flex items-center gap-2.5 whitespace-nowrap text-[13px] font-semibold text-slate-700 dark:text-gray-200 sm:gap-4 sm:text-sm">
+        <div className="ml-auto flex items-center gap-1 min-[360px]:gap-2 whitespace-nowrap text-[11px] font-semibold text-slate-700 dark:text-gray-200 sm:gap-4 sm:text-sm">
           <button
             type="button"
             onClick={toggleLocale}
-            className="transition hover:text-[#16293f] dark:hover:text-blue-300"
+            className="min-h-11 transition hover:text-[#16293f] dark:hover:text-blue-300"
             aria-label={t("toggleLanguage")}
           >
             <span className={isHindi ? "text-[#16293f] dark:text-blue-300" : ""}>
@@ -403,7 +417,7 @@ export default function AppHeader() {
             aria-label={
               cartCount > 0 ? t("cartWithCount", { count: cartCount }) : t("cart")
             }
-            className="relative flex items-center gap-1.5 transition hover:text-[#16293f] dark:hover:text-blue-300"
+            className="relative flex min-h-11 min-w-8 items-center justify-center gap-1.5 transition hover:text-[#16293f] dark:hover:text-blue-300"
           >
             <Icon icon={faCartShopping} size={16} />
             <span className="hidden sm:inline">{t("cart")}</span>
@@ -476,7 +490,7 @@ export default function AppHeader() {
                 setActivePanel(0);
                 setIsAuthModalVisible(true);
               }}
-              className="shrink-0 rounded-full border border-slate-300 px-3 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
+              className="shrink-0 rounded-full border border-slate-300 px-2 py-1.5 font-bold text-slate-900 transition hover:border-[#1c5bc7] hover:text-[#16293f] dark:border-gray-600 dark:text-white sm:px-4"
             >
               {t("loginSignup")}
             </button>
@@ -496,11 +510,11 @@ export default function AppHeader() {
           open={isLocationOpen}
           onClose={() => setIsLocationOpen(false)}
           currentAddress={currentAddress}
-          anchorClassName="left-4 right-4 w-auto"
+          anchorClassName="left-4 right-4 !w-auto"
         />
       </div>
 
-      {/* Cart sidebar (logged-in only) */}
+      {/* Cart sidebar is available to guests and signed-in customers. */}
       <Sidebar
         position={sidebarSide}
         visible={isCartOpen}

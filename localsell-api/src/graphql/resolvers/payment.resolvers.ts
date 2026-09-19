@@ -432,7 +432,7 @@ export const paymentResolvers: IResolvers<unknown, GraphQLContext> = {
         if (args.requestAmount > available) {
           throw userInputError(
             owed > 0
-              ? `You can withdraw ₹${available.toFixed(0)}. ₹${owed.toFixed(0)} of your balance is held against undeposited COD cash — deposit it to release the rest.`
+              ? `You can withdraw ₹${available.toFixed(2)}. ₹${owed.toFixed(2)} of your balance is held against undeposited COD cash — deposit it to release the rest.`
               : 'Withdraw amount exceeds your available balance',
           );
         }

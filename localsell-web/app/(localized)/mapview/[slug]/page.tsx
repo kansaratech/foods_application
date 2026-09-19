@@ -1,109 +1,41 @@
 "use client";
+import { use, useMemo, useState } from "react";
+import Link from "next/link";
+import { FiArrowLeft, FiMapPin, FiSearch, FiChevronRight } from "react-icons/fi";
 import useNearByRestaurantsPreview from "@/lib/hooks/useNearByRestaurantsPreview";
-import { FC, use, useEffect, useState } from "react";
-import Loader from "./components/Loader";
-import DisplayError from "./components/DisplayError";
-import { useConfig } from "@/lib/context/configuration/configuration.context";
+import { useUserAddress } from "@/lib/context/address/address.context";
+import { OPEN_LOCATION_PICKER_EVENT } from "@/lib/utils/constants";
 import Map from "./components/Map";
 import SideList from "./components/SideList";
-import dynamic from "next/dynamic";
+import styles from "./components/explore.module.css";
 
-//Your correct import
-import { isRestaurantOpen } from "../../../../lib/utils/constants/isRestaurantOpen";
-
-const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
-
-interface MapViewPageProps {
-    params: Promise<{
-        slug: string;
-    }>;
+export default function MapView({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const { error, loading, queryData } = useNearByRestaurantsPreview();
+  const { userAddress } = useUserAddress();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const isFood = slug === "restaurants";
+  const data = useMemo(() => queryData.filter(item => item.shopType === (isFood ? "restaurant" : "grocery")).filter(item => `${item.name} ${item.address || ""}`.toLowerCase().includes(query.toLowerCase())), [queryData, isFood, query]);
+  const selected = data.some(item => item._id === selectedId) ? selectedId : null;
+  const label = isFood ? "restaurants" : "stores";
+  const fullAddress = userAddress?.deliveryAddress || "";
+  const readableAddress = fullAddress.replace(/^[A-Z0-9]{4,8}\+[A-Z0-9]{2,3},?\s*/i, "");
+  return <main className={styles.explorer}>
+    <aside className={styles.sidebar} aria-label="Nearby places">
+      <div className={styles.heading}>
+        <Link href={isFood ? "/discovery" : "/store"} className={styles.back}><FiArrowLeft /> Back to browsing</Link>
+        <p className={styles.eyebrow}>LOCALSELL MAP</p>
+        <h1>{isFood ? "Restaurants near you" : "Stores near you"}</h1>
+        <p className={styles.headingHint}>Find a local favourite. Explore it on the map.</p>
+        <button type="button" className={styles.address} onClick={() => window.dispatchEvent(new Event(OPEN_LOCATION_PICKER_EVENT))}><FiMapPin /><span title={fullAddress}><small>DELIVERY AREA</small><strong>{readableAddress || "Choose your location"}</strong></span><FiChevronRight /></button>
+        <label className={styles.search}><FiSearch /><input aria-label={`Filter ${label}`} placeholder={`Find a ${isFood ? "restaurant" : "store"}...`} value={query} onChange={event => setQuery(event.target.value)} /></label>
+        <p className={styles.count} role="status">{loading ? "Finding nearby places..." : `${data.length} ${data.length === 1 ? (isFood ? "restaurant" : "store") : label} ${query ? "found" : "nearby"}`}</p>
+      </div>
+      <div className={styles.results}>
+        {error ? <div className={styles.empty}><FiMapPin /><h2>Unable to load places</h2><p>Please refresh and try again.</p></div> : loading ? <div className={styles.empty} role="status">Loading nearby places...</div> : data.length ? <SideList data={data} selectedId={selected} onSelect={setSelectedId} /> : <div className={styles.empty}><FiMapPin /><h2>{query ? "No matching places" : `No ${label} nearby yet`}</h2><p>{query ? "Try another name or clear your search." : "Choose another delivery location to discover places serving that area."}</p><button type="button" onClick={() => query ? setQuery("") : window.dispatchEvent(new Event(OPEN_LOCATION_PICKER_EVENT))}>{query ? "Clear search" : "Change location"}</button></div>}
+      </div>
+    </aside>
+    <section className={styles.map} aria-label="Map of nearby places"><Map data={data} selectedId={selected} onSelect={setSelectedId} /><div className={styles.legend}><span /> Explore nearby <small>Select a place to see its details</small></div></section>
+  </main>;
 }
-const MapView: FC<MapViewPageProps> = ({ params }) => {
-    const { slug } = use(params);
-    const [animationData, setAnimationData] = useState<null | object>(null);
-
-    useEffect(() => {
-        fetch("/assets/lottie/no-results.json")
-            .then((res) => res.json())
-            .then(setAnimationData)
-            .catch((err) => console.error("Failed to load Lottie JSON", err));
-    }, []);
-
-    const { error, loading, restaurantsData, groceriesData } =
-        useNearByRestaurantsPreview(true, 1, 110);
-
-    const { GOOGLE_MAPS_KEY } = useConfig();
-
-    const data = slug === "restaurants" ? restaurantsData : groceriesData;
-
-    const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
-
-    // ⭐ Enhance data with isOpen field
-    const enhancedData = data?.map((restaurant: any) => ({
-        ...restaurant,
-        isOpen: isRestaurantOpen(restaurant),
-    }));
-
-    return (
-        <div className="w-screen">
-            {loading ? (
-                <Loader />
-            ) : error ? (
-                <DisplayError />
-            ) : enhancedData?.length > 0 ? (
-                <div className="flex mt-1 relative min-h-screen max-h-screen md:flex-row flex-col-reverse">
-
-                    {/* LEFT SIDE LIST */}
-                    <div className="md:relative absolute bottom-0 z-[99] md:flex-[0.35] xl:flex-[0.25] overflow-y-auto md:w-auto w-full">
-                        <SideList
-                            data={enhancedData}
-                            slug={slug}
-                            onHover={(coordinates) => setCenter(coordinates)}
-                        />
-                    </div>
-
-                    {/* RIGHT MAP */}
-                    <div className="flex-[0.65] xl:flex-[0.75] h-screen overflow-y-auto">
-                        <Map
-                            apiKey={GOOGLE_MAPS_KEY}
-                            data={enhancedData}
-                            center={center}
-                        />
-                    </div>
-
-                </div>
-            ) : (
-                // NO DATA UI
-                <div className="flex mt-1 relative min-h-screen max-h-screen md:flex-row flex-col-reverse">
-                    <div className="md:relative absolute top-2 mt-12 z-[99] md:flex-[0.35] xl:flex-[0.25] overflow-y-auto md:w-auto w-full ">
-                        <div className="flex flex-col items-center justify-center p-6">
-                            <div className="w-32 h-32 md:w-60 md:h-60 flex items-center justify-center">
-                                <Lottie
-                                    animationData={animationData}
-                                    loop={true}
-                                    autoplay={true}
-                                />
-                            </div>
-                            <p className="text-gray-800 dark:text-gray-200 text-base md:text-lg font-semibold text-center">
-                                No {slug === "restaurants" ? "restaurants" : "stores"} found near you
-                            </p>
-                            <p className="text-gray-500 text-sm md:text-base text-center mb-4">
-                                We&apos;re not available in your area yet — try searching a different location.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex-[0.65] xl:flex-[0.75] h-screen overflow-y-auto">
-                        <Map
-                            apiKey={GOOGLE_MAPS_KEY}
-                            data={enhancedData}
-                            center={center}
-                        />
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
-
-export default MapView;

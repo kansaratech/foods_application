@@ -42,9 +42,9 @@ export default function SearchSuggestionsDropdown({
 
   return (
     <div
-      role="listbox"
+      role="region"
       aria-label="Search suggestions"
-      className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_60px_rgba(15,23,42,0.18)] dark:border-gray-700 dark:bg-gray-900"
+      className="absolute left-0 right-0 top-[calc(100%+8px)] z-50 max-h-[min(60dvh,420px)] overscroll-contain overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_20px_60px_rgba(15,23,42,0.18)] dark:border-gray-700 dark:bg-gray-900"
     >
       {loading && !hasResults && (
         <div className="flex items-center gap-2 px-3 py-3 text-sm text-slate-500 dark:text-gray-400">

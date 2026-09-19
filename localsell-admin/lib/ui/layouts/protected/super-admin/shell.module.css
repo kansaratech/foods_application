@@ -1,0 +1,4 @@
+.shell { --admin-header-height:72px; }
+.shell > :global(.layout-top-container) { height:var(--admin-header-height); flex-basis:var(--admin-header-height); }
+.shell :global(.layout-content) { scrollbar-gutter:stable; background:var(--app-bg,#f8fafc); }
+@media(max-width:767px) { .shell { --admin-header-height:64px; } }

@@ -151,7 +151,7 @@ export default function CustomerSupportMain({
         a.latestTicket?.lastMessageAt || a.latestTicket?.updatedAt || '0';
       const bTimestamp =
         b.latestTicket?.lastMessageAt || b.latestTicket?.updatedAt || '0';
-      return Number(bTimestamp) - Number(aTimestamp);
+      return new Date(bTimestamp).getTime() - new Date(aTimestamp).getTime();
     });
   const users = usersWithTickets.map(({ user }) => user);
 
@@ -167,7 +167,7 @@ export default function CustomerSupportMain({
         const getTimestamp = (ticket: ITicket): number => {
           const timestamp = ticket.lastMessageAt || ticket.updatedAt;
           try {
-            return parseInt(timestamp);
+            return new Date(timestamp).getTime();
           } catch (error) {
             return 0;
           }
@@ -183,7 +183,7 @@ export default function CustomerSupportMain({
   // Format date for display
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(parseInt(dateString));
+      const date = new Date(dateString);
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',

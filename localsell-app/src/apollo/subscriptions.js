@@ -28,6 +28,7 @@ export const orderStatusChanged = `subscription OrderStatusChanged($userId:Strin
       restaurant{
         _id
         name
+        phone
         image
         address
         location{coordinates}

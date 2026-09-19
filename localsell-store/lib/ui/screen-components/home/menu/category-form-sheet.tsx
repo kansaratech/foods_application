@@ -134,14 +134,26 @@ const CategoryFormSheet = forwardRef<CategoryFormSheetHandle, Props>(
     const loading = creating || editing;
 
     return (
-      <ResponsiveFormSheet ref={sheetRef}>
-          <Text
-            className="text-lg font-semibold"
-            style={{ color: appTheme.fontMainColor }}
-          >
-            {editingId ? t("Edit Category") : t("Add Category")}
-          </Text>
-
+      <ResponsiveFormSheet
+        ref={sheetRef}
+        header={
+          <View className="flex-row justify-between items-center">
+            <Text
+              className="text-lg font-semibold"
+              style={{ color: appTheme.fontMainColor }}
+            >
+              {editingId ? t("Edit Category") : t("Add Category")}
+            </Text>
+            <TouchableOpacity onPress={() => sheetRef.current?.dismiss()}>
+              <Ionicons
+                name="close"
+                size={22}
+                color={appTheme.fontSecondColor}
+              />
+            </TouchableOpacity>
+          </View>
+        }
+      >
           <TouchableOpacity
             onPress={handlePickImage}
             className="h-24 w-24 rounded-md items-center justify-center overflow-hidden self-center"

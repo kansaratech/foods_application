@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { Rating } from 'primereact/rating';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faStarHalfAlt } from '@fortawesome/free-solid-svg-icons';
-import { useConfiguration } from '@/lib/hooks/useConfiguration';
 import { formatCurrency } from '@/lib/utils/methods';
 
 interface ITransactionDetailModalProps {
@@ -21,7 +20,6 @@ const TransactionDetailModal: React.FC<ITransactionDetailModalProps> = ({
 }) => {
   // Hooks
   const t = useTranslations();
-  const { CURRENT_SYMBOL } = useConfiguration();
 
   if (!transaction) return null;
 
@@ -139,8 +137,7 @@ const TransactionDetailModal: React.FC<ITransactionDetailModalProps> = ({
                   {t('Current Wallet Amount')}
                 </p>
                 <p className="font-medium">
-                  {CURRENT_SYMBOL}
-                  {(transaction?.rider?.currentWalletAmount ?? 0).toFixed(2)}
+                  {formatCurrency(transaction?.rider?.currentWalletAmount ?? 0, true)}
                 </p>
               </div>
               <div>
@@ -148,8 +145,7 @@ const TransactionDetailModal: React.FC<ITransactionDetailModalProps> = ({
                   {t('Total Earnings')}
                 </p>
                 <p className="font-medium">
-                  {CURRENT_SYMBOL}
-                  {(transaction?.rider?.totalWalletAmount ?? 0).toFixed(2)}
+                  {formatCurrency(transaction?.rider?.totalWalletAmount ?? 0, true)}
                 </p>
               </div>
             </div>

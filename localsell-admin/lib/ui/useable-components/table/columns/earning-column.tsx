@@ -1,7 +1,7 @@
 import { IActionMenuProps } from '@/lib/utils/interfaces';
 import { IEarning } from '@/lib/utils/interfaces';
 import { useTranslations } from 'next-intl';
-import { useConfiguration } from '@/lib/hooks/useConfiguration';
+import { formatCurrency } from '@/lib/utils/methods';
 
 export const EARNING_COLUMNS = ({
   isSuperAdmin = false,
@@ -11,7 +11,6 @@ export const EARNING_COLUMNS = ({
 }) => {
   // Hooks
   const t = useTranslations();
-  const { CURRENT_SYMBOL } = useConfiguration();
 
   // Columns
   return [
@@ -46,8 +45,7 @@ export const EARNING_COLUMNS = ({
       body: (earning: IEarning) =>
         isSuperAdmin ? (
           <div>
-            {CURRENT_SYMBOL}{' '}
-            {earning?.platformEarnings?.totalEarnings?.toFixed(2)}
+            {formatCurrency(earning?.platformEarnings?.totalEarnings ?? 0, true)}
           </div>
         ) : (
           <span>-</span>
@@ -66,8 +64,7 @@ export const EARNING_COLUMNS = ({
 
       body: (earning: IEarning) => (
         <div>
-          {CURRENT_SYMBOL}{' '}
-          {earning?.storeEarnings?.totalEarnings?.toFixed(2)}
+          {formatCurrency(earning?.storeEarnings?.totalEarnings ?? 0, true)}
         </div>
       ),
     },
@@ -85,8 +82,7 @@ export const EARNING_COLUMNS = ({
       hidden: !isSuperAdmin,
       body: (earning: IEarning) => (
         <div>
-          {CURRENT_SYMBOL}{' '}
-          {earning?.riderEarnings?.totalEarnings?.toFixed(2)}
+          {formatCurrency(earning?.riderEarnings?.totalEarnings ?? 0, true)}
         </div>
       ),
     },

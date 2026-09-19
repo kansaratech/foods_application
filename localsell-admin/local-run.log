@@ -11,3 +11,62 @@
  ✓ Compiled in 487ms (799 modules)
  GET / 200 in 309ms
  ✓ Compiled in 3.4s (824 modules)
+ ✓ Compiled in 10.1s (824 modules)
+ ✓ Compiled in 2.1s (824 modules)
+ ✓ Compiled in 771ms (824 modules)
+ ✓ Compiled in 1711ms (824 modules)
+ ✓ Compiled in 875ms (824 modules)
+ ✓ Compiled in 1302ms (824 modules)
+ ✓ Compiled in 862ms (824 modules)
+ ✓ Compiled in 612ms (824 modules)
+ ✓ Compiled in 517ms (824 modules)
+ ✓ Compiled in 473ms (824 modules)
+ ✓ Compiled in 596ms (824 modules)
+ ✓ Compiled in 908ms (824 modules)
+ ✓ Compiled in 563ms (824 modules)
+ ✓ Compiled in 778ms (824 modules)
+ ✓ Compiled in 408ms (824 modules)
+ ✓ Compiled in 446ms (824 modules)
+ ✓ Compiled in 569ms (824 modules)
+ ✓ Compiled in 347ms (824 modules)
+ ✓ Compiled in 944ms (824 modules)
+ ✓ Compiled in 655ms (824 modules)
+ ✓ Compiled in 336ms (824 modules)
+ ✓ Compiled in 424ms (824 modules)
+ ✓ Compiled in 1508ms (824 modules)
+ ✓ Compiled in 1422ms (824 modules)
+ ✓ Compiled in 452ms (824 modules)
+ ✓ Compiled in 577ms (824 modules)
+ ✓ Compiled in 711ms (824 modules)
+ ✓ Compiled in 593ms (824 modules)
+ ✓ Compiled in 361ms (824 modules)
+ ✓ Compiled in 465ms (824 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 1634ms (953 modules)
+ GET / 200 in 3644ms
+ GET / 200 in 177ms
+ ○ Compiling /manifest.webmanifest ...
+ ✓ Compiled /manifest.webmanifest in 1237ms (988 modules)
+ GET /manifest.webmanifest 200 in 1596ms
+ ○ Compiling /home ...
+ ✓ Compiled /home in 3.9s (2039 modules)
+ GET /manifest.webmanifest 200 in 90ms
+ ✓ Compiled in 4.2s (952 modules)
+ ✓ Compiled in 8.1s (2053 modules)
+ GET /home 200 in 2603ms
+ ○ Compiling /manifest.webmanifest ...
+ ✓ Compiled /manifest.webmanifest in 6s (1116 modules)
+ GET /manifest.webmanifest 200 in 7138ms
+ ○ Compiling /authentication/login ...
+ ✓ Compiled /authentication/login in 13.8s (2363 modules)
+ GET /manifest.webmanifest 200 in 104ms
+ ✓ Compiled in 2.1s (2391 modules)
+ GET /home 200 in 675ms
+ GET /manifest.webmanifest 200 in 125ms
+ ○ Compiling /general/vendors ...
+ ✓ Compiled /general/vendors in 4s (2397 modules)
+ ○ Compiling /manifest.webmanifest ...
+ ✓ Compiled /manifest.webmanifest in 711ms (1314 modules)
+ GET /manifest.webmanifest 200 in 913ms
+ ✓ Compiled in 1309ms (2469 modules)
+ ✓ Compiled in 1549ms (2469 modules)

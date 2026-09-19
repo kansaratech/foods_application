@@ -4,6 +4,7 @@ interface Coordinates {
 }
 
 interface Restaurant {
+  phone?: string | null;
   _id: string;
   name: string;
   image: string;

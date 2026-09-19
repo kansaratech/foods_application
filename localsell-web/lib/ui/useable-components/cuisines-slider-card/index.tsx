@@ -57,7 +57,7 @@ const CuisinesSliderCard: CuisinesSliderCardComponent = ({
   const desktopVisible = shopTypes ? 4 : 8;
 
   const [page, setPage] = useState(0);
-  const [numVisible, setNumVisible] = useState(getNumVisible());
+  const [numVisible, setNumVisible] = useState(desktopVisible);
   const [userInteracted, setUserInteracted] = useState(false);
 
   const router = useRouter();
@@ -68,7 +68,7 @@ const CuisinesSliderCard: CuisinesSliderCardComponent = ({
     if (typeof window === "undefined") return desktopVisible;
     const width = window.innerWidth;
     if (width > 1536) return desktopVisible;
-    const option = responsiveOptions.find(
+    const option = [...responsiveOptions].reverse().find(
       (opt) => width <= parseInt(opt.breakpoint)
     );
     return option ? option.numVisible : desktopVisible;
@@ -79,19 +79,20 @@ const CuisinesSliderCard: CuisinesSliderCardComponent = ({
 
   const next = () => {
     setUserInteracted(true);
-    const maxPage = totalItems - numVisible;
+    const maxPage = Math.max(0, totalItems - numVisible);
     setPage((prevPage) => (prevPage < maxPage ? prevPage + numScroll : 0));
   };
 
   const prev = () => {
     setUserInteracted(true);
-    const maxPage = totalItems - numVisible;
+    const maxPage = Math.max(0, totalItems - numVisible);
     setPage((prevPage) => (prevPage > 0 ? prevPage - numScroll : maxPage));
   };
 
   // Handle resize
   useEffect(() => {
-    const handleResize = () => setNumVisible(getNumVisible());
+    const handleResize = () => { setNumVisible(getNumVisible()); setPage(0); };
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);

@@ -1,0 +1,23 @@
+.identity { display:flex; align-items:center; gap:14px; padding-bottom:20px; }
+.avatar { display:flex; align-items:center; justify-content:center; width:52px; height:52px; flex-shrink:0; border-radius:18px; background:#eaf1ff; color:#1c5bc7; font-size:20px; font-weight:700; }
+.name { min-width:0; overflow-wrap:anywhere; color:#16293f; font-size:20px; font-weight:700; }
+.contacts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.contact { display:flex; align-items:flex-start; gap:12px; min-width:0; padding:16px; border:1px solid #e2e8f0; border-radius:16px; }
+.contactIcon { display:flex; align-items:center; justify-content:center; width:36px; height:36px; flex-shrink:0; border-radius:12px; background:#f1f5fb; color:#64748b; }
+.contactBody { flex:1; min-width:0; }
+.label { color:#64748b; font-size:12px; font-weight:600; margin-bottom:4px; }
+.value { color:#16293f; font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+.verified,.unverified { display:inline-flex; align-items:center; gap:5px; margin-top:8px; padding:3px 7px; border-radius:6px; font-size:11px; font-weight:600; }
+.verified { color:#166534; background:#ecfdf3; }
+.unverified { color:#92400e; background:#fff7ed; }
+.edit { display:flex; align-items:center; justify-content:center; width:44px; height:44px; flex-shrink:0; border-radius:12px; color:#1c5bc7; background:#edf3ff; }
+.edit:hover { background:#dce9ff; }
+.edit:focus-visible { outline:2px solid #1c5bc7; outline-offset:3px; }
+:global(html.dark) .name,:global(html.dark) .value { color:#f1f5f9; }
+:global(html.dark) .contact { border-color:#334155; }
+:global(html.dark) .label { color:#94a3b8; }
+:global(html.dark) .avatar,:global(html.dark) .edit,:global(html.dark) .contactIcon { background:#1e293b; color:#93c5fd; }
+:global(html.dark) .verified { background:#052e16; color:#86efac; }
+:global(html.dark) .unverified { background:#451a03; color:#fdba74; }
+@media(max-width:767px) { .contacts { grid-template-columns:minmax(0,1fr); gap:0; } .contact { border:0; border-top:1px solid #e2e8f0; border-radius:0; padding:16px 0; gap:10px; } .contact:last-child { padding-bottom:0; } .identity { padding-bottom:16px; } }
+@media(max-width:359px) { .contactIcon { display:none; } }

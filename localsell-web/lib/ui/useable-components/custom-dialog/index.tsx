@@ -30,7 +30,7 @@ export default function CustomDialog({
       className={`w-full md:m-10 m-2 bg-white ${className} `}
       contentClassName="p-0 rounded-xl scrollbar-none  m-4 md:m-0 dark:bg-gray-900 dark:text-white"
       headerClassName="dark:bg-gray-900 dark:text-white"
-      style={{ maxWidth: width, borderRadius: "0.75rem", height: height }}
+      style={{ width: "calc(100vw - 24px)", maxHeight: "calc(100dvh - 24px)", maxWidth: width, borderRadius: "0.75rem", height: height }}
     >
       <div className="relative">
         {/* Close button */}
@@ -39,7 +39,7 @@ export default function CustomDialog({
             type="button"
             aria-label="Close dialog"
             onClick={onHide}
-            className={`${direction === "rtl" ? "left-4" : "right-4"} absolute cursor-pointer top-4 z-10 w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-700 focus:outline-none`}
+            className={`${direction === "rtl" ? "left-4" : "right-4"} absolute cursor-pointer top-4 z-10 w-11 h-11 flex items-center justify-center rounded-full text-gray-500 hover:text-gray-700 focus:outline-none`}
           >
             <CircleCrossSvg color="currentColor" width={24} height={24} />
           </button>

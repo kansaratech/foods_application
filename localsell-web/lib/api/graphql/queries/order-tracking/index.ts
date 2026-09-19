@@ -23,6 +23,7 @@ export const ORDER_TRACKING = gql`
       restaurant {
         _id
         name
+        phone
         image
         slug
         address
@@ -81,6 +82,8 @@ export const ORDER_TRACKING = gql`
       }
       rider {
         _id
+        name
+        phone
       }
       paymentMethod
       paymentStatus

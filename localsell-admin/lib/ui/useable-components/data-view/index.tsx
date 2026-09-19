@@ -21,7 +21,7 @@ const CustomDataView: React.FC<ICustomDataViewProps> = ({
       : '';
 
     const createdAt = review?.createdAt
-      ? new Date(parseInt(review?.createdAt)).toLocaleDateString()
+      ? new Date(review.createdAt).toLocaleDateString()
       : '';
 
     return (

@@ -11,6 +11,7 @@ import ThemeContext from '../../ui/ThemeContext/ThemeContext'
 import { theme } from '../../utils/themeColors'
 // import analytics from '../../utils/analytics'
 import Detail from '../../components/OrderDetail/Detail/Detail'
+import OrderContacts from '../../components/OrderDetail/OrderContacts'
 import RestaurantMarker from '../../assets/SVG/restaurant-marker'
 import CustomerMarker from '../../assets/SVG/customer-marker'
 import TrackingRider from '../../components/OrderDetail/TrackingRider/TrackingRider'
@@ -464,6 +465,7 @@ function OrderDetail(props) {
               </TextDefault>
             </View>
         )}
+        <OrderContacts order={order} theme={currentTheme} />
         <Instructions title={'Instructions'} theme={currentTheme} message={order?.instructions} />
         <Detail navigation={props?.navigation} currencySymbol={configuration.currencySymbol} items={items} from={restaurant?.name} orderNo={order?.orderId} deliveryAddress={deliveryAddress?.deliveryAddress} subTotal={subTotal} tip={tip} tax={tax} deliveryCharges={deliveryCharges} total={total} theme={currentTheme} id={id} rider={order?.rider} orderStatus={order?.orderStatus} hasUnread={hasUnreadMessage} onChatOpen={() => setHasUnreadMessage(false)} />
         <Taxes tax={tax} deliveryCharges={deliveryCharges} currency={configuration.currencySymbol} tip={tip} discountAmount={discountAmount} />
