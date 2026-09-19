@@ -1,0 +1,200 @@
+(node:23568) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <Suspense name="(localized)/" fallback={<Fragment>}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+              <SegmentViewNode type="page" pagePath="(localized...">
+                <SegmentTrieNode>
+                <RootPage>
+                  <Main>
+                    <main className="w-full ove...">
+                      <Start>
+                        <section className="relative b...">
+                          <div className="grid w-ful...">
+                            <div className="relative z-10">
+                              <p>
+                              <h1>
+                              <p>
+                              <div>
+                              <div>
++                             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                            ...
+                      ...
+              ...
+            ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at Start (lib\ui\screen-components\un-protected\Home\Start\index.tsx:157:13)
+    at Main (lib\ui\screens\unprotected\index.tsx:21:7)
+    at RootPage (app\(localized)\page.tsx:4:10)
+  155 |
+  156 |           {isInstallable && (
+> 157 |             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+      |             ^
+  158 |               <InstallAppButton variant="ghost" hideWhenUnavailable />
+  159 |               <span className="text-xs text-slate-500 dark:text-gray-400">
+  160 |                 {t("pwa.heroHint")}
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <Suspense name="(localized)/" fallback={<Fragment>}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+              <SegmentViewNode type="page" pagePath="(localized...">
+                <SegmentTrieNode>
+                <RootPage>
+                  <Main>
+                    <main className="w-full ove...">
+                      <Start>
+                        <section className="relative b...">
+                          <div className="grid w-ful...">
+                            <div className="relative z-10">
+                              <p>
+                              <h1>
+                              <p>
+                              <div>
+                              <div>
++                             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                            ...
+                      ...
+              ...
+            ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at Start (lib\ui\screen-components\un-protected\Home\Start\index.tsx:157:13)
+    at Main (lib\ui\screens\unprotected\index.tsx:21:7)
+    at RootPage (app\(localized)\page.tsx:4:10)
+  155 |
+  156 |           {isInstallable && (
+> 157 |             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+      |             ^
+  158 |               <InstallAppButton variant="ghost" hideWhenUnavailable />
+  159 |               <span className="text-xs text-slate-500 dark:text-gray-400">
+  160 |                 {t("pwa.heroHint")}
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Image with src "https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&w=800&q=70" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Uncaught SyntaxError: Invalid or unexpected token
+SyntaxError: Invalid or unexpected token
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Image with src "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=70" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Uncaught TypeError: Cannot read properties of null (reading 'removeChild')
+[browser] Uncaught TypeError: Cannot read properties of null (reading 'removeChild')
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] As of February 21st, 2024, google.maps.Marker is deprecated. Please use google.maps.marker.AdvancedMarkerElement instead. At this time, google.maps.Marker is not scheduled to be discontinued, but google.maps.marker.AdvancedMarkerElement is recommended over google.maps.Marker. While google.maps.Marker will continue to receive bug fixes for any major regressions, existing bugs in google.maps.Marker will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/deprecations for additional details and https://developers.google.com/maps/documentation/javascript/advanced-markers/migration for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:413:208)
+[browser] Element with name "gmp-internal-loading-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-request-error-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-back-button" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-dialog" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure-section" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-attribution" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-element-support-verification" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] You have included the Google Maps JavaScript API multiple times on this page. This may cause unexpected errors. 
+    at Fga (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:320:273)
+    at Nga (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:312:69)
+    at google.maps.Load (https://maps.googleapis.com/maps/api/js?key=AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q&v=weekly&loading=async&callback=initMap:38:5)
+    at <unknown> (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:626:267)
+    at <unknown> (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:626:280) (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:320:273)
+[browser] Element with name "gmp-map" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-pin" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-camera-control" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Element with name "gmp-internal-loading-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-request-error-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-back-button" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-dialog" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure-section" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-attribution" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-element-support-verification" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] You have included the Google Maps JavaScript API multiple times on this page. This may cause unexpected errors. 
+    at Fga (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:320:273)
+    at Nga (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:312:69)
+    at google.maps.Load (https://maps.googleapis.com/maps/api/js?key=AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q&v=weekly&loading=async&callback=initMap:38:5)
+    at <unknown> (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:626:267)
+    at <unknown> (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:626:280) (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:320:273)
+[browser] Element with name "gmp-map" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-pin" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-camera-control" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Element with name "gmp-internal-loading-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-request-error-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-back-button" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-dialog" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure-section" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-attribution" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] As of February 21st, 2024, google.maps.Marker is deprecated. Please use google.maps.marker.AdvancedMarkerElement instead. At this time, google.maps.Marker is not scheduled to be discontinued, but google.maps.marker.AdvancedMarkerElement is recommended over google.maps.Marker. While google.maps.Marker will continue to receive bug fixes for any major regressions, existing bugs in google.maps.Marker will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/deprecations for additional details and https://developers.google.com/maps/documentation/javascript/advanced-markers/migration for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:413:208)
+[browser] Image with src "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=70" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] ⚠️ Firebase config not ready yet. (lib\config\FirebaseForegroundHandler.tsx:29:15)
+[browser] Element with name "gmp-internal-loading-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-request-error-text" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-back-button" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-dialog" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-disclosure-section" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-attribution" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Element with name "gmp-internal-element-support-verification" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] You have included the Google Maps JavaScript API multiple times on this page. This may cause unexpected errors. 
+    at Fga (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:320:273)
+    at Nga (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:312:69)
+    at google.maps.Load (https://maps.googleapis.com/maps/api/js?key=AIzaSyByQslS8CFpwauY6LgcfOqdhWUohLRYN-Q&v=weekly&loading=async&callback=initMap:38:5)
+    at <unknown> (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:626:267)
+    at <unknown> (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:626:280) (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:320:273)
+[browser] Element with name "gmp-map" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] As of February 21st, 2024, google.maps.Marker is deprecated. Please use google.maps.marker.AdvancedMarkerElement instead. At this time, google.maps.Marker is not scheduled to be discontinued, but google.maps.marker.AdvancedMarkerElement is recommended over google.maps.Marker. While google.maps.Marker will continue to receive bug fixes for any major regressions, existing bugs in google.maps.Marker will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/deprecations for additional details and https://developers.google.com/maps/documentation/javascript/advanced-markers/migration for the migration guide. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:413:208)
+[browser] Element with name "gmp-pin" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)
+[browser] Image with src "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?auto=format&fit=crop&w=800&q=70" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[browser] Element with name "gmp-internal-camera-control" already defined. (https://maps.googleapis.com/maps-api-v3/api/js/66/4d/main.js:217:177)

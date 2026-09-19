@@ -9,7 +9,6 @@ import React, { useRef } from "react";
 import { Toast } from "primereact/toast";
 
 // Components
-import CustomNotification from "@/lib/ui/useable-components/notification";
 import {
   IToast,
   IToastContext,
@@ -58,17 +57,8 @@ export const ToastProvider: React.FC<IToastProviderProps> = ({ children }) => {
       severity: config.type,
       life: config.sticky ? undefined : (config?.duration ?? 2500),
       sticky: config.sticky ?? false,
-      contentStyle: {
-        margin: 0,
-        padding: 0,
-      },
-      content: (
-        <CustomNotification
-          type={config.type}
-          title={config.title}
-          message={config.message}
-        />
-      ),
+      summary: config.title,
+      detail: config.message,
     });
   };
 

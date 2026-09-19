@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import './map.css'
 import { darkMapStyle } from "@/lib/utils/mapStyles/mapStyle";
 import { useTheme } from "@/lib/providers/ThemeProvider";
+import { MARKETPLACE_LOCATION } from "@/lib/utils/constants/marketplace";
 
 interface MapProps {
   apiKey: string;
@@ -35,7 +36,10 @@ const Map: FC<MapProps> = ({ apiKey, data, center }) => {
       const [lng, lat] = data[0].location.coordinates;
       return { lat: Number(lat), lng: Number(lng) };
     }
-    return { lat: 33.6844, lng: 73.0479 }; // Default to Islamabad
+    // No stores to center on — fall back to the marketplace's own town
+    // (was hardcoded to Islamabad, Pakistan — clearly a leftover placeholder,
+    // not this marketplace).
+    return { lat: MARKETPLACE_LOCATION.latitude, lng: MARKETPLACE_LOCATION.longitude };
   }, [data]);
 
 

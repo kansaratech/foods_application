@@ -1,0 +1,48 @@
+▲ Next.js 16.2.10 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.156:3000
+- Environments: .env.local
+✓ Ready in 2.2s
+
+○ Compiling / ...
+ GET / 200 in 671ms (next.js: 57ms, application-code: 614ms)
+ GET / 200 in 695ms (next.js: 36ms, application-code: 659ms)
+ GET / 200 in 182ms (next.js: 4ms, application-code: 178ms)
+○ Compiling /store ...
+ GET /store 200 in 13.2s (next.js: 12.7s, application-code: 575ms)
+ GET /store 200 in 372ms (next.js: 22ms, application-code: 350ms)
+○ Compiling /store/[slug]/[id] ...
+ GET /store/deogarh-daily-mart/cmu3paehh009eieootwsyx882 200 in 35.1s (next.js: 34.5s, application-code: 606ms)
+ GET /mapview/store 200 in 20.9s (next.js: 19.4s, application-code: 1548ms)
+ GET /mapview/store 200 in 601ms (next.js: 40ms, application-code: 561ms)
+ GET /store/deogarh-daily-mart/cmu3paehh009eieootwsyx882 200 in 679ms (next.js: 69ms, application-code: 610ms)
+ GET / 200 in 26.1s (next.js: 1034ms, application-code: 25.1s)
+ GET /store/deogarh-daily-mart/cmu3paehh009eieootwsyx882 200 in 15.0s (next.js: 634ms, application-code: 14.4s)
+ GET / 200 in 930ms (next.js: 80ms, application-code: 850ms)
+ GET / 200 in 17.5s (next.js: 4.9s, application-code: 12.5s)
+ GET /store 200 in 1405ms (next.js: 229ms, application-code: 1176ms)
+ GET / 200 in 56ms (next.js: 4ms, application-code: 52ms)
+ GET / 200 in 1649ms (next.js: 854ms, application-code: 795ms)
+ GET / 200 in 3.7s (next.js: 4ms, application-code: 3.7s)
+ GET / 200 in 40ms (next.js: 2ms, application-code: 37ms)
+ GET / 200 in 37ms (next.js: 2ms, application-code: 34ms)
+ GET / 200 in 78ms (next.js: 4ms, application-code: 75ms)
+ GET / 200 in 458ms (next.js: 223ms, application-code: 235ms)
+ GET / 200 in 2.6s (next.js: 4ms, application-code: 2.6s)
+ GET / 200 in 991ms (next.js: 489ms, application-code: 501ms)
+○ Compiling /_not-found ...
+ GET /assets/images/hero/hero-food.png 404 in 4.3s (next.js: 3.5s, application-code: 749ms)
+ GET /assets/images/hero/hero-essentials.png 404 in 4.3s (next.js: 3.5s, application-code: 759ms)
+ GET / 200 in 236ms (next.js: 49ms, application-code: 187ms)
+ GET /assets/images/hero/hero-essentials.png 404 in 126ms (next.js: 8ms, application-code: 117ms)
+ GET / 200 in 7.8s (next.js: 18ms, application-code: 7.8s)
+ GET / 200 in 1547ms (next.js: 7ms, application-code: 1539ms)
+ GET / 200 in 157ms (next.js: 3ms, application-code: 154ms)
+ GET / 200 in 724ms (next.js: 293ms, application-code: 431ms)
+ GET / 200 in 737ms (next.js: 386ms, application-code: 352ms)
+○ Compiling /mapview/[slug] ...
+ GET /mapview/restaurants 200 in 3.8s (next.js: 3.5s, application-code: 311ms)
+ GET /mapview/restaurants 200 in 413ms (next.js: 142ms, application-code: 271ms)
+ GET /mapview/restaurants 200 in 1468ms (next.js: 26ms, application-code: 1442ms)
+ GET /mapview/restaurants 200 in 359ms (next.js: 24ms, application-code: 334ms)
+ GET /mapview/restaurants 200 in 249ms (next.js: 25ms, application-code: 225ms)

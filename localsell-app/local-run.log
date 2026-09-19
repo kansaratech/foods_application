@@ -1,0 +1,6 @@
+env: load .env
+env: export EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS EXPO_PUBLIC_GRAPHQL_URL EXPO_PUBLIC_WS_GRAPHQL_URL EXPO_PUBLIC_WEB_CLIENT_URL
+Starting project at D:\my-workspace\maekotech\project\kitchen\foods_application\localsell-app
+Starting Metro Bundler
+Waiting on http://localhost:8081
+Logs for your project will appear below.

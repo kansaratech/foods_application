@@ -1,170 +1,136 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@apollo/client";
-
-import { useTranslations } from "next-intl";
-
+import { FiArrowRight, FiArrowLeft, FiPause, FiPlay, FiMapPin, FiNavigation } from "react-icons/fi";
+import LocationPopover from "../../layout/app-header/location-popover";
 import useLocationSearch from "@/lib/hooks/useLocationSearch";
-import usePwaInstall from "@/lib/hooks/usePwaInstall";
-import InstallAppButton from "@/lib/ui/pwa/InstallAppButton";
-import { ACTIVE_RESTAURANT_COUNT } from "@/lib/api/graphql/queries/restaurants";
-import { MARKETPLACE_LOCATION } from "@/lib/utils/constants";
+import { OPEN_LOCATION_PICKER_EVENT } from "@/lib/utils/constants";
 import { useUserAddress } from "@/lib/context/address/address.context";
+import styles from "./hero.module.css";
 
-const TABS = [
-  { label: "Food", href: "/discovery" },
-  { label: "Groceries", href: "/store" },
-  { label: "Essentials", href: "/store" },
-  { label: "Sweets", href: "/discovery" },
+const categories = [
+  { label: "Food", caption: "EAT", href: "/discovery", crop: "890 35 525 420", image: "/assets/images/hero/hero-food.png" },
+  { label: "Groceries", caption: "SHOP", href: "/store", crop: "946 455 490 595", image: "" },
+  { label: "Essentials", caption: "ESSENTIALS", href: "/store", crop: "20 45 915 990", image: "/assets/images/hero/hero-essentials.png" },
+  { label: "Sweets", caption: "SWEETS", href: "/discovery", crop: "0 0 1024 1024", image: "/assets/images/hero/hero-sweets.png" },
 ];
+
+function Product({ index }: { index: number }) {
+  const clipId = useId();
+  const [x, y, width, height] = categories[index].crop.split(" ").map(Number);
+  if (categories[index].image) {
+    return <svg viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMax meet" className={styles.product} role="img" aria-label={categories[index].label}><image href={categories[index].image} width="1536" height="1024" preserveAspectRatio="xMidYMid meet" /></svg>;
+  }
+  return (
+    <svg viewBox={categories[index].crop} className={styles.product} role="img" aria-label={categories[index].label}>
+      <defs><clipPath id={clipId}><rect x={x} y={y} width={width} height={height} /></clipPath></defs>
+      <image href="/assets/images/hero/localsell-delivery-collage.png" width="1448" height="1086" clipPath={`url(#${clipId})`} />
+    </svg>
+  );
+}
 
 export default function Start() {
   const router = useRouter();
-  const t = useTranslations();
-  const [area, setArea] = useState("");
-  const { isInstallable } = usePwaInstall();
-  const { detectCurrentLocation, locating, error: locationError } =
-    useLocationSearch();
+  const [active, setActive] = useState(1);
+  const [paused, setPaused] = useState(false);
+  const [interacting, setInteracting] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(true);
+  const [isLocationOpen, setIsLocationOpen] = useState(false);
   const { userAddress } = useUserAddress();
-  const userLongitude = Number(userAddress?.location?.coordinates[0]);
-  const userLatitude = Number(userAddress?.location?.coordinates[1]);
-  const hasUserLocation = Number.isFinite(userLatitude) && Number.isFinite(userLongitude);
+  const { detectCurrentLocation, locating, error } = useLocationSearch();
+  const satellites = categories.map((_, index) => index).filter(index => index !== active).slice(0, 2);
 
-  const { data } = useQuery(ACTIVE_RESTAURANT_COUNT, {
-    variables: {
-      latitude: hasUserLocation ? userLatitude : MARKETPLACE_LOCATION.latitude,
-      longitude: hasUserLocation ? userLongitude : MARKETPLACE_LOCATION.longitude,
-      radiusKm: MARKETPLACE_LOCATION.radiusKm,
-    },
-    fetchPolicy: "cache-and-network",
-  });
-  const storeCount: number | undefined = data?.activeRestaurantCount;
+  useEffect(() => {
+    const open = () => setIsLocationOpen(true);
+    window.addEventListener(OPEN_LOCATION_PICKER_EVENT, open);
+    return () => window.removeEventListener(OPEN_LOCATION_PICKER_EVENT, open);
+  }, []);
 
-  // The app header already asks for the browser location once on first visit —
-  // don't fire a second prompt (and a second re-render) from here.
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
-  const useCurrentLocation = async () => {
-    const ok = await detectCurrentLocation();
-    if (ok) router.push("/discovery");
-  };
+  useEffect(() => {
+    if (paused || interacting || reducedMotion || isLocationOpen) return;
+    const timer = window.setInterval(() => {
+      if (!document.hidden) setActive(index => (index + 1) % categories.length);
+    }, 5500);
+    return () => window.clearInterval(timer);
+  }, [paused, interacting, reducedMotion, isLocationOpen, active]);
 
-  // "Browse stores" — take the typed area to search, otherwise straight to the
-  // store list. Either way we land on the ordering flow, never a location page.
-  const showStores = () => {
-    const query = area.trim();
-    router.push(query ? `/search/${encodeURIComponent(query)}` : "/discovery");
+  const selectSlide = (index: number) => {
+    setActive((index + categories.length) % categories.length);
+    setPaused(true);
   };
 
   return (
-    <section className="overflow-hidden bg-white dark:bg-gray-900">
-      <div className="grid w-full items-center gap-8 px-4 py-10 sm:py-12 md:px-6 lg:min-h-[620px] lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:px-12 lg:py-12 xl:px-20 2xl:px-[80px]">
-        {/* Left */}
-        <div className="relative z-10">
-          <p className="mb-6 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400 sm:text-xs sm:tracking-[0.3em]">
-            One app. Everyday possibilities.
-          </p>
-          <h1 className="text-[34px] font-black leading-[1.05] tracking-[-0.04em] text-slate-950 dark:text-white sm:text-5xl sm:leading-[1.03] lg:text-[58px]">
+    <section className={styles.hero} aria-labelledby="landing-heading">
+      <div className={styles.inner}>
+        <div className={styles.copy}>
+          <p className={styles.eyebrow}>One app. Everyday possibilities.</p>
+          <h1 id="landing-heading" className={styles.heading}>
             Everything you need,
-            <span className="mt-2 block font-serif text-[34px] font-normal italic leading-none tracking-[-0.03em] text-[#16293f] dark:text-blue-300 sm:text-[52px] lg:text-[60px]">
-              beautifully delivered.
-            </span>
+            <span>beautifully delivered.</span>
           </h1>
-          <p className="mt-7 max-w-lg text-base leading-7 text-slate-700 dark:text-gray-200 sm:text-lg">
-            Food, groceries and everyday essentials from{" "}
-            {storeCount ? storeCount.toLocaleString("en-IN") : "local"}{" "}
-            {MARKETPLACE_LOCATION.city} stores, brought together in one simple
-            experience.
-          </p>
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              showStores();
-            }}
-            className="mt-8 flex max-w-[640px] flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_45px_rgba(22,41,63,0.09)] dark:border-gray-700 dark:bg-gray-800 sm:flex-row sm:items-center"
-          >
-            <div className="flex flex-1 items-center gap-3 px-2">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-[#1c5bc7]" />
-              <input
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                placeholder="Search for an area or society…"
-                className="w-full bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
-              />
+          <p className={styles.description}>Food, groceries and everyday essentials, brought<br className={styles.desktopBreak} /> together in one simple experience.</p>
+          <div className={styles.controls}>
+            <div className={styles.searchBar}>
+              <button type="button" className={styles.location} onClick={() => setIsLocationOpen(true)} aria-haspopup="dialog" aria-expanded={isLocationOpen} title={userAddress?.deliveryAddress || "Search for a city or delivery address"}>
+                <FiMapPin aria-hidden="true" />
+                <span>{userAddress?.deliveryAddress || "Search for a city..."}</span>
+              </button>
+              <button type="button" className={styles.current} disabled={locating} onClick={() => void detectCurrentLocation()}>
+                <FiNavigation aria-hidden="true" /> {locating ? "Locating..." : "Current Location"}
+              </button>
+              <button type="button" className={styles.submit} onClick={() => router.push(categories[active].href)}>
+                Show Items <FiArrowRight aria-hidden="true" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={useCurrentLocation}
-              disabled={locating}
-              className="shrink-0 px-2 text-sm font-bold text-[#16293f] transition hover:text-[#1c5bc7] disabled:opacity-60 dark:text-blue-300"
-            >
-              {locating ? "Locating…" : "Current location"}
-            </button>
-            <button
-              type="submit"
-              className="shrink-0 rounded-xl bg-[#1c5bc7] px-5 py-3 text-sm font-bold text-white transition hover:brightness-95"
-            >
-              Browse stores <span aria-hidden="true">→</span>
-            </button>
-          </form>
-          {locationError && (
-            <p className="mt-2 text-sm text-amber-700 dark:text-amber-500">
-              {locationError}
-            </p>
-          )}
-
-          <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2 border-b border-slate-200 pb-1 text-sm font-bold dark:border-gray-700">
-            {TABS.map((tab, i) => (
-              <Link
-                key={tab.label}
-                href={tab.href}
-                aria-current={i === 0 ? "page" : undefined}
-                className={`-mb-px border-b-[3px] px-1 pb-3 transition ${
-                  i === 0
-                    ? "border-[#16293f] text-[#16293f] dark:border-blue-300 dark:text-blue-300"
-                    : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-950 dark:text-gray-300 dark:hover:text-white"
-                }`}
-              >
-                {tab.label}
-              </Link>
+            <LocationPopover open={isLocationOpen} onClose={() => setIsLocationOpen(false)} currentAddress={userAddress?.deliveryAddress || ""} anchorClassName="left-0 top-full !w-full sm:!w-[400px]" />
+          </div>
+          {error && <p role="alert" className={styles.error}>{error}</p>}
+          <div className={styles.categories} role="group" aria-label="Choose what to explore">
+            {categories.map((category, index) => (
+              <button key={category.label} type="button" aria-pressed={active === index} className={active === index ? styles.selected : undefined} onClick={() => selectSlide(index)}>{category.label}</button>
             ))}
           </div>
-
-          {isInstallable && (
-            <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <InstallAppButton variant="ghost" hideWhenUnavailable />
-              <span className="text-xs text-slate-500 dark:text-gray-400">
-                {t("pwa.heroHint")}
-              </span>
-            </div>
-          )}
         </div>
-
-        {/* Right — orbit */}
-        <div className="relative mx-auto aspect-square w-full max-w-[380px] sm:max-w-[460px] lg:max-w-[560px]">
-          <div className="hero-orbit hero-orbit-primary" aria-hidden="true" />
-          <div className="hero-orbit hero-orbit-secondary" aria-hidden="true" />
-          <Image
-            src="/assets/images/hero/localsell-delivery-collage.png"
-            alt="Food, groceries and everyday essentials delivered by LocalSell"
-            fill
-            priority
-            className="hero-collage relative z-10 object-contain p-3 sm:p-5"
-            sizes="(max-width: 640px) 92vw, (max-width: 1024px) 460px, 560px"
-          />
-          <span className="absolute right-[8%] top-[2%] z-20 px-2 py-1 text-[9px] font-bold tracking-[0.08em] text-slate-500 sm:px-3 sm:text-[11px]">
-            <b className="text-[#1c5bc7]">01</b> EAT
-          </span>
-          <span className="absolute bottom-[6%] right-[1%] z-20 px-2 py-1 text-[9px] font-bold tracking-[0.08em] text-slate-500 sm:px-3 sm:text-[11px]">
-            <b className="text-[#1c5bc7]">02</b> SHOP
-          </span>
-          <span className="absolute left-[1%] top-[43%] z-20 px-2 py-1 text-[9px] font-bold tracking-[0.08em] text-slate-500 sm:px-3 sm:text-[11px]">
-            <b className="text-[#1c5bc7]">03</b> ESSENTIALS
-          </span>
+        <div className={styles.scene} role="region" aria-roledescription="carousel" aria-label="Everyday delivery categories" onMouseEnter={() => setInteracting(true)} onMouseLeave={() => setInteracting(false)} onFocusCapture={() => setInteracting(true)} onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setInteracting(false); }}>
+          <svg className={styles.orbits} viewBox="0 0 760 600" fill="none" aria-hidden="true">
+            <g className={styles.orbitPrimary}>
+              <g transform="rotate(-27 374 300)">
+                <ellipse cx="374" cy="300" rx="330" ry="210" stroke="#1c5bc7" strokeWidth="2.5" />
+                <circle cx="44" cy="300" r="7" fill="white" stroke="#1c5bc7" strokeWidth="2.5" />
+                <circle cx="374" cy="90" r="5" fill="#1c5bc7" />
+                <circle cx="704" cy="300" r="5" fill="#1c5bc7" />
+              </g>
+            </g>
+            <g className={styles.orbitSecondary}>
+              <ellipse cx="374" cy="300" rx="308" ry="190" transform="rotate(-24 374 300)" stroke="#94a3b8" strokeWidth="1.3" />
+            </g>
+          </svg>
+          <div className={styles.platform} aria-hidden="true" />
+          <span className={styles.mainLabel}><b>0{active + 1}</b> {categories[active].caption}</span>
+          <div className={`${styles.mainProduct} ${categories[active].image ? styles.mainGenerated : ""}`} key={active}><Product index={active} /></div>
+          {satellites.map((index, position) => (
+            <button key={index} type="button" className={`${styles.satellite} ${position === 0 ? styles.top : styles.bottom}`} onClick={() => selectSlide(index)} aria-label={`Explore ${categories[index].label}`}>
+              <span className={styles.satelliteLabel}><b>0{index + 1}</b> {categories[index].caption}</span>
+              <Product index={index} />
+            </button>
+          ))}
+          <div className={styles.carouselControls}>
+            <button type="button" aria-label="Previous slide" onClick={() => selectSlide(active - 1)}><FiArrowLeft /></button>
+            <div className={styles.dots}>
+              {categories.map((category, index) => <button key={category.label} type="button" aria-label={`Show ${category.label}`} aria-pressed={active === index} onClick={() => selectSlide(index)} className={active === index ? styles.activeDot : undefined} />)}
+            </div>
+            <button type="button" aria-label="Next slide" onClick={() => selectSlide(active + 1)}><FiArrowRight /></button>
+            {!reducedMotion && <button type="button" aria-label={paused ? "Play slideshow" : "Pause slideshow"} onClick={() => setPaused(value => !value)}>{paused ? <FiPlay /> : <FiPause />}</button>}
+          </div>
         </div>
       </div>
     </section>

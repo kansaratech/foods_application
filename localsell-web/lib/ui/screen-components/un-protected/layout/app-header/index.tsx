@@ -3,7 +3,7 @@ import cartStyles from "@/lib/ui/useable-components/cart/cart.module.css";
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Sidebar } from "primereact/sidebar";
 import { Menu } from "primereact/menu";
@@ -138,6 +138,7 @@ function LocationButton({
  */
 export default function AppHeader() {
   const router = useRouter();
+  const isLandingPage = usePathname() === "/";
   const locale = useLocale();
   const t = useTranslations("AppHeader");
   const [, startTransition] = useTransition();
@@ -232,7 +233,7 @@ export default function AppHeader() {
   // Never re-prompts if the visitor already denied it, and any stored /
   // profile address takes priority.
   useEffect(() => {
-    if (didAutoLocate.current || currentAddress) return;
+    if (isLandingPage || didAutoLocate.current || currentAddress) return;
     if (typeof window === "undefined" || !navigator.geolocation) return;
     if (onUseLocalStorage("get", USER_CURRENT_LOCATION_LS_KEY)) return;
     if (profile?.addresses?.some((a) => a.selected)) return;
@@ -243,7 +244,7 @@ export default function AppHeader() {
     };
     if (navigator.permissions?.query) {
       navigator.permissions
-        .query({ name: "geolocation" as PermissionName })
+        .query({ name: "geolocation" })
         .then((status) => {
           if (status.state !== "denied") run();
         })
@@ -251,7 +252,7 @@ export default function AppHeader() {
     } else {
       run();
     }
-  }, [currentAddress, profile, detectCurrentLocation]);
+  }, [currentAddress, profile, detectCurrentLocation, isLandingPage]);
 
   const toggleLocale = () => {
     const next = isHindi ? "en" : "hi";
@@ -322,7 +323,7 @@ export default function AppHeader() {
           <Logo fillColor="#000000" darkmode="#FFFFFF" />
         </Link>
 
-        <div className="relative hidden lg:block">
+        <div className={isLandingPage ? "hidden" : "relative hidden lg:block"}>
           <LocationButton
             address={currentAddress}
             onClick={openLocation}
@@ -337,7 +338,7 @@ export default function AppHeader() {
           />
         </div>
 
-        <div ref={searchBoxRef} className="relative mx-auto hidden max-w-2xl flex-1 md:block">
+        <div ref={searchBoxRef} className={isLandingPage ? "hidden" : "relative mx-auto hidden max-w-2xl flex-1 md:block"}>
           <form
             onSubmit={submitSearch}
             className="flex items-center rounded-full border border-slate-200 bg-white px-4 shadow-sm transition focus-within:border-[#1c5bc7] focus-within:ring-2 focus-within:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800"
@@ -484,7 +485,7 @@ export default function AppHeader() {
       </div>
 
       {/* Mobile / tablet: dedicated location row so the top row stays uncluttered */}
-      <div className="relative border-t border-slate-100 px-4 py-2 dark:border-gray-800 lg:hidden">
+      <div className={isLandingPage ? "hidden" : "relative border-t border-slate-100 px-4 py-2 dark:border-gray-800 lg:hidden"}>
         <LocationButton
           address={currentAddress}
           onClick={openLocation}

@@ -957,6 +957,11 @@ export default function OrderCheckoutScreen() {
   }
 
   async function onCompleted(data: { placeOrder: IOrder }) {
+    // The comment belongs to THIS order, not to the restaurant — must not
+    // pre-fill the next order's cart (was clearing a stale key name,
+    // "orderInstructions", left over from before a rename; the cart writes
+    // to "newOrderInstructions", so this never actually cleared anything).
+    localStorage.removeItem("newOrderInstructions");
     localStorage.removeItem("orderInstructions");
     localStorage.removeItem("orderTip");
     if (paymentMethod === "COD") {
@@ -1121,11 +1126,21 @@ export default function OrderCheckoutScreen() {
   );
 
   // Use Effect
+  // Re-run whenever the delivery address changes too, not just when the
+  // restaurant first loads — deliveryCharges gets re-derived from the
+  // authoritative server `pricePreview` on address change (effect above),
+  // but `distance` (a purely client-side haversine estimate) had no such
+  // path and was staying frozen at whatever address was selected first,
+  // even though the displayed charge moved on.
   useEffect(() => {
     if (finalRestaurantData?.restaurant) {
       onInit();
     }
-  }, [finalRestaurantData]);
+  }, [
+    finalRestaurantData,
+    userAddress?.location?.coordinates?.[0],
+    userAddress?.location?.coordinates?.[1],
+  ]);
 
   useEffect(() => {
     onInitDirectionCacheSet();
@@ -1200,7 +1215,9 @@ export default function OrderCheckoutScreen() {
                     {!authToken
                       ? "Log in to select an address"
                       : addressConfirmed
-                        ? userAddress?.deliveryAddress
+                        ? isPickUp
+                          ? finalRestaurantData?.restaurant?.address
+                          : userAddress?.deliveryAddress
                         : "Select and confirm your address"}
                   </small>
                 </span>
@@ -1305,7 +1322,13 @@ export default function OrderCheckoutScreen() {
                             </span>
                             <span className="font-normal"> </span>
                             <span className="font-semibold">
-                              {userAddress?.deliveryAddress || (
+                              {/* Pickup: this is the STORE's own address —
+                                  fixed, not something the customer picks —
+                                  never the customer's saved delivery address
+                                  (was showing that unconditionally here). */}
+                              {(deliveryType === "Pickup"
+                                ? finalRestaurantData?.restaurant?.address
+                                : userAddress?.deliveryAddress) || (
                                 <span className="font-normal italic text-gray-500 dark:text-gray-400">
                                   {t("checkout_no_address_selected")}
                                 </span>
@@ -1315,15 +1338,17 @@ export default function OrderCheckoutScreen() {
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setIsUserAddressModalOpen(true)}
-                        className="shrink-0 rounded-full border border-primary-color px-3 py-1 text-xs font-semibold text-primary-color transition hover:bg-primary-color/5"
-                      >
-                        {userAddress?.deliveryAddress
-                          ? t("checkout_change_address")
-                          : t("checkout_add_address")}
-                      </button>
+                      {deliveryType !== "Pickup" && (
+                        <button
+                          type="button"
+                          onClick={() => setIsUserAddressModalOpen(true)}
+                          className="shrink-0 rounded-full border border-primary-color px-3 py-1 text-xs font-semibold text-primary-color transition hover:bg-primary-color/5"
+                        >
+                          {userAddress?.deliveryAddress
+                            ? t("checkout_change_address")
+                            : t("checkout_add_address")}
+                        </button>
+                      )}
                     </div>
                   </div>
 

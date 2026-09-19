@@ -6,13 +6,12 @@ import { useTranslations } from "next-intl";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLocationCrosshairs,
-  faMagnifyingGlass,
+  faLocationDot,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import useLocationSearch from "@/lib/hooks/useLocationSearch";
 
-const ORANGE = "#1c5bc7";
 
 /**
  * Lightweight delivery-location picker for the header. Two ways in: the
@@ -24,7 +23,6 @@ const ORANGE = "#1c5bc7";
 export default function LocationPopover({
   open,
   onClose,
-  currentAddress,
   anchorClassName = "",
 }: {
   open: boolean;
@@ -110,47 +108,12 @@ export default function LocationPopover({
       role="dialog"
       aria-label={t("ariaLabel")}
     >
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-sm font-semibold text-slate-900 dark:text-white">
-          {t("title")}
-        </span>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t("close")}
-          className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-gray-800"
-        >
-          <FontAwesomeIcon icon={faXmark} style={{ width: 14, height: 14 }} />
-        </button>
-      </div>
-
-      {currentAddress && (
-        <p className="mb-2 truncate rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500 dark:bg-gray-800 dark:text-gray-400">
-          {t("currentlyLabel")}{" "}
-          <span className="font-medium text-slate-700 dark:text-gray-200">
-            {currentAddress}
-          </span>
-        </p>
-      )}
-
-      <button
-        type="button"
-        onClick={pickCurrent}
-        disabled={locating}
-        className="mb-2 flex w-full items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold text-slate-800 transition hover:border-[#1c5bc7] hover:bg-blue-50/50 disabled:opacity-60 dark:border-gray-700 dark:text-gray-100 dark:hover:bg-gray-800"
-      >
-        {locating ? (
-          <BrandLoader variant="inline" size={20} />
-        ) : (
-          <FontAwesomeIcon icon={faLocationCrosshairs} />
-        )}
-        {locating ? t("gettingLocation") : t("useCurrentLocation")}
-      </button>
-
-      <div className="relative">
+      <div className="flex items-start gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="relative min-w-0 flex-1">
         <FontAwesomeIcon
-          icon={faMagnifyingGlass}
-          style={{ width: 13, height: 13 }}
+          icon={faLocationDot}
+          style={{ width: 15, height: 17 }}
           className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
         />
         <input
@@ -161,9 +124,29 @@ export default function LocationPopover({
             search(e.target.value);
           }}
           placeholder={t("searchPlaceholder")}
+          aria-label={t("searchPlaceholder")}
           className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-8 text-sm text-slate-900 outline-none transition focus:border-[#1c5bc7] focus:ring-2 focus:ring-[#1c5bc7]/15 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
         />
-        {searching && <BrandLoader variant="inline" size={20} />}
+        {searching && <span className="absolute right-3 top-1/2 -translate-y-1/2"><BrandLoader variant="inline" size={20} /></span>}
+      </div>
+      <button
+        type="button"
+        onClick={pickCurrent}
+        disabled={locating}
+        className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2.5 text-xs font-semibold text-[#1c5bc7] transition hover:bg-blue-100 disabled:opacity-60 dark:bg-gray-800 dark:text-blue-300"
+      >
+        {locating ? (
+          <BrandLoader variant="inline" size={20} />
+        ) : (
+          <FontAwesomeIcon icon={faLocationCrosshairs} style={{ width: 14, height: 14 }} />
+        )}
+        {locating ? t("gettingLocation") : t("useCurrentLocation")}
+      </button>
+
+      </div>
+      <button type="button" onClick={onClose} aria-label={t("close")} className="flex h-10 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:bg-gray-800">
+        <FontAwesomeIcon icon={faXmark} style={{ width: 14, height: 14 }} />
+      </button>
       </div>
 
       {error && (
@@ -173,21 +156,22 @@ export default function LocationPopover({
       )}
 
       {predictions.length > 0 && (
-        <ul className="mt-2 max-h-60 overflow-y-auto rounded-xl border border-slate-100 dark:border-gray-800">
+        <ul className="mt-3 max-h-72 divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-100 dark:divide-gray-800 dark:border-gray-800">
           {predictions.map((p) => (
             <li key={p.placeId}>
               <button
                 type="button"
                 onClick={() => pick(p.placeId, p.description)}
                 disabled={locating}
-                className="flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-blue-50 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-gray-800"
+                className="flex w-full items-center gap-3 px-3 py-3 text-left text-sm text-slate-700 transition hover:bg-blue-50 focus-visible:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60 dark:text-gray-200 dark:hover:bg-gray-800"
               >
-                <FontAwesomeIcon
-                  icon={faMagnifyingGlass}
-                  style={{ width: 11, height: 11, color: ORANGE }}
-                  className="mt-1 shrink-0"
-                />
-                <span className="min-w-0">{p.description}</span>
+                <span aria-hidden="true" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#1c5bc7] dark:bg-gray-800 dark:text-blue-300">
+                  <FontAwesomeIcon icon={faLocationDot} style={{ width: 15, height: 18 }} />
+                </span>
+                <span className="min-w-0 break-words">
+                  <span className="block font-semibold leading-5 text-slate-900 dark:text-white">{p.description.split(",")[0].trim()}</span>
+                  {p.description.includes(",") && <span className="mt-0.5 block text-xs leading-5 text-slate-500 dark:text-gray-400">{p.description.slice(p.description.indexOf(",") + 1).trim()}</span>}
+                </span>
               </button>
             </li>
           ))}

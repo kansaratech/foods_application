@@ -84,8 +84,11 @@ const MapView: FC<MapViewPageProps> = ({ params }) => {
                                     autoplay={true}
                                 />
                             </div>
+                            <p className="text-gray-800 dark:text-gray-200 text-base md:text-lg font-semibold text-center">
+                                No {slug === "restaurants" ? "restaurants" : "stores"} found near you
+                            </p>
                             <p className="text-gray-500 text-sm md:text-base text-center mb-4">
-                                No data available to show.
+                                We&apos;re not available in your area yet — try searching a different location.
                             </p>
                         </div>
                     </div>
